@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Lentando</title>
+<meta name="description" content="Zero-friction habit and usage tracker with wins system">
+<meta name="theme-color" content="#5c6bc0">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lentando">
+<style>
+:root {
+  --bg: #f4f3ef;
+  --card: #ffffff;
+  --card-border: #e8e7e3;
+  --text: #2c2c2c;
+  --muted: #8a8a8a;
+  --primary: #5c6bc0;
+  --primary-light: #e8eaf6;
+  --win: #4caf50;
+  --win-light: #e8f5e9;
+  --resist: #66bb6a;
+  --habit-bg: #eceff1;
+  --thc: #ef6c00;
+  --thc-light: #fff3e0;
+  --cbd: #00897b;
+  --cbd-light: #e0f2f1;
+  --mix: #7e57c2;
+  --danger: #e53935;
+  --chip-bg: #f0f0ec;
+  --chip-active: #5c6bc0;
+  --chip-active-text: #fff;
+  --danger-light: #ffebee;
+  --warn-light: #fff8e1;
+  --warn: #f57f17;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1a1a;
+    --card: #2c2c2c;
+    --card-border: #3a3a3a;
+    --text: #e8e8e8;
+    --muted: #a0a0a0;
+    --primary: #7986cb;
+    --primary-light: #2a2f4a;
+    --win: #66bb6a;
+    --win-light: #1e3a1f;
+    --resist: #81c784;
+    --habit-bg: #2e3338;
+    --thc: #ff8a50;
+    --thc-light: #3a2617;
+    --cbd: #26a69a;
+    --cbd-light: #1a2e2c;
+    --mix: #9575cd;
+    --danger: #ef5350;
+    --chip-bg: #3a3a3a;
+    --chip-active: #7986cb;
+    --chip-active-text: #fff;
+    --danger-light: #3a1f1f;
+    --warn-light: #3a3120;
+    --warn: #ffb74d;
+  }
+}
+
+[data-theme="dark"] {
+  --bg: #1a1a1a;
+  --card: #2c2c2c;
+  --card-border: #3a3a3a;
+  --text: #e8e8e8;
+  --muted: #a0a0a0;
+  --primary: #7986cb;
+  --primary-light: #2a2f4a;
+  --win: #66bb6a;
+  --win-light: #1e3a1f;
+  --resist: #81c784;
+  --habit-bg: #2e3338;
+  --thc: #ff8a50;
+  --thc-light: #3a2617;
+  --cbd: #26a69a;
+  --cbd-light: #1a2e2c;
+  --mix: #9575cd;
+  --danger: #ef5350;
+  --chip-bg: #3a3a3a;
+  --chip-active: #7986cb;
+  --chip-active-text: #fff;
+  --danger-light: #3a1f1f;
+  --warn-light: #3a3120;
+  --warn: #ffb74d;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px 80px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== HEADER ===== */
+header {
+  padding: 20px 0 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+header h1 { 
+  font-size: 24px; 
+  font-weight: 700;
+}
+header h1 .brand {
+  background: linear-gradient(135deg, var(--primary), var(--cbd));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+header h1 .tagline {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+}
+header .date { font-size: 14px; color: var(--muted); }
+
+/* ===== ACTION BUTTONS ===== */
+.action-group { margin-bottom: 8px; }
+
+.big-btn {
+  width: 100%;
+  padding: 18px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+  color: #fff;
+}
+.big-btn:active { transform: scale(0.97); opacity: 0.9; }
+
+.btn-used { background: var(--primary); }
+.btn-resisted { background: var(--resist); }
+
+.same-btn {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.same-btn:active { opacity: 0.8; }
+
+/* ===== CHIP ROWS ===== */
+.chip-row {
+  margin-top: 8px;
+  padding: 10px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.chip-row.hidden { display: none; }
+
+.chip-row-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chip-group:last-child { margin-bottom: 0; }
+
+.chip {
+  padding: 5px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  background: var(--chip-bg);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.chip.active {
+  background: var(--chip-active);
+  color: var(--chip-active-text);
+  border-color: var(--chip-active);
+}
+.chip:active { opacity: 0.8; }
+
+.chip-dismiss {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: right;
+  border: none;
+  background: none;
+}
+
+/* ===== COACHING TIP ===== */
+.coaching-tip {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--win-light);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--win);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.coaching-tip.hidden { display: none; }
+.coaching-tip button {
+  padding: 4px 12px;
+  border: 1px solid var(--resist);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--win);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ===== WATER REMINDER ===== */
+.water-reminder {
+  margin-top: 8px;
+}
+.water-reminder.hidden { display: none; }
+.water-reminder-btn {
+  width: 100%;
+  padding: 14px;
+  border: 2px dashed var(--cbd);
+  border-radius: var(--radius-sm);
+  background: var(--cbd-light);
+  color: var(--cbd);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.water-reminder-btn:active {
+  background: var(--cbd);
+  color: #fff;
+}
+
+/* ===== HABIT BUTTONS ===== */
+.habit-row {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+.habit-btn {
+  flex: 1;
+  min-width: 60px;
+  padding: 10px 4px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+  font-size: 11px;
+  text-align: center;
+  cursor: pointer;
+  line-height: 1.3;
+}
+.habit-btn .icon { font-size: 18px; display: block; margin-bottom: 2px; }
+.habit-btn:active { background: var(--habit-bg); }
+
+.exercise-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  justify-content: center;
+}
+.exercise-chips.hidden { display: none; }
+
+/* ===== DASHBOARD TILES ===== */
+.section-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 20px 0 8px;
+}
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tile {
+  padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+}
+.tile .val { font-size: 22px; font-weight: 700; }
+.tile .label { font-size: 12px; color: var(--muted); }
+.tile .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ===== TIMELINE ===== */
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+.timeline-item:last-child { border-bottom: none; }
+.tl-time { font-size: 13px; color: var(--muted); min-width: 58px; padding-top: 2px; }
+.tl-icon { font-size: 18px; min-width: 24px; text-align: center; padding-top: 1px; }
+.tl-body { flex: 1; }
+.tl-title { font-size: 14px; font-weight: 600; }
+.tl-detail { font-size: 12px; color: var(--muted); }
+.tl-actions {
+  display: flex;
+  gap: 4px;
+  padding-top: 2px;
+}
+.tl-act-btn {
+  border: none;
+  background: none;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0.4;
+}
+.tl-act-btn:hover { opacity: 1; }
+
+.empty-state {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ===== WINS ===== */
+.win-list { 
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+.win-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  text-align: center;
+  position: relative;
+}
+.win-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+.win-label {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text);
+}
+.win-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--win-light);
+  color: var(--win);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ===== ONBOARDING ===== */
+#onboarding-overlay:not(.hidden) { display: block; background: var(--bg); }
+.onboarding-sheet {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+.onboarding-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.onboarding-header h1 {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+.onboarding-header h1 .brand {
+  background: linear-gradient(135deg, var(--primary), var(--cbd));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.onboarding-header .tagline {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-align: center;
+}
+.onboarding-content h2 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.profile-card {
+  background: var(--card);
+  border: 2px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 24px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.profile-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+.profile-card:active {
+  transform: translateY(0);
+}
+.profile-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+.profile-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+}
+.modal-overlay.hidden { display: none; }
+
+.modal-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--card);
+  border-radius: 16px 16px 0 0;
+  padding: 20px 16px 32px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.modal-header h2 { font-size: 18px; }
+.modal-close {
+  border: none;
+  background: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.modal-field { margin-bottom: 14px; }
+.modal-field label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.modal-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-save { background: var(--primary); color: #fff; }
+.btn-delete { background: var(--danger-light); color: var(--danger); }
+
+/* ===== TABS ===== */
+.tab-bar {
+  display: flex;
+  margin-bottom: 16px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 4px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.tab-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+.tab-btn:not(.active):active { background: var(--chip-bg); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== HISTORY ===== */
+.history-list { list-style: none; }
+.history-day {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.history-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+}
+.history-day-header:active { background: var(--chip-bg); }
+.hd-date { font-weight: 600; font-size: 15px; }
+.hd-summary { font-size: 12px; color: var(--muted); }
+.history-day-detail {
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--card-border);
+  display: none;
+}
+.history-day.open .history-day-detail { display: block; }
+.hd-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.hd-stat-row .hd-label { color: var(--muted); }
+.hd-events { margin-top: 8px; }
+.hd-events .timeline-item { padding: 6px 0; }
+
+/* ===== GRAPH ===== */
+.graph-container {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  padding: 16px 12px 12px;
+  margin-bottom: 12px;
+}
+.graph-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.graph-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 120px;
+  padding-bottom: 22px;
+  position: relative;
+}
+.graph-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.graph-bar-val {
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 2px;
+  min-height: 12px;
+}
+.graph-bar {
+  border-radius: 3px 3px 0 0;
+  min-width: 6px;
+  max-width: 36px;
+  width: 100%;
+  opacity: 0.85;
+}
+.graph-bar-label {
+  font-size: 8px;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+}
+.graph-range {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+/* ===== EXPORT ===== */
+.export-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.export-btn {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+.export-btn:active { background: var(--chip-bg); }
+.import-btn { border-style: dashed; }
+.danger-btn { 
+  border-color: var(--danger);
+  color: var(--danger);
+  border-style: dashed;
+}
+.danger-btn:active { background: var(--danger-light); }
+.import-status {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+.import-status.success { background: var(--win-light); color: var(--win); }
+.import-status.error   { background: var(--danger-light); color: var(--danger); }
+.import-status.warn    { background: var(--warn-light); color: var(--warn); }
+
+/* ===== TO-DO LIST ===== */
+.todo-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.todo-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+}
+.todo-input::placeholder { color: var(--muted); }
+.todo-add-btn {
+  padding: 10px 16px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.todo-add-btn:active { opacity: 0.8; }
+.todo-list { list-style: none; }
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+}
+.todo-item.done .todo-text {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.todo-check {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+.todo-text {
+  flex: 1;
+  font-size: 14px;
+}
+.todo-delete {
+  border: none;
+  background: none;
+  font-size: 16px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+.todo-delete:hover { color: var(--danger); }
+
+/* ===== UTILITIES ===== */
+.hidden { display: none !important; }
+.flash { animation: flash 0.3s ease; }
+@keyframes flash {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="brand">Lentando</span> <span class="tagline">mindful progress tracking</span></h1>
+  <div class="date" id="header-date"></div>
+</header>
+
+<!-- ===== TAB BAR ===== -->
+<div class="tab-bar" id="tab-bar">
+  <button class="tab-btn active" data-tab="today">Today</button>
+  <button class="tab-btn" data-tab="graph">Graph</button>
+  <button class="tab-btn" data-tab="wins">Wins</button>
+  <button class="tab-btn" data-tab="history">History</button>
+  <button class="tab-btn" data-tab="settings">Settings</button>
+</div>
+
+<!-- ===== TODAY TAB ===== -->
+<div class="tab-panel active" id="tab-today">
+
+  <!-- ACTION BUTTONS -->
+  <section id="actions">
+    <div class="action-group">
+      <button class="big-btn btn-used" id="btn-used"><span id="used-label">Used</span></button>
+      <button class="same-btn" id="btn-same">Same as last ⚡</button>
+      <div class="chip-row hidden" id="used-chips"></div>
+    </div>
+
+    <div class="action-group" style="margin-top:12px">
+      <button class="big-btn btn-resisted" id="btn-resisted">Resisted 💪</button>
+      <div class="chip-row hidden" id="resisted-chips"></div>
+      <div class="coaching-tip hidden" id="coaching-tip">
+        <span id="coaching-text"></span>
+        <button id="coaching-log-btn">Log</button>
+      </div>
+      <div class="water-reminder hidden" id="water-reminder">
+        <button class="water-reminder-btn" id="water-reminder-btn" onclick="App.logWaterFromReminder()">💧 Drink some water?</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK HABITS -->
+  <div class="habit-row" id="habit-row">
+    <button class="habit-btn" data-habit="water"><span class="icon">💧</span>Water</button>
+    <button class="habit-btn" data-habit="breaths"><span class="icon">🌬️</span>Breaths</button>
+    <button class="habit-btn" data-habit="music"><span class="icon">🎵</span>Music</button>
+    <button class="habit-btn" data-habit="clean"><span class="icon">🧹</span>Clean</button>
+    <button class="habit-btn" data-habit="outside"><span class="icon">🚶</span>Outside</button>
+    <button class="habit-btn" data-habit="exercise"><span class="icon">🏃</span>Exercise</button>
+  </div>
+  <div class="exercise-chips hidden" id="exercise-chips">
+    <span class="chip" data-min="5">+5 min</span>
+    <span class="chip" data-min="10">+10 min</span>
+    <span class="chip" data-min="20">+20 min</span>
+    <span class="chip" data-min="30">+30 min</span>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="section-label">Today's Numbers</div>
+  <div class="tile-grid" id="metrics"></div>
+
+  <div class="section-label">Progress (7 Days)</div>
+  <div class="tile-grid" id="progress"></div>
+
+  <div class="section-label">To-Do</div>
+  <div class="todo-input-row">
+    <input type="text" class="todo-input" id="todo-input" placeholder="Add a task…" maxlength="120">
+    <button class="todo-add-btn" id="todo-add-btn">+</button>
+  </div>
+  <ul class="todo-list" id="todo-list"></ul>
+
+</div>
+
+<!-- ===== HISTORY TAB ===== -->
+<div class="tab-panel" id="tab-history">
+  <ul class="history-list" id="history-list"></ul>
+</div>
+
+<!-- ===== GRAPH TAB ===== -->
+<div class="tab-panel" id="tab-graph">
+  <div class="graph-range" id="graph-range">
+    <span class="chip active" data-days="7">7 days</span>
+    <span class="chip" data-days="14">14 days</span>
+    <span class="chip" data-days="30">30 days</span>
+  </div>
+  <div id="graph-content"></div>
+</div>
+
+<!-- ===== WINS TAB ===== -->
+<div class="tab-panel" id="tab-wins">
+  <div class="section-label">Today's Wins</div>
+  <ul class="win-list" id="wins-today"></ul>
+  
+  <div class="section-label">Total Wins</div>
+  <ul class="win-list" id="wins-total"></ul>
+</div>
+
+<!-- ===== SETTINGS TAB ===== -->
+<div class="tab-panel" id="tab-settings">
+  <div class="section-label">Tracking</div>
+  <div class="export-bar">
+    <button class="export-btn" id="btn-change-addiction" onclick="App.changeAddiction()" style="border-style:dashed;color:var(--primary)">🔄 Change Addiction</button>
+  </div>
+
+  <div class="section-label" style="margin-top: 24px;">Appearance</div>
+  <div class="export-bar">
+    <button class="export-btn" id="btn-theme-toggle-settings" onclick="App.toggleTheme()">
+      <span id="theme-icon-settings">🌙</span> Toggle Theme
+    </button>
+  </div>
+
+  <div class="section-label" style="margin-top: 24px;">Data Management</div>
+  <div class="export-bar">
+    <button class="export-btn" id="btn-export-json" onclick="App.exportJSON()">📥 Export JSON</button>
+  </div>
+  <div class="export-bar">
+    <button class="export-btn import-btn" id="btn-import-json" onclick="document.getElementById('import-file').click()">📤 Import JSON</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="App.importJSON(this)">
+  </div>
+  <div class="import-status hidden" id="import-status"></div>
+  <div class="export-bar">
+    <button class="export-btn danger-btn" id="btn-clear-db" onclick="App.clearDatabase()">🗑️ Clear Database</button>
+  </div>
+</div>
+
+<!-- ===== ONBOARDING MODAL ===== -->
+<div class="modal-overlay hidden" id="onboarding-overlay">
+  <div class="onboarding-sheet">
+    <div class="onboarding-header">
+      <h1><span class="brand">Lentando</span></h1>
+      <p class="tagline">mindful progress tracking</p>
+    </div>
+    <div class="onboarding-content">
+      <h2>Select what you're tracking</h2>
+      <div class="profile-grid">
+        <button class="profile-card" data-profile="cannabis">
+          <div class="profile-icon">🌿</div>
+          <div class="profile-name">Cannabis</div>
+        </button>
+        <button class="profile-card" data-profile="alcohol">
+          <div class="profile-icon">🍺</div>
+          <div class="profile-name">Alcohol</div>
+        </button>
+        <button class="profile-card" data-profile="nicotine">
+          <div class="profile-icon">🚬</div>
+          <div class="profile-name">Nicotine</div>
+        </button>
+        <button class="profile-card" data-profile="other">
+          <div class="profile-icon">⚡</div>
+          <div class="profile-name">Other</div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EDIT MODAL ===== -->
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal-sheet" id="modal-sheet"></div>
+</div>
+
+<script src="code.js"></script>
+</body>
+</html>
