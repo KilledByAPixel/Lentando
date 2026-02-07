@@ -89,16 +89,14 @@ const LOW_DAY_THRESHOLD = 2;
 const COACHING_TIPS = [
   { text: 'Drink water', habit: 'water' },
   { text: '10 breaths', habit: 'breaths' },
-  { text: 'Listen to music', habit: 'music' },
   { text: 'Clean room', habit: 'clean' },
   { text: 'Step outside', habit: 'outside' },
 ];
 
-const HABIT_ICONS = { water: '💧', breaths: '🌬️', music: '🎵', clean: '🧹', exercise: '🏃', outside: '🚶' };
+const HABIT_ICONS = { water: '💧', breaths: '🌬️', clean: '🧹', exercise: '🏃', outside: '🚶' };
 const HABIT_LABELS = {
   water: `${HABIT_ICONS.water} Water`,
   breaths: `${HABIT_ICONS.breaths} 10 Breaths`,
-  music: `${HABIT_ICONS.music} Music`,
   clean: `${HABIT_ICONS.clean} Clean Room`,
   exercise: `${HABIT_ICONS.exercise} Exercise`,
   outside: `${HABIT_ICONS.outside} Outside`
@@ -357,15 +355,6 @@ const Wins = {
     const uniqueHabits = new Set(habits.map(e => e.habit));
     addWin(uniqueHabits.size >= 2, `Habit Stack (${uniqueHabits.size} types)`, uniqueHabits.size, '🔗', 'Logged multiple different habit types in one day');
 
-    const musicEvents = getHabits(todayEvents, 'music');
-    const otherHabits = habits.filter(e => e.habit !== 'music');
-    addWin(musicEvents.length > 0 && otherHabits.length > 0, 'Music + Habit', 1, '🎶', 'Combined listening to music with another healthy habit');
-
-    const musicDuringResist = resisted.filter(r => 
-      musicEvents.some(m => Math.abs(m.ts - r.ts) <= FIFTEEN_MINUTES_MS)
-    ).length;
-    addWin(musicDuringResist > 0, 'Music During Resist', musicDuringResist, '🎼', 'Used music to help resist an urge');
-
     // --- Timing-based wins ---
     if (thcUsed.length >= 2) {
       const earned = getMilestoneWins(getMaxGapHours(thcUsed), GAP_MILESTONES);
@@ -404,9 +393,6 @@ const Wins = {
     
     const habitStreak = this._countStreak('habit');
     addWin(habitStreak >= 3, `Habit Streak (${habitStreak} days)`, habitStreak, '⛓️', `Logged healthy habits for ${habitStreak} consecutive days`);
-    
-    const musicStreak = this._countStreak('habit', 'music');
-    addWin(musicStreak >= 3, `Music Streak (${musicStreak} days)`, musicStreak, '🎵', `Listened to music for ${musicStreak} days straight`);
 
     const taperDays = this._countTaper();
     addWin(taperDays >= 3, `Taper Win (${taperDays} days declining)`, taperDays, '📐', `Gradually reduced usage over ${taperDays} consecutive days`);
@@ -595,7 +581,7 @@ function renderMetrics() {
 
   const exerciseMins = getHabits(events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
   const exerciseTotal = sumHabitCounts(events, ['exercise', 'outside', 'clean']);
-  const goodHabits = sumHabitCounts(events, ['water', 'breaths', 'music', 'clean', 'outside']);
+  const goodHabits = sumHabitCounts(events, ['water', 'breaths', 'clean', 'outside']);
 
   const cannabisTiles = DB.loadSettings().addictionProfile === 'cannabis' ? buildCannabisTiles(used) : '';
 
