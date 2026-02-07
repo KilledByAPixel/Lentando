@@ -759,8 +759,9 @@ header .date { font-size: 14px; color: var(--muted); }
 <!-- ===== TAB BAR ===== -->
 <div class="tab-bar" id="tab-bar">
   <button class="tab-btn active" data-tab="today">Today</button>
+  <button class="tab-btn" data-tab="history">History</button>
+  <button class="tab-btn" data-tab="graph">Graphs</button>
   <button class="tab-btn" data-tab="wins">Wins</button>
-  <button class="tab-btn" data-tab="graph">Graph</button>
   <button class="tab-btn" data-tab="settings">Settings</button>
 </div>
 
@@ -826,8 +827,10 @@ header .date { font-size: 14px; color: var(--muted); }
     <span class="chip" data-days="30">30 days</span>
   </div>
   <div id="graph-content"></div>
-  
-  <div class="section-label" style="margin-top: 24px;">History</div>
+</div>
+
+<!-- ===== HISTORY TAB ===== -->
+<div class="tab-panel" id="tab-history">
   <div class="day-nav" id="day-nav">
     <button class="day-nav-btn" id="prev-day">← Prev</button>
     <span class="day-nav-date" id="current-day-label">Today</span>

@@ -871,6 +871,10 @@ function switchTab(tabName) {
   else if (tabName === 'graph') {
     requestAnimationFrame(() => {
       renderGraphs();
+    });
+  }
+  else if (tabName === 'history') {
+    requestAnimationFrame(() => {
       renderDayHistory();
     });
   }
