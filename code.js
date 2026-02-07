@@ -108,7 +108,8 @@ const DEFAULT_SETTINGS = {
   lastMethod: 'bong',
   lastAmount: 1.0,
   lastReason: null,
-  showCoaching: true
+  showCoaching: true,
+  lastActivityTimestamp: null
 };
 
 // ========== TINY HELPERS ==========
@@ -324,6 +325,13 @@ const Wins = {
     const thcUsed  = filterTHC(used);
     const cbdUsed  = filterCBD(used);
     const totalAmt = sumAmount(used);
+
+    // --- Welcome Back win ---
+    const settings = DB.loadSettings();
+    if (settings.lastActivityTimestamp) {
+      const hoursSinceLastActivity = (Date.now() - settings.lastActivityTimestamp) / (1000 * 60 * 60);
+      addWin(hoursSinceLastActivity >= 24, 'Welcome Back', 1, '👋', 'Returned to tracking after 24+ hours away');
+    }
 
     // --- Session-based wins ---
     addWin(resisted.length > 0, 'Resist Win', resisted.length, '💪', 'Logged an urge but resisted using');
@@ -1208,6 +1216,8 @@ function logUsed() {
   const s = DB.loadSettings();
   const evt = createUsedEvent(s.lastSubstance, s.lastMethod, s.lastAmount, s.lastReason);
   DB.addEvent(evt);
+  s.lastActivityTimestamp = Date.now();
+  DB.saveSettings();
   render();
   hideResistedChips();
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
@@ -1217,6 +1227,9 @@ function logUsed() {
 function logResisted() {
   const evt = createResistedEvent();
   DB.addEvent(evt);
+  const s = DB.loadSettings();
+  s.lastActivityTimestamp = Date.now();
+  DB.saveSettings();
   render();
   hideUsedChips();
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
@@ -1226,6 +1239,9 @@ function logResisted() {
 
 function logHabit(habit, minutes) {
   DB.addEvent(createHabitEvent(habit, minutes));
+  const s = DB.loadSettings();
+  s.lastActivityTimestamp = Date.now();
+  DB.saveSettings();
   render();
 }
 
