@@ -687,7 +687,7 @@ function renderProgress() {
     `<div class="tile"><div class="val" style="color:${trend.color}">${trend.arrow} ${trend.label}</div><div class="label">7-Day Trend</div><div class="sub">vs prev week</div></div>`,
     tileHTML(dailyAvg, 'Sessions/Day', 'last 7 days'),
     tileHTML(gapStr, 'Longest Gap', 'this week'),
-    tileHTML(`${lateStarts} / 7`, 'Late Starts', 'past 12pm'),
+    tileHTML(`${lateStarts} / 7`, 'Late Starts', 'past noon'),
     ratioTile,
     tileHTML(`${exercisePerDay}m`, 'Exercise/Day', 'last 7 days')
   ].join('');
