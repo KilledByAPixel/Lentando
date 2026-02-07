@@ -384,8 +384,16 @@ const Wins = {
       addWin(thcUsed.length < yThc.length, 'Fewer THC sessions than yesterday', 1, '📉', 'Had fewer THC sessions than yesterday');
       addWin(used.length > 0 && totalAmt < sumAmount(yUsed), 'Lower amount than yesterday', 1, '📉', 'Used a smaller total amount than yesterday');
       
+      // Filter to daytime sessions for "first session" comparison
+      const todayDaytime = thcUsed.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
+      const yesterdayDaytime = yThc.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
+      
+      if (todayDaytime.length > 0 && yesterdayDaytime.length > 0) {
+        addWin(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'First THC later than yesterday', 1, '⏰', 'Started your first session later than yesterday');
+      }
+      
+      // Last session comparison uses all sessions (late-night sessions are relevant for when you stopped)
       if (thcUsed.length > 0 && yThc.length > 0) {
-        addWin(timeOfDayMin(thcUsed[0].ts) > timeOfDayMin(yThc[0].ts), 'First THC later than yesterday', 1, '⏰', 'Started your first session later than yesterday');
         addWin(timeOfDayMin(thcUsed[thcUsed.length - 1].ts) < timeOfDayMin(yThc[yThc.length - 1].ts), 'Last THC earlier than yesterday', 1, '🌙', 'Finished your last session earlier than yesterday');
       }
     }
