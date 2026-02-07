@@ -368,20 +368,11 @@
       }
 
       if (thcUsed.length > 0) {
-        // Filter out sessions between midnight and 2 AM (don't count as "first session")
-        const sessionsAfter2AM = thcUsed.filter(s => {
-          const hour = new Date(s.ts).getHours();
-          return hour >= 2 || hour < 0; // Sessions at 2 AM or later
-        });
-        
-        if (sessionsAfter2AM.length > 0) {
-          const firstSession = sessionsAfter2AM[0];
-          const firstHour = new Date(firstSession.ts).getHours();
-          
-          if (firstHour >= 12) {
-            const timeStr = new Date(firstSession.ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-            addWin(true, `Late Start (${timeStr})`, 1, '🌅', `Delayed first session until ${timeStr}`);
-          }
+        const firstHour = new Date(thcUsed[0].ts).getHours();
+        if (firstHour >= AFTERNOON_HOUR) {
+          const firstTime = new Date(thcUsed[0].ts);
+          const timeStr = firstTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+          addWin(true, `Held Off Until Afternoon (${timeStr})`, 1, '🌅', `Waited until afternoon before first session`);
         }
       }
 
