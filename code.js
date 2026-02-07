@@ -1181,12 +1181,17 @@ function selectProfile(profileKey) {
 }
 
 // ========== MAIN ACTIONS ==========
+function stampActivity() {
+  const s = DB.loadSettings();
+  s.lastActivityTimestamp = Date.now();
+  DB.saveSettings();
+}
+
 function logUsed() {
   const s = DB.loadSettings();
   const evt = createUsedEvent(s.lastSubstance, s.lastMethod, s.lastAmount, s.lastReason);
   DB.addEvent(evt);
-  s.lastActivityTimestamp = Date.now();
-  DB.saveSettings();
+  stampActivity();
   render();
   hideResistedChips();
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
@@ -1196,9 +1201,7 @@ function logUsed() {
 function logResisted() {
   const evt = createResistedEvent();
   DB.addEvent(evt);
-  const s = DB.loadSettings();
-  s.lastActivityTimestamp = Date.now();
-  DB.saveSettings();
+  stampActivity();
   render();
   hideUsedChips();
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
@@ -1208,9 +1211,7 @@ function logResisted() {
 
 function logHabit(habit, minutes) {
   DB.addEvent(createHabitEvent(habit, minutes));
-  const s = DB.loadSettings();
-  s.lastActivityTimestamp = Date.now();
-  DB.saveSettings();
+  stampActivity();
   render();
 }
 

@@ -28,7 +28,6 @@
   --thc-light: #fff3e0;
   --cbd: #00897b;
   --cbd-light: #e0f2f1;
-  --mix: #7e57c2;
   --danger: #e53935;
   --chip-bg: #f0f0ec;
   --chip-active: #5c6bc0;
@@ -57,7 +56,6 @@
     --thc-light: #3a2617;
     --cbd: #26a69a;
     --cbd-light: #1a2e2c;
-    --mix: #9575cd;
     --danger: #ef5350;
     --chip-bg: #3a3a3a;
     --chip-active: #7986cb;
@@ -84,7 +82,6 @@
   --thc-light: #3a2617;
   --cbd: #26a69a;
   --cbd-light: #1a2e2c;
-  --mix: #9575cd;
   --danger: #ef5350;
   --chip-bg: #3a3a3a;
   --chip-active: #7986cb;
@@ -584,39 +581,6 @@ header .date { font-size: 14px; color: var(--muted); }
   text-align: center;
 }
 
-.history-day {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
-  overflow: hidden;
-}
-.history-day-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  cursor: pointer;
-}
-.history-day-header:active { background: var(--chip-bg); }
-.hd-date { font-weight: 600; font-size: 15px; }
-.hd-summary { font-size: 12px; color: var(--muted); }
-.history-day-detail {
-  padding: 0 12px 12px;
-  border-top: 1px solid var(--card-border);
-  display: none;
-}
-.history-day.open .history-day-detail { display: block; }
-.hd-stat-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 13px;
-}
-.hd-stat-row .hd-label { color: var(--muted); }
-.hd-events { margin-top: 8px; }
-.hd-events .timeline-item { padding: 6px 0; }
-
 /* ===== GRAPH ===== */
 .graph-container {
   background: var(--card);
@@ -804,7 +768,7 @@ header .date { font-size: 14px; color: var(--muted); }
 <div class="tab-panel active" id="tab-today">
 
   <!-- ACTION BUTTONS -->
-  <section id="actions">
+  <section>
     <div class="action-group">
       <button class="big-btn btn-used" id="btn-used"><span id="used-label">Used</span></button>
       <div class="chip-row hidden" id="used-chips"></div>
