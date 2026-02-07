@@ -1,5 +1,5 @@
 // Service Worker for Lentando PWA
-const CACHE_NAME = 'lentando-v11';
+const CACHE_NAME = 'lentando-v12';
 const urlsToCache = [
   './index.html',
   './code.js',
@@ -34,26 +34,22 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch strategy: Cache first, falling back to network
+// Fetch strategy: Network first, falling back to cache
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then(response => {
-        if (response) {
-          return response;
+        if (!response || response.status !== 200) {
+          return caches.match(event.request).then(cached => cached || response);
         }
-        return fetch(event.request).then(response => {
-          // Don't cache non-successful responses
-          if (!response || response.status !== 200 || response.type === 'error') {
-            return response;
-          }
-          // Clone the response before caching
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-          return response;
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseToCache);
         });
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
       })
   );
 });
