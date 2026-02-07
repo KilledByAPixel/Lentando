@@ -1315,10 +1315,12 @@ function bindEvents() {
     if (e.target.classList.contains('todo-check')) toggleTodo(idx);
     if (e.target.classList.contains('todo-text')) editTodo(idx);
     
-    // Handle button clicks (edit and delete)
+    // Handle button clicks (move up, move down, edit and delete)
     const btn = e.target.closest('.tl-act-btn');
     if (btn && btn.dataset.idx !== undefined) {
       const buttonIdx = +btn.dataset.idx;
+      if (btn.title === 'Move Up') moveUpTodo(buttonIdx);
+      if (btn.title === 'Move Down') moveDownTodo(buttonIdx);
       if (btn.title === 'Edit') editTodo(buttonIdx);
       if (btn.title === 'Delete') deleteTodo(buttonIdx);
     }
@@ -1347,6 +1349,8 @@ function renderTodos() {
     : todos.map((t, i) => `<li class="todo-item${t.done ? ' done' : ''}">
         <input type="checkbox" class="todo-check" data-idx="${i}"${t.done ? ' checked' : ''}>
         <span class="todo-text" data-idx="${i}">${escapeHTML(t.text)}</span>
+        <button class="tl-act-btn" data-idx="${i}" title="Move Up"${i === 0 ? ' disabled' : ''}>↑</button>
+        <button class="tl-act-btn" data-idx="${i}" title="Move Down"${i === todos.length - 1 ? ' disabled' : ''}>↓</button>
         <button class="tl-act-btn" data-idx="${i}" title="Edit">✏️</button>
         <button class="tl-act-btn" data-idx="${i}" title="Delete">🗑️</button>
       </li>`).join('');
@@ -1371,6 +1375,22 @@ function toggleTodo(idx) {
 function deleteTodo(idx) {
   const todos = loadTodos();
   todos.splice(idx, 1);
+  saveTodos(todos);
+  renderTodos();
+}
+
+function moveUpTodo(idx) {
+  if (idx === 0) return;
+  const todos = loadTodos();
+  [todos[idx - 1], todos[idx]] = [todos[idx], todos[idx - 1]];
+  saveTodos(todos);
+  renderTodos();
+}
+
+function moveDownTodo(idx) {
+  const todos = loadTodos();
+  if (idx >= todos.length - 1) return;
+  [todos[idx], todos[idx + 1]] = [todos[idx + 1], todos[idx]];
   saveTodos(todos);
   renderTodos();
 }
