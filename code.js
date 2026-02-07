@@ -800,8 +800,9 @@ function buildHourGraphBars(hourCounts, max, color) {
     const showLabel = hour % 3 === 0; // Show every 3rd hour label
     const labelStyle = showLabel ? '' : 'visibility:hidden';
     const barStyle = `height:${h}px;background:${color};${count > 0 ? 'min-height:2px' : ''}`;
+    const displayVal = count > 0 ? (Number.isInteger(count) ? count : count.toFixed(1)) : '';
     html += `<div class="graph-bar-col">
-      <div class="graph-bar-val">${count > 0 ? count : ''}</div>
+      <div class="graph-bar-val">${displayVal}</div>
       <div class="graph-bar" style="${barStyle}"></div>
       <div class="graph-bar-label" style="${labelStyle}">${hourLabel}</div>
     </div>`;
@@ -818,17 +819,55 @@ function renderGraphs() {
   // Add today's usage by hour graph first
   const todayEvents = DB.forDate(todayKey());
   const todayUsed = filterUsed(todayEvents);
-  if (todayUsed.length > 0) {
-    const hourCounts = {};
-    todayUsed.forEach(evt => {
+  const hourCounts = {};
+  todayUsed.forEach(evt => {
+    const hour = new Date(evt.ts).getHours();
+    hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+  });
+  const hasHourData = todayUsed.length > 0;
+  const maxCount = hasHourData ? Math.max(...Object.values(hourCounts), 1) : 1;
+  html += `<div class="graph-container"><div class="graph-title">🕒 Today's Usage by Hour</div>`;
+  html += hasHourData
+    ? buildHourGraphBars(hourCounts, maxCount, 'var(--primary)')
+    : emptyStateHTML('No data yet.', 'padding:12px 0');
+  html += `</div>`;
+  
+  // Add average usage by hour heatmap
+  const allDayKeys = DB.getAllDayKeys();
+  const hourTotals = {};
+  const hourDayCounts = {};
+  
+  allDayKeys.forEach(dayKey => {
+    const dayUsed = filterUsed(DB.forDate(dayKey));
+    const dayHours = new Set();
+    
+    dayUsed.forEach(evt => {
       const hour = new Date(evt.ts).getHours();
-      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+      hourTotals[hour] = (hourTotals[hour] || 0) + 1;
+      dayHours.add(hour);
     });
-    const maxCount = Math.max(...Object.values(hourCounts), 1);
-    html += `<div class="graph-container"><div class="graph-title">🕒 Today's Usage by Hour</div>`;
-    html += buildHourGraphBars(hourCounts, maxCount, 'var(--primary)');
-    html += `</div>`;
+    
+    // Count how many days had usage in each hour
+    dayHours.forEach(hour => {
+      hourDayCounts[hour] = (hourDayCounts[hour] || 0) + 1;
+    });
+  });
+  
+  // Calculate averages
+  const hourAverages = {};
+  for (let hour = 0; hour < 24; hour++) {
+    if (hourTotals[hour]) {
+      hourAverages[hour] = hourTotals[hour] / allDayKeys.length;
+    }
   }
+  
+  const hasHeatmapData = Object.keys(hourAverages).length > 0;
+  const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
+  html += `<div class="graph-container"><div class="graph-title">🔥 Usage Heatmap (Average by Hour)</div>`;
+  html += hasHeatmapData
+    ? buildHourGraphBars(hourAverages, maxAvg, 'var(--thc)')
+    : emptyStateHTML('No data yet.', 'padding:12px 0');
+  html += `</div>`;
   
   // Regular graphs
   for (const def of GRAPH_DEFS) {
