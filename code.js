@@ -856,21 +856,12 @@ function renderGraphs() {
   // Add average usage by hour heatmap
   const allDayKeys = DB.getAllDayKeys();
   const hourTotals = {};
-  const hourDayCounts = {};
   
   allDayKeys.forEach(dayKey => {
     const dayUsed = filterUsed(DB.forDate(dayKey));
-    const dayHours = new Set();
-    
     dayUsed.forEach(evt => {
       const hour = new Date(evt.ts).getHours();
       hourTotals[hour] = (hourTotals[hour] || 0) + 1;
-      dayHours.add(hour);
-    });
-    
-    // Count how many days had usage in each hour
-    dayHours.forEach(hour => {
-      hourDayCounts[hour] = (hourDayCounts[hour] || 0) + 1;
     });
   });
   
@@ -1409,8 +1400,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applyTheme(localStorage.getItem(STORAGE_THEME) || 'dark');
   
   // Register service worker for PWA support
-  if (!debugMode)
-  if ('serviceWorker' in navigator) {
+  if (!debugMode && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
       .then(reg => console.log('[PWA] Service worker registered:', reg.scope))
       .catch(err => console.log('[PWA] Service worker registration failed:', err));
