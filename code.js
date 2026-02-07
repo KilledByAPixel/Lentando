@@ -590,7 +590,7 @@ function renderMetrics() {
     tileHTML(used.length, 'Sessions', `${totalAmt} total ${profile.amountUnit}`),
     tileHTML(resisted.length, 'Urges Resisted'),
     cannabisTiles,
-    tileHTML(`${exerciseMins} min`, 'Exercise', `${exerciseTotal} total activities`),
+    tileHTML(`${exerciseMins}m`, 'Exercise', `${exerciseTotal} total activities`),
     tileHTML(goodHabits, 'Good Habits', 'today')
   ].join('');
 }
@@ -661,7 +661,7 @@ function renderProgress() {
     tileHTML(gapStr, 'Longest Gap', 'this week'),
     tileHTML(`${lateStarts} / 7`, 'Late Starts', 'past 10am'),
     ratioTile,
-    tileHTML(`${exercisePerDay} min`, 'Exercise/Day', 'last 7 days')
+    tileHTML(`${exercisePerDay}m`, 'Exercise/Day', 'last 7 days')
   ].join('');
 }
 
@@ -744,9 +744,9 @@ function navigateDay(offset) {
 
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
-  { label: '⚡ Amount (units) / Day',    color: 'var(--thc)',     valueFn: evs => sumAmount(filterUsed(evs)) },
+  { label: '⚡ Amount Used / Day',    color: 'var(--thc)',     valueFn: evs => sumAmount(filterUsed(evs)) },
   { label: '💪 Resisted / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
-  { label: '🏃 Exercise (min) / Day', color: 'var(--thc)',     valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
+  { label: '🏃 Exercise Minutes / Day', color: 'var(--thc)',     valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
 ];
 
 function formatGraphValue(val) {
