@@ -556,6 +556,49 @@ header .date { font-size: 14px; color: var(--muted); }
 
 /* ===== HISTORY ===== */
 .history-list { list-style: none; }
+
+.day-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 8px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+}
+
+.day-nav-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  min-width: 80px;
+}
+
+.day-nav-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.day-nav-btn:active {
+  transform: scale(0.95);
+}
+
+.day-nav-date {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  flex: 1;
+  text-align: center;
+}
+
 .history-day {
   background: var(--card);
   border: 1px solid var(--card-border);
@@ -760,16 +803,15 @@ header .date { font-size: 14px; color: var(--muted); }
 <body>
 
 <header>
-  <h1><span class="brand">Lentando</span> <span class="tagline">mindful progress tracking</span></h1>
+  <h1><span class="brand">Lentando</span> <span class="tagline">mindful habit tracking</span></h1>
   <div class="date" id="header-date"></div>
 </header>
 
 <!-- ===== TAB BAR ===== -->
 <div class="tab-bar" id="tab-bar">
   <button class="tab-btn active" data-tab="today">Today</button>
-  <button class="tab-btn" data-tab="graph">Graph</button>
   <button class="tab-btn" data-tab="wins">Wins</button>
-  <button class="tab-btn" data-tab="history">History</button>
+  <button class="tab-btn" data-tab="graph">Graph</button>
   <button class="tab-btn" data-tab="settings">Settings</button>
 </div>
 
@@ -828,11 +870,6 @@ header .date { font-size: 14px; color: var(--muted); }
 
 </div>
 
-<!-- ===== HISTORY TAB ===== -->
-<div class="tab-panel" id="tab-history">
-  <ul class="history-list" id="history-list"></ul>
-</div>
-
 <!-- ===== GRAPH TAB ===== -->
 <div class="tab-panel" id="tab-graph">
   <div class="graph-range" id="graph-range">
@@ -841,6 +878,14 @@ header .date { font-size: 14px; color: var(--muted); }
     <span class="chip" data-days="30">30 days</span>
   </div>
   <div id="graph-content"></div>
+  
+  <div class="section-label" style="margin-top: 24px;">History</div>
+  <div class="day-nav" id="day-nav">
+    <button class="day-nav-btn" id="prev-day">← Prev</button>
+    <span class="day-nav-date" id="current-day-label">Today</span>
+    <button class="day-nav-btn" id="next-day">Next →</button>
+  </div>
+  <ul class="history-list" id="history-events"></ul>
 </div>
 
 <!-- ===== WINS TAB ===== -->
@@ -885,7 +930,7 @@ header .date { font-size: 14px; color: var(--muted); }
   <div class="onboarding-sheet">
     <div class="onboarding-header">
       <h1><span class="brand">Lentando</span></h1>
-      <p class="tagline">mindful progress tracking</p>
+      <p class="tagline">mindful habit tracking</p>
     </div>
     <div class="onboarding-content">
       <h2>Select what you're tracking</h2>
