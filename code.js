@@ -347,8 +347,12 @@
       addWin(used.length > 0 && thcUsed.length === 0, 'CBD-Only Day', 1, '🍃', 'Used only CBD products today, no THC');
       addWin(used.length > 0 && totalAmt <= LOW_DAY_THRESHOLD, `Low Day (≤${LOW_DAY_THRESHOLD} units)`, 1, '🤏', `Kept total usage to ${LOW_DAY_THRESHOLD} units or less`);
       addWin(thcUsed.length === 0 && (resisted.length > 0 || habits.length > 0 || cbdUsed.length > 0), 'Zero THC Day', 1, '🏆', 'No THC today while staying engaged with tracking');
+      addWin(used.length === 0 && (resisted.length > 0 || habits.length > 0), 'T-Break Day', 1, '🚫', 'Went a full day without using while staying engaged');
 
       // --- Habit-based wins ---
+      const waterCount = getHabits(todayEvents, 'water').length;
+      addWin(waterCount >= 4, 'Hydrated', 1, '💧', 'Drank water at least 4 times today');
+      
       const uniqueHabits = new Set(habits.map(e => e.habit));
       addWin(uniqueHabits.size >= 2, `Habit Stack (${uniqueHabits.size} types)`, uniqueHabits.size, '🔗', 'Logged multiple different habit types in one day');
 
