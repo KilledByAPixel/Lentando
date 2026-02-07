@@ -367,19 +367,22 @@
         }
       }
 
-      if (thcUsed.length >= 1) {
-        const earned = getMilestoneWins(getFirstSessionGapHours(thcUsed), GAP_MILESTONES);
-        if (earned.length > 0) {
-          const hours = earned[earned.length - 1];
-          addWin(true, `Late Start (${hours}h+)`, earned.length, '🌅', `Delayed first session by ${hours}+ hours after waking`);
-        }
-      }
-
       if (thcUsed.length > 0) {
-        const firstH = new Date(thcUsed[0].ts).getHours();
-        const label = firstH >= AFTERNOON_HOUR ? 'Afternoon' : '10am+';
-        const desc = firstH >= AFTERNOON_HOUR ? 'afternoon' : 'at least 10am';
-        addWin(firstH >= LATE_START_HOUR, `Held Off Until ${label}`, 1, '☀️', `Waited until ${desc} before first session`);
+        // Filter out sessions between midnight and 2 AM (don't count as "first session")
+        const sessionsAfter2AM = thcUsed.filter(s => {
+          const hour = new Date(s.ts).getHours();
+          return hour >= 2 || hour < 0; // Sessions at 2 AM or later
+        });
+        
+        if (sessionsAfter2AM.length > 0) {
+          const firstSession = sessionsAfter2AM[0];
+          const firstHour = new Date(firstSession.ts).getHours();
+          
+          if (firstHour >= 12) {
+            const timeStr = new Date(firstSession.ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            addWin(true, `Late Start (${timeStr})`, 1, '🌅', `Delayed first session until ${timeStr}`);
+          }
+        }
       }
 
       // --- Comparison wins ---
