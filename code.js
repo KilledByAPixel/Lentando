@@ -1295,7 +1295,15 @@ function bindEvents() {
   $('todo-list').addEventListener('click', e => {
     const idx = +e.target.dataset.idx;
     if (e.target.classList.contains('todo-check')) toggleTodo(idx);
-    if (e.target.classList.contains('todo-delete')) deleteTodo(idx);
+    if (e.target.classList.contains('todo-text')) editTodo(idx);
+    
+    // Handle button clicks (edit and delete)
+    const btn = e.target.closest('.tl-act-btn');
+    if (btn && btn.dataset.idx !== undefined) {
+      const buttonIdx = +btn.dataset.idx;
+      if (btn.title === 'Edit') editTodo(buttonIdx);
+      if (btn.title === 'Delete') deleteTodo(buttonIdx);
+    }
   });
   
   const prevBtn = $('prev-day');
@@ -1320,8 +1328,9 @@ function renderTodos() {
     ? ''
     : todos.map((t, i) => `<li class="todo-item${t.done ? ' done' : ''}">
         <input type="checkbox" class="todo-check" data-idx="${i}"${t.done ? ' checked' : ''}>
-        <span class="todo-text">${escapeHTML(t.text)}</span>
-        <button class="todo-delete" data-idx="${i}">✕</button>
+        <span class="todo-text" data-idx="${i}">${escapeHTML(t.text)}</span>
+        <button class="tl-act-btn" data-idx="${i}" title="Edit">✏️</button>
+        <button class="tl-act-btn" data-idx="${i}" title="Delete">🗑️</button>
       </li>`).join('');
 }
 
@@ -1346,6 +1355,44 @@ function deleteTodo(idx) {
   todos.splice(idx, 1);
   saveTodos(todos);
   renderTodos();
+}
+
+function editTodo(idx) {
+  const todos = loadTodos();
+  const todo = todos[idx];
+  if (!todo) return;
+  
+  const todoItems = $('todo-list').querySelectorAll('.todo-item');
+  const item = todoItems[idx];
+  if (!item) return;
+  
+  const textSpan = item.querySelector('.todo-text');
+  const currentText = todo.text;
+  
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'todo-edit-input';
+  input.value = currentText;
+  input.dataset.idx = idx;
+  
+  const saveEdit = () => {
+    const newText = input.value.trim();
+    if (newText && newText !== currentText) {
+      todos[idx].text = newText;
+      saveTodos(todos);
+    }
+    renderTodos();
+  };
+  
+  input.addEventListener('blur', saveEdit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveEdit();
+    if (e.key === 'Escape') renderTodos();
+  });
+  
+  textSpan.replaceWith(input);
+  input.focus();
+  input.select();
 }
 
 // ========== PUBLIC API ==========
