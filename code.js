@@ -1362,8 +1362,8 @@ window.App = {
   saveModal,
   deleteEvent(id) {
     DB.deleteEvent(id);
-    currentHistoryDay = todayKey();
     render();
+    renderDayHistory();
   },
   exportJSON,
   importJSON,
