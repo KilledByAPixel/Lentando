@@ -4,7 +4,7 @@
 
 'use strict';
 
-const useServiceWorker = false;
+const debugMode = true;
 
 // ========== CONSTANTS ==========
 const STORAGE_EVENTS = 'ht_events';
@@ -1334,7 +1334,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applyTheme(localStorage.getItem(STORAGE_THEME) || 'dark');
   
   // Register service worker for PWA support
-  if (useServiceWorker)
+  if (!debugMode)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
       .then(reg => console.log('[PWA] Service worker registered:', reg.scope))
