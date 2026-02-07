@@ -63,9 +63,9 @@ function getProfile() {
 }
 
 // User input options
-const REASONS = ['start', 'break', 'habit', 'boredom', 'reward', 'sleep', 'social', 'pain', 'eating'];
+const REASONS = ['start', 'break', 'habit', 'boredom', 'reward', 'stress', 'sleep', 'social', 'pain', 'eating'];
 const INTENSITIES = [1, 2, 3, 4, 5];
-const TRIGGERS = ['transition', 'boredom', 'stress', 'stuck', 'reward', 'habit', 'social'];
+const TRIGGERS = REASONS;
 const DID_INSTEAD = ['water', '10 breaths', '2-min tidy', 'step outside', 'stretch', 'just delayed'];
 const EXERCISE_DURATIONS = [5, 10, 15, 20, 30, 45, 60];
 const OPTIONAL_FIELDS = new Set(['reason', 'trigger', 'didInstead']);
