@@ -365,10 +365,12 @@ const Wins = {
       }
     }
 
-    if (thcUsed.length > 0) {
-      const firstHour = new Date(thcUsed[0].ts).getHours();
+    // Filter out late-night sessions (before 6 AM) when checking for "first session of the day"
+    const daytimeSessions = thcUsed.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
+    if (daytimeSessions.length > 0) {
+      const firstHour = new Date(daytimeSessions[0].ts).getHours();
       if (firstHour >= AFTERNOON_HOUR) {
-        const firstTime = new Date(thcUsed[0].ts);
+        const firstTime = new Date(daytimeSessions[0].ts);
         const timeStr = firstTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         addWin(true, `Held Off Until Afternoon (${timeStr})`, 1, '🌅', `Waited until afternoon before first session`);
       }
