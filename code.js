@@ -300,13 +300,6 @@ function getMaxGapHours(sessions) {
   return maxGapMs / 3600000;
 }
 
-function getFirstSessionGapHours(sessions) {
-  if (sessions.length < 1) return 0;
-  const dayStart = new Date(sessions[0].ts);
-  dayStart.setHours(0, 0, 0, 0);
-  return (sessions[0].ts - dayStart.getTime()) / 3600000;
-}
-
 function getMilestoneWins(gapHours, milestones) {
   return milestones.filter(h => gapHours >= h);
 }
@@ -720,17 +713,6 @@ function renderWaterReminder() {
 }
 
 // ========== HISTORY ==========
-function historyStatRow(label, value) {
-  return `<div class="hd-stat-row"><span class="hd-label">${label}</span><span>${value}</span></div>`;
-}
-
-function buildHistorySummary(used, resisted) {
-  return [
-    used.length > 0 && `${used.length} sess`,
-    resisted.length > 0 && `${resisted.length} resisted`
-  ].filter(Boolean).join(' · ');
-}
-
 function renderDayHistory() {
   const events = DB.forDate(currentHistoryDay).reverse();
   const historyEl = $('history-events');
@@ -758,10 +740,6 @@ function navigateDay(offset) {
   
   currentHistoryDay = newKey;
   renderDayHistory();
-}
-
-function toggleHistoryDay(headerEl) {
-  headerEl.closest('.history-day')?.classList.toggle('open');
 }
 
 // ========== GRAPHS ==========
@@ -1379,7 +1357,6 @@ window.App = {
     currentHistoryDay = todayKey();
     render();
   },
-  toggleHistoryDay,
   exportJSON,
   importJSON,
   clearDatabase,
