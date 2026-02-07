@@ -260,11 +260,14 @@
 
   // ========== EVENT FACTORIES ==========
   function createUsedEvent(substance, method, amount, reason) {
+    const profile = getProfile();
+    const sub = substance || 'thc';
     return {
       id: uid(), type: 'used', ts: Date.now(),
-      substance: substance || 'thc', method: method || 'bong',
+      substance: sub, method: method || 'bong',
       amount: amount != null ? amount : 1.0,
       reason: reason || null,
+      icon: profile.icons[sub] || '💊',
     };
   }
 
@@ -459,9 +462,14 @@
 
   function getUsedEventDetail(evt) {
     const profile = getProfile();
+    
+    // Use stored icon if available, otherwise try current profile, otherwise generic
+    const icon = evt.icon || profile.icons[evt.substance] || '💊';
+    const title = profile.substanceDisplay[evt.substance] || evt.substance.toUpperCase();
+    
     return {
-      icon: profile.icons[evt.substance] || profile.icons[profile.substances[0]],
-      title: profile.substanceDisplay[evt.substance] || evt.substance.toUpperCase(),
+      icon,
+      title,
       detail: [
         evt.method,
         evt.amount != null && `${evt.amount} ${evt.amount === 1 ? profile.amountUnit.replace(/s$/, '') : profile.amountUnit}`,
