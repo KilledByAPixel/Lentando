@@ -791,11 +791,46 @@ function buildGraphBars(vals, days, max, def) {
   return html + '</div>';
 }
 
+function buildHourGraphBars(hourCounts, max, color) {
+  let html = '<div class="graph-bars">';
+  for (let hour = 0; hour < 24; hour++) {
+    const count = hourCounts[hour] || 0;
+    const h = max > 0 ? Math.round((count / max) * 96) : 0;
+    const hourLabel = hour === 0 ? '12a' : hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`;
+    const showLabel = hour % 3 === 0; // Show every 3rd hour label
+    const labelStyle = showLabel ? '' : 'visibility:hidden';
+    const barStyle = `height:${h}px;background:${color};${count > 0 ? 'min-height:2px' : ''}`;
+    html += `<div class="graph-bar-col">
+      <div class="graph-bar-val">${count > 0 ? count : ''}</div>
+      <div class="graph-bar" style="${barStyle}"></div>
+      <div class="graph-bar-label" style="${labelStyle}">${hourLabel}</div>
+    </div>`;
+  }
+  return html + '</div>';
+}
+
 function renderGraphs() {
   const days = getLastNDays(graphDays);
   const container = $('graph-content');
 
   let html = '';
+  
+  // Add today's usage by hour graph first
+  const todayEvents = DB.forDate(todayKey());
+  const todayUsed = filterUsed(todayEvents);
+  if (todayUsed.length > 0) {
+    const hourCounts = {};
+    todayUsed.forEach(evt => {
+      const hour = new Date(evt.ts).getHours();
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+    });
+    const maxCount = Math.max(...Object.values(hourCounts), 1);
+    html += `<div class="graph-container"><div class="graph-title">🕒 Today's Usage by Hour</div>`;
+    html += buildHourGraphBars(hourCounts, maxCount, 'var(--primary)');
+    html += `</div>`;
+  }
+  
+  // Regular graphs
   for (const def of GRAPH_DEFS) {
     const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
     const max  = Math.max(...vals, 1);
