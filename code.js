@@ -1145,16 +1145,14 @@
   }
 
   // ========== MAIN ACTIONS ==========
-  function logUsed(silent) {
+  function logUsed() {
     const s = DB.loadSettings();
     const evt = createUsedEvent(s.lastSubstance, s.lastMethod, s.lastAmount, s.lastReason);
     DB.addEvent(evt);
     render();
-    if (!silent) {
-      hideResistedChips();
-      showChips('used-chips', buildUsedChips, evt, hideUsedChips);
-    }
-    flashEl(silent ? $('btn-same') : $('btn-used'));
+    hideResistedChips();
+    showChips('used-chips', buildUsedChips, evt, hideUsedChips);
+    flashEl($('btn-used'));
   }
 
   function logResisted() {
@@ -1189,8 +1187,7 @@
       requestAnimationFrame(renderGraphs);
     });
 
-    $('btn-used').addEventListener('click', () => logUsed(false));
-    $('btn-same').addEventListener('click', () => logUsed(true));
+    $('btn-used').addEventListener('click', logUsed);
     $('btn-resisted').addEventListener('click', logResisted);
     $('used-chips').addEventListener('click', handleChipClick);
     $('resisted-chips').addEventListener('click', handleChipClick);
