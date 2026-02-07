@@ -81,7 +81,7 @@ const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 const GAP_MILESTONES = [1, 2, 4, 8, 12];
 const DAYTIME_START_HOUR = 6;
 const DAYTIME_END_HOUR = 20;
-const LATE_START_HOUR = 10;
+const LATE_START_HOUR = 12;
 const AFTERNOON_HOUR = 12;
 const MAX_STREAK_DAYS = 60;
 const LOW_DAY_THRESHOLD = 2;
@@ -93,7 +93,7 @@ const COACHING_TIPS = [
   { text: 'Step outside', habit: 'outside' },
 ];
 
-const HABIT_ICONS = { water: '💧', breaths: '🌬️', clean: '🧹', exercise: '🏃', outside: '🚶' };
+const HABIT_ICONS = { water: '💧', breaths: '🌬️', clean: '🧹', exercise: '🏃', outside: '🌳' };
 const HABIT_LABELS = {
   water: `${HABIT_ICONS.water} Water`,
   breaths: `${HABIT_ICONS.breaths} 10 Breaths`,
@@ -577,9 +577,27 @@ function buildCannabisTiles(used) {
   const cbdCount = filterCBD(used).length + used.filter(e => e.substance === 'mix').length;
   const timeSinceTHC = thcUsed.length > 0 ? formatDuration(Date.now() - thcUsed[thcUsed.length - 1].ts) : '—';
   
+  // Calculate average gap from last 7 days
+  let avgGapStr = '';
+  if (thcUsed.length > 0) {
+    const last7Days = getLastNDays(7);
+    const weekTHC = last7Days.flatMap(k => filterTHC(filterUsed(DB.forDate(k))));
+    if (weekTHC.length >= 2) {
+      const gaps = weekTHC.slice(1).map((u, i) => u.ts - weekTHC[i].ts);
+      const avgGapMs = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
+      // Only show if average is meaningful (more than 1 minute)
+      if (avgGapMs >= 60000) {
+        const currentGapMs = Date.now() - thcUsed[thcUsed.length - 1].ts;
+        const avgFormatted = formatDuration(avgGapMs);
+        const comparison = currentGapMs > avgGapMs ? '↑ longer' : currentGapMs < avgGapMs ? '↓ shorter' : '= equal';
+        avgGapStr = `avg ${avgFormatted} (${comparison})`;
+      }
+    }
+  }
+  
   return [
     `<div class="tile"><div class="val" style="color:var(--thc)">${thcUsed.length}</div><div class="label">THC</div><div class="sub" style="color:var(--cbd)">${cbdCount} CBD</div></div>`,
-    `<div class="tile"><div class="val">${timeSinceTHC}</div><div class="label">Since Last THC</div></div>`
+    `<div class="tile"><div class="val">${timeSinceTHC}</div><div class="label">Since Last THC</div>${avgGapStr ? `<div class="sub">${avgGapStr}</div>` : ''}</div>`
   ].join('');
 }
 
@@ -669,7 +687,7 @@ function renderProgress() {
     `<div class="tile"><div class="val" style="color:${trend.color}">${trend.arrow} ${trend.label}</div><div class="label">7-Day Trend</div><div class="sub">vs prev week</div></div>`,
     tileHTML(dailyAvg, 'Sessions/Day', 'last 7 days'),
     tileHTML(gapStr, 'Longest Gap', 'this week'),
-    tileHTML(`${lateStarts} / 7`, 'Late Starts', 'past 10am'),
+    tileHTML(`${lateStarts} / 7`, 'Late Starts', 'past 12pm'),
     ratioTile,
     tileHTML(`${exercisePerDay}m`, 'Exercise/Day', 'last 7 days')
   ].join('');
