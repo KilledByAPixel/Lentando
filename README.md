@@ -2,7 +2,7 @@
 
 **Mindful habit tracking** - A zero-friction habit and substance use tracker that runs in your browser.
 
-![Lentando Logo](logo.jpg)
+![Lentando Logo](logo.png)
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/Vanilla_JS-F7DF1E?style=flat&logo=javascript&logoColor=black)
