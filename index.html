@@ -725,12 +725,17 @@ header .date { font-size: 14px; color: var(--muted); }
 .todo-check {
   width: 20px;
   height: 20px;
+  flex-shrink: 0;
   cursor: pointer;
   accent-color: var(--primary);
 }
 .todo-text {
   flex: 1;
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .todo-edit-input {
   flex: 1;
