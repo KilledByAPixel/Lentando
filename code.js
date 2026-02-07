@@ -816,7 +816,20 @@ function renderGraphs() {
 
   let html = '';
   
-  // Add today's usage by hour graph first
+  // Regular graphs first (Amount per day, Resisted per day, Exercise)
+  for (const def of GRAPH_DEFS) {
+    const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
+    const max  = Math.max(...vals, 1);
+    const hasData = vals.some(v => v > 0);
+
+    html += `<div class="graph-container"><div class="graph-title">${def.label}</div>`;
+    html += hasData 
+      ? buildGraphBars(vals, days, max, def)
+      : emptyStateHTML('No data yet', 'padding:12px 0');
+    html += `</div>`;
+  }
+  
+  // Add today's usage by hour graph
   const todayEvents = DB.forDate(todayKey());
   const todayUsed = filterUsed(todayEvents);
   const hourCounts = {};
@@ -863,24 +876,12 @@ function renderGraphs() {
   
   const hasHeatmapData = Object.keys(hourAverages).length > 0;
   const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
-  html += `<div class="graph-container"><div class="graph-title">🔥 Usage Heatmap (Average by Hour)</div>`;
+  html += `<div class="graph-container"><div class="graph-title">⚡ Average Usage by Hour</div>`;
   html += hasHeatmapData
     ? buildHourGraphBars(hourAverages, maxAvg, 'var(--thc)')
     : emptyStateHTML('No data yet.', 'padding:12px 0');
   html += `</div>`;
   
-  // Regular graphs
-  for (const def of GRAPH_DEFS) {
-    const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
-    const max  = Math.max(...vals, 1);
-    const hasData = vals.some(v => v > 0);
-
-    html += `<div class="graph-container"><div class="graph-title">${def.label}</div>`;
-    html += hasData 
-      ? buildGraphBars(vals, days, max, def)
-      : emptyStateHTML('No data yet', 'padding:12px 0');
-    html += `</div>`;
-  }
   container.innerHTML = html;
 }
 
