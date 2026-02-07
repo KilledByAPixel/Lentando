@@ -1021,7 +1021,7 @@ function persistFieldDefault(field, val) {
   if (field === 'substance') settings.lastSubstance = val;
   else if (field === 'method') settings.lastMethod = val;
   else if (field === 'amount') settings.lastAmount = val;
-  else if (field === 'reason' && val) settings.lastReason = val;
+  // Don't persist reason - it should reset each time
   else return;
   DB.saveSettings();
 }
@@ -1195,6 +1195,9 @@ function logUsed() {
   const s = DB.loadSettings();
   const evt = createUsedEvent(s.lastSubstance, s.lastMethod, s.lastAmount, s.lastReason);
   DB.addEvent(evt);
+  // Reset reason so it doesn't persist between uses
+  s.lastReason = null;
+  DB.saveSettings();
   stampActivity();
   render();
   hideResistedChips();
