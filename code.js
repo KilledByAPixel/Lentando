@@ -758,10 +758,8 @@ function toggleHistoryDay(headerEl) {
 
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
-  { label: 'Sessions / Day',          color: 'var(--primary)', valueFn: evs => filterUsed(evs).length },
-  { label: 'Amount (units) / Day',    color: 'var(--thc)',     valueFn: evs => sumAmount(filterUsed(evs)) },
-  { label: 'Urges Resisted / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
-  { label: '💧 Water / Day',          color: 'var(--cbd)',     valueFn: evs => getHabits(evs, 'water').length },
+  { label: '⚡ Amount (units) / Day',    color: 'var(--thc)',     valueFn: evs => sumAmount(filterUsed(evs)) },
+  { label: '💪 Resisted / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
   { label: '🏃 Exercise (min) / Day', color: 'var(--thc)',     valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
 ];
 
