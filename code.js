@@ -19,7 +19,7 @@
       substances: ['thc', 'cbd', 'mix'],
       substanceDisplay: { thc: 'THC', cbd: 'CBD', mix: 'Mix' },
       methods: ['bong', 'vape', 'joint', 'edible', 'other'],
-      amounts: [0.5, 1.0, 1.5],
+      amounts: [0.5, 1.0, 1.5, 2.0],
       amountUnit: 'units',
       icons: { thc: '🔥', cbd: '🌿', mix: '🔥🌿' }
     },
@@ -64,7 +64,7 @@
   }
 
   // User input options
-  const REASONS = ['start', 'break', 'transition', 'boredom', 'stress', 'reward', 'sleep', 'social', 'pain', 'habit'];
+  const REASONS = ['start', 'break', 'habit', 'boredom', 'reward', 'sleep', 'social', 'pain', 'eating'];
   const INTENSITIES = [1, 2, 3, 4, 5];
   const TRIGGERS = ['transition', 'boredom', 'stress', 'stuck', 'reward', 'habit', 'social'];
   const DID_INSTEAD = ['water', '10 breaths', '2-min tidy', 'step outside', 'stretch', 'just delayed'];
