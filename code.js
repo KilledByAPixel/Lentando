@@ -771,7 +771,8 @@ function aggregateWins(days) {
 }
 
 function renderWins() {
-  const todayWins = Wins.calculate(DB.forDate(todayKey()), DB.forDate(daysAgoKey(1)));
+  const todayWins = Wins.calculate(DB.forDate(todayKey()), DB.forDate(daysAgoKey(1)))
+    .sort((a, b) => a.label.localeCompare(b.label));
   const todayEl = $('wins-today');
   if (todayEl) {
     todayEl.innerHTML = todayWins.length === 0
@@ -782,7 +783,8 @@ function renderWins() {
   const totalEl = $('wins-total');
   if (!totalEl) return;
   
-  const totalWins = aggregateWins(DB.getAllDayKeys());
+  const totalWins = aggregateWins(DB.getAllDayKeys())
+    .sort((a, b) => a.label.localeCompare(b.label));
   totalEl.innerHTML = totalWins.length === 0
     ? emptyStateHTML('Total wins will appear here')
     : totalWins.map(winCardHTML).join('');
