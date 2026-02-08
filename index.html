@@ -881,7 +881,7 @@ header .date { font-size: 14px; color: var(--muted); }
 <div class="tab-panel" id="tab-settings">
   <div class="section-label">Customization</div>
   <div class="export-bar">
-    <button class="export-btn" id="btn-change-addiction" onclick="App.changeAddiction()" style="border-style:dashed;color:var(--primary)">🔄 Change Addiction</button>
+    <button class="export-btn" id="btn-change-addiction" onclick="App.changeAddiction()">🔄 Change Addiction</button>
   </div>
   <div class="export-bar">
     <button class="export-btn" id="btn-theme-toggle-settings" onclick="App.toggleTheme()">
@@ -894,7 +894,7 @@ header .date { font-size: 14px; color: var(--muted); }
     <button class="export-btn" id="btn-export-json" onclick="App.exportJSON()">📥 Export JSON</button>
   </div>
   <div class="export-bar">
-    <button class="export-btn import-btn" id="btn-import-json" onclick="document.getElementById('import-file').click()">📤 Import JSON</button>
+    <button class="export-btn" id="btn-import-json" onclick="document.getElementById('import-file').click()">📤 Import JSON</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="App.importJSON(this)">
   </div>
   <div class="import-status hidden" id="import-status"></div>
