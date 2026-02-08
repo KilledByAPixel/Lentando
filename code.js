@@ -1163,6 +1163,8 @@ function switchTab(tabName) {
     });
   }
   else if (tabName === 'history') {
+    currentHistoryDay = todayKey();
+    historyShowCount = HISTORY_PAGE_SIZE;
     requestAnimationFrame(() => {
       renderDayHistory();
     });
