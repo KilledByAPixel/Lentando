@@ -341,9 +341,6 @@ function updateAuthUI(user) {
           <button class="export-btn" style="flex:none;padding:8px 12px;font-size:12px;margin:0" onclick="FirebaseSync.sync()">🔄 Sync</button>
           <button class="export-btn" style="flex:none;padding:8px 12px;font-size:12px;margin:0" onclick="FirebaseSync.logout()">Sign Out</button>
         </div>
-      </div>
-      <div style="margin-top:8px;text-align:right">
-        <button style="background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;text-decoration:underline" onclick="App.deleteAccount()">Delete Account</button>
       </div>`;
   } else {
     _authUIState = 'logged-out';
