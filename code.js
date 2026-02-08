@@ -1543,9 +1543,18 @@ window.App = {
 
 // ========== TEST DATA GENERATION ==========
 // Call these from browser console to generate realistic historical data:
+// generateAllTestData() - adds a mix of everything (recommended)
 // generateTestData(100) - adds 100 random usage events over past 30 days
 // generateTestHabits(20) - adds 20 random events per habit type
 // generateTestResists(50) - adds 50 random resist events
+
+function generateAllTestData() {
+  console.log('🎲 Generating comprehensive test data...');
+  generateTestData(80);
+  generateTestHabits(15);
+  generateTestResists(40);
+  console.log('✅ All test data generated! Reload the page to see results.');
+}
 
 function generateTestData(numEvents = 100) {
   const profile = getProfile();
@@ -1650,6 +1659,7 @@ function generateTestResists(numEvents = 50) {
 }
 
 // Attach to window for console access
+window.generateAllTestData = generateAllTestData;
 window.generateTestData = generateTestData;
 window.generateTestHabits = generateTestHabits;
 window.generateTestResists = generateTestResists;
@@ -1677,7 +1687,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   // Log test data generation instructions
-  console.log('📊 Test data generation available:');
+  console.log('📊 Test daAllTestData() - Add a mix of everything (recommended)');
+  console.log('  generateta generation available:');
   console.log('  generateTestData(100) - Add 100 random usage events');
   console.log('  generateTestHabits(20) - Add 20 events per habit type');
   console.log('  generateTestResists(50) - Add 50 resist events');
