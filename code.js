@@ -66,9 +66,8 @@ function getProfile() {
 // User input options
 const REASONS = ['start', 'break', 'habit', 'boredom', 'reward', 'stress', 'sleep', 'social', 'pain', 'eating'];
 const INTENSITIES = [1, 2, 3, 4, 5];
-const DID_INSTEAD = ['water', '10 breaths', '2-min tidy', 'step outside', 'stretch', 'just delayed'];
 const EXERCISE_DURATIONS = [5, 10, 15, 20, 30, 45, 60];
-const OPTIONAL_FIELDS = new Set(['reason', 'trigger', 'didInstead']);
+const OPTIONAL_FIELDS = new Set(['reason', 'trigger']);
 
 // Timeouts and durations
 const CHIP_TIMEOUT_MS = 5000;
@@ -369,10 +368,10 @@ function createUsedEvent(substance, method, amount, reason) {
   };
 }
 
-function createResistedEvent(intensity, trigger, didInstead) {
+function createResistedEvent(intensity, trigger) {
   return {
     id: uid(), type: 'resisted', ts: Date.now(),
-    intensity: intensity || null, trigger: trigger || null, didInstead: didInstead || null,
+    intensity: intensity || null, trigger: trigger || null,
   };
 }
 
@@ -1886,15 +1885,13 @@ function generateTestResists(numEvents = 50) {
     const timestamp = thirtyDaysAgo + Math.random() * (now - thirtyDaysAgo);
     const intensity = Math.random() > 0.2 ? INTENSITIES[Math.floor(Math.random() * INTENSITIES.length)] : null;
     const trigger = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
-    const didInstead = Math.random() > 0.4 ? DID_INSTEAD[Math.floor(Math.random() * DID_INSTEAD.length)] : null;
     
     const evt = {
       id: uid(),
       type: 'resisted',
       ts: timestamp,
       intensity,
-      trigger,
-      didInstead
+      trigger
     };
     
     DB._events.push(evt);
