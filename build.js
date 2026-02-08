@@ -17,7 +17,6 @@ const STATIC_FILES = [
   'icon-192.png',
   'icon-512.png',
   'logo.png',
-  'screenshot.jpg'
 ];
 
 (async () => {

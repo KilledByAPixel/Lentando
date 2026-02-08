@@ -1,5 +1,5 @@
 // Service Worker for Lentando PWA
-const CACHE_NAME = 'lentando-v53';
+const CACHE_NAME = 'lentando-v54';
 const urlsToCache = [
   './index.html',
   './code.js',

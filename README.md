@@ -44,7 +44,7 @@ It's designed for harm reduction, not judgment. Every small win counts.
 2. Select what substance you're tracking.
 3. Start logging and get healthy!
 
-![Lentando Screenshot](screenshot.jpg)
+![Lentando Screenshot](screenshot.png)
 
 ## License
 

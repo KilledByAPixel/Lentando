@@ -1541,6 +1541,7 @@ function modalFieldWrap(html) {
 function openEditModal(eventId) {
   hideUsedChips();
   hideResistedChips();
+  hideUndo();
   const evt = DB.loadEvents().find(e => e.id === eventId);
   if (!evt) return;
   const profile = getProfile();
@@ -1799,6 +1800,7 @@ function logUsed() {
   hideResistedChips();
   $('exercise-chips').classList.add('hidden');
   clearTimeout(exerciseTimeout);
+  hideUndo();
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
   
   const btn = $('btn-used');
@@ -2081,7 +2083,9 @@ window.App = {
   closeModal,
   saveModal,
   deleteEvent(id) {
+    if (!confirm('Delete this event?')) return;
     DB.deleteEvent(id);
+    calculateAndUpdateWins();
     render();
   },
   exportJSON,
