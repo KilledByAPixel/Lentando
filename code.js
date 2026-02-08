@@ -66,7 +66,6 @@ function getProfile() {
 // User input options
 const REASONS = ['start', 'break', 'habit', 'boredom', 'reward', 'stress', 'sleep', 'social', 'pain', 'eating'];
 const INTENSITIES = [1, 2, 3, 4, 5];
-const TRIGGERS = REASONS;
 const DID_INSTEAD = ['water', '10 breaths', '2-min tidy', 'step outside', 'stretch', 'just delayed'];
 const EXERCISE_DURATIONS = [5, 10, 15, 20, 30, 45, 60];
 const OPTIONAL_FIELDS = new Set(['reason', 'trigger', 'didInstead']);
@@ -80,7 +79,6 @@ const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 const GAP_MILESTONES = [1, 2, 4, 8, 12];
 const DAYTIME_START_HOUR = 6;
 const DAYTIME_END_HOUR = 20;
-const LATE_START_HOUR = 12;
 const AFTERNOON_HOUR = 12;
 const MAX_STREAK_DAYS = 60;
 const LOW_DAY_THRESHOLD = 2;
@@ -342,7 +340,6 @@ function getHabits(events, habitType) {
 
 // ========== EVENT FACTORIES ==========
 function createUsedEvent(substance, method, amount, reason) {
-  const profile = getProfile();
   const sub = substance || 'thc';
   return {
     id: uid(), type: 'used', ts: Date.now(),
@@ -461,26 +458,22 @@ const Wins = {
 
     // --- Timing-based wins ---
     if (thcUsed.length >= 2) {
-      const earned = getMilestoneWins(getMaxGapHours(thcUsed), GAP_MILESTONES);
-      if (earned.length > 0) {
-        const hours = earned[earned.length - 1];
-        addWin(true, `Gap Win (${hours}h+)`, earned.length, '⏱️', `Maintained a gap of ${hours}+ hours between sessions`);
-      }
+      const maxGap = getMaxGapHours(thcUsed);
+      const earned = getMilestoneWins(maxGap, GAP_MILESTONES);
+      earned.forEach(h => addWin(true, `gap-${h}h`));
       
       // Gap longer than average
       const gaps = thcUsed.slice(1).map((u, i) => u.ts - thcUsed[i].ts);
       const avgGap = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
       const longestGapToday = Math.max(...gaps);
-      addWin(longestGapToday > avgGap, 'Gap Longer Than Average', 1, '📏', 'Today\'s longest gap between sessions exceeded your average');
+      addWin(longestGapToday > avgGap, 'gap-above-avg');
     }
 
     // Filter out late-night sessions (before 6 AM) when checking for "first session of the day"
     const daytimeSessions = thcUsed.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
     if (daytimeSessions.length > 0) {
       const firstHour = new Date(daytimeSessions[0].ts).getHours();
-      if (firstHour >= AFTERNOON_HOUR) {
-        addWin(true, 'Held Off Until Afternoon', 1, '🌅', 'Waited until afternoon before first session');
-      }
+      addWin(firstHour >= AFTERNOON_HOUR, 'held-off-afternoon');
     }
 
     // --- Comparison wins ---
@@ -564,7 +557,7 @@ const Wins = {
     
     for (let i = 0; i < MAX_STREAK_DAYS; i++) {
       const amt = sumAmount(filterUsed(DB.forDate(dateKey(d))));
-      if (prevAmt !== null && amt <= prevAmt) break;
+      if (prevAmt !== null && amt >= prevAmt) break;
       if (prevAmt !== null) count++;
       prevAmt = amt;
       d.setDate(d.getDate() - 1);
@@ -809,7 +802,7 @@ function getWeekData(days) {
 function countLateStarts(days) {
   return days.filter(day => {
     const dayTHC = filterTHC(filterUsed(DB.forDate(day)));
-    return dayTHC.length > 0 && new Date(dayTHC[0].ts).getHours() >= LATE_START_HOUR;
+    return dayTHC.length > 0 && new Date(dayTHC[0].ts).getHours() >= AFTERNOON_HOUR;
   }).length;
 }
 
@@ -1228,6 +1221,7 @@ function importJSON(inputEl) {
         const mergedWinData = {
           todayDate: winData.todayDate,
           todayWins: winData.todayWins,
+          todayUndoCount: winData.todayUndoCount || 0,
           lifetimeWins: Array.from(lifetimeMap.entries())
             .filter(([, count]) => count > 0)
             .map(([id, count]) => ({ id, count }))
@@ -1282,7 +1276,7 @@ function buildUsedChips(evt) {
 function buildResistedChips(evt) {
   return [
     chipGroupHTML('Urge Intensity', 'intensity', INTENSITIES, evt.intensity),
-    chipGroupHTML('Trigger', 'trigger', TRIGGERS, evt.trigger),
+    chipGroupHTML('Trigger', 'trigger', REASONS, evt.trigger),
     chipGroupHTML('Did Instead', 'didInstead', DID_INSTEAD, evt.didInstead),
     chipDismissBtn('dismiss ✕', 'App.hideResistedChips()')
   ].join('');
@@ -1371,7 +1365,7 @@ function openEditModal(eventId) {
     ],
     resisted: () => [
       chipGroupHTML('Urge Intensity', 'intensity', INTENSITIES, evt.intensity),
-      chipGroupHTML('Trigger', 'trigger', TRIGGERS, evt.trigger),
+      chipGroupHTML('Trigger', 'trigger', REASONS, evt.trigger),
       chipGroupHTML('Did Instead', 'didInstead', DID_INSTEAD, evt.didInstead)
     ],
     habit: () => {
@@ -1429,7 +1423,7 @@ function handleModalChipClick(e) {
 // ========== COACHING ==========
 function hasRecentWater() {
   const cutoff = Date.now() - TWO_HOURS_MS;
-  return DB.loadEvents().some(e => e.type === 'habit' && e.habit === 'water' && e.ts >= cutoff);
+  return DB.forDate(todayKey()).some(e => e.type === 'habit' && e.habit === 'water' && e.ts >= cutoff);
 }
 
 function showCoaching() {
@@ -1906,7 +1900,7 @@ function generateTestResists(numEvents = 50) {
   for (let i = 0; i < numEvents; i++) {
     const timestamp = thirtyDaysAgo + Math.random() * (now - thirtyDaysAgo);
     const intensity = Math.random() > 0.2 ? INTENSITIES[Math.floor(Math.random() * INTENSITIES.length)] : null;
-    const trigger = Math.random() > 0.3 ? TRIGGERS[Math.floor(Math.random() * TRIGGERS.length)] : null;
+    const trigger = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
     const didInstead = Math.random() > 0.4 ? DID_INSTEAD[Math.floor(Math.random() * DID_INSTEAD.length)] : null;
     
     const evt = {
