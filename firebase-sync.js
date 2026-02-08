@@ -181,6 +181,10 @@ async function pullFromCloud(uid) {
     localStorage.setItem(STORAGE_KEYS.todos, JSON.stringify(cloud.todos));
   }
 
+  // Invalidate DB caches immediately after localStorage is updated
+  // This ensures continueToApp() will read fresh data
+  invalidateDBCaches();
+
   console.log('[Sync] Pulled from cloud, merged', mergedEvents.length, 'events');
 }
 
@@ -196,6 +200,7 @@ if (isConfigured) {
 
     if (user) {
       try {
+        // Pull from cloud (which now invalidates caches internally)
         await pullFromCloud(user.uid);
         
         // Hide login screen if shown
@@ -204,10 +209,7 @@ if (isConfigured) {
           loginOverlay.classList.add('hidden');
         }
         
-        // Invalidate DB caches BEFORE continueToApp so it reads fresh settings from localStorage
-        invalidateDBCaches();
-        
-        // Continue to app after successful login (will check if addiction profile is set)
+        // Continue to app after successful login (caches already invalidated by pullFromCloud)
         if (typeof continueToApp === 'function') {
           continueToApp();
         }
