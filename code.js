@@ -385,6 +385,9 @@ const DB = {
   },
 };
 
+// Expose DB globally so firebase-sync.js can invalidate caches after cloud sync
+window.DB = DB;
+
 // ========== EVENT QUERY HELPERS ==========
 function filterByType(events, type) { return events.filter(e => e.type === type); }
 function filterUsed(events) { return filterByType(events, 'used'); }
@@ -508,7 +511,7 @@ const Wins = {
       const cbdUsed = filterCBD(used);
       const replacementCount = cbdUsed.filter(u => isDaytime(u.ts)).length;
       for (let i = 0; i < replacementCount; i++) addWin(true, 'replacement-cbd');
-      addWin(used.length > 0 && profileUsed.length === 0, 'cbd-only');
+      addWin(cbdUsed.length > 0 && filterTHC(used).length === 0, 'cbd-only');
     }
 
     const vapeCount = isCannabis ? used.filter(e => e.method === 'vape').length : 0;
