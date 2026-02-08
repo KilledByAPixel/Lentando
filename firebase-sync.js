@@ -218,11 +218,8 @@ if (isConfigured) {
         await pullFromCloud(user.uid);
         
         // Hide login screen and clear auth inputs from DOM
-        const loginOverlay = document.getElementById('login-overlay');
-        if (loginOverlay && !loginOverlay.classList.contains('hidden')) {
-          loginOverlay.classList.add('hidden');
-          const loginInputs = loginOverlay.querySelector('.login-inputs');
-          if (loginInputs) loginInputs.innerHTML = '';
+        if (typeof hideLoginScreen === 'function') {
+          hideLoginScreen();
         }
         
         // Continue to app after successful login (caches already invalidated by pullFromCloud)
@@ -251,16 +248,8 @@ function checkAuthAndContinue() {
   
   if (!currentUser && !hasSkippedLogin) {
     // Not logged in and hasn't skipped - show login screen
-    const loginOverlay = document.getElementById('login-overlay');
-    if (loginOverlay) {
-      loginOverlay.classList.remove('hidden');
-      // Inject auth inputs dynamically (not in static HTML to avoid autofill issues)
-      const loginInputs = loginOverlay.querySelector('.login-inputs');
-      if (loginInputs && !loginInputs.children.length) {
-        loginInputs.innerHTML = `
-          <input type="email" id="login-email" placeholder="Email" class="login-input">
-          <input type="password" id="login-password" placeholder="Password (6+ chars)" class="login-input">`;
-      }
+    if (typeof showLoginScreen === 'function') {
+      showLoginScreen();
     }
   } else {
     // User is logged in or has skipped - continue to app
