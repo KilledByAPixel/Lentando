@@ -142,6 +142,7 @@ const WIN_DEFINITIONS = {
   'tbreak-21d': { label: 'T-Break: 3 Weeks', icon: '🌳', desc: 'Three weeks without THC' },
   'tbreak-30d': { label: 'T-Break: 1 Month', icon: '🏆', desc: 'One month without THC' },
   'tbreak-365d': { label: 'T-Break: 1 Year', icon: '👑', desc: 'One year without THC!' },
+  'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider — shows mindful decision-making' },
 };
 
 function getWinDef(id) {
@@ -388,10 +389,10 @@ function getMilestoneWins(gapHours, milestones) {
 function loadWinData() {
   try {
     const data = JSON.parse(localStorage.getItem(STORAGE_WINS));
-    if (!data) return { todayDate: null, todayWins: [], lifetimeWins: [] };
+    if (!data) return { todayDate: null, todayWins: [], lifetimeWins: [], todayUndoCount: 0 };
     return data;
   } catch {
-    return { todayDate: null, todayWins: [], lifetimeWins: [] };
+    return { todayDate: null, todayWins: [], lifetimeWins: [], todayUndoCount: 0 };
   }
 }
 
@@ -877,6 +878,10 @@ function calculateAndUpdateWins() {
   const yesterdayEvents = DB.forDate(daysAgoKey(1));
   const freshTodayIds = Wins.calculate(todayEvents, yesterdayEvents);
   
+  // Add undo wins (tracked separately since undos aren't events)
+  const undoCount = isSameDay ? (winData.todayUndoCount || 0) : 0;
+  for (let i = 0; i < undoCount; i++) freshTodayIds.push('second-thought');
+  
   // Aggregate today's wins into {id, count} pairs
   const todayCountMap = new Map();
   freshTodayIds.forEach(id => {
@@ -904,7 +909,8 @@ function calculateAndUpdateWins() {
   const updatedWinData = {
     todayDate: today,
     todayWins: freshTodayWins,
-    lifetimeWins: updatedLifetimeWins
+    lifetimeWins: updatedLifetimeWins,
+    todayUndoCount: undoCount
   };
   
   saveWinData(updatedWinData);
@@ -1530,6 +1536,14 @@ function hideUndo() {
 function undoLastUsed() {
   if (!lastUndoEventId) return;
   DB.deleteEvent(lastUndoEventId);
+  
+  // Track undo for "Second Thought" win
+  const winData = loadWinData();
+  const today = todayKey();
+  winData.todayUndoCount = (winData.todayDate === today ? (winData.todayUndoCount || 0) : 0) + 1;
+  winData.todayDate = today;
+  saveWinData(winData);
+  
   hideUndo();
   hideUsedChips();
   render();
