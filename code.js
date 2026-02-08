@@ -1777,6 +1777,8 @@ function undoLastUsed() {
   
   hideUndo();
   hideUsedChips();
+  hapticFeedback();
+  showToast('↩️ Undone');
   render();
 }
 
@@ -1796,8 +1798,7 @@ function logUsed() {
   pulseEl(btn);
   
   const profile = getProfile();
-  const amountStr = s.lastAmount === 1 ? profile.amountUnit.replace(/s$/, '') : profile.amountUnit;
-  showToast(`✅ ${profile.sessionLabel} - ${s.lastAmount} ${amountStr}`);
+  showToast(`✅ ${profile.sessionLabel}`);
   
   showUndo(evt.id);
 }
