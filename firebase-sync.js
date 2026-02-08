@@ -192,27 +192,22 @@ if (isConfigured) {
       try {
         await pullFromCloud(user.uid);
         
-        // Invalidate DB caches so continueToApp reads fresh settings
-        if (window.DB) {
-          window.DB._events = null;
-          window.DB._settings = null;
-          window.DB._dateIndex = null;
-        }
-        
         // Hide login screen if shown
         const loginOverlay = document.getElementById('login-overlay');
         if (loginOverlay && !loginOverlay.classList.contains('hidden')) {
           loginOverlay.classList.add('hidden');
         }
         
+        // Invalidate DB caches BEFORE continueToApp so it reads fresh settings from localStorage
+        if (window.DB) {
+          window.DB._events = null;
+          window.DB._settings = null;
+          window.DB._dateIndex = null;
+        }
+        
         // Continue to app after successful login (will check if addiction profile is set)
         if (typeof continueToApp === 'function') {
           continueToApp();
-        }
-        
-        // Re-render if we went straight to app (not onboarding)
-        if (typeof render === 'function' && window.DB?.loadSettings?.()?.addictionProfile) {
-          render();
         }
       } catch (err) {
         console.error('[Sync] Pull failed:', err);
