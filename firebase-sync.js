@@ -240,6 +240,28 @@ function checkAuthAndContinue() {
   }
 }
 
+// Pull fresh data when app regains focus (e.g., switching back from another tab/app)
+if (isConfigured) {
+  window.addEventListener('focus', async () => {
+    if (currentUser) {
+      try {
+        await pullFromCloud(currentUser.uid);
+        if (window.DB) {
+          window.DB._events = null;
+          window.DB._settings = null;
+          window.DB._dateIndex = null;
+        }
+        if (typeof render === 'function') {
+          render();
+        }
+        console.log('[Sync] Refreshed data on focus');
+      } catch (err) {
+        console.error('[Sync] Focus refresh failed:', err);
+      }
+    }
+  });
+}
+
 // ========== AUTH UI ==========
 
 function updateAuthUI(user) {
@@ -366,7 +388,21 @@ window.FirebaseSync = {
   async sync() {
     if (!currentUser) return alert('Sign in first');
     try {
+      // Pull first to get latest data from cloud
+      await pullFromCloud(currentUser.uid);
+      // Then push local changes
       await pushToCloud(currentUser.uid);
+      
+      // Invalidate caches and re-render
+      if (window.DB) {
+        window.DB._events = null;
+        window.DB._settings = null;
+        window.DB._dateIndex = null;
+      }
+      if (typeof render === 'function') {
+        render();
+      }
+      
       alert('✅ Synced to cloud!');
     } catch (err) {
       alert('Sync failed: ' + err.message);
