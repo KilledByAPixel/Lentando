@@ -1,0 +1,21 @@
+{
+  "name": "lentando",
+  "version": "1.0.0",
+  "description": "**Mindful habit tracking** - A zero-friction habit and substance use tracker that runs in your browser.",
+  "main": "code.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KilledByAPixel/lentando.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/KilledByAPixel/lentando/issues"
+  },
+  "homepage": "https://github.com/KilledByAPixel/lentando#readme"
+}
