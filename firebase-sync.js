@@ -181,6 +181,7 @@ async function pullFromCloud(uid) {
 // ========== AUTH STATE LISTENER ==========
 
 let currentUser = null;
+let authCheckComplete = false;
 
 if (isConfigured) {
   onAuthStateChanged(auth, async (user) => {
@@ -195,10 +196,11 @@ if (isConfigured) {
         const loginOverlay = document.getElementById('login-overlay');
         if (loginOverlay && !loginOverlay.classList.contains('hidden')) {
           loginOverlay.classList.add('hidden');
-          // Continue to app after successful login
-          if (typeof continueToApp === 'function') {
-            continueToApp();
-          }
+        }
+        
+        // Continue to app after successful login
+        if (typeof continueToApp === 'function') {
+          continueToApp();
         }
         
         // Re-render the app with merged data
@@ -209,11 +211,33 @@ if (isConfigured) {
       } catch (err) {
         console.error('[Sync] Pull failed:', err);
       }
+    } else if (!authCheckComplete) {
+      // First auth check complete, user is not logged in
+      authCheckComplete = true;
+      checkAuthAndContinue();
     }
   });
 } else {
-  // Not configured — show setup instructions
-  setTimeout(() => updateAuthUI(null), 100);
+  // Not configured — show setup instructions after delay
+  setTimeout(() => {
+    updateAuthUI(null);
+    checkAuthAndContinue();
+  }, 100);
+}
+
+function checkAuthAndContinue() {
+  const hasSkippedLogin = localStorage.getItem('ht_login_skipped') === 'true';
+  
+  if (!currentUser && !hasSkippedLogin) {
+    // Not logged in and hasn't skipped - show login screen
+    const loginOverlay = document.getElementById('login-overlay');
+    if (loginOverlay) loginOverlay.classList.remove('hidden');
+  } else {
+    // User is logged in or has skipped - continue to app
+    if (typeof continueToApp === 'function') {
+      continueToApp();
+    }
+  }
 }
 
 // ========== AUTH UI ==========

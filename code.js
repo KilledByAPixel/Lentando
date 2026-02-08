@@ -2030,18 +2030,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => console.log('[PWA] Service worker registration failed:', err));
   }
   
-  // Check if user is logged in or has skipped login
-  const hasSkippedLogin = localStorage.getItem(STORAGE_LOGIN_SKIPPED) === 'true';
-  const isLoggedIn = window.FirebaseSync?.getUser?.() !== null;
-  
-  if (!isLoggedIn && !hasSkippedLogin) {
-    // Show login screen first
-    showLoginScreen();
-    // Firebase auth listener will call continueToApp() when user logs in
-  } else {
-    // User is logged in or has skipped, continue to app
-    continueToApp();
-  }
+  // Firebase will handle initial auth check and call continueToApp() or show login screen
+  // If Firebase is not configured, checkAuthAndContinue will be called after a short delay
   
   // Log test data generation instructions
   console.log('📊 Test data generation available:');
