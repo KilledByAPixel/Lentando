@@ -1480,11 +1480,7 @@ function skipLogin() {
 
 function continueToApp() {
   // After login or skip, check if we need onboarding
-  const settings = DB.loadSettings();
-  console.log('[App] continueToApp - settings loaded:', settings);
-  console.log('[App] addictionProfile:', settings.addictionProfile);
-  
-  if (!settings.addictionProfile) {
+  if (!DB.loadSettings().addictionProfile) {
     showOnboarding();
   } else {
     bindEvents();
@@ -2036,8 +2032,8 @@ window.generateTestWins = generateTestWins;
 
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
+  // Don't preload settings - let them load lazily to avoid caching stale data before Firebase sync
   DB.loadEvents();
-  DB.loadSettings();
   
   applyTheme(localStorage.getItem(STORAGE_THEME) || 'dark');
   
