@@ -458,7 +458,6 @@ const Wins = {
     const resisted = filterByType(todayEvents, 'resisted');
     const habits   = filterByType(todayEvents, 'habit');
     const profileUsed = filterProfileUsed(used); // Profile-aware: only substances in current profile
-    const totalAmt = sumAmount(used);
 
     // --- Welcome Back win ---
     const settings = DB.loadSettings();
@@ -493,7 +492,8 @@ const Wins = {
     const mindfulCount = used.filter(e => e.reason).length;
     for (let i = 0; i < mindfulCount; i++) addWin(true, 'mindful');
 
-    addWin(used.length > 0 && totalAmt <= LOW_DAY_THRESHOLD, 'low-day');
+    const profileAmt = sumAmount(profileUsed);
+    addWin(profileUsed.length > 0 && profileAmt <= LOW_DAY_THRESHOLD, 'low-day');
     addWin(profileUsed.length === 0 && (resisted.length > 0 || habits.length > 0), 'zero-thc');
     addWin(used.length === 0 && (resisted.length > 0 || habits.length > 0), 'tbreak-day');
 
@@ -517,11 +517,15 @@ const Wins = {
       const earned = getMilestoneWins(maxGap, GAP_MILESTONES);
       earned.forEach(h => addWin(true, `gap-${h}h`));
       
-      // Gap longer than average
-      const gaps = profileUsed.slice(1).map((u, i) => u.ts - profileUsed[i].ts);
-      const avgGap = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
-      const longestGapToday = Math.max(...gaps);
-      addWin(longestGapToday > avgGap, 'gap-above-avg');
+      // Gap longer than 7-day historical average
+      const weekDays = getLastNDays(7);
+      const weekSessions = weekDays.flatMap(k => filterProfileUsed(DB.forDate(k)));
+      if (weekSessions.length >= 2) {
+        const weekGaps = weekSessions.slice(1).map((u, i) => u.ts - weekSessions[i].ts);
+        const avgGap = weekGaps.reduce((s, g) => s + g, 0) / weekGaps.length;
+        const todayGaps = profileUsed.slice(1).map((u, i) => u.ts - profileUsed[i].ts);
+        addWin(Math.max(...todayGaps) > avgGap, 'gap-above-avg');
+      }
     }
 
     // Filter out late-night sessions (before 6 AM) when checking for "first session of the day"
@@ -537,7 +541,7 @@ const Wins = {
       const yProfile = filterProfileUsed(yesterdayEvents);
 
       addWin(profileUsed.length < yProfile.length, 'fewer-sessions');
-      addWin(used.length > 0 && totalAmt < sumAmount(yUsed), 'lower-amount');
+      addWin(profileUsed.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
       
       // Reuse daytimeSessions from above for "first session" comparison
       const yesterdayDaytime = yProfile.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
@@ -606,7 +610,7 @@ const Wins = {
     const d = new Date();
     
     for (let i = 0; i < MAX_STREAK_DAYS; i++) {
-      const amt = sumAmount(filterUsed(DB.forDate(dateKey(d))));
+      const amt = sumAmount(filterProfileUsed(DB.forDate(dateKey(d))));
       // Walking backwards: prevAmt = newer day, amt = older day
       // Tapering means older day should have MORE usage than newer day
       // Break when older day <= newer day (not tapering)
@@ -857,13 +861,13 @@ function getTrendDisplay(trendPct) {
 function getWeekData(days) {
   const events = days.flatMap(k => DB.forDate(k));
   const used = filterUsed(events);
-  return { events, used, thc: filterTHC(used) };
+  return { events, used, profileUsed: filterProfileUsed(events) };
 }
 
 function countLateStarts(days) {
   return days.filter(day => {
-    const dayTHC = filterTHC(filterUsed(DB.forDate(day)));
-    return dayTHC.length > 0 && new Date(dayTHC[0].ts).getHours() >= AFTERNOON_HOUR;
+    const dayUsed = filterProfileUsed(DB.forDate(day));
+    return dayUsed.length > 0 && new Date(dayUsed[0].ts).getHours() >= AFTERNOON_HOUR;
   }).length;
 }
 
@@ -881,7 +885,7 @@ function renderProgress() {
 
   const dailyAvg = thisWeekAvg.toFixed(1);
 
-  const longestGapMs = getMaxGapHours(thisWeek.thc) * 3600000;
+  const longestGapMs = getMaxGapHours(thisWeek.profileUsed) * 3600000;
   const gapStr = longestGapMs > 0 ? formatDuration(longestGapMs) : '—';
 
   const lateStarts = countLateStarts(last7Days);
