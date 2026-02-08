@@ -281,6 +281,7 @@ const DB = {
   saveEvents() {
     localStorage.setItem(STORAGE_EVENTS, JSON.stringify(this._events));
     this._invalidateDateIndex();
+    if (window.FirebaseSync) FirebaseSync.onDataChanged();
   },
 
   loadSettings() {
@@ -296,6 +297,7 @@ const DB = {
 
   saveSettings() {
     localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(this._settings));
+    if (window.FirebaseSync) FirebaseSync.onDataChanged();
   },
 
   addEvent(evt) {
@@ -406,6 +408,7 @@ function loadWinData() {
 
 function saveWinData(data) {
   localStorage.setItem(STORAGE_WINS, JSON.stringify(data));
+  if (window.FirebaseSync) FirebaseSync.onDataChanged();
 }
 
 // ========== WINS ENGINE ==========
@@ -1636,6 +1639,7 @@ function loadTodos() {
 
 function saveTodos(todos) {
   localStorage.setItem(STORAGE_TODOS, JSON.stringify(todos));
+  if (window.FirebaseSync) FirebaseSync.onDataChanged();
 }
 
 function renderTodos() {

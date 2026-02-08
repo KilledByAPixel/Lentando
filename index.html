@@ -866,7 +866,12 @@ header .date { font-size: 14px; color: var(--muted); }
 
 <!-- ===== SETTINGS TAB ===== -->
 <div class="tab-panel" id="tab-settings">
-  <div class="section-label">Customization</div>
+  <div class="section-label">Account</div>
+  <div id="auth-status" style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:12px;margin-bottom:4px">
+    Loading...
+  </div>
+
+  <div class="section-label" style="margin-top:20px">Customization</div>
   <div class="export-bar">
     <button class="export-btn" id="btn-change-addiction" onclick="App.changeAddiction()">🔄 Change Addiction</button>
   </div>
@@ -939,5 +944,6 @@ header .date { font-size: 14px; color: var(--muted); }
 </div>
 
 <script src="code.js"></script>
+<script type="module" src="firebase-sync.js"></script>
 </body>
 </html>

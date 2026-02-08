@@ -1,8 +1,9 @@
 // Service Worker for Lentando PWA
-const CACHE_NAME = 'lentando-v17';
+const CACHE_NAME = 'lentando-v18';
 const urlsToCache = [
   './index.html',
   './code.js',
+  './firebase-sync.js',
   './manifest.json'
 ];
 
