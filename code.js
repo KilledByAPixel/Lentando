@@ -1118,20 +1118,24 @@ function renderGraphs() {
   // Add average usage by hour heatmap
   const allDayKeys = DB.getAllDayKeys();
   const hourTotals = {};
+  let daysWithUse = 0;
   
   allDayKeys.forEach(dayKey => {
     const dayUsed = filterProfileUsed(DB.forDate(dayKey));
-    dayUsed.forEach(evt => {
-      const hour = new Date(evt.ts).getHours();
-      hourTotals[hour] = (hourTotals[hour] || 0) + 1;
-    });
+    if (dayUsed.length > 0) {
+      daysWithUse++;
+      dayUsed.forEach(evt => {
+        const hour = new Date(evt.ts).getHours();
+        hourTotals[hour] = (hourTotals[hour] || 0) + 1;
+      });
+    }
   });
   
-  // Calculate averages
+  // Calculate averages (only count days with at least 1 use)
   const hourAverages = {};
   for (let hour = 0; hour < 24; hour++) {
-    if (hourTotals[hour]) {
-      hourAverages[hour] = hourTotals[hour] / allDayKeys.length;
+    if (hourTotals[hour] && daysWithUse > 0) {
+      hourAverages[hour] = hourTotals[hour] / daysWithUse;
     }
   }
   
