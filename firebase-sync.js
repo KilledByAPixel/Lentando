@@ -307,11 +307,11 @@ function updateAuthUI(user) {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="export-btn" style="margin:0" onclick="FirebaseSync.loginWithGoogle()">🔑 Sign in with Google</button>
-        <div style="display:flex;gap:6px;align-items:stretch">
+        <div style="display:flex;flex-direction:column;gap:6px">
           <input type="email" id="auth-email" placeholder="Email" 
-            style="flex:1;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
+            style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
           <input type="password" id="auth-password" placeholder="Password (6+ chars)" 
-            style="flex:1;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
+            style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
         </div>
         <div style="display:flex;gap:6px">
           <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.loginWithEmailForm()">🔓 Log In</button>
