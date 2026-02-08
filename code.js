@@ -1367,12 +1367,51 @@ function chipDismissBtn(text, onclick) {
   return `<button class="chip-dismiss" onclick="${onclick}">${text}</button>`;
 }
 
+function buildTimeChips(eventTs) {
+  const now = new Date();
+  const slots = [{ label: 'Now', value: 'now' }];
+  
+  // Generate half-hour slots going back ~3 hours
+  const d = new Date(now);
+  // Round down to last half hour
+  d.setMinutes(d.getMinutes() < 30 ? 0 : 30, 0, 0);
+  
+  for (let i = 0; i < 6; i++) {
+    d.setMinutes(d.getMinutes() - 30);
+    const h = d.getHours();
+    const m = d.getMinutes();
+    const ampm = h >= 12 ? 'pm' : 'am';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    const label = `${h12}:${String(m).padStart(2, '0')}${ampm}`;
+    slots.push({ label, value: d.getTime().toString() });
+  }
+  
+  // Determine which slot is active
+  const isNow = Math.abs(eventTs - now.getTime()) < 60000; // within 1 minute = "Now"
+  let activeSlot = 'now';
+  if (!isNow) {
+    let minDiff = Infinity;
+    for (const s of slots) {
+      if (s.value === 'now') continue;
+      const diff = Math.abs(parseInt(s.value) - eventTs);
+      if (diff < minDiff) { minDiff = diff; activeSlot = s.value; }
+    }
+  }
+  
+  return `
+    <div class="chip-row-label">Time</div>
+    <div class="chip-group" data-field="ts">
+      ${slots.map(s => `<span class="chip${activeSlot === s.value ? ' active' : ''}" data-val="${s.value}">${s.label}</span>`).join('')}
+    </div>`;
+}
+
 function buildUsedChips(evt) {
   const profile = getProfile();
   return [
     chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v]),
     chipGroupHTML('Method', 'method', profile.methods, evt.method),
     chipGroupHTML('Amount', 'amount', profile.amounts, evt.amount),
+    buildTimeChips(evt.ts),
     chipGroupHTML('Reason (optional)', 'reason', REASONS, evt.reason),
     chipDismissBtn('dismiss ✕', 'App.hideUsedChips()')
   ].join('');
@@ -1438,6 +1477,16 @@ function handleChipClick(e) {
 
   const field = chip.closest('.chip-group').dataset.field;
   const currentEvent = DB.loadEvents().find(ev => ev.id === activeChipEventId);
+  
+  // Special handling for time field
+  if (field === 'ts') {
+    const newTs = chip.dataset.val === 'now' ? Date.now() : parseInt(chip.dataset.val);
+    DB.updateEvent(activeChipEventId, { ts: newTs });
+    updateActiveChips();
+    render();
+    return;
+  }
+  
   const val = resolveChipVal(field, chip.dataset.val, currentEvent);
 
   const updateData = { [field]: val };
