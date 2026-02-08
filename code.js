@@ -1297,7 +1297,7 @@ function changeAddiction() {
   settings.addictionProfile = null;
   DB._settings = settings;
   DB.saveSettings();
-  location.reload();
+  showOnboarding();
 }
 
 function validateImportData(data) {
@@ -1736,6 +1736,7 @@ function selectProfile(profileKey) {
   
   $('onboarding-overlay').classList.add('hidden');
   
+  calculateAndUpdateWins();
   bindEvents();
   render();
   // Clear existing interval if selectProfile is called multiple times
