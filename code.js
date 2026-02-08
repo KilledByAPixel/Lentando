@@ -326,6 +326,11 @@ const DB = {
 // ========== EVENT QUERY HELPERS ==========
 function filterByType(events, type) { return events.filter(e => e.type === type); }
 function filterUsed(events) { return filterByType(events, 'used'); }
+function filterProfileUsed(events) {
+  const profile = getProfile();
+  const subs = new Set(profile.substances);
+  return filterUsed(events).filter(e => subs.has(e.substance));
+}
 function filterTHC(usedEvents) { return usedEvents.filter(e => e.substance === 'thc' || e.substance === 'mix'); }
 function filterCBD(usedEvents) { return usedEvents.filter(e => e.substance === 'cbd'); }
 function sumAmount(usedEvents) { return usedEvents.reduce((s, e) => s + (e.amount ?? 1), 0); }
@@ -993,7 +998,7 @@ function navigateDay(offset) {
 
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
-  { label: '⚡ Amount Used / Day',    color: 'var(--thc)',     valueFn: evs => sumAmount(filterUsed(evs)) },
+  { label: '⚡ Amount Used / Day',    color: 'var(--thc)',     valueFn: evs => sumAmount(filterProfileUsed(evs)) },
   { label: '💪 Resisted / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
   { label: '🏃 Exercise Minutes / Day', color: 'var(--thc)',     valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
 ];
@@ -1066,7 +1071,7 @@ function renderGraphs() {
   
   // Add today's usage by hour graph
   const todayEvents = DB.forDate(todayKey());
-  const todayUsed = filterUsed(todayEvents);
+  const todayUsed = filterProfileUsed(todayEvents);
   const hourCounts = {};
   todayUsed.forEach(evt => {
     const hour = new Date(evt.ts).getHours();
@@ -1085,7 +1090,7 @@ function renderGraphs() {
   const hourTotals = {};
   
   allDayKeys.forEach(dayKey => {
-    const dayUsed = filterUsed(DB.forDate(dayKey));
+    const dayUsed = filterProfileUsed(DB.forDate(dayKey));
     dayUsed.forEach(evt => {
       const hour = new Date(evt.ts).getHours();
       hourTotals[hour] = (hourTotals[hour] || 0) + 1;
