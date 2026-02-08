@@ -42,8 +42,16 @@ if (isConfigured) {
 
 // ========== AUTH FUNCTIONS ==========
 
+let isSigningIn = false;
+
 async function loginWithGoogle() {
   if (!isConfigured) return alert('Firebase not configured yet. See firebase-sync.js.');
+  if (isSigningIn) {
+    console.log('[Auth] Sign-in already in progress, ignoring duplicate request');
+    return;
+  }
+  
+  isSigningIn = true;
   try {
     const result = await signInWithPopup(auth, provider);
     // Check if this is a brand new user
@@ -52,8 +60,13 @@ async function loginWithGoogle() {
     }
     return result.user;
   } catch (err) {
-    console.error('[Auth] Google sign-in failed:', err);
+    // Only log error if it's not a cancelled popup (user closed it or clicked again)
+    if (err.code !== 'auth/cancelled-popup-request' && err.code !== 'auth/popup-closed-by-user') {
+      console.error('[Auth] Google sign-in failed:', err);
+    }
     throw err;
+  } finally {
+    isSigningIn = false;
   }
 }
 
@@ -199,18 +212,23 @@ if (isConfigured) {
     updateAuthUI(user);
 
     if (user) {
+      console.log('[Auth] User authenticated:', user.email || user.displayName);
+      
       try {
         // Pull from cloud (which now invalidates caches internally)
         await pullFromCloud(user.uid);
+        console.log('[Auth] Data synced, caches invalidated');
         
         // Hide login screen if shown
         const loginOverlay = document.getElementById('login-overlay');
         if (loginOverlay && !loginOverlay.classList.contains('hidden')) {
           loginOverlay.classList.add('hidden');
+          console.log('[Auth] Login screen hidden');
         }
         
         // Continue to app after successful login (caches already invalidated by pullFromCloud)
         if (typeof continueToApp === 'function') {
+          console.log('[Auth] Calling continueToApp()');
           continueToApp();
         }
       } catch (err) {
