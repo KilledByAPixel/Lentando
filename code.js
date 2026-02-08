@@ -20,7 +20,7 @@ const ADDICTION_PROFILES = {
     methods: ['bong', 'vape', 'joint', 'edible', 'other'],
     amounts: [0.5, 1.0, 1.5, 2.0],
     amountUnit: 'units',
-    icons: { thc: '🔥', cbd: '🌿', mix: '🔥🌿' }
+    icons: { thc: '🌿', cbd: '🌿', mix: '🌿' }
   },
   alcohol: {
     name: 'Alcohol',
