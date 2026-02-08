@@ -1531,6 +1531,7 @@ function undoLastUsed() {
   if (!lastUndoEventId) return;
   DB.deleteEvent(lastUndoEventId);
   hideUndo();
+  hideUsedChips();
   render();
 }
 
