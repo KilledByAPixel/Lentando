@@ -1497,6 +1497,7 @@ function continueToApp() {
   if (!DB.loadSettings().addictionProfile) {
     showOnboarding();
   } else {
+    calculateAndUpdateWins();
     bindEvents();
     render();
     // Clear existing interval if continueToApp is called multiple times
@@ -1581,6 +1582,7 @@ function logUsed() {
   const evt = createUsedEvent(s.lastSubstance, s.lastMethod, s.lastAmount);
   DB.addEvent(evt);
   stampActivity();
+  calculateAndUpdateWins();
   render();
   hideResistedChips();
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
@@ -1592,6 +1594,7 @@ function logResisted() {
   const evt = createResistedEvent();
   DB.addEvent(evt);
   stampActivity();
+  calculateAndUpdateWins();
   render();
   hideUsedChips();
   hideUndo();
@@ -1604,6 +1607,7 @@ function logHabit(habit, minutes) {
   const evt = createHabitEvent(habit, minutes);
   DB.addEvent(evt);
   stampActivity();
+  calculateAndUpdateWins();
   render();
   hideUndo();
 }
