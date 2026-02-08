@@ -563,7 +563,7 @@ const Wins = {
     
     for (let i = 0; i < MAX_STREAK_DAYS; i++) {
       const amt = sumAmount(filterUsed(DB.forDate(dateKey(d))));
-      if (prevAmt !== null && amt >= prevAmt) break;
+      if (prevAmt !== null && amt <= prevAmt) break;
       if (prevAmt !== null) count++;
       prevAmt = amt;
       d.setDate(d.getDate() - 1);
