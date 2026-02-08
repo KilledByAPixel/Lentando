@@ -1,53 +1,44 @@
 # Lentando
 
-**Mindful habit tracking** - A zero-friction habit and substance use tracker that runs in your browser.
+**Mindful habit tracking that actually works.**
 
-![Lentando Logo](logo.png)
+Track substance use, resist urges, and build healthy habits—all in your browser. No judgment, just progress.
+
+[**Try it now →**](https://killedbyapixel.github.io/Lentando/)
+
+---
+
+## Why Lentando?
+
+- **One-tap logging** - Record sessions, resisted urges, or healthy habits instantly
+- **Celebrates every win** - 40+ automatic awards for streaks, improvements, and milestones
+- **Works anywhere** - Install as an app or use in your browser. Works offline.
+- **Your data, your choice** - Use locally or sync across devices with Google/email sign-in
+- **Zero judgment** - Built for harm reduction. Every small step counts.
+
+## What You Can Track
+
+Choose your focus: cannabis, alcohol, nicotine, or create a custom tracker. Lentando adapts to what you're working on.
+
+**Built-in features:**
+- Visual graphs and usage patterns
+- Day-by-day history with editing
+- Hourly heatmaps showing your patterns
+- Gentle coaching tips (hydration, breathing, movement)
+- Task list to stay organized
+- Dark/light theme
+- Full data export
+
+## Get Started
+
+1. [Open Lentando](https://killedbyapixel.github.io/Lentando/)
+2. Pick what you're tracking
+3. Start building better habits today
+
+---
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/Vanilla_JS-F7DF1E?style=flat&logo=javascript&logoColor=black)
 ![PWA](https://img.shields.io/badge/PWA-Installable-5c6bc0)
-![License](https://img.shields.io/badge/License-All_Rights_Reserved-red)
 
-## What It Does
-
-Lentando helps you track substance use, urges resisted, and healthy habits.
-
-It's designed for harm reduction, not judgment. Every small win counts.
-
-### Features
-
-- **One-tap logging** - Log sessions, resisted urges, or healthy habits with a single tap
-- **Multi-addiction profiles** - Cannabis, alcohol, nicotine, or custom tracking
-- **Cloud sync** - Sign in with Google or email to sync your data across all devices (optional)
-- **30+ win awards** - Automatic recognition of streaks, gaps, tapers, harm reduction, mindfulness, and more
-- **Visual analytics** - View graphs for sessions, amounts, urges resisted, and exercise
-- **Hourly heatmaps** - See usage patterns by time of day
-- **Day-by-day history** - Browse previous days with full event details and editing
-- **Coaching tips** - Gentle nudges toward water, breathing, and movement after resisting
-- **Dark/light theme** - Follows system preference or toggle manually
-- **To-do list** - Built-in task tracking to help you stay organized
-- **Import/export** - Full JSON backup and restore with duplicate detection
-- **PWA support** - Install to home screen, works offline, network-first updates
-
-### Tracked Win Types
-
-| Category | Examples |
-|---|---|
-| **Session** | Resist, Delay, CBD Replacement, Harm Reduction, Low Dose, Mindful Session |
-| **Daily** | CBD-Only Day, Zero THC Day, Low Day (≤2 units), T-Break Day, Hydrated (4+ waters) |
-| **Timing** | Gap Wins (1–12h), Held Off Until Afternoon |
-| **Comparison** | Fewer than yesterday, Lower amount, First later / Last earlier |
-| **Habits** | Habit Stack (2+ habit types) |
-| **Streaks** | Resist Streak, Habit Streak, Taper Win (consecutive declining days) |
-| **Engagement** | Welcome Back (24+ hours away) |
-
-## Getting Started
-
-1. [Open the Lentando webpage in any modern browser](https://killedbyapixel.github.io/Lentando/)
-2. Select what you're tracking (cannabis, alcohol, nicotine, or other)
-3. Start logging and get healthy
-
-## License
-
-© 2026 Frank Force. All rights reserved. See [LICENSE](LICENSE) for details.
+© 2026 Frank Force. All rights reserved.
