@@ -804,9 +804,54 @@ header .date { font-size: 14px; color: var(--muted); }
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+#splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  gap: 16px;
+}
+#splash-screen.hidden {
+  display: none;
+}
+#splash-screen img {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 8px;
+}
+#splash-screen h1 {
+  font-size: 32px;
+  margin: 0;
+}
+#splash-screen h1 .brand {
+  background: linear-gradient(135deg, var(--primary), var(--cbd));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+#splash-screen .tagline {
+  font-size: 16px;
+  color: var(--muted);
+  font-style: italic;
+}
 </style>
 </head>
 <body>
+
+<!-- ===== SPLASH SCREEN ===== -->
+<div id="splash-screen">
+  <img src="logo.png" alt="Lentando">
+  <h1><span class="brand">Lentando</span></h1>
+  <p class="tagline">mindful progress tracking</p>
+</div>
 
 <header>
   <h1><span class="brand">Lentando</span> <span class="tagline">mindful progress tracking</span></h1>

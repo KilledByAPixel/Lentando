@@ -1620,6 +1620,9 @@ function showCoaching() {
 // ========== LOGIN SCREEN ==========
 
 function showLoginScreen() {
+  const splash = $('splash-screen');
+  if (splash) splash.classList.add('hidden');
+  
   const overlay = $('login-overlay');
   overlay.classList.remove('hidden');
   // Inject auth inputs only when login screen is visible
@@ -1646,6 +1649,9 @@ function skipLogin() {
 }
 
 function continueToApp() {
+  const splash = $('splash-screen');
+  if (splash) splash.classList.add('hidden');
+  
   // After login or skip, check if we need onboarding
   if (!DB.loadSettings().addictionProfile) {
     showOnboarding();
@@ -1669,6 +1675,9 @@ function continueToApp() {
 // ========== ONBOARDING ==========
 
 function showOnboarding() {
+  const splash = $('splash-screen');
+  if (splash) splash.classList.add('hidden');
+  
   const overlay = $('onboarding-overlay');
   overlay.classList.remove('hidden');
   
