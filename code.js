@@ -1903,6 +1903,8 @@ function bindEvents() {
   $('exercise-chips').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
     if (!chip) return;
+    const exerciseBtn = document.querySelector('[data-habit="exercise"]');
+    if (exerciseBtn) pulseEl(exerciseBtn);
     logHabit('exercise', parseInt(chip.dataset.min, 10));
     $('exercise-chips').classList.add('hidden');
   });
