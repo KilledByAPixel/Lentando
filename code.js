@@ -379,9 +379,7 @@ const Wins = {
     if (daytimeSessions.length > 0) {
       const firstHour = new Date(daytimeSessions[0].ts).getHours();
       if (firstHour >= AFTERNOON_HOUR) {
-        const firstTime = new Date(daytimeSessions[0].ts);
-        const timeStr = firstTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        addWin(true, `Held Off Until Afternoon (${timeStr})`, 1, '🌅', `Waited until afternoon before first session`);
+        addWin(true, 'Held Off Until Afternoon', 1, '🌅', 'Waited until afternoon before first session');
       }
     }
 
