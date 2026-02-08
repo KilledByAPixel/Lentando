@@ -1119,6 +1119,8 @@ function renderGraphs() {
 // ========== TAB SWITCHING ==========
 function switchTab(tabName) {
   hideUndo();
+  hideUsedChips();
+  hideResistedChips();
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabName));
   
