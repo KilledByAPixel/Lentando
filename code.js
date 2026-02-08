@@ -83,11 +83,27 @@ const AFTERNOON_HOUR = 12;
 const MAX_STREAK_DAYS = 60;
 const LOW_DAY_THRESHOLD = 2;
 
-const COACHING_TIPS = [
-  { text: 'Drink water', habit: 'water' },
-  { text: '10 breaths', habit: 'breaths' },
-  { text: 'Clean room', habit: 'clean' },
-  { text: 'Step outside', habit: 'outside' },
+const COACHING_MESSAGES = [
+  '💧 Drink some water',
+  '🌬️ Take 10 slow breaths',
+  '🌳 Step outside for a minute',
+  '📖 Read a few pages of a book',
+  '🎵 Put on a song you love',
+  '🍎 Grab a healthy snack',
+  '☕ Make some tea or coffee',
+  '🧘 Do a quick stretch',
+  '🚶 Go for a short walk',
+  '🧹 Tidy up one small thing',
+  '💪 You\'re stronger than the urge',
+  '🏆 Every resist is a win',
+  '🧠 This craving will pass',
+  '🎮 Play a quick game',
+  '📞 Text a friend',
+  '🎨 Do something creative',
+  '🤸 Take a movement break',
+  '🧼 Wash your face or hands',
+  '🍬 Chew some gum or brush teeth',
+  '📽️ Watch an educational video',
 ];
 
 const HABIT_ICONS = { water: '💧', breaths: '🌬️', clean: '🧹', exercise: '🏃', outside: '🌳' };
@@ -1416,18 +1432,8 @@ function hasRecentWater() {
 
 function showCoaching() {
   if (!DB.loadSettings().showCoaching) return;
-  
-  const tips = hasRecentWater() 
-    ? COACHING_TIPS.filter(t => t.habit !== 'water')
-    : [COACHING_TIPS.find(t => t.habit === 'water')];
-  const tip = tips[Math.floor(Math.random() * tips.length)];
-  
-  $('coaching-text').textContent = tip.text;
-  $('coaching-log-btn').onclick = () => {
-    DB.addEvent(createHabitEvent(tip.habit));
-    $('coaching-tip').classList.add('hidden');
-    render();
-  };
+  const msg = COACHING_MESSAGES[Math.floor(Math.random() * COACHING_MESSAGES.length)];
+  $('coaching-text').textContent = msg;
   $('coaching-tip').classList.remove('hidden');
 }
 

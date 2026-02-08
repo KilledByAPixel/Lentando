@@ -219,26 +219,15 @@ header .date { font-size: 14px; color: var(--muted); }
 /* ===== COACHING TIP ===== */
 .coaching-tip {
   margin-top: 8px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: var(--win-light);
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--win);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  text-align: center;
+  font-weight: 500;
 }
 .coaching-tip.hidden { display: none; }
-.coaching-tip button {
-  padding: 4px 12px;
-  border: 1px solid var(--resist);
-  border-radius: 12px;
-  background: var(--card);
-  color: var(--win);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
 
 /* ===== WATER REMINDER ===== */
 .water-reminder {
@@ -808,7 +797,6 @@ header .date { font-size: 14px; color: var(--muted); }
       <div class="chip-row hidden" id="resisted-chips"></div>
       <div class="coaching-tip hidden" id="coaching-tip">
         <span id="coaching-text"></span>
-        <button id="coaching-log-btn">Log</button>
       </div>
       <div class="water-reminder hidden" id="water-reminder">
         <button class="water-reminder-btn" id="water-reminder-btn" onclick="App.logWaterFromReminder()">💧 Drink some water?</button>
