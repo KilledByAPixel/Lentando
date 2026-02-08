@@ -1063,7 +1063,17 @@ function buildGraphBars(vals, days, max, def) {
     const v = vals[i];
     const h = max > 0 ? Math.round((v / max) * 96) : 0;
     const dayLabel = days[i].slice(5);
-    const showLabel = graphDays <= 14 || i % Math.ceil(graphDays / 14) === 0;
+    
+    // Show fewer labels for longer date ranges to prevent overlap
+    let showLabel;
+    if (graphDays <= 14) {
+      showLabel = true; // Show all labels for short ranges
+    } else if (graphDays <= 30) {
+      showLabel = i % 5 === 0; // Show every 5th label (6 labels for 30 days)
+    } else {
+      showLabel = i % 10 === 0; // Show every 10th label (6 labels for 60 days)
+    }
+    
     html += graphBarCol(v, h, { color: def.color, text: dayLabel }, showLabel);
   }
   return html + '</div>';
