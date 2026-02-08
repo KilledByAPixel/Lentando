@@ -177,7 +177,6 @@ const DEFAULT_SETTINGS = {
   lastSubstance: 'thc',
   lastMethod: 'bong',
   lastAmount: 1.0,
-  lastReason: null,
   showCoaching: true,
   lastActivityTimestamp: null
 };
@@ -1100,7 +1099,7 @@ function renderGraphs() {
   html += `<div class="graph-container"><div class="graph-title">🕒 Today's Usage by Hour</div>`;
   html += hasHourData
     ? buildHourGraphBars(hourCounts, maxCount, '#f39c12')
-    : emptyStateHTML('No data yet.', 'padding:12px 0');
+    : emptyStateHTML('No data yet', 'padding:12px 0');
   html += `</div>`;
   
   // Add average usage by hour heatmap
@@ -1128,7 +1127,7 @@ function renderGraphs() {
   html += `<div class="graph-container"><div class="graph-title">⚡ Average Usage by Hour</div>`;
   html += hasHeatmapData
     ? buildHourGraphBars(hourAverages, maxAvg, '#e67e22')
-    : emptyStateHTML('No data yet.', 'padding:12px 0');
+    : emptyStateHTML('No data yet', 'padding:12px 0');
   html += `</div>`;
   
   container.innerHTML = html;
@@ -1517,11 +1516,8 @@ function undoLastUsed() {
 
 function logUsed() {
   const s = DB.loadSettings();
-  const evt = createUsedEvent(s.lastSubstance, s.lastMethod, s.lastAmount, s.lastReason);
+  const evt = createUsedEvent(s.lastSubstance, s.lastMethod, s.lastAmount);
   DB.addEvent(evt);
-  // Reset reason so it doesn't persist between uses
-  s.lastReason = null;
-  DB.saveSettings();
   stampActivity();
   render();
   hideResistedChips();
