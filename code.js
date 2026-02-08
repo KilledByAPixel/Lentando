@@ -354,10 +354,10 @@ function getMilestoneWins(gapHours, milestones) {
 function loadWinData() {
   try {
     const data = JSON.parse(localStorage.getItem(STORAGE_WINS));
-    if (!data) return { todayWins: [], lifetimeWins: [] };
+    if (!data) return { todayDate: null, todayWins: [], lifetimeWins: [] };
     return data;
   } catch {
-    return { todayWins: [], lifetimeWins: [] };
+    return { todayDate: null, todayWins: [], lifetimeWins: [] };
   }
 }
 
@@ -817,38 +817,49 @@ function winCardHTML(w) {
 
 function calculateAndUpdateWins() {
   const winData = loadWinData();
+  const today = todayKey();
+  const isSameDay = winData.todayDate === today;
   
-  // Step 1: Create lifetime map and subtract old today's wins
+  // Step 1: Create lifetime map
   const lifetimeMap = new Map();
   winData.lifetimeWins.forEach(w => {
-    lifetimeMap.set(w.id, { id: w.id, count: w.count });
+    lifetimeMap.set(w.id, w.count);
   });
   
-  winData.todayWins.forEach(id => {
-    const existing = lifetimeMap.get(id);
-    if (existing) {
-      existing.count = Math.max(0, existing.count - 1);
-    }
-  });
+  // Only subtract old today's wins if we're recalculating the SAME day.
+  // On a new day, the old today's wins are already part of lifetime history.
+  if (isSameDay && winData.todayWins) {
+    winData.todayWins.forEach(w => {
+      const id = typeof w === 'string' ? w : w.id;
+      const count = typeof w === 'string' ? 1 : (w.count || 1);
+      const current = lifetimeMap.get(id) || 0;
+      lifetimeMap.set(id, Math.max(0, current - count));
+    });
+  }
   
   // Step 2: Calculate fresh today's wins
-  const todayEvents = DB.forDate(todayKey());
+  const todayEvents = DB.forDate(today);
   const yesterdayEvents = DB.forDate(daysAgoKey(1));
-  const freshTodayWins = Wins.calculate(todayEvents, yesterdayEvents);
+  const freshTodayIds = Wins.calculate(todayEvents, yesterdayEvents);
+  
+  // Aggregate today's wins into {id, count} pairs
+  const todayCountMap = new Map();
+  freshTodayIds.forEach(id => {
+    todayCountMap.set(id, (todayCountMap.get(id) || 0) + 1);
+  });
+  const freshTodayWins = Array.from(todayCountMap.entries())
+    .map(([id, count]) => ({ id, count }));
   
   // Step 3: Add fresh today's wins to lifetime
-  freshTodayWins.forEach(id => {
-    const existing = lifetimeMap.get(id);
-    if (existing) {
-      existing.count += 1;
-    } else {
-      lifetimeMap.set(id, { id, count: 1 });
-    }
+  freshTodayWins.forEach(w => {
+    const current = lifetimeMap.get(w.id) || 0;
+    lifetimeMap.set(w.id, current + w.count);
   });
   
   // Step 4: Convert map back to array and save
-  const updatedLifetimeWins = Array.from(lifetimeMap.values())
-    .filter(w => w.count > 0)
+  const updatedLifetimeWins = Array.from(lifetimeMap.entries())
+    .filter(([, count]) => count > 0)
+    .map(([id, count]) => ({ id, count }))
     .sort((a, b) => {
       const defA = getWinDef(a.id);
       const defB = getWinDef(b.id);
@@ -856,6 +867,7 @@ function calculateAndUpdateWins() {
     });
   
   const updatedWinData = {
+    todayDate: today,
     todayWins: freshTodayWins,
     lifetimeWins: updatedLifetimeWins
   };
@@ -872,15 +884,10 @@ function renderWins() {
     if (winData.todayWins.length === 0) {
       todayEl.innerHTML = emptyStateHTML('Wins appear here as you go');
     } else {
-      // Aggregate today's wins by ID into counts
-      const todayMap = new Map();
-      winData.todayWins.forEach(id => {
-        todayMap.set(id, (todayMap.get(id) || 0) + 1);
-      });
-      const todayAggregated = Array.from(todayMap.entries())
-        .map(([id, count]) => ({ id, count, ...getWinDef(id) }))
+      const todayWinsWithDef = winData.todayWins
+        .map(w => ({ ...w, ...getWinDef(w.id) }))
         .sort((a, b) => a.label.localeCompare(b.label));
-      todayEl.innerHTML = todayAggregated.map(winCardHTML).join('');
+      todayEl.innerHTML = todayWinsWithDef.map(winCardHTML).join('');
     }
   }
 
@@ -1080,6 +1087,7 @@ function clearDatabase() {
   localStorage.removeItem(STORAGE_SETTINGS);
   localStorage.removeItem(STORAGE_TODOS);
   localStorage.removeItem(STORAGE_THEME);
+  localStorage.removeItem(STORAGE_WINS);
   location.reload();
 }
 
@@ -1694,6 +1702,7 @@ function generateAllTestData() {
   generateTestData(80);
   generateTestHabits(15);
   generateTestResists(40);
+  generateTestWins();
   console.log('✅ All test data generated! Reload the page to see results.');
 }
 
@@ -1799,11 +1808,56 @@ function generateTestResists(numEvents = 50) {
   console.log(`✅ Added ${numEvents} resist events. Reload the page to see updated data.`);
 }
 
+function generateTestWins() {
+  const winIds = Object.keys(WIN_DEFINITIONS);
+  // Exclude rare/milestone wins to keep it realistic
+  const excludeIds = new Set(['year-streak', 'month-streak', 'tbreak-365d', 'tbreak-30d', 'tbreak-21d']);
+  // Common wins get higher counts, rare wins get lower
+  const commonWins = new Set(['resist', 'mindful', 'dose-half', 'harm-reduction-vape', 'hydrated',
+    'habit-stack', 'good-start', 'app-streak', 'gap-1h', 'gap-2h']);
+  const eligibleIds = winIds.filter(id => !excludeIds.has(id));
+  
+  console.log('Generating random lifetime wins...');
+  
+  // Start fresh — only keep existing lifetime wins, clear today tracking
+  // so calculateAndUpdateWins won't subtract stale todayWins from the new lifetime.
+  const winData = loadWinData();
+  const lifetimeMap = new Map();
+  winData.lifetimeWins.forEach(w => lifetimeMap.set(w.id, w.count));
+  
+  for (const id of eligibleIds) {
+    // ~80% chance each win has been earned at least once
+    if (Math.random() < 0.8) {
+      // Common wins: 10-50 count, rare wins: 1-10
+      const count = commonWins.has(id)
+        ? Math.floor(Math.random() * 40) + 10
+        : Math.floor(Math.random() * 10) + 1;
+      lifetimeMap.set(id, (lifetimeMap.get(id) || 0) + count);
+    }
+  }
+  
+  const updatedData = {
+    todayDate: null,
+    todayWins: [],
+    lifetimeWins: Array.from(lifetimeMap.entries())
+      .map(([id, count]) => ({ id, count }))
+      .filter(w => w.count > 0)
+  };
+  
+  saveWinData(updatedData);
+  
+  // Verify save
+  const verify = loadWinData();
+  console.log(`✅ Added random wins for ${updatedData.lifetimeWins.length} win types. Stored ${verify.lifetimeWins.length} in database.`);
+  console.log('Sample lifetime wins:', verify.lifetimeWins.slice(0, 5));
+}
+
 // Attach to window for console access
 window.generateAllTestData = generateAllTestData;
 window.generateTestData = generateTestData;
 window.generateTestHabits = generateTestHabits;
 window.generateTestResists = generateTestResists;
+window.generateTestWins = generateTestWins;
 
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -1828,9 +1882,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   // Log test data generation instructions
-  console.log('📊 Test daAllTestData() - Add a mix of everything (recommended)');
-  console.log('  generateta generation available:');
+  console.log('📊 Test data generation available:');
+  console.log('  generateAllTestData() - Add a mix of everything (recommended)');
   console.log('  generateTestData(100) - Add 100 random usage events');
   console.log('  generateTestHabits(20) - Add 20 events per habit type');
   console.log('  generateTestResists(50) - Add 50 resist events');
+  console.log('  generateTestWins() - Add random lifetime wins');
 });
