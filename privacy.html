@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Lentando</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #151515;
+      --text: #e0e0e0;
+      --muted: #888;
+      --primary: #4a9eff;
+      --border: #2a2a2a;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f5f5f5;
+        --card: #ffffff;
+        --text: #1a1a1a;
+        --muted: #666;
+        --primary: #0066cc;
+        --border: #e0e0e0;
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .updated {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+    h2 {
+      font-size: 20px;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+    h3 {
+      font-size: 16px;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    p, li {
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+    ul {
+      margin-left: 20px;
+      margin-bottom: 16px;
+    }
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 48px;
+      padding: 10px 20px;
+      background: var(--primary);
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      opacity: 0.9;
+      text-decoration: none;
+    }
+    strong {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Privacy Policy</h1>
+    <p class="updated"><strong>Last updated:</strong> February 8, 2026</p>
+
+    <h2>1. Who we are</h2>
+    <ul>
+      <li><strong>App name:</strong> Lentando</li>
+      <li><strong>Website:</strong> <a href="https://lentando.3d2k.com" target="_blank">lentando.3d2k.com</a></li>
+      <li><strong>Contact:</strong> frankforce@gmail.com</li>
+    </ul>
+    <p>This Privacy Policy explains how <strong>Lentando</strong> collects, uses, and shares information when you use the app.</p>
+
+    <h2>2. What data we collect</h2>
+    <p>Depending on how you sign in and use the app, we may collect:</p>
+
+    <h3>A) Account and authentication data (via Firebase Authentication)</h3>
+    <ul>
+      <li>If you sign in with Google, we may receive basic profile info such as your Google account <strong>email address</strong>, <strong>display name</strong>, and <strong>profile photo URL</strong> (if available).</li>
+      <li>We also store a Firebase <strong>UID</strong> (unique user identifier) to keep your account working.</li>
+    </ul>
+
+    <h3>B) App data you provide</h3>
+    <ul>
+      <li>We store the information you enter into the app, such as usage entries (including timestamps), to-do items, and settings.</li>
+      <li>This data is stored in <strong>Cloud Firestore</strong> and associated with your Firebase user ID (UID).</li>
+    </ul>
+
+    <h3>C) Technical data</h3>
+    <p>Basic device and usage information that may be collected by Firebase (for example <strong>IP address</strong>, <strong>user agent</strong>, <strong>timestamps</strong>) to operate and secure the service.</p>
+
+    <h3>D) Analytics</h3>
+    <p>We use Google Analytics (Google Analytics for Firebase) to understand how the app is used and to improve performance.</p>
+    <p>Analytics may automatically collect information such as:</p>
+    <ul>
+      <li>Usage and session statistics</li>
+      <li>Approximate location (derived from network information)</li>
+      <li>Browser/device information</li>
+      <li>Pages visited and basic interaction events (for example page views)</li>
+    </ul>
+    <p>We do not intentionally send Google Analytics information that directly identifies you.</p>
+
+    <h2>3. How we use data</h2>
+    <p>We use your information to:</p>
+    <ul>
+      <li>Provide sign-in and account features</li>
+      <li>Store and sync your app data across devices</li>
+      <li>Maintain security, prevent abuse, and debug issues</li>
+      <li>Improve app reliability and performance</li>
+    </ul>
+
+    <h2>4. How we share data</h2>
+    <p>We do <strong>not</strong> sell your personal information.</p>
+    <p>We share data only:</p>
+    <ul>
+      <li>With service providers used to run the app, primarily <strong>Google Firebase</strong> (Authentication, database, hosting, etc.)</li>
+      <li>If required by law or to protect rights and safety</li>
+      <li>With your consent (for example, if you choose to export or share content)</li>
+    </ul>
+
+    <h2>5. Google OAuth and limited use disclosure</h2>
+    <p>If you sign in with Google, our use of information received from Google APIs will comply with the <strong>Google API Services User Data Policy</strong>, including the <strong>Limited Use</strong> requirements.</p>
+
+    <h2>6. Data storage and retention</h2>
+    <ul>
+      <li>Your data is stored in Firebase in the project operated by <strong>Frank Force Games</strong>.</li>
+      <li>We keep your data for as long as your account is active or as needed to provide the service.</li>
+      <li>You can request deletion (see "Your choices" below).</li>
+    </ul>
+
+    <h2>7. Your choices and controls</h2>
+    <ul>
+      <li><strong>Access / update:</strong> You can view and update some information within the app.</li>
+      <li><strong>Delete your data:</strong> You can request deletion by contacting us at <strong>frankforce@gmail.com</strong> with the email you used to sign in. We will delete your user data within a reasonable period, unless we must keep it for legal or security reasons.</li>
+      <li><strong>Disconnect Google access:</strong> You can remove the app's access from your Google Account settings.</li>
+    </ul>
+
+    <h2>8. Children's privacy</h2>
+    <p>The app is not intended for children under 13, and we do not knowingly collect data from children.</p>
+
+    <h2>9. Security</h2>
+    <p>We use reasonable safeguards (including Firebase security rules) to protect information. No method of transmission or storage is 100% secure.</p>
+
+    <h2>10. International users</h2>
+    <p>Your information may be processed in countries where Google or our service providers operate, which may include the United States.</p>
+
+    <h2>11. Changes to this policy</h2>
+    <p>We may update this policy from time to time. We will update the "Last updated" date and, if changes are significant, provide a notice in the app or on the website.</p>
+
+    <h2>12. Contact</h2>
+    <p>Questions or requests: <strong>frankforce@gmail.com</strong></p>
+
+    <a href="./index.html" class="back-link">← Back to Lentando</a>
+  </div>
+</body>
+</html>
