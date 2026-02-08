@@ -275,13 +275,6 @@ const DB = {
     } catch {
       this._events = [];
     }
-    // Strip legacy fields that are no longer stored
-    let dirty = false;
-    this._events.forEach(e => {
-      if ('icon' in e) { delete e.icon; dirty = true; }
-      if ('note' in e) { delete e.note; dirty = true; }
-    });
-    if (dirty) this.saveEvents();
     this._invalidateDateIndex();
     return this._events;
   },
@@ -879,10 +872,8 @@ function calculateAndUpdateWins() {
   // On a new day, the old today's wins are already part of lifetime history.
   if (isSameDay && winData.todayWins) {
     winData.todayWins.forEach(w => {
-      const id = typeof w === 'string' ? w : w.id;
-      const count = typeof w === 'string' ? 1 : (w.count || 1);
-      const current = lifetimeMap.get(id) || 0;
-      lifetimeMap.set(id, Math.max(0, current - count));
+      const current = lifetimeMap.get(w.id) || 0;
+      lifetimeMap.set(w.id, Math.max(0, current - (w.count || 1)));
     });
   }
   
@@ -988,7 +979,7 @@ function renderDayHistory() {
   const totalAmt = sumAmount(used);
   
   const summaryParts = [];
-  if (used.length > 0) summaryParts.push(`Used ${used.length}x (${totalAmt} units)`);
+  if (used.length > 0) summaryParts.push(`Used ${used.length}x (${totalAmt} ${getProfile().amountUnit})`);
   if (resisted.length > 0) summaryParts.push(`Resisted ${resisted.length}x`);
   if (exerciseMins > 0) summaryParts.push(`Exercised ${exerciseMins}m`);
   
