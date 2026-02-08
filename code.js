@@ -549,15 +549,11 @@ const Wins = {
     return wins;
   },
 
-  _countStreak(eventType, habitType = null) {
+  _countStreak(eventType) {
     const d = new Date();
     
     for (let streak = 0; streak < MAX_STREAK_DAYS; streak++) {
-      const dayEvents = DB.forDate(dateKey(d));
-      const hasEvent = habitType
-        ? dayEvents.some(e => e.type === eventType && e.habit === habitType)
-        : dayEvents.some(e => e.type === eventType);
-      if (!hasEvent) return streak;
+      if (!DB.forDate(dateKey(d)).some(e => e.type === eventType)) return streak;
       d.setDate(d.getDate() - 1);
     }
     return MAX_STREAK_DAYS;
