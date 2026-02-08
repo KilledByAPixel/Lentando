@@ -1037,7 +1037,7 @@ function navigateDay(offset) {
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)) },
-  { label: '💪 Resisted / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
+  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
   { label: '🏃 Exercise Minutes / Day', color: '#e74c3c',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
 ];
 
