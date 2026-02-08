@@ -141,7 +141,7 @@ const WIN_DEFINITIONS = {
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
   'zero-thc': { label: 'Clean Day', icon: '🏆', desc: 'No use today while staying engaged with tracking' },
   'tbreak-day': { label: 'Break Day', icon: '🚫', desc: 'Went a full day without using while staying engaged' },
-  'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 4 times today' },
+  'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 3 times today' },
   'habit-stack': { label: 'Habit Stack', icon: '🔗', desc: 'Logged multiple different habit types in one day' },
   'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '🏃💧', desc: 'Logged both exercise and water today' },
   'gap-1h': { label: 'Gap Win (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions' },
@@ -529,7 +529,7 @@ const Wins = {
 
     // --- Habit-based wins ---
     const waterCount = getHabits(todayEvents, 'water').length;
-    addWin(waterCount >= 4, 'hydrated');
+    addWin(waterCount >= 3, 'hydrated');
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
     if (uniqueHabits.size >= 2) {
