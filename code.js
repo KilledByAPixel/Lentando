@@ -692,6 +692,8 @@ let exerciseTimeout = null;
 let timerInterval = null;
 let graphDays = 7;
 let currentHistoryDay = todayKey();
+const HISTORY_PAGE_SIZE = 100;
+let historyShowCount = HISTORY_PAGE_SIZE;
 
 function render() {
   renderDate();
@@ -937,7 +939,7 @@ function renderWaterReminder() {
 
 // ========== HISTORY ==========
 function renderDayHistory() {
-  const events = DB.forDate(currentHistoryDay).reverse();
+  const events = DB.forDate(currentHistoryDay);
   const historyEl = $('history-events');
   const labelEl = $('current-day-label');
   
@@ -950,7 +952,30 @@ function renderDayHistory() {
     return;
   }
 
-  historyEl.innerHTML = events.map(e => eventRowHTML(e, true)).join('');
+  // Build HTML in reverse order, limited to historyShowCount
+  const len = events.length;
+  const start = Math.max(0, len - historyShowCount);
+  let html = '';
+  for (let i = len - 1; i >= start; i--) {
+    html += eventRowHTML(events[i], true);
+  }
+  
+  // Show "Load More" button if there are more events
+  if (start > 0) {
+    const remaining = start;
+    html += `<div style="text-align:center;padding:12px">
+      <button onclick="App.loadMoreHistory()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer">
+        Show ${Math.min(remaining, HISTORY_PAGE_SIZE)} more (${remaining} remaining)
+      </button>
+    </div>`;
+  }
+  
+  historyEl.innerHTML = html;
+}
+
+function loadMoreHistory() {
+  historyShowCount += HISTORY_PAGE_SIZE;
+  renderDayHistory();
 }
 
 function navigateDay(offset) {
@@ -962,6 +987,7 @@ function navigateDay(offset) {
   if (newKey > todayKey()) return;
   
   currentHistoryDay = newKey;
+  historyShowCount = HISTORY_PAGE_SIZE;
   renderDayHistory();
 }
 
@@ -1730,6 +1756,7 @@ window.App = {
   changeAddiction,
   switchTab,
   logWaterFromReminder,
+  loadMoreHistory,
   toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     applyTheme(getToggleTheme(currentTheme));
