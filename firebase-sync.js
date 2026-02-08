@@ -217,10 +217,12 @@ if (isConfigured) {
         // Pull from cloud (which now invalidates caches internally)
         await pullFromCloud(user.uid);
         
-        // Hide login screen if shown
+        // Hide login screen and clear auth inputs from DOM
         const loginOverlay = document.getElementById('login-overlay');
         if (loginOverlay && !loginOverlay.classList.contains('hidden')) {
           loginOverlay.classList.add('hidden');
+          const loginInputs = loginOverlay.querySelector('.login-inputs');
+          if (loginInputs) loginInputs.innerHTML = '';
         }
         
         // Continue to app after successful login (caches already invalidated by pullFromCloud)
