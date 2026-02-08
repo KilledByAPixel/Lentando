@@ -2106,11 +2106,41 @@ window.App = {
       alert('Login failed: ' + err.message);
     }
   },
+  async forgotPasswordFromScreen() {
+    const email = $('login-email')?.value;
+    if (!email) return alert('Enter your email address first');
+    try {
+      if (window.FirebaseSync) {
+        await FirebaseSync.sendPasswordReset(email);
+        alert('✅ Password reset email sent! Check your inbox.');
+      }
+    } catch (err) {
+      alert('Failed to send reset email: ' + err.message);
+    }
+  },
+  async deleteAccount() {
+    if (!confirm('⚠️ Delete your account?\n\nThis will permanently delete your cloud data and account. Local data will also be cleared.\n\nThis cannot be undone.')) return;
+    try {
+      if (window.FirebaseSync) {
+        await FirebaseSync.deleteAccount();
+      }
+      localStorage.removeItem(STORAGE_EVENTS);
+      localStorage.removeItem(STORAGE_SETTINGS);
+      localStorage.removeItem(STORAGE_TODOS);
+      localStorage.removeItem(STORAGE_THEME);
+      localStorage.removeItem(STORAGE_WINS);
+      localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
+      location.reload();
+    } catch (err) {
+      alert('Failed to delete account: ' + err.message);
+    }
+  },
   async signupWithEmailFromScreen() {
     const email = $('login-email')?.value;
     const password = $('login-password')?.value;
     if (!email || !password) return alert('Enter email and password');
-    if (password.length < 6) return alert('Password must be at least 6 characters');
+    if (password.length < 8) return alert('Password must be at least 8 characters');
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return alert('Password must contain both letters and numbers');
     try {
       if (window.FirebaseSync) {
         await FirebaseSync.signupWithEmail(email, password);

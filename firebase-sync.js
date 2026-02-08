@@ -3,8 +3,8 @@
 // ============================================================
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
-import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification, sendPasswordResetEmail, deleteUser } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
 // ==========================================================
 // 🔧 FIREBASE CONFIG — Replace with your Firebase project values
@@ -93,6 +93,25 @@ async function signupWithEmail(email, password) {
 async function logout() {
   if (!isConfigured) return;
   await signOut(auth);
+}
+
+async function resetPassword(email) {
+  if (!isConfigured) return alert('Firebase not configured yet.');
+  await sendPasswordResetEmail(auth, email);
+}
+
+async function deleteAccountAndData() {
+  if (!isConfigured || !currentUser) return;
+  // Delete Firestore user doc first
+  try {
+    const userDoc = doc(db, 'users', currentUser.uid);
+    await deleteDoc(userDoc);
+  } catch (err) {
+    console.warn('[Auth] Could not delete Firestore data:', err);
+  }
+  // Delete the Firebase auth account
+  await deleteUser(currentUser);
+  currentUser = null;
 }
 
 // ========== HELPER FUNCTIONS ==========
@@ -285,13 +304,14 @@ const AUTH_FORM_HTML = `
     <form id="auth-form" onsubmit="return false" style="display:flex;flex-direction:column;gap:6px">
       <input type="email" id="auth-email" name="email" autocomplete="username" placeholder="Email" 
         style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
-      <input type="password" id="auth-password" name="password" autocomplete="current-password" placeholder="Password (6+ chars)" 
+      <input type="password" id="auth-password" name="password" autocomplete="current-password" placeholder="Password (8+ chars)" 
         style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
     </form>
     <div style="display:flex;gap:6px">
       <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.loginWithEmailForm()">🔓 Log In</button>
       <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.signupWithEmailForm()">✨ Sign Up</button>
     </div>
+    <button style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:2px 0;text-decoration:underline" onclick="FirebaseSync.forgotPasswordForm()">Forgot password?</button>
   </div>`;
 
 let _authUIState = null; // 'logged-in', 'logged-out', or 'not-configured'
@@ -321,6 +341,9 @@ function updateAuthUI(user) {
           <button class="export-btn" style="flex:none;padding:8px 12px;font-size:12px;margin:0" onclick="FirebaseSync.sync()">🔄 Sync</button>
           <button class="export-btn" style="flex:none;padding:8px 12px;font-size:12px;margin:0" onclick="FirebaseSync.logout()">Sign Out</button>
         </div>
+      </div>
+      <div style="margin-top:8px;text-align:right">
+        <button style="background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;text-decoration:underline" onclick="App.deleteAccount()">Delete Account</button>
       </div>`;
   } else {
     _authUIState = 'logged-out';
@@ -402,8 +425,21 @@ window.FirebaseSync = {
   loginWithGoogle,
   loginWithEmail,
   signupWithEmail,
+  sendPasswordReset: resetPassword,
+  deleteAccount: deleteAccountAndData,
   mountAuthForm,
   unmountAuthForm,
+
+  async forgotPasswordForm() {
+    const email = document.getElementById('auth-email')?.value;
+    if (!email) return alert('Enter your email address first');
+    try {
+      await resetPassword(email);
+      alert('✅ Password reset email sent! Check your inbox.');
+    } catch (err) {
+      alert('Failed to send reset email: ' + err.message);
+    }
+  },
 
   async loginWithEmailForm() {
     const email = document.getElementById('auth-email')?.value;
@@ -420,7 +456,8 @@ window.FirebaseSync = {
     const email = document.getElementById('auth-email')?.value;
     const password = document.getElementById('auth-password')?.value;
     if (!email || !password) return alert('Enter email and password');
-    if (password.length < 6) return alert('Password must be at least 6 characters');
+    if (password.length < 8) return alert('Password must be at least 8 characters');
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return alert('Password must contain both letters and numbers');
     try {
       await signupWithEmail(email, password);
       showWelcomeMessage(email);
