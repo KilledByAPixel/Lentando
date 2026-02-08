@@ -1133,7 +1133,14 @@ function handleChipClick(e) {
   const currentEvent = DB.loadEvents().find(ev => ev.id === activeChipEventId);
   const val = resolveChipVal(field, chip.dataset.val, currentEvent);
 
-  DB.updateEvent(activeChipEventId, { [field]: val });
+  // Update substance and icon together
+  const updateData = { [field]: val };
+  if (field === 'substance' && currentEvent.type === 'used') {
+    const profile = getProfile();
+    updateData.icon = profile.icons[val] || '💊';
+  }
+
+  DB.updateEvent(activeChipEventId, updateData);
   persistFieldDefault(field, val);
   updateActiveChips();
   render();
@@ -1207,7 +1214,14 @@ function handleModalChipClick(e) {
   const currentEvent = DB.loadEvents().find(ev => ev.id === eventId);
   const val = resolveChipVal(field, chip.dataset.val, currentEvent);
 
-  DB.updateEvent(eventId, { [field]: val });
+  // Update substance and icon together
+  const updateData = { [field]: val };
+  if (field === 'substance' && currentEvent.type === 'used') {
+    const profile = getProfile();
+    updateData.icon = profile.icons[val] || '💊';
+  }
+
+  DB.updateEvent(eventId, updateData);
   chip.closest('.chip-group').querySelectorAll('.chip').forEach(c => 
     c.classList.toggle('active', val !== null && c.dataset.val === String(val))
   );
