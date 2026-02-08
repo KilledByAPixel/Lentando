@@ -81,6 +81,17 @@ async function logout() {
   await signOut(auth);
 }
 
+// ========== HELPER FUNCTIONS ==========
+
+/** Invalidate DB caches so the app re-reads from localStorage */
+function invalidateDBCaches() {
+  if (window.DB) {
+    window.DB._events = null;
+    window.DB._settings = null;
+    window.DB._dateIndex = null;
+  }
+}
+
 // ========== SYNC FUNCTIONS ==========
 
 // Storage keys (must match code.js constants)
@@ -168,13 +179,6 @@ async function pullFromCloud(uid) {
     localStorage.setItem(STORAGE_KEYS.todos, JSON.stringify(cloud.todos));
   }
 
-  // Invalidate DB caches so the app re-reads from localStorage
-  if (window.DB) {
-    window.DB._events = null;
-    window.DB._settings = null;
-    window.DB._dateIndex = null;
-  }
-
   console.log('[Sync] Pulled from cloud, merged', mergedEvents.length, 'events');
 }
 
@@ -199,11 +203,7 @@ if (isConfigured) {
         }
         
         // Invalidate DB caches BEFORE continueToApp so it reads fresh settings from localStorage
-        if (window.DB) {
-          window.DB._events = null;
-          window.DB._settings = null;
-          window.DB._dateIndex = null;
-        }
+        invalidateDBCaches();
         
         // Continue to app after successful login (will check if addiction profile is set)
         if (typeof continueToApp === 'function') {
@@ -247,11 +247,7 @@ if (isConfigured) {
     if (currentUser) {
       try {
         await pullFromCloud(currentUser.uid);
-        if (window.DB) {
-          window.DB._events = null;
-          window.DB._settings = null;
-          window.DB._dateIndex = null;
-        }
+        invalidateDBCaches();
         if (typeof render === 'function') {
           render();
         }
@@ -395,11 +391,7 @@ window.FirebaseSync = {
       await pushToCloud(currentUser.uid);
       
       // Invalidate caches and re-render
-      if (window.DB) {
-        window.DB._events = null;
-        window.DB._settings = null;
-        window.DB._dateIndex = null;
-      }
+      invalidateDBCaches();
       if (typeof render === 'function') {
         render();
       }

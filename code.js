@@ -1821,8 +1821,6 @@ window.App = {
     try {
       if (window.FirebaseSync) {
         await FirebaseSync.loginWithEmail(email, password);
-        hideLoginScreen();
-        continueToApp();
       }
     } catch (err) {
       alert('Login failed: ' + err.message);
@@ -1836,11 +1834,9 @@ window.App = {
     try {
       if (window.FirebaseSync) {
         await FirebaseSync.signupWithEmail(email, password);
-        hideLoginScreen();
         if (FirebaseSync.showWelcome) {
           FirebaseSync.showWelcome(email);
         }
-        continueToApp();
       }
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
