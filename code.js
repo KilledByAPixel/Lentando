@@ -139,8 +139,8 @@ const WIN_DEFINITIONS = {
   'mindful': { label: 'Mindful Session', icon: '🧠', desc: 'Logged the reason for using, showing mindful awareness' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
-  'zero-thc': { label: 'Zero THC Day', icon: '🏆', desc: 'No THC today while staying engaged with tracking' },
-  'tbreak-day': { label: 'T-Break Day', icon: '🚫', desc: 'Went a full day without using while staying engaged' },
+  'zero-thc': { label: 'Clean Day', icon: '🏆', desc: 'No use today while staying engaged with tracking' },
+  'tbreak-day': { label: 'Break Day', icon: '🚫', desc: 'Went a full day without using while staying engaged' },
   'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 4 times today' },
   'habit-stack': { label: 'Habit Stack', icon: '🔗', desc: 'Logged multiple different habit types in one day' },
   'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '🏃💧', desc: 'Logged both exercise and water today' },
@@ -151,10 +151,10 @@ const WIN_DEFINITIONS = {
   'gap-12h': { label: 'Gap Win (12h+)', icon: '⏱️', desc: 'Maintained a gap of 12+ hours between sessions' },
   'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Today\'s longest gap between sessions exceeded your average' },
   'held-off-afternoon': { label: 'Held Off Until Afternoon', icon: '🌅', desc: 'Waited until afternoon before first session' },
-  'fewer-sessions': { label: 'Fewer THC sessions than yesterday', icon: '📉', desc: 'Had fewer THC sessions than yesterday' },
+  'fewer-sessions': { label: 'Fewer sessions than yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
   'lower-amount': { label: 'Lower amount than yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
-  'first-later': { label: 'First THC later than yesterday', icon: '⏰', desc: 'Started your first session later than yesterday' },
-  'last-earlier': { label: 'Last THC earlier than yesterday', icon: '🌙', desc: 'Finished your last session earlier than yesterday' },
+  'first-later': { label: 'First session later than yesterday', icon: '⏰', desc: 'Started your first session later than yesterday' },
+  'last-earlier': { label: 'Last session earlier than yesterday', icon: '🌙', desc: 'Finished your last session earlier than yesterday' },
   'good-start': { label: 'Good Start', icon: '🌟', desc: 'Started your day with a positive action instead of using' },
   'resist-streak': { label: 'Resist Streak', icon: '🔥', desc: 'Resisted urges for multiple days in a row' },
   'habit-streak': { label: 'Habit Streak', icon: '⛓️', desc: 'Logged healthy habits for consecutive days' },
@@ -163,12 +163,12 @@ const WIN_DEFINITIONS = {
   'week-streak': { label: 'Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
   'month-streak': { label: 'Month Streak', icon: '🗓️', desc: 'Used the app every day for a month' },
   'year-streak': { label: 'Year Streak', icon: '🎉', desc: 'Used the app every day for a year!' },
-  'tbreak-1d': { label: 'T-Break: 1 Day', icon: '🌱', desc: 'One full day without THC' },
-  'tbreak-7d': { label: 'T-Break: 1 Week', icon: '🌿', desc: 'One week without THC' },
-  'tbreak-14d': { label: 'T-Break: 2 Weeks', icon: '🍀', desc: 'Two weeks without THC' },
-  'tbreak-21d': { label: 'T-Break: 3 Weeks', icon: '🌳', desc: 'Three weeks without THC' },
-  'tbreak-30d': { label: 'T-Break: 1 Month', icon: '🏆', desc: 'One month without THC' },
-  'tbreak-365d': { label: 'T-Break: 1 Year', icon: '👑', desc: 'One year without THC!' },
+  'tbreak-1d': { label: 'Break: 1 Day', icon: '🌱', desc: 'One full day clean' },
+  'tbreak-7d': { label: 'Break: 1 Week', icon: '🌿', desc: 'One week clean' },
+  'tbreak-14d': { label: 'Break: 2 Weeks', icon: '🍀', desc: 'Two weeks clean' },
+  'tbreak-21d': { label: 'Break: 3 Weeks', icon: '🌳', desc: 'Three weeks clean' },
+  'tbreak-30d': { label: 'Break: 1 Month', icon: '🏆', desc: 'One month clean' },
+  'tbreak-365d': { label: 'Break: 1 Year', icon: '👑', desc: 'One year clean!' },
   'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider — shows mindful decision-making' },
 };
 
@@ -538,7 +538,7 @@ const Wins = {
     addWin(appStreak >= 30, 'month-streak');
     addWin(appStreak >= 365, 'year-streak');
     
-    // T-Break milestones (time since last THC use)
+    // Break milestones (time since last use)
     if (thcUsed.length === 0) {
       const daysSinceLastTHC = this._countDaysSinceLastTHC();
       if (daysSinceLastTHC >= 1) {
