@@ -55,17 +55,14 @@ async function loginWithGoogle() {
 
 async function loginWithEmail(email, password) {
   if (!isConfigured) return alert('Firebase not configured yet. See firebase-sync.js.');
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    return result.user;
-  } catch (err) {
-    if (err.code === 'auth/user-not-found') {
-      // Auto-create account for new users
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      return result.user;
-    }
-    throw err;
-  }
+  const result = await signInWithEmailAndPassword(auth, email, password);
+  return result.user;
+}
+
+async function signupWithEmail(email, password) {
+  if (!isConfigured) return alert('Firebase not configured yet. See firebase-sync.js.');
+  const result = await createUserWithEmailAndPassword(auth, email, password);
+  return result.user;
 }
 
 async function logout() {
@@ -230,9 +227,12 @@ function updateAuthUI(user) {
         <div style="display:flex;gap:6px;align-items:stretch">
           <input type="email" id="auth-email" placeholder="Email" 
             style="flex:1;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
-          <input type="password" id="auth-password" placeholder="Password" 
+          <input type="password" id="auth-password" placeholder="Password (6+ chars)" 
             style="flex:1;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
-          <button class="export-btn" style="flex:none;padding:10px 16px;margin:0;font-size:13px" onclick="FirebaseSync.loginWithEmailForm()">Go</button>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.loginWithEmailForm()">🔓 Log In</button>
+          <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.signupWithEmailForm()">✨ Sign Up</button>
         </div>
       </div>`;
   }
@@ -260,6 +260,7 @@ function debouncedSync() {
 window.FirebaseSync = {
   loginWithGoogle,
   loginWithEmail,
+  signupWithEmail,
 
   async loginWithEmailForm() {
     const email = document.getElementById('auth-email')?.value;
@@ -269,6 +270,22 @@ window.FirebaseSync = {
       await loginWithEmail(email, password);
     } catch (err) {
       alert('Login failed: ' + err.message);
+    }
+  },
+
+  async signupWithEmailForm() {
+    const email = document.getElementById('auth-email')?.value;
+    const password = document.getElementById('auth-password')?.value;
+    if (!email || !password) return alert('Enter email and password');
+    if (password.length < 6) return alert('Password must be at least 6 characters');
+    try {
+      await signupWithEmail(email, password);
+    } catch (err) {
+      if (err.code === 'auth/email-already-in-use') {
+        alert('Account already exists — use Log In instead.');
+      } else {
+        alert('Sign up failed: ' + err.message);
+      }
     }
   },
 
