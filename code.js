@@ -792,6 +792,12 @@ function getRatioTile(weekUsed) {
   };
   
   const config = ratioMap[settings.addictionProfile];
+  
+  // If no profile is set, return a placeholder tile
+  if (!config) {
+    return tileHTML('—', 'Better Choice', 'this week');
+  }
+  
   const total = weekUsed.length;
   const ratio = total > 0 ? ((weekUsed.filter(config.filter).length / total) * 100).toFixed(0) + '%' : '—';
   return tileHTML(ratio, config.label, 'this week');
