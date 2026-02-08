@@ -279,11 +279,30 @@ if (isConfigured) {
 
 // ========== AUTH UI ==========
 
+// Auth form HTML kept out of DOM until Settings tab is visible
+const AUTH_FORM_HTML = `
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <button class="export-btn" style="margin:0" onclick="FirebaseSync.loginWithGoogle()">🔑 Sign in with Google</button>
+    <form id="auth-form" onsubmit="return false" style="display:flex;flex-direction:column;gap:6px">
+      <input type="email" id="auth-email" name="email" autocomplete="username" placeholder="Email" 
+        style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
+      <input type="password" id="auth-password" name="password" autocomplete="current-password" placeholder="Password (6+ chars)" 
+        style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
+    </form>
+    <div style="display:flex;gap:6px">
+      <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.loginWithEmailForm()">🔓 Log In</button>
+      <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.signupWithEmailForm()">✨ Sign Up</button>
+    </div>
+  </div>`;
+
+let _authUIState = null; // 'logged-in', 'logged-out', or 'not-configured'
+
 function updateAuthUI(user) {
   const el = document.getElementById('auth-status');
   if (!el) return;
 
   if (!isConfigured) {
+    _authUIState = 'not-configured';
     el.innerHTML = `
       <div style="text-align:center;color:var(--muted);font-size:13px;line-height:1.5">
         <div style="font-size:18px;margin-bottom:4px">🔧</div>
@@ -294,6 +313,7 @@ function updateAuthUI(user) {
   }
 
   if (user) {
+    _authUIState = 'logged-in';
     const name = escapeHTMLSync(user.displayName || user.email || 'User');
     el.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap">
@@ -304,20 +324,38 @@ function updateAuthUI(user) {
         </div>
       </div>`;
   } else {
-    el.innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="export-btn" style="margin:0" onclick="FirebaseSync.loginWithGoogle()">🔑 Sign in with Google</button>
-        <form id="auth-form" onsubmit="return false" style="display:flex;flex-direction:column;gap:6px">
-          <input type="email" id="auth-email" name="email" autocomplete="username" placeholder="Email" 
-            style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
-          <input type="password" id="auth-password" name="password" autocomplete="current-password" placeholder="Password (6+ chars)" 
-            style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
-        </form>
-        <div style="display:flex;gap:6px">
-          <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.loginWithEmailForm()">🔓 Log In</button>
-          <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.signupWithEmailForm()">✨ Sign Up</button>
-        </div>
-      </div>`;
+    _authUIState = 'logged-out';
+    // Don't inject auth form here — only mount it when Settings tab is visible
+    // Show a placeholder; mountAuthForm() will replace it if Settings is open
+    const settingsPanel = document.getElementById('tab-settings');
+    const isSettingsVisible = settingsPanel && settingsPanel.classList.contains('active');
+    if (isSettingsVisible) {
+      el.innerHTML = AUTH_FORM_HTML;
+    } else {
+      el.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:13px;padding:8px">Sign in from the Settings tab</div>`;
+    }
+  }
+}
+
+/** Mount auth form into DOM (call when Settings tab opens) */
+function mountAuthForm() {
+  if (_authUIState !== 'logged-out') return;
+  const el = document.getElementById('auth-status');
+  if (!el) return;
+  // Only inject if not already mounted
+  if (!document.getElementById('auth-form')) {
+    el.innerHTML = AUTH_FORM_HTML;
+  }
+}
+
+/** Remove auth form from DOM (call when leaving Settings tab) */
+function unmountAuthForm() {
+  if (_authUIState !== 'logged-out') return;
+  const el = document.getElementById('auth-status');
+  if (!el) return;
+  const form = document.getElementById('auth-form');
+  if (form) {
+    el.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:13px;padding:8px">Sign in from the Settings tab</div>`;
   }
 }
 
@@ -365,6 +403,8 @@ window.FirebaseSync = {
   loginWithGoogle,
   loginWithEmail,
   signupWithEmail,
+  mountAuthForm,
+  unmountAuthForm,
 
   async loginWithEmailForm() {
     const email = document.getElementById('auth-email')?.value;

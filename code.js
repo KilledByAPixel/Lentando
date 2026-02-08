@@ -1168,6 +1168,12 @@ function switchTab(tabName) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabName));
   
+  // Mount/unmount auth form to prevent browser autofill on other inputs
+  if (window.FirebaseSync) {
+    if (tabName === 'settings') FirebaseSync.mountAuthForm();
+    else FirebaseSync.unmountAuthForm();
+  }
+  
   if (tabName === 'wins') renderWins();
   else if (tabName === 'graph') {
     requestAnimationFrame(() => {
@@ -1484,6 +1490,9 @@ function showLoginScreen() {
 function hideLoginScreen() {
   const overlay = $('login-overlay');
   overlay.classList.add('hidden');
+  // Remove auth inputs from DOM to prevent browser autofill on other inputs
+  const loginInputs = overlay.querySelector('.login-inputs');
+  if (loginInputs) loginInputs.innerHTML = '';
 }
 
 function skipLogin() {
