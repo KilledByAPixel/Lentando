@@ -150,6 +150,23 @@ header .date { font-size: 14px; color: var(--muted); }
 .btn-used { background: var(--primary); }
 .btn-resisted { background: var(--resist); }
 
+.used-row {
+  display: flex;
+  gap: 8px;
+}
+.used-row .btn-used { flex: 3; }
+.btn-undo {
+  flex: 1;
+  background: var(--warn-light);
+  color: var(--warn);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 8px;
+  display: none;
+}
+.used-row.has-undo .btn-undo { display: block; }
+.btn-undo:active { background: var(--danger-light); color: var(--danger); }
+
 /* ===== CHIP ROWS ===== */
 .chip-row {
   margin-top: 8px;
@@ -780,7 +797,10 @@ header .date { font-size: 14px; color: var(--muted); }
   <!-- ACTION BUTTONS -->
   <section>
     <div class="action-group">
-      <button class="big-btn btn-used" id="btn-used"><span id="used-label">Used</span></button>
+      <div class="used-row" id="used-row">
+        <button class="big-btn btn-used" id="btn-used"><span id="used-label">Used</span></button>
+        <button class="big-btn btn-undo" id="btn-undo">↩ Undo</button>
+      </div>
       <div class="chip-row hidden" id="used-chips"></div>
     </div>
 

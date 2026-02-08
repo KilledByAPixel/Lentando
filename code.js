@@ -1118,6 +1118,7 @@ function renderGraphs() {
 
 // ========== TAB SWITCHING ==========
 function switchTab(tabName) {
+  hideUndo();
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabName));
   
@@ -1510,6 +1511,27 @@ function checkNewWins(event) {
   }
 }
 
+let lastUndoEventId = null;
+
+function showUndo(eventId) {
+  lastUndoEventId = eventId;
+  const row = $('used-row');
+  if (row) row.classList.add('has-undo');
+}
+
+function hideUndo() {
+  lastUndoEventId = null;
+  const row = $('used-row');
+  if (row) row.classList.remove('has-undo');
+}
+
+function undoLastUsed() {
+  if (!lastUndoEventId) return;
+  DB.deleteEvent(lastUndoEventId);
+  hideUndo();
+  render();
+}
+
 function logUsed() {
   const s = DB.loadSettings();
   const evt = createUsedEvent(s.lastSubstance, s.lastMethod, s.lastAmount, s.lastReason);
@@ -1523,6 +1545,7 @@ function logUsed() {
   hideResistedChips();
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
   flashEl($('btn-used'));
+  showUndo(evt.id);
 }
 
 function logResisted() {
@@ -1532,6 +1555,7 @@ function logResisted() {
   checkNewWins(evt);
   render();
   hideUsedChips();
+  hideUndo();
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
   showCoaching();
   flashEl($('btn-resisted'));
@@ -1543,6 +1567,7 @@ function logHabit(habit, minutes) {
   stampActivity();
   checkNewWins(evt);
   render();
+  hideUndo();
 }
 
 function logWaterFromReminder() {
@@ -1563,6 +1588,7 @@ function bindEvents() {
   });
 
   $('btn-used').addEventListener('click', logUsed);
+  $('btn-undo').addEventListener('click', undoLastUsed);
   $('btn-resisted').addEventListener('click', logResisted);
   $('used-chips').addEventListener('click', handleChipClick);
   $('resisted-chips').addEventListener('click', handleChipClick);
