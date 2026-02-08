@@ -72,6 +72,9 @@ const OPTIONAL_FIELDS = new Set(['reason', 'trigger']);
 
 // Timeouts and durations
 const CHIP_TIMEOUT_MS = 5000;
+const FLASH_ANIMATION_MS = 300;
+const IMPORT_STATUS_HIDE_MS = 5000;
+const METRICS_REFRESH_MS = 30000;
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
@@ -195,7 +198,7 @@ function uid() {
 
 function flashEl(el) {
   el.classList.add('flash');
-  setTimeout(() => el.classList.remove('flash'), 300);
+  setTimeout(() => el.classList.remove('flash'), FLASH_ANIMATION_MS);
 }
 
 function escapeHTML(str) {
@@ -1216,7 +1219,7 @@ function importJSON(inputEl) {
   const showStatus = (msg, cls) => {
     statusEl.textContent = msg;
     statusEl.className = `import-status ${cls}`;
-    setTimeout(() => statusEl.classList.add('hidden'), 5000);
+    setTimeout(() => statusEl.classList.add('hidden'), IMPORT_STATUS_HIDE_MS);
   };
 
   const reader = new FileReader();
@@ -1484,7 +1487,7 @@ function continueToApp() {
     render();
     // Clear existing interval if continueToApp is called multiple times
     if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(() => renderMetrics(), 30000);
+    timerInterval = setInterval(() => renderMetrics(), METRICS_REFRESH_MS);
   }
 }
 
@@ -1519,7 +1522,7 @@ function selectProfile(profileKey) {
   render();
   // Clear existing interval if selectProfile is called multiple times
   if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => renderMetrics(), 30000);
+  timerInterval = setInterval(() => renderMetrics(), METRICS_REFRESH_MS);
 }
 
 // ========== MAIN ACTIONS ==========
