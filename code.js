@@ -982,10 +982,25 @@ function renderDayHistory() {
     return;
   }
 
+  // Calculate summary stats
+  const used = filterUsed(events);
+  const resisted = filterByType(events, 'resisted');
+  const exerciseMins = getHabits(events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
+  const totalAmt = sumAmount(used);
+  
+  const summaryParts = [];
+  if (used.length > 0) summaryParts.push(`Used ${used.length}x (${totalAmt} units)`);
+  if (resisted.length > 0) summaryParts.push(`Resisted ${resisted.length}x`);
+  if (exerciseMins > 0) summaryParts.push(`Exercised ${exerciseMins}m`);
+  
+  const summary = summaryParts.length > 0 
+    ? `<div style="padding:8px 12px;background:var(--card);border:1px solid var(--card-border);border-radius:8px;margin-bottom:12px;font-size:13px;color:var(--muted)">${summaryParts.join(' • ')}</div>`
+    : '';
+
   // Build HTML in reverse order, limited to historyShowCount
   const len = events.length;
   const start = Math.max(0, len - historyShowCount);
-  let html = '';
+  let html = summary;
   for (let i = len - 1; i >= start; i--) {
     html += eventRowHTML(events[i], true);
   }
