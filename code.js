@@ -576,13 +576,14 @@ const Wins = {
   },
   
   _countDaysSinceLastTHC() {
-    const allEvents = DB.loadEvents();
-    const allTHC = filterTHC(filterUsed(allEvents));
-    if (allTHC.length === 0) return 0;
-    
-    const lastTHC = allTHC[allTHC.length - 1];
-    const daysSince = Math.floor((Date.now() - lastTHC.ts) / (1000 * 60 * 60 * 24));
-    return daysSince;
+    const keys = DB.getAllDayKeys(); // sorted reverse (most recent first)
+    for (const key of keys) {
+      const dayTHC = filterTHC(filterUsed(DB.forDate(key)));
+      if (dayTHC.length > 0) {
+        return Math.floor((Date.now() - dayTHC[dayTHC.length - 1].ts) / (1000 * 60 * 60 * 24));
+      }
+    }
+    return 0;
   },
 };
 
@@ -1036,15 +1037,7 @@ function buildHourGraphBars(hourCounts, max, color) {
     const count = hourCounts[hour] || 0;
     const h = max > 0 ? Math.round((count / max) * 96) : 0;
     const hourLabel = hour === 0 ? '12a' : hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`;
-    const showLabel = hour % 3 === 0; // Show every 3rd hour label
-    const labelStyle = showLabel ? '' : 'visibility:hidden';
-    const barStyle = `height:${h}px;background:${color};${count > 0 ? 'min-height:2px' : ''}`;
-    const displayVal = count > 0 ? (Number.isInteger(count) ? count : count.toFixed(1)) : '';
-    html += `<div class="graph-bar-col">
-      <div class="graph-bar-val">${displayVal}</div>
-      <div class="graph-bar" style="${barStyle}"></div>
-      <div class="graph-bar-label" style="${labelStyle}">${hourLabel}</div>
-    </div>`;
+    html += graphBarCol(count, h, { color, text: hourLabel }, hour % 3 === 0);
   }
   return html + '</div>';
 }
@@ -1203,7 +1196,7 @@ function importJSON(inputEl) {
       const existingIds = new Set(existing.map(e => e.id));
       const newEvents = validation.events.filter(evt => !existingIds.has(evt.id));
       
-      DB._events = [...existing, ...newEvents];
+      DB._events = [...existing, ...newEvents].sort((a, b) => a.ts - b.ts);
       DB.saveEvents();
 
       // Import lifetime wins if present
@@ -1481,38 +1474,6 @@ function stampActivity() {
   DB.saveSettings();
 }
 
-function checkNewWins(event) {
-  const winData = loadWinData();
-  const lifetimeIds = new Set(winData.lifetimeWins.map(w => w.id));
-  
-  // Quick check for obvious new wins
-  const newWinIds = [];
-  
-  if (event.type === 'resisted' && !lifetimeIds.has('resist')) {
-    newWinIds.push('resist');
-  }
-  
-  if (event.type === 'habit') {
-    if (event.habit === 'water' && !lifetimeIds.has('hydrated')) {
-      newWinIds.push('hydrated');
-    }
-    if (event.habit === 'exercise' && !lifetimeIds.has('exercise-water-combo')) {
-      newWinIds.push('exercise-water-combo');
-    }
-  }
-  
-  // Add new wins to lifetime (don't increment, just ensure they exist)
-  newWinIds.forEach(id => {
-    if (!lifetimeIds.has(id)) {
-      winData.lifetimeWins.push({ id, count: 1 });
-    }
-  });
-  
-  if (newWinIds.length > 0) {
-    saveWinData(winData);
-  }
-}
-
 let lastUndoEventId = null;
 
 function showUndo(eventId) {
@@ -1551,7 +1512,6 @@ function logUsed() {
   s.lastReason = null;
   DB.saveSettings();
   stampActivity();
-  checkNewWins(evt);
   render();
   hideResistedChips();
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
@@ -1563,7 +1523,6 @@ function logResisted() {
   const evt = createResistedEvent();
   DB.addEvent(evt);
   stampActivity();
-  checkNewWins(evt);
   render();
   hideUsedChips();
   hideUndo();
@@ -1576,7 +1535,6 @@ function logHabit(habit, minutes) {
   const evt = createHabitEvent(habit, minutes);
   DB.addEvent(evt);
   stampActivity();
-  checkNewWins(evt);
   render();
   hideUndo();
 }
@@ -1953,6 +1911,7 @@ function generateTestWins() {
   const updatedData = {
     todayDate: null,
     todayWins: [],
+    todayUndoCount: 0,
     lifetimeWins: Array.from(lifetimeMap.entries())
       .map(([id, count]) => ({ id, count }))
       .filter(w => w.count > 0)
