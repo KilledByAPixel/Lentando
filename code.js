@@ -1541,6 +1541,119 @@ window.App = {
   }
 };
 
+// ========== TEST DATA GENERATION ==========
+// Call these from browser console to generate realistic historical data:
+// generateTestData(100) - adds 100 random usage events over past 30 days
+// generateTestHabits(20) - adds 20 random events per habit type
+// generateTestResists(50) - adds 50 random resist events
+
+function generateTestData(numEvents = 100) {
+  const profile = getProfile();
+  const now = Date.now();
+  const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  
+  console.log(`Generating ${numEvents} random usage events...`);
+  
+  for (let i = 0; i < numEvents; i++) {
+    // Random timestamp within past 30 days
+    const timestamp = thirtyDaysAgo + Math.random() * (now - thirtyDaysAgo);
+    
+    // Random substance, method, amount
+    const substance = profile.substances[Math.floor(Math.random() * profile.substances.length)];
+    const method = profile.methods[Math.floor(Math.random() * profile.methods.length)];
+    const amount = profile.amounts[Math.floor(Math.random() * profile.amounts.length)];
+    const reason = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
+    
+    const evt = {
+      id: uid(),
+      type: 'used',
+      ts: timestamp,
+      substance,
+      method,
+      amount,
+      reason,
+      icon: profile.icons[substance] || '💊'
+    };
+    
+    DB._events.push(evt);
+  }
+  
+  // Sort events by timestamp
+  DB._events.sort((a, b) => a.ts - b.ts);
+  DB.saveEvents();
+  
+  console.log(`✅ Added ${numEvents} usage events. Reload the page to see updated data.`);
+}
+
+function generateTestHabits(numPerHabit = 20) {
+  const habitTypes = ['water', 'breaths', 'clean', 'exercise', 'outside'];
+  const now = Date.now();
+  const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  
+  console.log(`Generating ${numPerHabit} events for each habit type...`);
+  
+  for (const habit of habitTypes) {
+    for (let i = 0; i < numPerHabit; i++) {
+      const timestamp = thirtyDaysAgo + Math.random() * (now - thirtyDaysAgo);
+      const minutes = habit === 'exercise' 
+        ? EXERCISE_DURATIONS[Math.floor(Math.random() * EXERCISE_DURATIONS.length)]
+        : null;
+      
+      const evt = {
+        id: uid(),
+        type: 'habit',
+        ts: timestamp,
+        habit,
+        minutes
+      };
+      
+      DB._events.push(evt);
+    }
+  }
+  
+  // Sort events by timestamp
+  DB._events.sort((a, b) => a.ts - b.ts);
+  DB.saveEvents();
+  
+  console.log(`✅ Added ${numPerHabit * habitTypes.length} habit events. Reload the page to see updated data.`);
+}
+
+function generateTestResists(numEvents = 50) {
+  const now = Date.now();
+  const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  
+  console.log(`Generating ${numEvents} random resist events...`);
+  
+  for (let i = 0; i < numEvents; i++) {
+    const timestamp = thirtyDaysAgo + Math.random() * (now - thirtyDaysAgo);
+    const intensity = Math.random() > 0.2 ? INTENSITIES[Math.floor(Math.random() * INTENSITIES.length)] : null;
+    const trigger = Math.random() > 0.3 ? TRIGGERS[Math.floor(Math.random() * TRIGGERS.length)] : null;
+    const didInstead = Math.random() > 0.4 ? DID_INSTEAD[Math.floor(Math.random() * DID_INSTEAD.length)] : null;
+    
+    const evt = {
+      id: uid(),
+      type: 'resisted',
+      ts: timestamp,
+      intensity,
+      trigger,
+      didInstead
+    };
+    
+    DB._events.push(evt);
+  }
+  
+  // Sort events by timestamp
+  DB._events.sort((a, b) => a.ts - b.ts);
+  DB.saveEvents();
+  
+  console.log(`✅ Added ${numEvents} resist events. Reload the page to see updated data.`);
+}
+
+// Attach to window for console access
+window.generateTestData = generateTestData;
+window.generateTestHabits = generateTestHabits;
+window.generateTestResists = generateTestResists;
+
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
   DB.loadEvents();
@@ -1562,4 +1675,10 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
     timerInterval = setInterval(() => renderMetrics(), 30000);
   }
+  
+  // Log test data generation instructions
+  console.log('📊 Test data generation available:');
+  console.log('  generateTestData(100) - Add 100 random usage events');
+  console.log('  generateTestHabits(20) - Add 20 events per habit type');
+  console.log('  generateTestResists(50) - Add 50 resist events');
 });
