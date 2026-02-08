@@ -1788,6 +1788,7 @@ function logUsed() {
   calculateAndUpdateWins();
   render();
   hideResistedChips();
+  $('exercise-chips').classList.add('hidden');
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
   
   const btn = $('btn-used');
@@ -1796,7 +1797,7 @@ function logUsed() {
   
   const profile = getProfile();
   const amountStr = s.lastAmount === 1 ? profile.amountUnit.replace(/s$/, '') : profile.amountUnit;
-  showToast(`✅ Logged ${profile.sessionLabel} - ${s.lastAmount} ${amountStr}`);
+  showToast(`✅ ${profile.sessionLabel} - ${s.lastAmount} ${amountStr}`);
   
   showUndo(evt.id);
 }
@@ -1809,6 +1810,7 @@ function logResisted() {
   render();
   hideUsedChips();
   hideUndo();
+  $('exercise-chips').classList.add('hidden');
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
   showCoaching();
   
@@ -1828,7 +1830,7 @@ function logHabit(habit, minutes) {
   
   hapticFeedback();
   const label = HABIT_LABELS[habit] || habit;
-  showToast(`${label} logged!`);
+  showToast(`${label}`);
 }
 
 function logWaterFromReminder() {
@@ -1881,6 +1883,7 @@ function bindEvents() {
       return;
     }
     
+    $('exercise-chips').classList.add('hidden');
     logHabit(habit);
     flashEl(btn);
   });
