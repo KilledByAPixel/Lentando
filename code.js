@@ -182,7 +182,8 @@ const DEFAULT_SETTINGS = {
   lastMethod: 'bong',
   lastAmount: 1.0,
   showCoaching: true,
-  lastActivityTimestamp: null
+  lastActivityTimestamp: null,
+  graphDays: 7
 };
 
 // ========== TINY HELPERS ==========
@@ -283,9 +284,16 @@ const DB = {
   },
 
   saveEvents() {
-    localStorage.setItem(STORAGE_EVENTS, JSON.stringify(this._events));
-    this._invalidateDateIndex();
-    if (window.FirebaseSync) FirebaseSync.onDataChanged();
+    try {
+      localStorage.setItem(STORAGE_EVENTS, JSON.stringify(this._events));
+      this._invalidateDateIndex();
+      if (window.FirebaseSync) FirebaseSync.onDataChanged();
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        alert('Storage limit reached. Please export your data and clear old events.');
+      }
+      throw e;
+    }
   },
 
   loadSettings() {
@@ -300,8 +308,15 @@ const DB = {
   },
 
   saveSettings() {
-    localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(this._settings));
-    if (window.FirebaseSync) FirebaseSync.onDataChanged();
+    try {
+      localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(this._settings));
+      if (window.FirebaseSync) FirebaseSync.onDataChanged();
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        alert('Storage limit reached. Please export your data.');
+      }
+      throw e;
+    }
   },
 
   addEvent(evt) {
@@ -316,6 +331,7 @@ const DB = {
     const idx = this._events.findIndex(e => e.id === id);
     if (idx === -1) return null;
     Object.assign(this._events[idx], data);
+    this._invalidateDateIndex(); // Rebuild index if timestamp changed
     this.saveEvents();
     return this._events[idx];
   },
@@ -391,7 +407,11 @@ function countDelayedResists(resisted, used) {
 
 function getMaxGapHours(sessions) {
   if (sessions.length < 2) return 0;
-  const maxGapMs = Math.max(...sessions.slice(1).map((u, i) => u.ts - sessions[i].ts));
+  const gaps = sessions.slice(1).map((u, i) => u.ts - sessions[i].ts);
+  // Also include gap from last session to now
+  const gapSinceLastSession = Date.now() - sessions[sessions.length - 1].ts;
+  gaps.push(gapSinceLastSession);
+  const maxGapMs = Math.max(...gaps);
   return maxGapMs / 3600000;
 }
 
@@ -411,8 +431,15 @@ function loadWinData() {
 }
 
 function saveWinData(data) {
-  localStorage.setItem(STORAGE_WINS, JSON.stringify(data));
-  if (window.FirebaseSync) FirebaseSync.onDataChanged();
+  try {
+    localStorage.setItem(STORAGE_WINS, JSON.stringify(data));
+    if (window.FirebaseSync) FirebaseSync.onDataChanged();
+  } catch (e) {
+    if (e.name === 'QuotaExceededError') {
+      alert('Storage limit reached. Please export your data.');
+    }
+    throw e;
+  }
 }
 
 // ========== WINS ENGINE ==========
@@ -957,7 +984,9 @@ function renderWins() {
 
 function hasRecentWater() {
   const cutoff = Date.now() - TWO_HOURS_MS;
-  return DB.forDate(todayKey()).some(e => e.type === 'habit' && e.habit === 'water' && e.ts >= cutoff);
+  const today = DB.forDate(todayKey());
+  const yesterday = DB.forDate(daysAgoKey(1));
+  return [...today, ...yesterday].some(e => e.type === 'habit' && e.habit === 'water' && e.ts >= cutoff);
 }
 
 function renderWaterReminder() {
@@ -1648,6 +1677,10 @@ function bindEvents() {
     const chip = e.target.closest('.chip');
     if (!chip) return;
     graphDays = +chip.dataset.days;
+    const settings = DB.loadSettings();
+    settings.graphDays = graphDays;
+    DB._settings = settings;
+    DB.saveSettings();
     e.currentTarget.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c === chip));
     requestAnimationFrame(renderGraphs);
   });
@@ -1725,8 +1758,15 @@ function loadTodos() {
 }
 
 function saveTodos(todos) {
-  localStorage.setItem(STORAGE_TODOS, JSON.stringify(todos));
-  if (window.FirebaseSync) FirebaseSync.onDataChanged();
+  try {
+    localStorage.setItem(STORAGE_TODOS, JSON.stringify(todos));
+    if (window.FirebaseSync) FirebaseSync.onDataChanged();
+  } catch (e) {
+    if (e.name === 'QuotaExceededError') {
+      alert('Storage limit reached. Please export your data and clear completed tasks.');
+    }
+    throw e;
+  }
 }
 
 function renderTodos() {
