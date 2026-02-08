@@ -1171,22 +1171,11 @@ function buildHourGraphBars(hourCounts, max, color) {
 
 function renderGraphs() {
   const days = getLastNDays(graphDays);
-  const container = $('graph-content');
+  const hourContainer = $('hour-graphs');
+  const dayContainer = $('graph-content');
 
-  let html = '';
-  
-  // Regular graphs first (Amount per day, Resisted per day, Exercise)
-  for (const def of GRAPH_DEFS) {
-    const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
-    const max  = Math.max(...vals, 1);
-    const hasData = vals.some(v => v > 0);
-
-    html += `<div class="graph-container"><div class="graph-title">${def.label}</div>`;
-    html += hasData 
-      ? buildGraphBars(vals, days, max, def)
-      : emptyStateHTML('No data yet', 'padding:12px 0');
-    html += `</div>`;
-  }
+  // Hour graphs (not affected by day selector)
+  let hourHtml = '';
   
   // Add today's usage by hour graph
   const todayEvents = DB.forDate(todayKey());
@@ -1198,11 +1187,11 @@ function renderGraphs() {
   });
   const hasHourData = todayUsed.length > 0;
   const maxCount = hasHourData ? Math.max(...Object.values(hourCounts), 1) : 1;
-  html += `<div class="graph-container"><div class="graph-title">🕒 Today's Usage by Hour</div>`;
-  html += hasHourData
+  hourHtml += `<div class="graph-container"><div class="graph-title">🕒 Today's Usage by Hour</div>`;
+  hourHtml += hasHourData
     ? buildHourGraphBars(hourCounts, maxCount, '#f39c12')
     : emptyStateHTML('No data yet', 'padding:12px 0');
-  html += `</div>`;
+  hourHtml += `</div>`;
   
   // Add average usage by hour heatmap
   const allDayKeys = DB.getAllDayKeys();
@@ -1230,13 +1219,29 @@ function renderGraphs() {
   
   const hasHeatmapData = Object.keys(hourAverages).length > 0;
   const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
-  html += `<div class="graph-container"><div class="graph-title">⚡ Average Usage by Hour</div>`;
-  html += hasHeatmapData
+  hourHtml += `<div class="graph-container"><div class="graph-title">⚡ Average Usage by Hour</div>`;
+  hourHtml += hasHeatmapData
     ? buildHourGraphBars(hourAverages, maxAvg, '#e67e22')
     : emptyStateHTML('No data yet', 'padding:12px 0');
-  html += `</div>`;
+  hourHtml += `</div>`;
   
-  container.innerHTML = html;
+  hourContainer.innerHTML = hourHtml;
+  
+  // Day-based graphs (affected by 7/14/30 day selector)
+  let dayHtml = '';
+  for (const def of GRAPH_DEFS) {
+    const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
+    const max  = Math.max(...vals, 1);
+    const hasData = vals.some(v => v > 0);
+
+    dayHtml += `<div class="graph-container"><div class="graph-title">${def.label}</div>`;
+    dayHtml += hasData 
+      ? buildGraphBars(vals, days, max, def)
+      : emptyStateHTML('No data yet', 'padding:12px 0');
+    dayHtml += `</div>`;
+  }
+  
+  dayContainer.innerHTML = dayHtml;
 }
 
 // ========== TAB SWITCHING ==========
