@@ -9,6 +9,7 @@ const STORAGE_EVENTS = 'ht_events';
 const STORAGE_SETTINGS = 'ht_settings';
 const STORAGE_TODOS = 'ht_todos';
 const STORAGE_THEME = 'ht_theme';
+const STORAGE_WINS = 'ht_wins';
 
 const ADDICTION_PROFILES = {
   cannabis: {
@@ -99,6 +100,53 @@ const HABIT_LABELS = {
   exercise: `${HABIT_ICONS.exercise} Exercise`,
   outside: `${HABIT_ICONS.outside} Outside`
 };
+
+// Win definitions - maps win IDs to their display properties
+const WIN_DEFINITIONS = {
+  'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
+  'resist': { label: 'Resist Win', icon: '💪', desc: 'Logged an urge but resisted using' },
+  'delay-15m': { label: 'Delay Win (15m+)', icon: '⏳', desc: 'Resisted and didn\'t use for at least 15 minutes after' },
+  'replacement-cbd': { label: 'Replacement Win (CBD)', icon: '🌿', desc: 'Used CBD during daytime (6am-8pm) instead of THC' },
+  'harm-reduction-vape': { label: 'Harm Reduction (vape)', icon: '🌡️', desc: 'Chose vaping as a safer consumption method' },
+  'dose-half': { label: 'Dose Win (half)', icon: '⚖️', desc: 'Used a smaller dose (0.5 units)' },
+  'mindful': { label: 'Mindful Session', icon: '🧠', desc: 'Logged the reason for using, showing mindful awareness' },
+  'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
+  'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
+  'zero-thc': { label: 'Zero THC Day', icon: '🏆', desc: 'No THC today while staying engaged with tracking' },
+  'tbreak-day': { label: 'T-Break Day', icon: '🚫', desc: 'Went a full day without using while staying engaged' },
+  'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 4 times today' },
+  'habit-stack': { label: 'Habit Stack', icon: '🔗', desc: 'Logged multiple different habit types in one day' },
+  'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '💪💧', desc: 'Logged both exercise and water today' },
+  'gap-1h': { label: 'Gap Win (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions' },
+  'gap-2h': { label: 'Gap Win (2h+)', icon: '⏱️', desc: 'Maintained a gap of 2+ hours between sessions' },
+  'gap-4h': { label: 'Gap Win (4h+)', icon: '⏱️', desc: 'Maintained a gap of 4+ hours between sessions' },
+  'gap-8h': { label: 'Gap Win (8h+)', icon: '⏱️', desc: 'Maintained a gap of 8+ hours between sessions' },
+  'gap-12h': { label: 'Gap Win (12h+)', icon: '⏱️', desc: 'Maintained a gap of 12+ hours between sessions' },
+  'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Today\'s longest gap between sessions exceeded your average' },
+  'held-off-afternoon': { label: 'Held Off Until Afternoon', icon: '🌅', desc: 'Waited until afternoon before first session' },
+  'fewer-sessions': { label: 'Fewer THC sessions than yesterday', icon: '📉', desc: 'Had fewer THC sessions than yesterday' },
+  'lower-amount': { label: 'Lower amount than yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
+  'first-later': { label: 'First THC later than yesterday', icon: '⏰', desc: 'Started your first session later than yesterday' },
+  'last-earlier': { label: 'Last THC earlier than yesterday', icon: '🌙', desc: 'Finished your last session earlier than yesterday' },
+  'good-start': { label: 'Good Start', icon: '🌟', desc: 'Started your day with a positive action instead of using' },
+  'resist-streak': { label: 'Resist Streak', icon: '🔥', desc: 'Resisted urges for multiple days in a row' },
+  'habit-streak': { label: 'Habit Streak', icon: '⛓️', desc: 'Logged healthy habits for consecutive days' },
+  'taper': { label: 'Taper Win', icon: '📐', desc: 'Gradually reduced usage over consecutive days' },
+  'app-streak': { label: 'App Streak', icon: '📱', desc: 'Used the app multiple days in a row' },
+  'week-streak': { label: 'Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
+  'month-streak': { label: 'Month Streak', icon: '🗓️', desc: 'Used the app every day for a month' },
+  'year-streak': { label: 'Year Streak', icon: '🎉', desc: 'Used the app every day for a year!' },
+  'tbreak-1d': { label: 'T-Break: 1 Day', icon: '🌱', desc: 'One full day without THC' },
+  'tbreak-7d': { label: 'T-Break: 1 Week', icon: '🌿', desc: 'One week without THC' },
+  'tbreak-14d': { label: 'T-Break: 2 Weeks', icon: '🍀', desc: 'Two weeks without THC' },
+  'tbreak-21d': { label: 'T-Break: 3 Weeks', icon: '🌳', desc: 'Three weeks without THC' },
+  'tbreak-30d': { label: 'T-Break: 1 Month', icon: '🏆', desc: 'One month without THC' },
+  'tbreak-365d': { label: 'T-Break: 1 Year', icon: '👑', desc: 'One year without THC!' },
+};
+
+function getWinDef(id) {
+  return WIN_DEFINITIONS[id] || { label: 'Unknown Win', icon: '❓', desc: '' };
+}
 
 const DEFAULT_SETTINGS = {
   addictionProfile: null, // Set on first launch
@@ -302,12 +350,27 @@ function getMilestoneWins(gapHours, milestones) {
   return milestones.filter(h => gapHours >= h);
 }
 
+// ========== WIN STORAGE ==========
+function loadWinData() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_WINS));
+    if (!data) return { todayWins: [], lifetimeWins: [] };
+    return data;
+  } catch {
+    return { todayWins: [], lifetimeWins: [] };
+  }
+}
+
+function saveWinData(data) {
+  localStorage.setItem(STORAGE_WINS, JSON.stringify(data));
+}
+
 // ========== WINS ENGINE ==========
 const Wins = {
   calculate(todayEvents, yesterdayEvents) {
     const wins = [];
-    const addWin = (condition, label, count, icon, desc) => {
-      if (condition) wins.push({ label, count, icon, desc });
+    const addWin = (condition, id) => {
+      if (condition) wins.push(id);
     };
 
     const used     = filterUsed(todayEvents);
@@ -321,43 +384,45 @@ const Wins = {
     const settings = DB.loadSettings();
     if (settings.lastActivityTimestamp) {
       const hoursSinceLastActivity = (Date.now() - settings.lastActivityTimestamp) / (1000 * 60 * 60);
-      addWin(hoursSinceLastActivity >= 24, 'Welcome Back', 1, '👋', 'Returned to tracking after 24+ hours away');
+      addWin(hoursSinceLastActivity >= 24, 'welcome-back');
     }
 
     // --- Session-based wins ---
-    addWin(resisted.length > 0, 'Resist Win', resisted.length, '💪', 'Logged an urge but resisted using');
+    for (let i = 0; i < resisted.length; i++) addWin(true, 'resist');
 
     const delayCount = countDelayedResists(resisted, used);
-    addWin(delayCount > 0, 'Delay Win (15m+)', delayCount, '⏳', 'Resisted and didn\'t use for at least 15 minutes after');
+    for (let i = 0; i < delayCount; i++) addWin(true, 'delay-15m');
 
     const replacementCount = cbdUsed.filter(u => isDaytime(u.ts)).length;
-    addWin(replacementCount > 0, 'Replacement Win (CBD)', replacementCount, '🌿', 'Used CBD during daytime (6am-8pm) instead of THC');
+    for (let i = 0; i < replacementCount; i++) addWin(true, 'replacement-cbd');
 
     const vapeCount = used.filter(e => e.method === 'vape').length;
-    addWin(vapeCount > 0, 'Harm Reduction (vape)', vapeCount, '🌡️', 'Chose vaping as a safer consumption method');
+    for (let i = 0; i < vapeCount; i++) addWin(true, 'harm-reduction-vape');
 
     const doseCount = used.filter(e => e.amount === 0.5).length;
-    addWin(doseCount > 0, 'Dose Win (half)', doseCount, '⚖️', 'Used a smaller dose (0.5 units)');
+    for (let i = 0; i < doseCount; i++) addWin(true, 'dose-half');
 
     const mindfulCount = used.filter(e => e.reason).length;
-    addWin(mindfulCount > 0, 'Mindful Session', mindfulCount, '🧠', 'Logged the reason for using, showing mindful awareness');
+    for (let i = 0; i < mindfulCount; i++) addWin(true, 'mindful');
 
-    addWin(used.length > 0 && thcUsed.length === 0, 'CBD-Only Day', 1, '🍃', 'Used only CBD products today, no THC');
-    addWin(used.length > 0 && totalAmt <= LOW_DAY_THRESHOLD, `Low Day (≤${LOW_DAY_THRESHOLD} units)`, 1, '🤏', `Kept total usage to ${LOW_DAY_THRESHOLD} units or less`);
-    addWin(thcUsed.length === 0 && (resisted.length > 0 || habits.length > 0 || cbdUsed.length > 0), 'Zero THC Day', 1, '🏆', 'No THC today while staying engaged with tracking');
-    addWin(used.length === 0 && (resisted.length > 0 || habits.length > 0), 'T-Break Day', 1, '🚫', 'Went a full day without using while staying engaged');
+    addWin(used.length > 0 && thcUsed.length === 0, 'cbd-only');
+    addWin(used.length > 0 && totalAmt <= LOW_DAY_THRESHOLD, 'low-day');
+    addWin(thcUsed.length === 0 && (resisted.length > 0 || habits.length > 0 || cbdUsed.length > 0), 'zero-thc');
+    addWin(used.length === 0 && (resisted.length > 0 || habits.length > 0), 'tbreak-day');
 
     // --- Habit-based wins ---
     const waterCount = getHabits(todayEvents, 'water').length;
-    addWin(waterCount >= 4, 'Hydrated', 1, '💧', 'Drank water at least 4 times today');
+    addWin(waterCount >= 4, 'hydrated');
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
-    addWin(uniqueHabits.size >= 2, `Habit Stack (${uniqueHabits.size} types)`, uniqueHabits.size, '🔗', 'Logged multiple different habit types in one day');
+    if (uniqueHabits.size >= 2) {
+      for (let i = 0; i < uniqueHabits.size - 1; i++) addWin(true, 'habit-stack');
+    }
     
     // Exercise + Water combo
     const hasExercise = habits.some(e => e.habit === 'exercise');
     const hasWater = habits.some(e => e.habit === 'water');
-    addWin(hasExercise && hasWater, 'Exercise + Water Combo', 1, '💪💧', 'Logged both exercise and water today');
+    addWin(hasExercise && hasWater, 'exercise-water-combo');
 
     // --- Timing-based wins ---
     if (thcUsed.length >= 2) {
@@ -388,56 +453,56 @@ const Wins = {
       const yUsed = filterUsed(yesterdayEvents);
       const yThc  = filterTHC(yUsed);
 
-      addWin(thcUsed.length < yThc.length, 'Fewer THC sessions than yesterday', 1, '📉', 'Had fewer THC sessions than yesterday');
-      addWin(used.length > 0 && totalAmt < sumAmount(yUsed), 'Lower amount than yesterday', 1, '📉', 'Used a smaller total amount than yesterday');
+      addWin(thcUsed.length < yThc.length, 'fewer-sessions');
+      addWin(used.length > 0 && totalAmt < sumAmount(yUsed), 'lower-amount');
       
       // Filter to daytime sessions for "first session" comparison
       const todayDaytime = thcUsed.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
       const yesterdayDaytime = yThc.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
       
       if (todayDaytime.length > 0 && yesterdayDaytime.length > 0) {
-        addWin(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'First THC later than yesterday', 1, '⏰', 'Started your first session later than yesterday');
+        addWin(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
       }
       
       // Last session comparison uses all sessions (late-night sessions are relevant for when you stopped)
       if (thcUsed.length > 0 && yThc.length > 0) {
-        addWin(timeOfDayMin(thcUsed[thcUsed.length - 1].ts) < timeOfDayMin(yThc[yThc.length - 1].ts), 'Last THC earlier than yesterday', 1, '🌙', 'Finished your last session earlier than yesterday');
+        addWin(timeOfDayMin(thcUsed[thcUsed.length - 1].ts) < timeOfDayMin(yThc[yThc.length - 1].ts), 'last-earlier');
       }
     }
     
     // Good Start win - logged habit or resist before first use
     const firstEvent = todayEvents[0];
     if (firstEvent && (firstEvent.type === 'habit' || firstEvent.type === 'resisted')) {
-      addWin(true, 'Good Start', 1, '🌟', 'Started your day with a positive action instead of using');
+      addWin(true, 'good-start');
     }
 
     // --- Streak wins ---
     const resistStreak = this._countStreak('resisted');
-    addWin(resistStreak >= 2, `Resist Streak (${resistStreak} days)`, resistStreak, '🔥', `Resisted urges for ${resistStreak} days in a row`);
+    for (let i = 0; i < resistStreak - 1; i++) addWin(resistStreak >= 2, 'resist-streak');
     
     const habitStreak = this._countStreak('habit');
-    addWin(habitStreak >= 3, `Habit Streak (${habitStreak} days)`, habitStreak, '⛓️', `Logged healthy habits for ${habitStreak} consecutive days`);
+    for (let i = 0; i < habitStreak - 2; i++) addWin(habitStreak >= 3, 'habit-streak');
 
     const taperDays = this._countTaper();
-    addWin(taperDays >= 3, `Taper Win (${taperDays} days declining)`, taperDays, '📐', `Gradually reduced usage over ${taperDays} consecutive days`);
+    for (let i = 0; i < taperDays - 2; i++) addWin(taperDays >= 3, 'taper');
     
     // App usage streaks
     const appStreak = this._countAppUsageStreak();
-    addWin(appStreak >= 2, `App Streak (${appStreak} days)`, 1, '📱', `Used the app ${appStreak} days in a row`);
-    addWin(appStreak >= 7, `Week Streak`, 1, '📅', 'Used the app every day for a week');
-    addWin(appStreak >= 30, `Month Streak`, 1, '🗓️', 'Used the app every day for a month');
-    addWin(appStreak >= 365, `Year Streak`, 1, '🎉', 'Used the app every day for a year!');
+    for (let i = 0; i < appStreak - 1; i++) addWin(appStreak >= 2, 'app-streak');
+    addWin(appStreak >= 7, 'week-streak');
+    addWin(appStreak >= 30, 'month-streak');
+    addWin(appStreak >= 365, 'year-streak');
     
     // T-Break milestones (time since last THC use)
     if (thcUsed.length === 0) {
       const daysSinceLastTHC = this._countDaysSinceLastTHC();
       if (daysSinceLastTHC >= 1) {
-        addWin(daysSinceLastTHC >= 1, 'T-Break: 1 Day', 1, '🌱', 'One full day without THC');
-        addWin(daysSinceLastTHC >= 7, 'T-Break: 1 Week', 1, '🌿', 'One week without THC');
-        addWin(daysSinceLastTHC >= 14, 'T-Break: 2 Weeks', 1, '🍀', 'Two weeks without THC');
-        addWin(daysSinceLastTHC >= 21, 'T-Break: 3 Weeks', 1, '🌳', 'Three weeks without THC');
-        addWin(daysSinceLastTHC >= 30, 'T-Break: 1 Month', 1, '🏆', 'One month without THC');
-        addWin(daysSinceLastTHC >= 365, 'T-Break: 1 Year', 1, '👑', 'One year without THC!');
+        addWin(daysSinceLastTHC >= 1, 'tbreak-1d');
+        addWin(daysSinceLastTHC >= 7, 'tbreak-7d');
+        addWin(daysSinceLastTHC >= 14, 'tbreak-14d');
+        addWin(daysSinceLastTHC >= 21, 'tbreak-21d');
+        addWin(daysSinceLastTHC >= 30, 'tbreak-30d');
+        addWin(daysSinceLastTHC >= 365, 'tbreak-365d');
       }
     }
 
@@ -750,44 +815,84 @@ function winCardHTML(w) {
   return `<li class="win-item" title="${w.desc || ''}"><span class="win-badge">${w.count}</span><div class="win-icon">${w.icon}</div><div class="win-label">${w.label}</div></li>`;
 }
 
-function aggregateWins(days) {
-  const winsMap = new Map();
+function calculateAndUpdateWins() {
+  const winData = loadWinData();
   
-  for (const day of days) {
-    const dayEvents = DB.forDate(day);
-    const prevDayEvents = DB.forDate(getPrevDayKey(day));
-    const dayWins = Wins.calculate(dayEvents, prevDayEvents);
-    
-    for (const win of dayWins) {
-      if (winsMap.has(win.label)) {
-        winsMap.get(win.label).count += win.count;
-      } else {
-        winsMap.set(win.label, { ...win });
-      }
+  // Step 1: Create lifetime map and subtract old today's wins
+  const lifetimeMap = new Map();
+  winData.lifetimeWins.forEach(w => {
+    lifetimeMap.set(w.id, { id: w.id, count: w.count });
+  });
+  
+  winData.todayWins.forEach(id => {
+    const existing = lifetimeMap.get(id);
+    if (existing) {
+      existing.count = Math.max(0, existing.count - 1);
     }
-  }
+  });
   
-  return Array.from(winsMap.values()).sort((a, b) => b.count - a.count);
+  // Step 2: Calculate fresh today's wins
+  const todayEvents = DB.forDate(todayKey());
+  const yesterdayEvents = DB.forDate(daysAgoKey(1));
+  const freshTodayWins = Wins.calculate(todayEvents, yesterdayEvents);
+  
+  // Step 3: Add fresh today's wins to lifetime
+  freshTodayWins.forEach(id => {
+    const existing = lifetimeMap.get(id);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      lifetimeMap.set(id, { id, count: 1 });
+    }
+  });
+  
+  // Step 4: Convert map back to array and save
+  const updatedLifetimeWins = Array.from(lifetimeMap.values())
+    .filter(w => w.count > 0)
+    .sort((a, b) => {
+      const defA = getWinDef(a.id);
+      const defB = getWinDef(b.id);
+      return defA.label.localeCompare(defB.label);
+    });
+  
+  const updatedWinData = {
+    todayWins: freshTodayWins,
+    lifetimeWins: updatedLifetimeWins
+  };
+  
+  saveWinData(updatedWinData);
+  return updatedWinData;
 }
 
 function renderWins() {
-  const todayWins = Wins.calculate(DB.forDate(todayKey()), DB.forDate(daysAgoKey(1)))
-    .sort((a, b) => a.label.localeCompare(b.label));
+  const winData = calculateAndUpdateWins();
+  
   const todayEl = $('wins-today');
   if (todayEl) {
-    todayEl.innerHTML = todayWins.length === 0
-      ? emptyStateHTML('Wins appear here as you go')
-      : todayWins.map(winCardHTML).join('');
+    if (winData.todayWins.length === 0) {
+      todayEl.innerHTML = emptyStateHTML('Wins appear here as you go');
+    } else {
+      // Aggregate today's wins by ID into counts
+      const todayMap = new Map();
+      winData.todayWins.forEach(id => {
+        todayMap.set(id, (todayMap.get(id) || 0) + 1);
+      });
+      const todayAggregated = Array.from(todayMap.entries())
+        .map(([id, count]) => ({ id, count, ...getWinDef(id) }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+      todayEl.innerHTML = todayAggregated.map(winCardHTML).join('');
+    }
   }
 
   const totalEl = $('wins-total');
   if (!totalEl) return;
   
-  const totalWins = aggregateWins(DB.getAllDayKeys())
-    .sort((a, b) => a.label.localeCompare(b.label));
-  totalEl.innerHTML = totalWins.length === 0
-    ? emptyStateHTML('Total wins will appear here')
-    : totalWins.map(winCardHTML).join('');
+  if (winData.lifetimeWins.length === 0) {
+    totalEl.innerHTML = emptyStateHTML('Total wins will appear here');
+  } else {
+    const lifetimeWinsWithDef = winData.lifetimeWins.map(w => ({ ...w, ...getWinDef(w.id) }));
+    totalEl.innerHTML = lifetimeWinsWithDef.map(winCardHTML).join('');
+  }
 }
 
 function renderWaterReminder() {
@@ -1288,6 +1393,38 @@ function stampActivity() {
   DB.saveSettings();
 }
 
+function checkNewWins(event) {
+  const winData = loadWinData();
+  const lifetimeIds = new Set(winData.lifetimeWins.map(w => w.id));
+  
+  // Quick check for obvious new wins
+  const newWinIds = [];
+  
+  if (event.type === 'resisted' && !lifetimeIds.has('resist')) {
+    newWinIds.push('resist');
+  }
+  
+  if (event.type === 'habit') {
+    if (event.habit === 'water' && !lifetimeIds.has('hydrated')) {
+      newWinIds.push('hydrated');
+    }
+    if (event.habit === 'exercise' && !lifetimeIds.has('exercise-water-combo')) {
+      newWinIds.push('exercise-water-combo');
+    }
+  }
+  
+  // Add new wins to lifetime (don't increment, just ensure they exist)
+  newWinIds.forEach(id => {
+    if (!lifetimeIds.has(id)) {
+      winData.lifetimeWins.push({ id, count: 1 });
+    }
+  });
+  
+  if (newWinIds.length > 0) {
+    saveWinData(winData);
+  }
+}
+
 function logUsed() {
   const s = DB.loadSettings();
   const evt = createUsedEvent(s.lastSubstance, s.lastMethod, s.lastAmount, s.lastReason);
@@ -1296,6 +1433,7 @@ function logUsed() {
   s.lastReason = null;
   DB.saveSettings();
   stampActivity();
+  checkNewWins(evt);
   render();
   hideResistedChips();
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
@@ -1306,6 +1444,7 @@ function logResisted() {
   const evt = createResistedEvent();
   DB.addEvent(evt);
   stampActivity();
+  checkNewWins(evt);
   render();
   hideUsedChips();
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
@@ -1314,8 +1453,10 @@ function logResisted() {
 }
 
 function logHabit(habit, minutes) {
-  DB.addEvent(createHabitEvent(habit, minutes));
+  const evt = createHabitEvent(habit, minutes);
+  DB.addEvent(evt);
   stampActivity();
+  checkNewWins(evt);
   render();
 }
 
