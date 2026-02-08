@@ -1245,6 +1245,8 @@ function switchTab(tabName) {
   hideUndo();
   hideUsedChips();
   hideResistedChips();
+  $('exercise-chips').classList.add('hidden');
+  clearTimeout(exerciseTimeout);
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabName));
   
