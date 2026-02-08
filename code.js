@@ -1831,7 +1831,8 @@ function logHabit(habit, minutes) {
   
   hapticFeedback();
   const label = HABIT_LABELS[habit] || habit;
-  showToast(`${label}`);
+  const message = habit === 'exercise' && minutes ? `${label} +${minutes} min` : label;
+  showToast(message);
 }
 
 function logWaterFromReminder() {
