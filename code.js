@@ -1038,7 +1038,7 @@ function renderDayHistory() {
   if (exerciseMins > 0) summaryParts.push(`Exercised ${exerciseMins}m`);
   
   const summary = summaryParts.length > 0 
-    ? `<div style="padding:8px 12px;background:var(--card);border:1px solid var(--card-border);border-radius:8px;margin-bottom:12px;font-size:13px;color:var(--muted)">${summaryParts.join(' • ')}</div>`
+    ? `<div style="padding:8px 12px;background:var(--card);border:1px solid var(--card-border);border-radius:8px;margin-bottom:12px;font-size:13px;color:var(--muted);text-align:center">${summaryParts.join(' • ')}</div>`
     : '';
 
   // Build HTML in reverse order, limited to historyShowCount
