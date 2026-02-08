@@ -307,12 +307,12 @@ function updateAuthUI(user) {
     el.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="export-btn" style="margin:0" onclick="FirebaseSync.loginWithGoogle()">🔑 Sign in with Google</button>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <input type="email" id="auth-email" name="login-email" form="auth-form" autocomplete="username" placeholder="Email" 
+        <form id="auth-form" onsubmit="return false" style="display:flex;flex-direction:column;gap:6px">
+          <input type="email" id="auth-email" name="email" autocomplete="username" placeholder="Email" 
             style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
-          <input type="password" id="auth-password" name="login-password" form="auth-form" autocomplete="current-password" placeholder="Password (6+ chars)" 
+          <input type="password" id="auth-password" name="password" autocomplete="current-password" placeholder="Password (6+ chars)" 
             style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
-        </div>
+        </form>
         <div style="display:flex;gap:6px">
           <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.loginWithEmailForm()">🔓 Log In</button>
           <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.signupWithEmailForm()">✨ Sign Up</button>
