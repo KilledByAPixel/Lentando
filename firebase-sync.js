@@ -100,6 +100,7 @@ const STORAGE_KEYS = {
   settings: 'ht_settings',
   wins: 'ht_wins',
   todos: 'ht_todos',
+  loginSkipped: 'ht_login_skipped',
 };
 
 function getLocalData() {
@@ -227,7 +228,7 @@ if (isConfigured) {
 }
 
 function checkAuthAndContinue() {
-  const hasSkippedLogin = localStorage.getItem('ht_login_skipped') === 'true';
+  const hasSkippedLogin = localStorage.getItem(STORAGE_KEYS.loginSkipped) === 'true';
   
   if (!currentUser && !hasSkippedLogin) {
     // Not logged in and hasn't skipped - show login screen
@@ -303,7 +304,7 @@ function updateAuthUI(user) {
   }
 }
 
-/** Simple HTML escape (standalone, doesn't depend on code.js) */
+/** Simple HTML escape (standalone copy - code.js has its own version) */
 function escapeHTMLSync(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

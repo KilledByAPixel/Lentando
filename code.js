@@ -703,6 +703,7 @@ let graphDays = 7;
 let currentHistoryDay = todayKey();
 const HISTORY_PAGE_SIZE = 100;
 let historyShowCount = HISTORY_PAGE_SIZE;
+let eventsAreBound = false;
 
 function render() {
   renderDate();
@@ -1481,6 +1482,8 @@ function continueToApp() {
   } else {
     bindEvents();
     render();
+    // Clear existing interval if continueToApp is called multiple times
+    if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => renderMetrics(), 30000);
   }
 }
@@ -1514,6 +1517,8 @@ function selectProfile(profileKey) {
   
   bindEvents();
   render();
+  // Clear existing interval if selectProfile is called multiple times
+  if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => renderMetrics(), 30000);
 }
 
@@ -1593,6 +1598,10 @@ function logWaterFromReminder() {
 
 // ========== EVENT HANDLERS ==========
 function bindEvents() {
+  // Prevent duplicate event listener bindings
+  if (eventsAreBound) return;
+  eventsAreBound = true;
+
   $('tab-bar').addEventListener('click', e => { const b = e.target.closest('.tab-btn'); if (b) switchTab(b.dataset.tab); });
 
   $('graph-range').addEventListener('click', e => {
