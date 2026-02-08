@@ -1,5 +1,5 @@
 // Service Worker for Lentando PWA
-const CACHE_NAME = 'lentando-v20';
+const CACHE_NAME = 'lentando-v21';
 const urlsToCache = [
   './index.html',
   './code.js',
@@ -37,6 +37,12 @@ self.addEventListener('activate', event => {
 
 // Fetch strategy: Network first, falling back to cache
 self.addEventListener('fetch', event => {
+  // Only cache GET requests
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
