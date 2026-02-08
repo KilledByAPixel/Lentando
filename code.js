@@ -457,8 +457,7 @@ const Wins = {
     const used     = filterUsed(todayEvents);
     const resisted = filterByType(todayEvents, 'resisted');
     const habits   = filterByType(todayEvents, 'habit');
-    const thcUsed  = filterTHC(used);
-    const cbdUsed  = filterCBD(used);
+    const profileUsed = filterProfileUsed(used); // Profile-aware: only substances in current profile
     const totalAmt = sumAmount(used);
 
     // --- Welcome Back win ---
@@ -474,21 +473,28 @@ const Wins = {
     const delayCount = countDelayedResists(resisted, used);
     for (let i = 0; i < delayCount; i++) addWin(true, 'delay-15m');
 
-    const replacementCount = cbdUsed.filter(u => isDaytime(u.ts)).length;
-    for (let i = 0; i < replacementCount; i++) addWin(true, 'replacement-cbd');
+    // Cannabis-specific wins
+    const isCannabis = DB.loadSettings().addictionProfile === 'cannabis';
+    if (isCannabis) {
+      const cbdUsed = filterCBD(used);
+      const replacementCount = cbdUsed.filter(u => isDaytime(u.ts)).length;
+      for (let i = 0; i < replacementCount; i++) addWin(true, 'replacement-cbd');
+      addWin(used.length > 0 && profileUsed.length === 0, 'cbd-only');
+    }
 
-    const vapeCount = used.filter(e => e.method === 'vape').length;
+    const vapeCount = isCannabis ? used.filter(e => e.method === 'vape').length : 0;
     for (let i = 0; i < vapeCount; i++) addWin(true, 'harm-reduction-vape');
 
-    const doseCount = used.filter(e => e.amount === 0.5).length;
+    const profile = getProfile();
+    const smallDose = profile.amounts[0]; // Smallest amount in the profile
+    const doseCount = used.filter(e => e.amount === smallDose).length;
     for (let i = 0; i < doseCount; i++) addWin(true, 'dose-half');
 
     const mindfulCount = used.filter(e => e.reason).length;
     for (let i = 0; i < mindfulCount; i++) addWin(true, 'mindful');
 
-    addWin(used.length > 0 && thcUsed.length === 0, 'cbd-only');
     addWin(used.length > 0 && totalAmt <= LOW_DAY_THRESHOLD, 'low-day');
-    addWin(thcUsed.length === 0 && (resisted.length > 0 || habits.length > 0 || cbdUsed.length > 0), 'zero-thc');
+    addWin(profileUsed.length === 0 && (resisted.length > 0 || habits.length > 0), 'zero-thc');
     addWin(used.length === 0 && (resisted.length > 0 || habits.length > 0), 'tbreak-day');
 
     // --- Habit-based wins ---
@@ -506,20 +512,20 @@ const Wins = {
     addWin(hasExercise && hasWater, 'exercise-water-combo');
 
     // --- Timing-based wins ---
-    if (thcUsed.length >= 2) {
-      const maxGap = getMaxGapHours(thcUsed);
+    if (profileUsed.length >= 2) {
+      const maxGap = getMaxGapHours(profileUsed);
       const earned = getMilestoneWins(maxGap, GAP_MILESTONES);
       earned.forEach(h => addWin(true, `gap-${h}h`));
       
       // Gap longer than average
-      const gaps = thcUsed.slice(1).map((u, i) => u.ts - thcUsed[i].ts);
+      const gaps = profileUsed.slice(1).map((u, i) => u.ts - profileUsed[i].ts);
       const avgGap = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
       const longestGapToday = Math.max(...gaps);
       addWin(longestGapToday > avgGap, 'gap-above-avg');
     }
 
     // Filter out late-night sessions (before 6 AM) when checking for "first session of the day"
-    const daytimeSessions = thcUsed.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
+    const daytimeSessions = profileUsed.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
     if (daytimeSessions.length > 0) {
       const firstHour = new Date(daytimeSessions[0].ts).getHours();
       addWin(firstHour >= AFTERNOON_HOUR, 'held-off-afternoon');
@@ -528,21 +534,21 @@ const Wins = {
     // --- Comparison wins ---
     if (yesterdayEvents && yesterdayEvents.length > 0) {
       const yUsed = filterUsed(yesterdayEvents);
-      const yThc  = filterTHC(yUsed);
+      const yProfile = filterProfileUsed(yesterdayEvents);
 
-      addWin(thcUsed.length < yThc.length, 'fewer-sessions');
+      addWin(profileUsed.length < yProfile.length, 'fewer-sessions');
       addWin(used.length > 0 && totalAmt < sumAmount(yUsed), 'lower-amount');
       
       // Reuse daytimeSessions from above for "first session" comparison
-      const yesterdayDaytime = yThc.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
+      const yesterdayDaytime = yProfile.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
       
       if (daytimeSessions.length > 0 && yesterdayDaytime.length > 0) {
         addWin(timeOfDayMin(daytimeSessions[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
       }
       
       // Last session comparison uses all sessions (late-night sessions are relevant for when you stopped)
-      if (thcUsed.length > 0 && yThc.length > 0) {
-        addWin(timeOfDayMin(thcUsed[thcUsed.length - 1].ts) < timeOfDayMin(yThc[yThc.length - 1].ts), 'last-earlier');
+      if (profileUsed.length > 0 && yProfile.length > 0) {
+        addWin(timeOfDayMin(profileUsed[profileUsed.length - 1].ts) < timeOfDayMin(yProfile[yProfile.length - 1].ts), 'last-earlier');
       }
     }
     
@@ -570,15 +576,15 @@ const Wins = {
     addWin(appStreak >= 365, 'year-streak');
     
     // Break milestones (time since last use)
-    if (thcUsed.length === 0) {
-      const daysSinceLastTHC = this._countDaysSinceLastTHC();
-      if (daysSinceLastTHC >= 1) {
+    if (profileUsed.length === 0) {
+      const daysSinceLastUse = this._countDaysSinceLastUse();
+      if (daysSinceLastUse >= 1) {
         addWin(true, 'tbreak-1d');
-        addWin(daysSinceLastTHC >= 7, 'tbreak-7d');
-        addWin(daysSinceLastTHC >= 14, 'tbreak-14d');
-        addWin(daysSinceLastTHC >= 21, 'tbreak-21d');
-        addWin(daysSinceLastTHC >= 30, 'tbreak-30d');
-        addWin(daysSinceLastTHC >= 365, 'tbreak-365d');
+        addWin(daysSinceLastUse >= 7, 'tbreak-7d');
+        addWin(daysSinceLastUse >= 14, 'tbreak-14d');
+        addWin(daysSinceLastUse >= 21, 'tbreak-21d');
+        addWin(daysSinceLastUse >= 30, 'tbreak-30d');
+        addWin(daysSinceLastUse >= 365, 'tbreak-365d');
       }
     }
 
@@ -601,12 +607,15 @@ const Wins = {
     
     for (let i = 0; i < MAX_STREAK_DAYS; i++) {
       const amt = sumAmount(filterUsed(DB.forDate(dateKey(d))));
-      if (prevAmt !== null && amt >= prevAmt) break;
+      // Walking backwards: prevAmt = newer day, amt = older day
+      // Tapering means older day should have MORE usage than newer day
+      // Break when older day <= newer day (not tapering)
+      if (prevAmt !== null && amt <= prevAmt) break;
+      if (prevAmt !== null) count++;
       prevAmt = amt;
       d.setDate(d.getDate() - 1);
-      count++;
     }
-    return Math.max(0, count - 1); // Don't count the first day (no comparison)
+    return count;
   },
   
   _countAppUsageStreak() {
@@ -619,12 +628,12 @@ const Wins = {
     return MAX_STREAK_DAYS;
   },
   
-  _countDaysSinceLastTHC() {
+  _countDaysSinceLastUse() {
     const keys = DB.getAllDayKeys(); // sorted reverse (most recent first)
     for (const key of keys) {
-      const dayTHC = filterTHC(filterUsed(DB.forDate(key)));
-      if (dayTHC.length > 0) {
-        return Math.floor((Date.now() - dayTHC[dayTHC.length - 1].ts) / (1000 * 60 * 60 * 24));
+      const dayUsed = filterProfileUsed(DB.forDate(key));
+      if (dayUsed.length > 0) {
+        return Math.floor((Date.now() - dayUsed[dayUsed.length - 1].ts) / (1000 * 60 * 60 * 24));
       }
     }
     return 0;
@@ -1476,7 +1485,7 @@ function openEditModal(eventId) {
     ${fieldsHTML}
     <div class="modal-actions">
       <button class="btn-delete" onclick="App.deleteEvent('${evt.id}'); App.closeModal();">Delete</button>
-      <button class="btn-save" onclick="App.saveModal()">Save</button>
+      <button class="btn-save" onclick="App.saveModal()">Done</button>
     </div>`;
   $('modal-sheet').dataset.eventId = eventId;
   $('modal-overlay').classList.remove('hidden');
@@ -1552,6 +1561,13 @@ function continueToApp() {
   if (!DB.loadSettings().addictionProfile) {
     showOnboarding();
   } else {
+    // Restore user's preferred graph range
+    const settings = DB.loadSettings();
+    graphDays = settings.graphDays || 7;
+    const rangeEl = $('graph-range');
+    if (rangeEl) rangeEl.querySelectorAll('.chip').forEach(c =>
+      c.classList.toggle('active', +c.dataset.days === graphDays));
+    
     calculateAndUpdateWins();
     bindEvents();
     render();
@@ -1574,6 +1590,7 @@ function showOnboarding() {
 
 function selectProfile(profileKey) {
   const profile = ADDICTION_PROFILES[profileKey];
+  if (!profile) return;
   const settings = DB.loadSettings();
   
   // Default to 1.0 or closest amount to 1.0 in the profile's amounts array

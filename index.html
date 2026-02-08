@@ -618,6 +618,11 @@ header .date { font-size: 14px; color: var(--muted); }
 .day-nav-btn:active {
   transform: scale(0.95);
 }
+.day-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
 
 .day-nav-date {
   font-weight: 600;
