@@ -800,10 +800,35 @@ header .date { font-size: 14px; color: var(--muted); }
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
 }
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+.pulse { animation: pulse 0.3s ease-out; }
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 14px;
+  font-weight: 500;
+  max-width: 90%;
+  text-align: center;
+}
+.toast.show { opacity: 1; }
 
 #splash-screen {
   position: fixed;

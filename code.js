@@ -202,6 +202,36 @@ function flashEl(el) {
   setTimeout(() => el.classList.remove('flash'), FLASH_ANIMATION_MS);
 }
 
+function pulseEl(el) {
+  el.classList.add('pulse');
+  setTimeout(() => el.classList.remove('pulse'), 300);
+}
+
+function hapticFeedback() {
+  if (navigator.vibrate) navigator.vibrate(50);
+}
+
+let toastTimeout = null;
+
+function showToast(message, durationMs = 2000) {
+  clearTimeout(toastTimeout);
+  
+  let toast = $('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+  }
+  
+  toast.textContent = message;
+  toast.classList.add('show');
+  
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, durationMs);
+}
+
 function escapeHTML(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -1759,7 +1789,15 @@ function logUsed() {
   render();
   hideResistedChips();
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
-  flashEl($('btn-used'));
+  
+  const btn = $('btn-used');
+  hapticFeedback();
+  pulseEl(btn);
+  
+  const profile = getProfile();
+  const amountStr = s.lastAmount === 1 ? profile.amountUnit.replace(/s$/, '') : profile.amountUnit;
+  showToast(`✅ Logged ${profile.sessionLabel} - ${s.lastAmount} ${amountStr}`);
+  
   showUndo(evt.id);
 }
 
@@ -1773,7 +1811,11 @@ function logResisted() {
   hideUndo();
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
   showCoaching();
-  flashEl($('btn-resisted'));
+  
+  const btn = $('btn-resisted');
+  hapticFeedback();
+  pulseEl(btn);
+  showToast('🛡️ Resisted!');
 }
 
 function logHabit(habit, minutes) {
@@ -1783,11 +1825,17 @@ function logHabit(habit, minutes) {
   calculateAndUpdateWins();
   render();
   hideUndo();
+  
+  hapticFeedback();
+  const label = HABIT_LABELS[habit] || habit;
+  showToast(`${label} logged!`);
 }
 
 function logWaterFromReminder() {
   logHabit('water');
-  flashEl($('water-reminder-btn'));
+  const btn = $('water-reminder-btn');
+  hapticFeedback();
+  pulseEl(btn);
 }
 
 // ========== EVENT HANDLERS ==========
