@@ -2045,12 +2045,4 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Firebase will handle initial auth check and call continueToApp() or show login screen
   // If Firebase is not configured, checkAuthAndContinue will be called after a short delay
-  
-  // Log test data generation instructions
-  console.log('📊 Test data generation available:');
-  console.log('  generateAllTestData() - Add a mix of everything (recommended)');
-  console.log('  generateTestData(100) - Add 100 random usage events');
-  console.log('  generateTestHabits(20) - Add 20 events per habit type');
-  console.log('  generateTestResists(50) - Add 50 resist events');
-  console.log('  generateTestWins() - Add random lifetime wins');
 });
