@@ -265,7 +265,6 @@ if (isConfigured) {
     if (currentUser) {
       try {
         await pullFromCloud(currentUser.uid);
-        invalidateDBCaches();
         if (typeof render === 'function') {
           render();
         }
