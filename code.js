@@ -709,7 +709,6 @@ let historyShowCount = HISTORY_PAGE_SIZE;
 let eventsAreBound = false;
 
 function render() {
-  console.log('[App] render() called - DB._events:', DB._events, 'DB._settings:', DB._settings);
   renderDate();
   renderMetrics();
   renderProgress();
@@ -2034,7 +2033,6 @@ window.generateTestWins = generateTestWins;
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
   // Don't preload events or settings - let them load lazily to avoid caching stale data before Firebase sync
-  console.log('[App] DOMContentLoaded - NOT loading events/settings yet');
   
   applyTheme(localStorage.getItem(STORAGE_THEME) || 'dark');
   
