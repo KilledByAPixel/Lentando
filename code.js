@@ -84,7 +84,7 @@ const MAX_STREAK_DAYS = 60;
 const LOW_DAY_THRESHOLD = 2;
 
 const COACHING_MESSAGES = [
-  '💧 Drink some water',
+  '💧 Drink a glass of water',
   '🌬️ Take 10 slow breaths',
   '🌳 Step outside for a minute',
   '📖 Read a few pages of a book',
@@ -104,6 +104,35 @@ const COACHING_MESSAGES = [
   '🧼 Wash your face or hands',
   '🍬 Chew some gum or brush teeth',
   '📽️ Watch an educational video',
+  '💧 Drink some water',
+  '🌬️ Take 10 slow breaths',
+  '🌳 Step outside for a minute',
+  '📖 Read a few pages of a book',
+  '🎵 Put on a song you love',
+  '🍎 Grab a healthy snack',
+  '☕ Make some tea or coffee',
+  '🧘 Do a quick stretch',
+  '🚶 Go for a short walk',
+  '🧹 Tidy up one small thing',
+  '💪 You\'re stronger than the urge',
+  '🏆 Every resist is a win',
+  '🧠 This craving will pass',
+  '🎮 Play a quick game',
+  '📞 Text a friend',
+  '🎨 Do something creative',
+  '🤸 Take a movement break',
+  '🍬 Chew some gum or brush teeth',
+  '📽️ Watch an educational video',
+  '📝 Write about how you feel',
+  '🕯️ Light a candle or incense',
+  '🦶 Feel your feet on the floor',
+  '🗑️ Throw away one piece of trash',
+  '🍽️ Wash a few dishes',
+  '🧠 You’re building the “pause” muscle',
+  '📈 One good choice shifts the trend',
+  '🌤️ This moment will pass',
+  '📦 Put substance away for now',
+  '🌱 Do something small for future you',
 ];
 
 const HABIT_ICONS = { water: '💧', breaths: '🌬️', clean: '🧹', exercise: '🏃', outside: '🌳' };
@@ -948,6 +977,11 @@ function renderWins() {
   }
 }
 
+function hasRecentWater() {
+  const cutoff = Date.now() - TWO_HOURS_MS;
+  return DB.forDate(todayKey()).some(e => e.type === 'habit' && e.habit === 'water' && e.ts >= cutoff);
+}
+
 function renderWaterReminder() {
   const reminderEl = $('water-reminder');
   reminderEl.classList.toggle('hidden', hasRecentWater());
@@ -1011,7 +1045,7 @@ function navigateDay(offset) {
 const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: 'var(--thc)',     valueFn: evs => sumAmount(filterProfileUsed(evs)) },
   { label: '💪 Resisted / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
-  { label: '🏃 Exercise Minutes / Day', color: 'var(--thc)',     valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
+  { label: '🏃 Exercise Minutes / Day', color: 'var(--primary)',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
 ];
 
 function formatGraphValue(val) {
@@ -1425,11 +1459,6 @@ function handleModalChipClick(e) {
 }
 
 // ========== COACHING ==========
-function hasRecentWater() {
-  const cutoff = Date.now() - TWO_HOURS_MS;
-  return DB.forDate(todayKey()).some(e => e.type === 'habit' && e.habit === 'water' && e.ts >= cutoff);
-}
-
 function showCoaching() {
   if (!DB.loadSettings().showCoaching) return;
   const msg = COACHING_MESSAGES[Math.floor(Math.random() * COACHING_MESSAGES.length)];
@@ -1749,7 +1778,6 @@ window.App = {
   deleteEvent(id) {
     DB.deleteEvent(id);
     render();
-    renderDayHistory();
   },
   exportJSON,
   importJSON,
