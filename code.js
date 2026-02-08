@@ -1875,6 +1875,8 @@ function bindEvents() {
     const habit = btn.dataset.habit;
     
     if (habit === 'exercise') {
+      hapticFeedback();
+      pulseEl(btn);
       const picker = $('exercise-chips');
       const isNowHidden = picker.classList.toggle('hidden');
       clearTimeout(exerciseTimeout);
