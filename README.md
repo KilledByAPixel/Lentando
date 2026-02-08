@@ -42,6 +42,8 @@ It's designed for harm reduction, not judgment. Every small win counts.
 2. Select what substance you're tracking.
 3. Start logging and get healthy!
 
+![Lentando Screenshot](screenshot.png)
+
 ## License
 
 © 2026 Frank Force. All rights reserved. See [LICENSE](LICENSE) for details.
