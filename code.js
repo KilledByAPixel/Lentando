@@ -652,8 +652,7 @@ function getResistedEventDetail(evt) {
     title: 'Resisted',
     detail: [
       evt.intensity && 'intensity ' + evt.intensity,
-      evt.trigger,
-      evt.didInstead && '→ ' + evt.didInstead
+      evt.trigger
     ].filter(Boolean).join(' · ')
   };
 }
@@ -1296,7 +1295,6 @@ function buildResistedChips(evt) {
   return [
     chipGroupHTML('Urge Intensity', 'intensity', INTENSITIES, evt.intensity),
     chipGroupHTML('Trigger', 'trigger', REASONS, evt.trigger),
-    chipGroupHTML('Did Instead', 'didInstead', DID_INSTEAD, evt.didInstead),
     chipDismissBtn('dismiss ✕', 'App.hideResistedChips()')
   ].join('');
 }
@@ -1384,8 +1382,7 @@ function openEditModal(eventId) {
     ],
     resisted: () => [
       chipGroupHTML('Urge Intensity', 'intensity', INTENSITIES, evt.intensity),
-      chipGroupHTML('Trigger', 'trigger', REASONS, evt.trigger),
-      chipGroupHTML('Did Instead', 'didInstead', DID_INSTEAD, evt.didInstead)
+      chipGroupHTML('Trigger', 'trigger', REASONS, evt.trigger)
     ],
     habit: () => {
       const fields = [`<label>Habit</label><div style="font-size:16px">${HABIT_LABELS[evt.habit] || evt.habit}</div>`];
