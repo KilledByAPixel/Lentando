@@ -1485,6 +1485,13 @@ function showCoaching() {
 function showLoginScreen() {
   const overlay = $('login-overlay');
   overlay.classList.remove('hidden');
+  // Inject auth inputs only when login screen is visible
+  const loginInputs = overlay.querySelector('.login-inputs');
+  if (loginInputs && !loginInputs.children.length) {
+    loginInputs.innerHTML = `
+      <input type="email" id="login-email" placeholder="Email" class="login-input">
+      <input type="password" id="login-password" placeholder="Password (6+ chars)" class="login-input">`;
+  }
 }
 
 function hideLoginScreen() {
