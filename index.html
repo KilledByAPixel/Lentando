@@ -394,16 +394,21 @@ header .date { font-size: 14px; color: var(--muted); }
 #onboarding-overlay:not(.hidden) { display: block; background: var(--bg); }
 .onboarding-sheet {
   max-width: 440px;
+  max-height: 100vh;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 24px 20px;
+  overflow-y: auto;
 }
 .onboarding-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
+}
+.onboarding-header img {
+  margin-bottom: 8px;
 }
 .onboarding-header h1 {
   font-size: 32px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 .onboarding-header h1 .brand {
   background: linear-gradient(135deg, var(--primary), var(--cbd));
@@ -455,6 +460,30 @@ header .date { font-size: 14px; color: var(--muted); }
   color: var(--text);
 }
 
+/* Login screen inputs */
+.login-inputs {
+  display: flex;
+  gap: 8px;
+}
+.login-input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  min-width: 0;
+}
+@media (max-width: 400px) {
+  .login-inputs {
+    flex-direction: column;
+  }
+  .login-input {
+    width: 100%;
+  }
+}
+
 /* ===== MODAL ===== */
 .modal-overlay {
   position: fixed;
@@ -466,6 +495,13 @@ header .date { font-size: 14px; color: var(--muted); }
   z-index: 100;
 }
 .modal-overlay.hidden { display: none; }
+
+/* Login and onboarding overlays should have opaque background */
+#login-overlay,
+#onboarding-overlay {
+  background: var(--bg);
+  align-items: center;
+}
 
 .modal-sheet {
   width: 100%;
@@ -904,6 +940,38 @@ header .date { font-size: 14px; color: var(--muted); }
       </a>
     </p>
     <p style="margin-bottom: 0; color: var(--muted); font-size: 12px;">Lentando © 2026 Frank Force. All rights reserved.</p>
+  </div>
+</div>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div class="modal-overlay hidden" id="login-overlay">
+  <div class="onboarding-sheet">
+    <div class="onboarding-header">
+      <img src="logo.png" alt="Lentando" style="width:80px;height:80px;margin:0 auto;display:block">
+      <h1><span class="brand">Lentando</span></h1>
+      <p class="tagline">mindful progress tracking</p>
+    </div>
+    <div class="onboarding-content">
+      <h2 style="margin-bottom:12px">Sign in to sync your data</h2>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.5">Create an account or sign in to sync your progress across all your devices.</p>
+      
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+        <button class="export-btn" style="padding:14px;font-size:15px" onclick="App.loginWithGoogle()">🔑 Sign in with Google</button>
+        <div class="login-inputs">
+          <input type="email" id="login-email" placeholder="Email" class="login-input">
+          <input type="password" id="login-password" placeholder="Password (6+ chars)" class="login-input">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="export-btn" style="flex:1;padding:12px;font-size:14px" onclick="App.loginWithEmailFromScreen()">🔓 Log In</button>
+          <button class="export-btn" style="flex:1;padding:12px;font-size:14px" onclick="App.signupWithEmailFromScreen()">✨ Sign Up</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <button class="export-btn" style="width:100%;padding:10px;font-size:13px;opacity:0.7" onclick="App.skipLogin()">Continue without account</button>
+        <p style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.4">Your data will only be saved on this device and won't sync to other devices.</p>
+      </div>
+    </div>
   </div>
 </div>
 

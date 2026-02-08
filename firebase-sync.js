@@ -3,7 +3,7 @@
 // ============================================================
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
-import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
 // ==========================================================
@@ -46,6 +46,10 @@ async function loginWithGoogle() {
   if (!isConfigured) return alert('Firebase not configured yet. See firebase-sync.js.');
   try {
     const result = await signInWithPopup(auth, provider);
+    // Check if this is a brand new user
+    if (result?._tokenResponse?.isNewUser) {
+      showWelcomeMessage(result.user.displayName || result.user.email);
+    }
     return result.user;
   } catch (err) {
     console.error('[Auth] Google sign-in failed:', err);
@@ -62,6 +66,13 @@ async function loginWithEmail(email, password) {
 async function signupWithEmail(email, password) {
   if (!isConfigured) return alert('Firebase not configured yet. See firebase-sync.js.');
   const result = await createUserWithEmailAndPassword(auth, email, password);
+  // Send verification email
+  try {
+    await sendEmailVerification(result.user);
+    console.log('[Auth] Verification email sent to', email);
+  } catch (e) {
+    console.warn('[Auth] Could not send verification email:', e);
+  }
   return result.user;
 }
 
@@ -179,6 +190,17 @@ if (isConfigured) {
     if (user) {
       try {
         await pullFromCloud(user.uid);
+        
+        // Hide login screen if shown
+        const loginOverlay = document.getElementById('login-overlay');
+        if (loginOverlay && !loginOverlay.classList.contains('hidden')) {
+          loginOverlay.classList.add('hidden');
+          // Continue to app after successful login
+          if (typeof continueToApp === 'function') {
+            continueToApp();
+          }
+        }
+        
         // Re-render the app with merged data
         if (typeof render === 'function') {
           window.DB?._events && (window.DB._events = null);
@@ -255,6 +277,27 @@ function debouncedSync() {
   }, 3000); // Wait 3 seconds after last change before syncing
 }
 
+// ========== WELCOME MESSAGE ==========
+
+function showWelcomeMessage(nameOrEmail) {
+  const name = nameOrEmail ? escapeHTMLSync(nameOrEmail.split('@')[0]) : 'there';
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:200;animation:fadeIn 0.2s ease';
+  overlay.innerHTML = `
+    <div style="background:var(--card);border-radius:16px;padding:32px 24px;max-width:340px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2)">
+      <div style="font-size:48px;margin-bottom:12px">🎉</div>
+      <h2 style="font-size:20px;margin-bottom:8px;color:var(--text)">Welcome, ${name}!</h2>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:6px">Your account has been created.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Your data will now sync across all your devices. A verification email has been sent to your inbox.</p>
+      <button onclick="this.closest('div[style]').parentElement.remove()"
+        style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:15px;font-weight:600;cursor:pointer">
+        Let's Go!
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
 // ========== PUBLIC API ==========
 
 window.FirebaseSync = {
@@ -280,6 +323,7 @@ window.FirebaseSync = {
     if (password.length < 6) return alert('Password must be at least 6 characters');
     try {
       await signupWithEmail(email, password);
+      showWelcomeMessage(email);
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
         alert('Account already exists — use Log In instead.');
@@ -310,5 +354,8 @@ window.FirebaseSync = {
   /** Called by code.js whenever data changes */
   onDataChanged() {
     debouncedSync();
-  }
+  },
+  
+  /** Export showWelcomeMessage for use in code.js */
+  showWelcome: showWelcomeMessage
 };

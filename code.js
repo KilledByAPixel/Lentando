@@ -10,6 +10,7 @@ const STORAGE_SETTINGS = 'ht_settings';
 const STORAGE_TODOS = 'ht_todos';
 const STORAGE_THEME = 'ht_theme';
 const STORAGE_WINS = 'ht_wins';
+const STORAGE_LOGIN_SKIPPED = 'ht_login_skipped';
 
 const ADDICTION_PROFILES = {
   cannabis: {
@@ -1449,6 +1450,37 @@ function showCoaching() {
 }
 
 // ========== ONBOARDING ==========
+// ========== LOGIN SCREEN ==========
+
+function showLoginScreen() {
+  const overlay = $('login-overlay');
+  overlay.classList.remove('hidden');
+}
+
+function hideLoginScreen() {
+  const overlay = $('login-overlay');
+  overlay.classList.add('hidden');
+}
+
+function skipLogin() {
+  localStorage.setItem(STORAGE_LOGIN_SKIPPED, 'true');
+  hideLoginScreen();
+  continueToApp();
+}
+
+function continueToApp() {
+  // After login or skip, check if we need onboarding
+  if (!DB.loadSettings().addictionProfile) {
+    showOnboarding();
+  } else {
+    bindEvents();
+    render();
+    timerInterval = setInterval(() => renderMetrics(), 30000);
+  }
+}
+
+// ========== ONBOARDING ==========
+
 function showOnboarding() {
   const overlay = $('onboarding-overlay');
   overlay.classList.remove('hidden');
@@ -1769,6 +1801,48 @@ window.App = {
   toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     applyTheme(getToggleTheme(currentTheme));
+  },
+  skipLogin,
+  loginWithGoogle() {
+    if (window.FirebaseSync) {
+      FirebaseSync.loginWithGoogle();
+    }
+  },
+  async loginWithEmailFromScreen() {
+    const email = $('login-email')?.value;
+    const password = $('login-password')?.value;
+    if (!email || !password) return alert('Enter email and password');
+    try {
+      if (window.FirebaseSync) {
+        await FirebaseSync.loginWithEmail(email, password);
+        hideLoginScreen();
+        continueToApp();
+      }
+    } catch (err) {
+      alert('Login failed: ' + err.message);
+    }
+  },
+  async signupWithEmailFromScreen() {
+    const email = $('login-email')?.value;
+    const password = $('login-password')?.value;
+    if (!email || !password) return alert('Enter email and password');
+    if (password.length < 6) return alert('Password must be at least 6 characters');
+    try {
+      if (window.FirebaseSync) {
+        await FirebaseSync.signupWithEmail(email, password);
+        hideLoginScreen();
+        if (FirebaseSync.showWelcome) {
+          FirebaseSync.showWelcome(email);
+        }
+        continueToApp();
+      }
+    } catch (err) {
+      if (err.code === 'auth/email-already-in-use') {
+        alert('Account already exists — use Log In instead.');
+      } else {
+        alert('Sign up failed: ' + err.message);
+      }
+    }
   }
 };
 
@@ -1956,12 +2030,17 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => console.log('[PWA] Service worker registration failed:', err));
   }
   
-  if (!DB.loadSettings().addictionProfile) {
-    showOnboarding();
+  // Check if user is logged in or has skipped login
+  const hasSkippedLogin = localStorage.getItem(STORAGE_LOGIN_SKIPPED) === 'true';
+  const isLoggedIn = window.FirebaseSync?.getUser?.() !== null;
+  
+  if (!isLoggedIn && !hasSkippedLogin) {
+    // Show login screen first
+    showLoginScreen();
+    // Firebase auth listener will call continueToApp() when user logs in
   } else {
-    bindEvents();
-    render();
-    timerInterval = setInterval(() => renderMetrics(), 30000);
+    // User is logged in or has skipped, continue to app
+    continueToApp();
   }
   
   // Log test data generation instructions
