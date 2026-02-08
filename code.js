@@ -114,7 +114,7 @@ const WIN_DEFINITIONS = {
   'tbreak-day': { label: 'T-Break Day', icon: '🚫', desc: 'Went a full day without using while staying engaged' },
   'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 4 times today' },
   'habit-stack': { label: 'Habit Stack', icon: '🔗', desc: 'Logged multiple different habit types in one day' },
-  'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '💪💧', desc: 'Logged both exercise and water today' },
+  'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '🏃💧', desc: 'Logged both exercise and water today' },
   'gap-1h': { label: 'Gap Win (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions' },
   'gap-2h': { label: 'Gap Win (2h+)', icon: '⏱️', desc: 'Maintained a gap of 2+ hours between sessions' },
   'gap-4h': { label: 'Gap Win (4h+)', icon: '⏱️', desc: 'Maintained a gap of 4+ hours between sessions' },
