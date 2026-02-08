@@ -406,7 +406,11 @@ function countDelayedResists(resisted, used) {
 }
 
 function getMaxGapHours(sessions) {
-  if (sessions.length < 2) return 0;
+  if (sessions.length === 0) return 0;
+  if (sessions.length === 1) {
+    // Single session — gap is time from that session to now
+    return (Date.now() - sessions[0].ts) / 3600000;
+  }
   const gaps = sessions.slice(1).map((u, i) => u.ts - sessions[i].ts);
   // Also include gap from last session to now
   const gapSinceLastSession = Date.now() - sessions[sessions.length - 1].ts;
@@ -597,12 +601,12 @@ const Wins = {
     
     for (let i = 0; i < MAX_STREAK_DAYS; i++) {
       const amt = sumAmount(filterUsed(DB.forDate(dateKey(d))));
-      if (prevAmt !== null && amt <= prevAmt) break;
-      if (prevAmt !== null) count++;
+      if (prevAmt !== null && amt >= prevAmt) break;
       prevAmt = amt;
       d.setDate(d.getDate() - 1);
+      count++;
     }
-    return count;
+    return Math.max(0, count - 1); // Don't count the first day (no comparison)
   },
   
   _countAppUsageStreak() {
@@ -1000,7 +1004,7 @@ function renderDayHistory() {
   const historyEl = $('history-events');
   const labelEl = $('current-day-label');
   
-  if (!historyEl) return;
+  if (!historyEl || !labelEl) return;
   
   labelEl.textContent = friendlyDate(currentHistoryDay);
   
@@ -1061,6 +1065,10 @@ function navigateDay(offset) {
   currentHistoryDay = newKey;
   historyShowCount = HISTORY_PAGE_SIZE;
   renderDayHistory();
+  
+  // Update next button disabled state
+  const nextBtn = $('next-day');
+  if (nextBtn) nextBtn.disabled = (currentHistoryDay === todayKey());
 }
 
 // ========== GRAPHS ==========
@@ -1265,6 +1273,8 @@ function importJSON(inputEl) {
   if (!file) return;
 
   const statusEl = $('import-status');
+  if (!statusEl) return;
+  
   const showStatus = (msg, cls) => {
     statusEl.textContent = msg;
     statusEl.className = `import-status ${cls}`;
@@ -1785,7 +1795,7 @@ function renderTodos() {
 
 function addTodo(text) {
   const trimmed = text.trim();
-  if (!trimmed) return;
+  if (!trimmed || trimmed.length > 120) return;
   const todos = loadTodos();
   todos.push({ text: trimmed, done: false });
   saveTodos(todos);
@@ -1832,12 +1842,15 @@ function editTodo(idx) {
   if (!item) return;
   
   const textSpan = item.querySelector('.todo-text');
+  if (!textSpan) return;
+  
   const currentText = todo.text;
   
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'todo-edit-input';
   input.value = currentText;
+  input.maxLength = 120;
   input.dataset.idx = idx;
   
   const saveEdit = () => {
