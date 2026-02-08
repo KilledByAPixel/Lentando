@@ -495,12 +495,11 @@ const Wins = {
       addWin(thcUsed.length < yThc.length, 'fewer-sessions');
       addWin(used.length > 0 && totalAmt < sumAmount(yUsed), 'lower-amount');
       
-      // Filter to daytime sessions for "first session" comparison
-      const todayDaytime = thcUsed.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
+      // Reuse daytimeSessions from above for "first session" comparison
       const yesterdayDaytime = yThc.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
       
-      if (todayDaytime.length > 0 && yesterdayDaytime.length > 0) {
-        addWin(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
+      if (daytimeSessions.length > 0 && yesterdayDaytime.length > 0) {
+        addWin(timeOfDayMin(daytimeSessions[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
       }
       
       // Last session comparison uses all sessions (late-night sessions are relevant for when you stopped)
