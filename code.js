@@ -236,6 +236,13 @@ const DB = {
     } catch {
       this._events = [];
     }
+    // Strip legacy fields that are no longer stored
+    let dirty = false;
+    this._events.forEach(e => {
+      if ('icon' in e) { delete e.icon; dirty = true; }
+      if ('note' in e) { delete e.note; dirty = true; }
+    });
+    if (dirty) this.saveEvents();
     return this._events;
   },
 
@@ -313,7 +320,6 @@ function createUsedEvent(substance, method, amount, reason) {
     substance: sub, method: method || 'bong',
     amount: amount != null ? amount : 1.0,
     reason: reason || null,
-    icon: profile.icons[sub] || '💊',
   };
 }
 
@@ -583,8 +589,7 @@ function chipGroupHTML(label, field, values, activeVal, displayFn) {
 function getUsedEventDetail(evt) {
   const profile = getProfile();
   
-  // Use stored icon if available, otherwise try current profile, otherwise generic
-  const icon = evt.icon || profile.icons[evt.substance] || '💊';
+  const icon = profile.icons[evt.substance] || '💊';
   const title = profile.substanceDisplay[evt.substance] || evt.substance.toUpperCase();
   
   return {
@@ -1246,12 +1251,7 @@ function handleChipClick(e) {
   const currentEvent = DB.loadEvents().find(ev => ev.id === activeChipEventId);
   const val = resolveChipVal(field, chip.dataset.val, currentEvent);
 
-  // Update substance and icon together
   const updateData = { [field]: val };
-  if (field === 'substance' && currentEvent.type === 'used') {
-    const profile = getProfile();
-    updateData.icon = profile.icons[val] || '💊';
-  }
 
   DB.updateEvent(activeChipEventId, updateData);
   persistFieldDefault(field, val);
@@ -1327,12 +1327,7 @@ function handleModalChipClick(e) {
   const currentEvent = DB.loadEvents().find(ev => ev.id === eventId);
   const val = resolveChipVal(field, chip.dataset.val, currentEvent);
 
-  // Update substance and icon together
   const updateData = { [field]: val };
-  if (field === 'substance' && currentEvent.type === 'used') {
-    const profile = getProfile();
-    updateData.icon = profile.icons[val] || '💊';
-  }
 
   DB.updateEvent(eventId, updateData);
   chip.closest('.chip-group').querySelectorAll('.chip').forEach(c => 
@@ -1731,7 +1726,6 @@ function generateTestData(numEvents = 100) {
       method,
       amount,
       reason,
-      icon: profile.icons[substance] || '💊'
     };
     
     DB._events.push(evt);
