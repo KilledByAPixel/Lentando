@@ -161,6 +161,10 @@ const DEFAULT_SETTINGS = {
 // ========== TINY HELPERS ==========
 const $ = id => document.getElementById(id);
 
+// Cache Intl formatters — creating these is expensive
+const _timeFormatter = new Intl.DateTimeFormat([], { hour: 'numeric', minute: '2-digit' });
+const _dateFormatter = new Intl.DateTimeFormat([], { weekday: 'short', month: 'short', day: 'numeric' });
+
 function uid() {
   return Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 11);
 }
@@ -197,7 +201,7 @@ function daysAgoKey(n) {
 }
 
 function formatTime(ts) {
-  return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return _timeFormatter.format(new Date(ts));
 }
 
 function formatDuration(ms) {
@@ -215,7 +219,7 @@ function getLastNDays(n, offset = 0) {
 function friendlyDate(key) {
   if (key === todayKey()) return 'Today';
   if (key === daysAgoKey(1)) return 'Yesterday';
-  return new Date(key + 'T12:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  return _dateFormatter.format(new Date(key + 'T12:00:00'));
 }
 
 function getPrevDayKey(key) {
@@ -228,6 +232,23 @@ function getPrevDayKey(key) {
 const DB = {
   _events: null,
   _settings: null,
+  _dateIndex: null,
+
+  _buildDateIndex() {
+    this._dateIndex = new Map();
+    for (const e of this._events) {
+      const key = dateKey(e.ts);
+      if (!this._dateIndex.has(key)) this._dateIndex.set(key, []);
+      this._dateIndex.get(key).push(e);
+    }
+    for (const [, arr] of this._dateIndex) {
+      arr.sort((a, b) => a.ts - b.ts);
+    }
+  },
+
+  _invalidateDateIndex() {
+    this._dateIndex = null;
+  },
 
   loadEvents() {
     if (this._events) return this._events;
@@ -243,11 +264,13 @@ const DB = {
       if ('note' in e) { delete e.note; dirty = true; }
     });
     if (dirty) this.saveEvents();
+    this._invalidateDateIndex();
     return this._events;
   },
 
   saveEvents() {
     localStorage.setItem(STORAGE_EVENTS, JSON.stringify(this._events));
+    this._invalidateDateIndex();
   },
 
   loadSettings() {
@@ -288,15 +311,15 @@ const DB = {
   },
 
   forDate(key) {
-    return this.loadEvents()
-      .filter(e => dateKey(e.ts) === key)
-      .sort((a, b) => a.ts - b.ts);
+    this.loadEvents();
+    if (!this._dateIndex) this._buildDateIndex();
+    return this._dateIndex.get(key) || [];
   },
 
   getAllDayKeys() {
-    const keys = new Set();
-    this.loadEvents().forEach(e => keys.add(dateKey(e.ts)));
-    return Array.from(keys).sort().reverse();
+    this.loadEvents();
+    if (!this._dateIndex) this._buildDateIndex();
+    return Array.from(this._dateIndex.keys()).sort().reverse();
   },
 };
 
@@ -683,7 +706,7 @@ function render() {
 }
 
 function renderDate() {
-  $('header-date').textContent = new Date().toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  $('header-date').textContent = _dateFormatter.format(new Date());
   
   // Update dynamic labels based on profile
   const profile = getProfile();
