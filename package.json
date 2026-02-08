@@ -4,6 +4,8 @@
   "description": "**Mindful habit tracking** - A zero-friction habit and substance use tracker that runs in your browser.",
   "main": "code.js",
   "scripts": {
+    "build": "node build.js",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true}); console.log('✅ Cleaned dist/')\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/KilledByAPixel/lentando/issues"
   },
-  "homepage": "https://github.com/KilledByAPixel/lentando#readme"
+  "homepage": "https://github.com/KilledByAPixel/lentando#readme",
+  "devDependencies": {
+    "terser": "^5.46.0"
+  }
 }
