@@ -135,7 +135,7 @@ const WIN_DEFINITIONS = {
   'delay-15m': { label: 'Delay Win (15m+)', icon: '⏳', desc: 'Resisted and didn\'t use for at least 15 minutes after' },
   'replacement-cbd': { label: 'Replacement Win (CBD)', icon: '🌿', desc: 'Used CBD during daytime (6am-8pm) instead of THC' },
   'harm-reduction-vape': { label: 'Harm Reduction (vape)', icon: '🌡️', desc: 'Chose vaping as a safer consumption method' },
-  'dose-half': { label: 'Dose Win (half)', icon: '⚖️', desc: 'Used a smaller dose (0.5 units)' },
+  'dose-half': { label: 'Low Dose', icon: '⚖️', desc: 'Used less than a full dose' },
   'mindful': { label: 'Mindful Session', icon: '🧠', desc: 'Logged the reason for using, showing mindful awareness' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
@@ -515,8 +515,7 @@ const Wins = {
     for (let i = 0; i < vapeCount; i++) addWin(true, 'harm-reduction-vape');
 
     const profile = getProfile();
-    const smallDose = profile.amounts[0]; // Smallest amount in the profile
-    const doseCount = used.filter(e => e.amount === smallDose).length;
+    const doseCount = used.filter(e => e.amount < 1).length;
     for (let i = 0; i < doseCount; i++) addWin(true, 'dose-half');
 
     const mindfulCount = used.filter(e => e.reason).length;
