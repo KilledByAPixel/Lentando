@@ -1082,7 +1082,13 @@ function switchTab(tabName) {
 
 // ========== EXPORT ==========
 function exportJSON() {
-  const data = { events: DB.loadEvents(), settings: DB.loadSettings(), exportedAt: new Date().toISOString() };
+  const winData = loadWinData();
+  const data = { 
+    events: DB.loadEvents(), 
+    settings: DB.loadSettings(), 
+    lifetimeWins: winData.lifetimeWins,
+    exportedAt: new Date().toISOString() 
+  };
   downloadFile(JSON.stringify(data, null, 2), 'habit-tracker-' + todayKey() + '.json', 'application/json');
 }
 
@@ -1143,6 +1149,28 @@ function importJSON(inputEl) {
       
       DB._events = [...existing, ...newEvents];
       DB.saveEvents();
+
+      // Import lifetime wins if present
+      if (data.lifetimeWins && Array.isArray(data.lifetimeWins)) {
+        const winData = loadWinData();
+        const lifetimeMap = new Map();
+        winData.lifetimeWins.forEach(w => lifetimeMap.set(w.id, w.count));
+        
+        // Merge imported wins (higher counts win)
+        data.lifetimeWins.forEach(w => {
+          const current = lifetimeMap.get(w.id) || 0;
+          lifetimeMap.set(w.id, Math.max(current, w.count));
+        });
+        
+        const mergedWinData = {
+          todayDate: winData.todayDate,
+          todayWins: winData.todayWins,
+          lifetimeWins: Array.from(lifetimeMap.entries())
+            .filter(([, count]) => count > 0)
+            .map(([id, count]) => ({ id, count }))
+        };
+        saveWinData(mergedWinData);
+      }
 
       const added = newEvents.length;
       const skipped = validation.events.length - added;
