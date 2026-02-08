@@ -353,6 +353,11 @@ const Wins = {
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
     addWin(uniqueHabits.size >= 2, `Habit Stack (${uniqueHabits.size} types)`, uniqueHabits.size, '🔗', 'Logged multiple different habit types in one day');
+    
+    // Exercise + Water combo
+    const hasExercise = habits.some(e => e.habit === 'exercise');
+    const hasWater = habits.some(e => e.habit === 'water');
+    addWin(hasExercise && hasWater, 'Exercise + Water Combo', 1, '💪💧', 'Logged both exercise and water today');
 
     // --- Timing-based wins ---
     if (thcUsed.length >= 2) {
@@ -361,6 +366,12 @@ const Wins = {
         const hours = earned[earned.length - 1];
         addWin(true, `Gap Win (${hours}h+)`, earned.length, '⏱️', `Maintained a gap of ${hours}+ hours between sessions`);
       }
+      
+      // Gap longer than average
+      const gaps = thcUsed.slice(1).map((u, i) => u.ts - thcUsed[i].ts);
+      const avgGap = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
+      const longestGapToday = Math.max(...gaps);
+      addWin(longestGapToday > avgGap, 'Gap Longer Than Average', 1, '📏', 'Today\'s longest gap between sessions exceeded your average');
     }
 
     // Filter out late-night sessions (before 6 AM) when checking for "first session of the day"
@@ -395,6 +406,12 @@ const Wins = {
         addWin(timeOfDayMin(thcUsed[thcUsed.length - 1].ts) < timeOfDayMin(yThc[yThc.length - 1].ts), 'Last THC earlier than yesterday', 1, '🌙', 'Finished your last session earlier than yesterday');
       }
     }
+    
+    // Good Start win - logged habit or resist before first use
+    const firstEvent = todayEvents[0];
+    if (firstEvent && (firstEvent.type === 'habit' || firstEvent.type === 'resisted')) {
+      addWin(true, 'Good Start', 1, '🌟', 'Started your day with a positive action instead of using');
+    }
 
     // --- Streak wins ---
     const resistStreak = this._countStreak('resisted');
@@ -405,6 +422,26 @@ const Wins = {
 
     const taperDays = this._countTaper();
     addWin(taperDays >= 3, `Taper Win (${taperDays} days declining)`, taperDays, '📐', `Gradually reduced usage over ${taperDays} consecutive days`);
+    
+    // App usage streaks
+    const appStreak = this._countAppUsageStreak();
+    addWin(appStreak >= 2, `App Streak (${appStreak} days)`, 1, '📱', `Used the app ${appStreak} days in a row`);
+    addWin(appStreak >= 7, `Week Streak`, 1, '📅', 'Used the app every day for a week');
+    addWin(appStreak >= 30, `Month Streak`, 1, '🗓️', 'Used the app every day for a month');
+    addWin(appStreak >= 365, `Year Streak`, 1, '🎉', 'Used the app every day for a year!');
+    
+    // T-Break milestones (time since last THC use)
+    if (thcUsed.length === 0) {
+      const daysSinceLastTHC = this._countDaysSinceLastTHC();
+      if (daysSinceLastTHC >= 1) {
+        addWin(daysSinceLastTHC >= 1, 'T-Break: 1 Day', 1, '🌱', 'One full day without THC');
+        addWin(daysSinceLastTHC >= 7, 'T-Break: 1 Week', 1, '🌿', 'One week without THC');
+        addWin(daysSinceLastTHC >= 14, 'T-Break: 2 Weeks', 1, '🍀', 'Two weeks without THC');
+        addWin(daysSinceLastTHC >= 21, 'T-Break: 3 Weeks', 1, '🌳', 'Three weeks without THC');
+        addWin(daysSinceLastTHC >= 30, 'T-Break: 1 Month', 1, '🏆', 'One month without THC');
+        addWin(daysSinceLastTHC >= 365, 'T-Break: 1 Year', 1, '👑', 'One year without THC!');
+      }
+    }
 
     return wins;
   },
@@ -435,6 +472,26 @@ const Wins = {
       d.setDate(d.getDate() - 1);
     }
     return count;
+  },
+  
+  _countAppUsageStreak() {
+    const d = new Date();
+    for (let streak = 0; streak < MAX_STREAK_DAYS; streak++) {
+      const dayEvents = DB.forDate(dateKey(d));
+      if (dayEvents.length === 0) return streak;
+      d.setDate(d.getDate() - 1);
+    }
+    return MAX_STREAK_DAYS;
+  },
+  
+  _countDaysSinceLastTHC() {
+    const allEvents = DB.loadEvents();
+    const allTHC = filterTHC(filterUsed(allEvents));
+    if (allTHC.length === 0) return 0;
+    
+    const lastTHC = allTHC[allTHC.length - 1];
+    const daysSince = Math.floor((Date.now() - lastTHC.ts) / (1000 * 60 * 60 * 24));
+    return daysSince;
   },
 };
 
