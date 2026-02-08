@@ -42,7 +42,7 @@ const ADDICTION_PROFILES = {
     substances: ['cigarette', 'vape', 'gum', 'other'],
     substanceDisplay: { cigarette: 'Cigarette', vape: 'Vape', gum: 'Gum', other: 'Other' },
     methods: ['outside', 'inside', 'car', 'work', 'social', 'other'],
-    amounts: [1, 2, 3, 5, 10],
+    amounts: [0.5, 1, 2, 3, 5, 10],
     amountUnit: 'count',
     icons: { cigarette: '🚬', vape: '💨', gum: '🍬', other: '⚡' }
   },
@@ -1521,11 +1521,14 @@ function selectProfile(profileKey) {
   const profile = ADDICTION_PROFILES[profileKey];
   const settings = DB.loadSettings();
   
+  // Default to 1.0 or closest amount to 1.0 in the profile's amounts array
+  const defaultAmount = profile.amounts.find(a => a >= 1) || profile.amounts[0];
+  
   Object.assign(settings, {
     addictionProfile: profileKey,
     lastSubstance: profile.substances[0],
     lastMethod: profile.methods[0],
-    lastAmount: profile.amounts[0]
+    lastAmount: defaultAmount
   });
   
   DB._settings = settings;
