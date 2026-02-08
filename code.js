@@ -1024,9 +1024,9 @@ function navigateDay(offset) {
 
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
-  { label: '⚡ Amount Used / Day',    color: 'var(--thc)',     valueFn: evs => sumAmount(filterProfileUsed(evs)) },
+  { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)) },
   { label: '💪 Resisted / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
-  { label: '🏃 Exercise Minutes / Day', color: 'var(--primary)',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
+  { label: '🏃 Exercise Minutes / Day', color: '#e74c3c',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
 ];
 
 function formatGraphValue(val) {
@@ -1099,7 +1099,7 @@ function renderGraphs() {
   const maxCount = hasHourData ? Math.max(...Object.values(hourCounts), 1) : 1;
   html += `<div class="graph-container"><div class="graph-title">🕒 Today's Usage by Hour</div>`;
   html += hasHourData
-    ? buildHourGraphBars(hourCounts, maxCount, 'var(--primary)')
+    ? buildHourGraphBars(hourCounts, maxCount, '#f39c12')
     : emptyStateHTML('No data yet.', 'padding:12px 0');
   html += `</div>`;
   
@@ -1127,7 +1127,7 @@ function renderGraphs() {
   const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
   html += `<div class="graph-container"><div class="graph-title">⚡ Average Usage by Hour</div>`;
   html += hasHeatmapData
-    ? buildHourGraphBars(hourAverages, maxAvg, 'var(--thc)')
+    ? buildHourGraphBars(hourAverages, maxAvg, '#e67e22')
     : emptyStateHTML('No data yet.', 'padding:12px 0');
   html += `</div>`;
   
