@@ -221,12 +221,6 @@ function friendlyDate(key) {
   return _dateFormatter.format(new Date(key + 'T12:00:00'));
 }
 
-function getPrevDayKey(key) {
-  const d = new Date(key + 'T12:00:00');
-  d.setDate(d.getDate() - 1);
-  return dateKey(d);
-}
-
 // ========== DATA LAYER ==========
 const DB = {
   _events: null,
@@ -506,17 +500,17 @@ const Wins = {
 
     // --- Streak wins ---
     const resistStreak = this._countStreak('resisted');
-    for (let i = 0; i < resistStreak - 1; i++) addWin(resistStreak >= 2, 'resist-streak');
+    for (let i = 0; i < resistStreak - 1; i++) addWin(true, 'resist-streak');
     
     const habitStreak = this._countStreak('habit');
-    for (let i = 0; i < habitStreak - 2; i++) addWin(habitStreak >= 3, 'habit-streak');
+    for (let i = 0; i < habitStreak - 2; i++) addWin(true, 'habit-streak');
 
     const taperDays = this._countTaper();
-    for (let i = 0; i < taperDays - 2; i++) addWin(taperDays >= 3, 'taper');
+    for (let i = 0; i < taperDays - 2; i++) addWin(true, 'taper');
     
     // App usage streaks
     const appStreak = this._countAppUsageStreak();
-    for (let i = 0; i < appStreak - 1; i++) addWin(appStreak >= 2, 'app-streak');
+    for (let i = 0; i < appStreak - 1; i++) addWin(true, 'app-streak');
     addWin(appStreak >= 7, 'week-streak');
     addWin(appStreak >= 30, 'month-streak');
     addWin(appStreak >= 365, 'year-streak');
@@ -525,7 +519,7 @@ const Wins = {
     if (thcUsed.length === 0) {
       const daysSinceLastTHC = this._countDaysSinceLastTHC();
       if (daysSinceLastTHC >= 1) {
-        addWin(daysSinceLastTHC >= 1, 'tbreak-1d');
+        addWin(true, 'tbreak-1d');
         addWin(daysSinceLastTHC >= 7, 'tbreak-7d');
         addWin(daysSinceLastTHC >= 14, 'tbreak-14d');
         addWin(daysSinceLastTHC >= 21, 'tbreak-21d');
@@ -704,7 +698,8 @@ function render() {
   
   const activeTab = document.querySelector('.tab-panel.active')?.id.replace('tab-', '');
   if (activeTab === 'wins') renderWins();
-  else if (activeTab === 'graph') { renderGraphs(); renderDayHistory(); }
+  else if (activeTab === 'graph') renderGraphs();
+  else if (activeTab === 'history') renderDayHistory();
 }
 
 function renderDate() {
@@ -969,7 +964,7 @@ function renderDayHistory() {
   if (start > 0) {
     const remaining = start;
     html += `<div style="text-align:center;padding:12px">
-      <button onclick="App.loadMoreHistory()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer">
+      <button onclick="App.loadMoreHistory()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--card-border);background:var(--card);color:var(--text);cursor:pointer">
         Show ${Math.min(remaining, HISTORY_PAGE_SIZE)} more (${remaining} remaining)
       </button>
     </div>`;
@@ -1783,6 +1778,7 @@ function generateTestData(numEvents = 100) {
   const profile = getProfile();
   const now = Date.now();
   const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  DB.loadEvents();
   
   console.log(`Generating ${numEvents} random usage events...`);
   
@@ -1820,6 +1816,7 @@ function generateTestHabits(numPerHabit = 20) {
   const habitTypes = ['water', 'breaths', 'clean', 'exercise', 'outside'];
   const now = Date.now();
   const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  DB.loadEvents();
   
   console.log(`Generating ${numPerHabit} events for each habit type...`);
   
@@ -1852,6 +1849,7 @@ function generateTestHabits(numPerHabit = 20) {
 function generateTestResists(numEvents = 50) {
   const now = Date.now();
   const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  DB.loadEvents();
   
   console.log(`Generating ${numEvents} random resist events...`);
   
