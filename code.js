@@ -1480,7 +1480,11 @@ function skipLogin() {
 
 function continueToApp() {
   // After login or skip, check if we need onboarding
-  if (!DB.loadSettings().addictionProfile) {
+  const settings = DB.loadSettings();
+  console.log('[App] continueToApp - settings loaded:', settings);
+  console.log('[App] addictionProfile:', settings.addictionProfile);
+  
+  if (!settings.addictionProfile) {
     showOnboarding();
   } else {
     bindEvents();

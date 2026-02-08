@@ -168,11 +168,13 @@ async function pullFromCloud(uid) {
     localStorage.setItem(STORAGE_KEYS.wins, JSON.stringify(mergedWinData));
   }
 
-  // --- Settings: cloud wins (but preserve local addictionProfile if set) ---
+  // --- Settings: cloud wins ---
   if (cloud.settings) {
     const localSettings = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}');
+    // Cloud settings take priority, but keep local if cloud doesn't have a value
     const mergedSettings = { ...localSettings, ...cloud.settings };
     localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(mergedSettings));
+    console.log('[Sync] Merged settings, addictionProfile:', mergedSettings.addictionProfile);
   }
 
   // --- Todos: cloud wins ---
@@ -205,6 +207,10 @@ if (isConfigured) {
         
         // Invalidate DB caches BEFORE continueToApp so it reads fresh settings from localStorage
         invalidateDBCaches();
+        
+        // Debug: Check what's in localStorage before continueToApp
+        const settingsCheck = localStorage.getItem('ht_settings');
+        console.log('[Auth] Settings in localStorage before continueToApp:', settingsCheck);
         
         // Continue to app after successful login (will check if addiction profile is set)
         if (typeof continueToApp === 'function') {
