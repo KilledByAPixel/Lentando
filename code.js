@@ -1531,10 +1531,16 @@ function openEditModal(eventId) {
 
   const fields = fieldBuilders[evt.type]?.() || [];
   const fieldsHTML = fields.map(modalFieldWrap).join('');
+  
+  // Format time as HH:MM for input type="time"
+  const eventTime = new Date(evt.ts);
+  const hours = String(eventTime.getHours()).padStart(2, '0');
+  const minutes = String(eventTime.getMinutes()).padStart(2, '0');
+  const timeValue = `${hours}:${minutes}`;
 
   $('modal-sheet').innerHTML = `
     <div class="modal-header"><h2>Edit Event</h2><button class="modal-close" onclick="App.closeModal()">✕</button></div>
-    <div class="modal-field"><label>Time</label><div style="font-size:14px">${formatTime(evt.ts)}</div></div>
+    <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
     ${fieldsHTML}
     <div class="modal-actions">
       <button class="btn-delete" onclick="App.deleteEvent('${evt.id}'); App.closeModal();">Delete</button>
@@ -1549,6 +1555,36 @@ function closeModal() {
 }
 
 function saveModal() {
+  const eventId = $('modal-sheet').dataset.eventId;
+  const timeInput = $('modal-time-input');
+  
+  if (eventId && timeInput) {
+    const currentEvent = DB.loadEvents().find(e => e.id === eventId);
+    if (currentEvent) {
+      const oldDateKey = dateKey(currentEvent.ts);
+      
+      // Parse the time input and create new timestamp on same date as event
+      const [hours, minutes] = timeInput.value.split(':').map(Number);
+      const newDate = new Date(currentEvent.ts);
+      newDate.setHours(hours, minutes, 0, 0);
+      const newTs = newDate.getTime();
+      
+      // Update the event timestamp
+      DB.updateEvent(eventId, { ts: newTs });
+      
+      const newDateKey = dateKey(newTs);
+      
+      // If date changed, we need to refresh history view
+      if (oldDateKey !== newDateKey && currentHistoryDay === oldDateKey) {
+        // Event moved to different day - refresh the history display
+        renderDayHistory();
+      }
+      
+      // Recalculate wins since event time changed
+      calculateAndUpdateWins();
+    }
+  }
+  
   closeModal();
   render();
 }
