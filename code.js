@@ -1794,6 +1794,7 @@ function logUsed() {
   render();
   hideResistedChips();
   $('exercise-chips').classList.add('hidden');
+  clearTimeout(exerciseTimeout);
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
   
   const btn = $('btn-used');
@@ -1815,6 +1816,7 @@ function logResisted() {
   hideUsedChips();
   hideUndo();
   $('exercise-chips').classList.add('hidden');
+  clearTimeout(exerciseTimeout);
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
   showCoaching();
   
@@ -1891,6 +1893,10 @@ function bindEvents() {
     }
     
     $('exercise-chips').classList.add('hidden');
+    clearTimeout(exerciseTimeout);
+    hideUsedChips();
+    hideResistedChips();
+    hideUndo();
     logHabit(habit);
     flashEl(btn);
   });
