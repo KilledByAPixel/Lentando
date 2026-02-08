@@ -12,9 +12,9 @@
     "type": "git",
     "url": "git+https://github.com/KilledByAPixel/lentando.git"
   },
-  "keywords": [],
+  "keywords": ["pwa", "habit-tracker", "addiction", "recovery", "harm-reduction"],
   "author": "",
-  "license": "ISC",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/KilledByAPixel/lentando/issues"

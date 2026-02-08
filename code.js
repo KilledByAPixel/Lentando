@@ -1666,7 +1666,7 @@ function showLoginScreen() {
   if (loginInputs && !loginInputs.children.length) {
     loginInputs.innerHTML = `
       <input type="email" id="login-email" placeholder="Email" class="login-input">
-      <input type="password" id="login-password" placeholder="Password (6+ chars)" class="login-input">`;
+      <input type="password" id="login-password" placeholder="Password (8+ chars)" class="login-input">`;
   }
 }
 

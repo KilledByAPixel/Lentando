@@ -5,7 +5,7 @@
 ## 1. Who we are
 
 - **App name:** Lentando
-- **Website:** https://killedbyapixel.github.io/Lentando
+- **Website:** https://lentando.3d2k.com
 - **Contact:** frankforce@gmail.com
 
 This Privacy Policy explains how **Lentando** collects, uses, and shares information when you use the app.

@@ -7,7 +7,7 @@ These Terms of Service ("Terms") govern your use of **Lentando** (the "App"). By
 ## 1. Who we are
 
 - **App name:** Lentando
-- **Website:** https://killedbyapixel.github.io/Lentando/
+- **Website:** https://lentando.3d2k.com
 - **Contact:** frankforce@gmail.com
 - **Operator:** Frank Force Games
 
@@ -40,7 +40,7 @@ The App uses third-party services, including **Google Firebase** and **Google si
 ## 7. Privacy
 
 Your use of the App is also governed by the Privacy Policy:  
-https://killedbyapixel.github.io/Lentando/privacy-policy.html
+https://lentando.3d2k.com/privacy.html
 
 ## 8. Changes to the App
 

@@ -9,6 +9,8 @@
 ![PWA](https://img.shields.io/badge/PWA-Installable-5c6bc0)
 ![License](https://img.shields.io/badge/License-All_Rights_Reserved-red)
 
+**[🚀 Try it now → lentando.3d2k.com](https://lentando.3d2k.com)**
+
 ## What It Does
 
 Lentando helps you track substance use, urges resisted, and healthy habits.
@@ -42,7 +44,7 @@ It's designed for harm reduction, not judgment. Every small win counts.
 2. Select what substance you're tracking.
 3. Start logging and get healthy!
 
-![Lentando Screenshot](screenshot.png)
+![Lentando Screenshot](screenshot.jpg)
 
 ## License
 
