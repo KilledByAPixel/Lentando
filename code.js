@@ -441,15 +441,13 @@ function countDelayedResists(resisted, used) {
 function getMaxGapHours(sessions) {
   if (sessions.length === 0) return 0;
   if (sessions.length === 1) {
-    // Single session — gap is time from that session to now
     return (Date.now() - sessions[0].ts) / 3600000;
   }
-  const gaps = sessions.slice(1).map((u, i) => u.ts - sessions[i].ts);
-  // Also include gap from last session to now
-  const gapSinceLastSession = Date.now() - sessions[sessions.length - 1].ts;
-  gaps.push(gapSinceLastSession);
-  const maxGapMs = Math.max(...gaps);
-  return maxGapMs / 3600000;
+  // Sort to ensure correct gap calculation regardless of input order
+  const sorted = [...sessions].sort((a, b) => a.ts - b.ts);
+  const gaps = sorted.slice(1).map((u, i) => u.ts - sorted[i].ts);
+  gaps.push(Date.now() - sorted[sorted.length - 1].ts);
+  return Math.max(...gaps) / 3600000;
 }
 
 function getMilestoneWins(gapHours, milestones) {
@@ -754,7 +752,7 @@ function eventRowHTML(e, editable) {
   return `<li class="timeline-item" data-id="${e.id}" ${editable ? '' : 'style="padding:4px 0"'}>
     <span class="tl-time">${time}</span>
     <span class="tl-icon">${icon}</span>
-    <div class="tl-body"><div class="tl-title">${title}</div><div class="tl-detail">${detail}</div></div>
+    <div class="tl-body"><div class="tl-title">${escapeHTML(title)}</div><div class="tl-detail">${escapeHTML(detail)}</div></div>
     ${actions}
   </li>`;
 }
@@ -1284,6 +1282,7 @@ function exportJSON() {
   const data = { 
     events: DB.loadEvents(), 
     settings: DB.loadSettings(), 
+    todos: loadTodos(),
     lifetimeWins: winData.lifetimeWins,
     exportedAt: new Date().toISOString() 
   };
@@ -1371,6 +1370,11 @@ function importJSON(inputEl) {
             .map(([id, count]) => ({ id, count }))
         };
         saveWinData(mergedWinData);
+      }
+
+      // Import todos if present and local list is empty
+      if (data.todos && Array.isArray(data.todos) && loadTodos().length === 0) {
+        saveTodos(data.todos);
       }
 
       const added = newEvents.length;
@@ -1598,30 +1602,30 @@ function saveModal() {
   const eventId = $('modal-sheet').dataset.eventId;
   const timeInput = $('modal-time-input');
   
-  if (eventId && timeInput) {
+  if (eventId && timeInput && timeInput.value) {
     const currentEvent = DB.loadEvents().find(e => e.id === eventId);
     if (currentEvent) {
       const oldDateKey = dateKey(currentEvent.ts);
       
       // Parse the time input and create new timestamp on same date as event
       const [hours, minutes] = timeInput.value.split(':').map(Number);
-      const newDate = new Date(currentEvent.ts);
-      newDate.setHours(hours, minutes, 0, 0);
-      const newTs = newDate.getTime();
-      
-      // Update the event timestamp
-      DB.updateEvent(eventId, { ts: newTs });
-      
-      const newDateKey = dateKey(newTs);
-      
-      // If date changed, we need to refresh history view
-      if (oldDateKey !== newDateKey && currentHistoryDay === oldDateKey) {
-        // Event moved to different day - refresh the history display
-        renderDayHistory();
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        const newDate = new Date(currentEvent.ts);
+        newDate.setHours(hours, minutes, 0, 0);
+        const newTs = newDate.getTime();
+        
+        // Only update if time actually changed
+        if (newTs !== currentEvent.ts) {
+          DB.updateEvent(eventId, { ts: newTs });
+          
+          const newDateKey = dateKey(newTs);
+          if (oldDateKey !== newDateKey && currentHistoryDay === oldDateKey) {
+            renderDayHistory();
+          }
+          
+          calculateAndUpdateWins();
+        }
       }
-      
-      // Recalculate wins since event time changed
-      calculateAndUpdateWins();
     }
   }
   
