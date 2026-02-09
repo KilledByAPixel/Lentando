@@ -351,8 +351,15 @@ function updateAuthUI(user) {
           <button class="export-btn" style="flex:none;padding:8px 12px;font-size:12px;margin:0" onclick="FirebaseSync.logout()">Sign Out</button>
         </div>
       </div>`;
+    // Show delete account button when logged in
+    const deleteAccountBar = document.getElementById('delete-account-bar');
+    if (deleteAccountBar) deleteAccountBar.classList.remove('hidden');
   } else {
     _authUIState = 'logged-out';
+    // Hide delete account button when not logged in
+    const deleteAccountBar = document.getElementById('delete-account-bar');
+    if (deleteAccountBar) deleteAccountBar.classList.add('hidden');
+    
     // Don't inject auth form here — only mount it when Settings tab is visible
     // Show a placeholder; mountAuthForm() will replace it if Settings is open
     const settingsPanel = document.getElementById('tab-settings');
