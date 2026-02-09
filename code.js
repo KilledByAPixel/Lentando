@@ -1413,7 +1413,11 @@ function exportJSON() {
 }
 
 async function clearDatabase() {
-  if (!confirm('⚠️ This will permanently delete ALL events and reset settings. This cannot be undone.\n\nAre you sure?')) return;
+  const isLoggedIn = window.FirebaseSync && FirebaseSync.getUser();
+  const msg = isLoggedIn
+    ? '⚠️ This will permanently delete ALL local AND cloud data and reset settings. This cannot be undone.\n\nAre you sure?'
+    : '⚠️ This will permanently delete ALL events and reset settings. This cannot be undone.\n\nAre you sure?';
+  if (!confirm(msg)) return;
   localStorage.removeItem(STORAGE_EVENTS);
   localStorage.removeItem(STORAGE_SETTINGS);
   localStorage.removeItem(STORAGE_TODOS);

@@ -494,7 +494,11 @@ window.FirebaseSync = {
     localStorage.removeItem(STORAGE_KEYS.wins);
     localStorage.removeItem(STORAGE_KEYS.todos);
     localStorage.removeItem(STORAGE_KEYS.loginSkipped);
+    localStorage.removeItem('ht_theme');
     invalidateDBCaches();
+    
+    // Reset theme to default
+    document.documentElement.setAttribute('data-theme', 'dark');
     
     updateAuthUI(null);
     // Show login screen
