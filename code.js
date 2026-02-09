@@ -2143,7 +2143,7 @@ function saveTodos(todos) {
     if (window.FirebaseSync) FirebaseSync.onDataChanged();
   } catch (e) {
     if (e.name === 'QuotaExceededError') {
-      alert('Storage limit reached. Please export your data and clear completed tasks.');
+      alert('Storage limit reached. Please export your data and clear completed goals.');
     }
     throw e;
   }
@@ -2182,7 +2182,7 @@ function toggleTodo(idx) {
 }
 
 async function deleteTodo(idx) {
-  if (!confirm('Delete this task?')) return;
+  if (!confirm('Delete this goal?')) return;
   const todos = loadTodos();
   todos.splice(idx, 1);
   saveTodos(todos);
