@@ -578,7 +578,7 @@ const Wins = {
       const yProfile = filterProfileUsed(yesterdayEvents);
 
       addWin(profileUsed.length < yProfile.length, 'fewer-sessions');
-      addWin(profileUsed.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
+      addWin(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
       
       // Reuse daytimeSessions from above for "first session" comparison
       const yesterdayDaytime = yProfile.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
