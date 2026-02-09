@@ -36,6 +36,9 @@ if (isConfigured) {
   auth = getAuth(app);
   db = getFirestore(app);
   provider = new GoogleAuthProvider();
+  provider.setCustomParameters({
+    prompt: 'select_account'
+  });
 } else {
   console.warn('[Firebase] Not configured. Edit firebase-sync.js with your Firebase project config.');
 }
