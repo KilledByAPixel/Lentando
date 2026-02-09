@@ -1175,6 +1175,9 @@ function renderDayHistory() {
     </div>`;
   }
   
+  // Clear Day button
+  html += `<button class="export-btn danger-btn" onclick="App.clearDay()" style="width:100%;margin-top:12px;font-size:13px;padding:10px;color:var(--muted)">🗑️ Clear Day</button>`;
+
   historyEl.innerHTML = html;
 }
 
@@ -2226,6 +2229,18 @@ window.App = {
     // Flush to cloud immediately so focus-triggered pull doesn't restore the deleted event
     if (window.FirebaseSync) FirebaseSync.pushNow().catch(() => {});
     return true;
+  },
+  async clearDay() {
+    const events = DB.forDate(currentHistoryDay);
+    if (events.length === 0) return;
+    const label = friendlyDate(currentHistoryDay);
+    if (!confirm(`🗑️ Delete all ${events.length} events for ${label}?\n\nThis cannot be undone.`)) return;
+    for (const e of events) DB.deleteEvent(e.id);
+    calculateAndUpdateWins();
+    render();
+    if (window.FirebaseSync) {
+      try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
+    }
   },
   exportJSON,
   importJSON,
