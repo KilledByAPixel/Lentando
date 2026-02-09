@@ -2094,6 +2094,10 @@ function hideUndo() {
 
 function undoLastUsed() {
   if (!lastUndoEventId) return;
+  
+  const undoBtn = $('btn-undo');
+  if (undoBtn) pulseEl(undoBtn);
+  
   DB.deleteEvent(lastUndoEventId);
   
   // Track undo for "Second Thought" win
@@ -2104,8 +2108,13 @@ function undoLastUsed() {
   saveWinData(winData);
   
   calculateAndUpdateWins();
-  hideUndo();
-  hideUsedChips();
+  
+  // Delay hiding undo until after animation completes
+  setTimeout(() => {
+    hideUndo();
+    hideUsedChips();
+  }, 400);
+  
   hapticFeedback();
   showToast('↩️ Undone');
   render();
