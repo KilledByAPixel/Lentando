@@ -866,16 +866,19 @@ function buildSinceLastUsedTile(used) {
     } else {
       sinceLastVal = formatDuration(elapsedMs);
       
-      // Show average gap comparison as subtitle when under a day
+      // Show 7-day average gap as subtitle when under a day (within-day gaps only)
       const last7Days = getLastNDays(7);
-      const weekUsed = last7Days.flatMap(k => filterUsed(DB.forDate(k)));
-      if (weekUsed.length >= 2) {
-        const gaps = weekUsed.slice(1).map((u, i) => u.ts - weekUsed[i].ts);
-        const avgGapMs = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
+      const withinDayGaps = [];
+      for (const dk of last7Days) {
+        const dayUsed = filterUsed(DB.forDate(dk));
+        for (let i = 1; i < dayUsed.length; i++) {
+          withinDayGaps.push(dayUsed[i].ts - dayUsed[i - 1].ts);
+        }
+      }
+      if (withinDayGaps.length > 0) {
+        const avgGapMs = withinDayGaps.reduce((sum, gap) => sum + gap, 0) / withinDayGaps.length;
         if (avgGapMs >= 60000) {
-          const avgFormatted = formatDuration(avgGapMs);
-          const comparison = elapsedMs > avgGapMs ? '↑ longer' : elapsedMs < avgGapMs ? '↓ shorter' : '= equal';
-          sinceLastSub = `avg ${avgFormatted} (${comparison})`;
+          sinceLastSub = `7-day avg: ${formatDuration(avgGapMs)}`;
         }
       }
     }
