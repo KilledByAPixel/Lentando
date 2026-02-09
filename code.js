@@ -960,12 +960,14 @@ function renderProgress() {
 
   const exerciseMins = getHabits(thisWeek.events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
   const exercisePerDay = (exerciseMins / 7).toFixed(1);
+  const weekHabits = sumHabitCounts(thisWeek.events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
+  const exerciseSub = weekHabits > 0 ? `${weekHabits} healthy actions` : '';
 
   $('progress').innerHTML = [
     tileHTML(dailyAvg, 'Sessions/Day', sessionsSub),
     tileHTML(gapStr, 'Longest Gap', gapSub),
     ratioTile,
-    tileHTML(`${exercisePerDay}m`, 'Exercise/Day', 'last 7 days')
+    tileHTML(`${exercisePerDay}m`, 'Exercise/Day', exerciseSub)
   ].join('');
 }
 
