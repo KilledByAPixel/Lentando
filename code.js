@@ -2591,7 +2591,7 @@ function generateTestData(numEvents = 100) {
     
     // Random substance, method, amount
     const substance = profile.substances[Math.floor(Math.random() * profile.substances.length)];
-    const method = profile.methods[Math.floor(Math.random() * profile.methods.length)];
+    const method = profile.methods ? profile.methods[Math.floor(Math.random() * profile.methods.length)] : null;
     const amount = profile.amounts[Math.floor(Math.random() * profile.amounts.length)];
     const reason = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
     
