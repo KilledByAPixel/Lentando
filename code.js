@@ -142,7 +142,7 @@ const WIN_DEFINITIONS = {
   'mindful': { label: 'Mindful Session', icon: '🧠', desc: 'Logged the reason for using, showing mindful awareness' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
-  'zero-thc': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
+  'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
   'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 3 times today' },
   'habit-stack': { label: 'Habit Stack', icon: '🧩', desc: 'Logged multiple different habit types in one day' },
   'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '🏃💧', desc: 'Logged both exercise and water today' },
@@ -605,16 +605,14 @@ const Wins = {
 
     const profileAmt = sumAmount(profileUsed);
     addWin(profileUsed.length > 0 && profileAmt <= LOW_DAY_THRESHOLD, 'low-day');
-    addWin(profileUsed.length === 0, 'zero-thc');
+    addWin(profileUsed.length === 0, 'zero-use');
 
     // --- Habit-based wins ---
     const waterCount = getHabits(todayEvents, 'water').length;
     addWin(waterCount >= 3, 'hydrated');
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
-    if (uniqueHabits.size >= 2) {
-      for (let i = 0; i < uniqueHabits.size - 1; i++) addWin(true, 'habit-stack');
-    }
+    addWin(uniqueHabits.size >= 2, 'habit-stack');
     
     // Exercise + Water combo
     const hasExercise = habits.some(e => e.habit === 'exercise');
@@ -625,10 +623,14 @@ const Wins = {
     // Gap wins — include all sessions but skip gaps that cross the 4am boundary (sleep gap)
     if (profileUsed.length >= 1) {
       const allGaps = getAllGapHours(profileUsed);
-      // Award the highest milestone for each gap
-      for (const gapHours of allGaps) {
-        const milestone = getMilestoneWins(gapHours, GAP_MILESTONES);
-        milestone.forEach(h => addWin(true, `gap-${h}h`));
+      // Award only the highest milestone achieved today
+      if (allGaps.length > 0) {
+        const maxGap = Math.max(...allGaps);
+        const milestones = getMilestoneWins(maxGap, GAP_MILESTONES);
+        if (milestones.length > 0) {
+          const highestMilestone = Math.max(...milestones);
+          addWin(true, `gap-${highestMilestone}h`);
+        }
       }
       
       // Gap longer than 7-day historical average (within-day gaps only)
