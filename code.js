@@ -1832,6 +1832,9 @@ function hideLoginScreen() {
 }
 
 function skipLogin() {
+  if (!confirm('⚠️ Continue without an account?\n\nYour data will only be saved on this device and won\'t sync to other devices.\n\nYou can sign in later from Settings to enable cloud backup.')) {
+    return;
+  }
   localStorage.setItem(STORAGE_LOGIN_SKIPPED, 'true');
   hideLoginScreen();
   continueToApp();
