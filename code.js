@@ -131,8 +131,7 @@ const HABIT_LABELS = {
 const WIN_DEFINITIONS = {
   'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
   'resist': { label: 'Resist Win', icon: '💪', desc: 'Logged an urge but resisted using' },
-  'delay-15m': { label: 'Delay Win (15m+)', icon: '⏳', desc: 'Resisted and didn\'t use for at least 15 minutes after' },
-  'urge-surfed': { label: 'Urge Surfed (5m+)', icon: '🧘', desc: 'Logged an urge and didn\'t use for at least 5 minutes after' },
+  'urge-surfed': { label: 'Urge Surfed (15m+)', icon: '🧘', desc: 'Logged an urge and didn\'t use for at least 15 minutes after' },
   'swap-completed': { label: 'Swap Completed', icon: '🛠️', desc: 'Logged an urge, then a healthy action within 15 minutes' },
   'replacement-cbd': { label: 'Replacement Win (CBD)', icon: '🔄', desc: 'Used CBD instead of THC today' },
   'harm-reduction-vape': { label: 'Harm Reduction (vape)', icon: '🌡️', desc: 'Chose vape over smoke' },
@@ -430,26 +429,20 @@ function createHabitEvent(habit, minutes) {
 }
 
 // ========== WIN CALCULATION HELPERS ==========
-function countDelayedResists(resisted, used) {
-  return resisted.filter(r => 
-    !used.some(u => u.ts > r.ts && u.ts - r.ts <= FIFTEEN_MINUTES_MS)
-  ).length;
-}
-
 function countUrgeSurfed(resisted, used) {
-  const FIVE_MINUTES_MS = 5 * 60 * 1000;
+  const CLUSTER_MS = 5 * 60 * 1000;
   const sorted = [...resisted].sort((a, b) => a.ts - b.ts);
   
   return sorted.filter((r, i) => {
-    // Skip if this resist is within 5 minutes of the previous resist (not first in cluster)
-    if (i > 0 && r.ts - sorted[i - 1].ts <= FIVE_MINUTES_MS) {
+    // Skip if this resist is within 5 minutes of the previous resist (cluster de-dupe)
+    if (i > 0 && r.ts - sorted[i - 1].ts <= CLUSTER_MS) {
       return false;
     }
     
-    // Check if 5+ minutes have passed and no use occurred after this resist
+    // Check if 15+ minutes have passed and no use occurred within 15 minutes after
     const timeSinceResist = Date.now() - r.ts;
-    const usedAfter = used.some(u => u.ts > r.ts && u.ts - r.ts <= FIVE_MINUTES_MS);
-    return timeSinceResist >= FIVE_MINUTES_MS && !usedAfter;
+    const usedAfter = used.some(u => u.ts > r.ts && u.ts - r.ts <= FIFTEEN_MINUTES_MS);
+    return timeSinceResist >= FIFTEEN_MINUTES_MS && !usedAfter;
   }).length;
 }
 
@@ -528,9 +521,6 @@ const Wins = {
 
     // --- Session-based wins ---
     for (let i = 0; i < resisted.length; i++) addWin(true, 'resist');
-
-    const delayCount = countDelayedResists(resisted, used);
-    for (let i = 0; i < delayCount; i++) addWin(true, 'delay-15m');
 
     const urgeSurfedCount = countUrgeSurfed(resisted, used);
     for (let i = 0; i < urgeSurfedCount; i++) addWin(true, 'urge-surfed');
@@ -1424,7 +1414,9 @@ function importJSON(inputEl) {
 
       // Import todos if present and local list is empty
       if (data.todos && Array.isArray(data.todos) && loadTodos().length === 0) {
-        const validTodos = data.todos.filter(t => t && typeof t.text === 'string' && t.text.trim());
+        const validTodos = data.todos
+          .filter(t => t && typeof t.text === 'string' && t.text.trim())
+          .map(t => ({ ...t, text: t.text.trim().slice(0, 120) }));
         if (validTodos.length > 0) saveTodos(validTodos);
       }
 
@@ -1461,7 +1453,7 @@ function downloadFile(content, filename, mime) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // ========== CHIP ROWS ==========
@@ -2422,12 +2414,12 @@ function generateTestWins() {
   console.log('Sample lifetime wins:', verify.lifetimeWins.slice(0, 5));
 }
 
-// Attach to window for console access
-window.generateAllTestData = generateAllTestData;
-window.generateTestData = generateTestData;
-window.generateTestHabits = generateTestHabits;
-window.generateTestResists = generateTestResists;
-window.generateTestWins = generateTestWins;
+// Dev tools — uncomment to expose in browser console:
+// window.generateAllTestData = generateAllTestData;
+// window.generateTestData = generateTestData;
+// window.generateTestHabits = generateTestHabits;
+// window.generateTestResists = generateTestResists;
+// window.generateTestWins = generateTestWins;
 
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
