@@ -490,7 +490,8 @@ const Wins = {
     const used     = filterUsed(todayEvents);
     const resisted = filterByType(todayEvents, 'resisted');
     const habits   = filterByType(todayEvents, 'habit');
-    const profileUsed = filterProfileUsed(used); // Profile-aware: only substances in current profile
+    const subs = new Set(getProfile().substances);
+    const profileUsed = used.filter(e => subs.has(e.substance)); // Profile-aware: only substances in current profile
 
     // --- Welcome Back win ---
     const settings = DB.loadSettings();
@@ -742,11 +743,12 @@ const EVENT_DETAIL_BUILDERS = {
 function eventRowHTML(e, editable) {
   const time = formatTime(e.ts);
   const { icon, title, detail } = EVENT_DETAIL_BUILDERS[e.type]?.(e) || { icon: '', title: '', detail: '' };
+  const safeId = escapeHTML(e.id);
 
   const actions = editable
     ? `<div class="tl-actions">
-          <button class="tl-act-btn" onclick="App.editEvent('${e.id}')" title="Edit">✏️</button>
-          <button class="tl-act-btn" onclick="App.deleteEvent('${e.id}')" title="Delete">🗑️</button>
+          <button class="tl-act-btn" onclick="App.editEvent('${safeId}')" title="Edit">✏️</button>
+          <button class="tl-act-btn" onclick="App.deleteEvent('${safeId}')" title="Delete">🗑️</button>
         </div>` : '';
 
   return `<li class="timeline-item" data-id="${e.id}" ${editable ? '' : 'style="padding:4px 0"'}>
@@ -1317,6 +1319,7 @@ async function clearDatabase() {
   localStorage.removeItem(STORAGE_TODOS);
   localStorage.removeItem(STORAGE_THEME);
   localStorage.removeItem(STORAGE_WINS);
+  localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
   // Push cleared state to cloud so data doesn't restore on reload
   if (window.FirebaseSync) {
     try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
@@ -1622,7 +1625,7 @@ function openEditModal(eventId) {
     <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
     ${fieldsHTML}
     <div class="modal-actions">
-      <button class="btn-delete" onclick="App.deleteEvent('${evt.id}') && App.closeModal()">Delete</button>
+      <button class="btn-delete" onclick="App.deleteEvent('${escapeHTML(evt.id)}') && App.closeModal()">Delete</button>
       <button class="btn-save" onclick="App.saveModal()">Done</button>
     </div>`;
   $('modal-sheet').dataset.eventId = eventId;
