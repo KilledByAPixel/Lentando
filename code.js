@@ -740,7 +740,7 @@ function getUsedEventDetail(evt) {
       if (!title && p.substanceDisplay[evt.substance]) title = p.substanceDisplay[evt.substance];
     }
   }
-  icon = icon || '💊';
+  icon = icon || '⚡';
   title = title || evt.substance.toUpperCase();
   
   return {
