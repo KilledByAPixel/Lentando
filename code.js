@@ -504,7 +504,7 @@ const Wins = {
     for (let i = 0; i < delayCount; i++) addWin(true, 'delay-15m');
 
     // Cannabis-specific wins
-    const isCannabis = DB.loadSettings().addictionProfile === 'cannabis';
+    const isCannabis = settings.addictionProfile === 'cannabis';
     if (isCannabis) {
       const cbdUsed = filterCBD(used);
       const replacementCount = cbdUsed.filter(u => isDaytime(u.ts)).length;
@@ -1050,6 +1050,10 @@ function renderDayHistory() {
   
   labelEl.textContent = friendlyDate(currentHistoryDay);
   
+  // Update next button disabled state (before possible early return)
+  const nextBtn = $('next-day');
+  if (nextBtn) nextBtn.disabled = (currentHistoryDay === todayKey());
+  
   if (events.length === 0) {
     historyEl.innerHTML = emptyStateHTML('No events for this day');
     return;
@@ -1089,10 +1093,6 @@ function renderDayHistory() {
   }
   
   historyEl.innerHTML = html;
-
-  // Update next button disabled state
-  const nextBtn = $('next-day');
-  if (nextBtn) nextBtn.disabled = (currentHistoryDay === todayKey());
 }
 
 function loadMoreHistory() {
@@ -1111,10 +1111,6 @@ function navigateDay(offset) {
   currentHistoryDay = newKey;
   historyShowCount = HISTORY_PAGE_SIZE;
   renderDayHistory();
-  
-  // Update next button disabled state
-  const nextBtn = $('next-day');
-  if (nextBtn) nextBtn.disabled = (currentHistoryDay === todayKey());
 }
 
 // ========== GRAPHS ==========
@@ -1541,6 +1537,7 @@ function handleChipClick(e) {
     const newTs = chip.dataset.val === 'now' ? Date.now() : parseInt(chip.dataset.val);
     DB.updateEvent(activeChipEventId, { ts: newTs });
     updateActiveChips();
+    calculateAndUpdateWins();
     render();
     return;
   }
@@ -1552,6 +1549,7 @@ function handleChipClick(e) {
   DB.updateEvent(activeChipEventId, updateData);
   persistFieldDefault(field, val);
   updateActiveChips();
+  calculateAndUpdateWins();
   render();
 }
 
@@ -1602,7 +1600,7 @@ function openEditModal(eventId) {
     <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
     ${fieldsHTML}
     <div class="modal-actions">
-      <button class="btn-delete" onclick="App.deleteEvent('${evt.id}'); App.closeModal();">Delete</button>
+      <button class="btn-delete" onclick="App.deleteEvent('${evt.id}') && App.closeModal()">Delete</button>
       <button class="btn-save" onclick="App.saveModal()">Done</button>
     </div>`;
   $('modal-sheet').dataset.eventId = eventId;
@@ -1804,6 +1802,7 @@ function undoLastUsed() {
   winData.todayDate = today;
   saveWinData(winData);
   
+  calculateAndUpdateWins();
   hideUndo();
   hideUsedChips();
   hapticFeedback();
@@ -2104,10 +2103,11 @@ window.App = {
   closeModal,
   saveModal,
   deleteEvent(id) {
-    if (!confirm('Delete this event?')) return;
+    if (!confirm('Delete this event?')) return false;
     DB.deleteEvent(id);
     calculateAndUpdateWins();
     render();
+    return true;
   },
   exportJSON,
   importJSON,
