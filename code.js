@@ -1140,7 +1140,8 @@ function renderProgress() {
 }
 
 function winCardHTML(w) {
-  return `<li class="win-item" title="${escapeHTML(w.desc || '')}"><span class="win-badge">${w.count}</span><div class="win-icon">${w.icon}</div><div class="win-label">${escapeHTML(w.label)}</div></li>`;
+  const unearnedClass = w.count === 0 ? ' unearned' : '';
+  return `<li class="win-item${unearnedClass}" title="${escapeHTML(w.desc || '')}"><span class="win-badge">${w.count}</span><div class="win-icon">${w.icon}</div><div class="win-label">${escapeHTML(w.label)}</div></li>`;
 }
 
 function calculateAndUpdateWins() {
@@ -1238,48 +1239,52 @@ function renderWins() {
   
   const todayEl = $('wins-today');
   if (todayEl) {
-    if (winData.todayWins.length === 0) {
-      todayEl.innerHTML = emptyStateHTML('Wins appear here as you go');
-    } else {
-      // Sort by todayOrder (most recently incremented first)
-      const todayOrder = winData.todayOrder || [];
-      const todayWinsWithDef = winData.todayWins
-        .map(w => ({ ...w, ...getWinDef(w.id) }))
-        .filter(w => WIN_DEFINITIONS[w.id]); // Filter out unknown medals
+    // Get earned medals
+    const todayOrder = winData.todayOrder || [];
+    const earnedWins = winData.todayWins
+      .map(w => ({ ...w, ...getWinDef(w.id) }))
+      .filter(w => WIN_DEFINITIONS[w.id]); // Filter out unknown medals
+    
+    // Sort earned wins by todayOrder
+    earnedWins.sort((a, b) => {
+      const aIdx = todayOrder.indexOf(a.id);
+      const bIdx = todayOrder.indexOf(b.id);
       
-      // Sort using todayOrder - wins not in order go to end alphabetically
-      todayWinsWithDef.sort((a, b) => {
-        const aIdx = todayOrder.indexOf(a.id);
-        const bIdx = todayOrder.indexOf(b.id);
-        
-        // Both in order - sort by order position
-        if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-        
-        // Only a in order - a comes first
-        if (aIdx !== -1) return -1;
-        
-        // Only b in order - b comes first
-        if (bIdx !== -1) return 1;
-        
-        // Neither in order - alphabetical
-        return a.label.localeCompare(b.label);
-      });
-      
-      todayEl.innerHTML = todayWinsWithDef.map(winCardHTML).join('');
-    }
+      if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+      if (aIdx !== -1) return -1;
+      if (bIdx !== -1) return 1;
+      return a.label.localeCompare(b.label);
+    });
+    
+    // Get unearned medals (all medals not in earned list)
+    const earnedIds = new Set(earnedWins.map(w => w.id));
+    const unearnedWins = Object.keys(WIN_DEFINITIONS)
+      .filter(id => !earnedIds.has(id))
+      .map(id => ({ id, count: 0, ...getWinDef(id) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+    
+    const allWins = [...earnedWins, ...unearnedWins];
+    todayEl.innerHTML = allWins.map(winCardHTML).join('');
   }
 
   const totalEl = $('wins-total');
   if (!totalEl) return;
   
-  if (winData.lifetimeWins.length === 0) {
-    totalEl.innerHTML = emptyStateHTML('Daily medals earned are saved here permanently');
-  } else {
-    const lifetimeWinsWithDef = winData.lifetimeWins
-      .map(w => ({ ...w, ...getWinDef(w.id) }))
-      .filter(w => WIN_DEFINITIONS[w.id]); // Filter out unknown medals
-    totalEl.innerHTML = lifetimeWinsWithDef.map(winCardHTML).join('');
-  }
+  // Get earned lifetime medals
+  const earnedLifetime = winData.lifetimeWins
+    .map(w => ({ ...w, ...getWinDef(w.id) }))
+    .filter(w => WIN_DEFINITIONS[w.id])
+    .sort((a, b) => a.label.localeCompare(b.label));
+  
+  // Get unearned medals
+  const earnedLifetimeIds = new Set(earnedLifetime.map(w => w.id));
+  const unearnedLifetime = Object.keys(WIN_DEFINITIONS)
+    .filter(id => !earnedLifetimeIds.has(id))
+    .map(id => ({ id, count: 0, ...getWinDef(id) }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+  
+  const allLifetime = [...earnedLifetime, ...unearnedLifetime];
+  totalEl.innerHTML = allLifetime.map(winCardHTML).join('');
 }
 
 function hasRecentWater() {
