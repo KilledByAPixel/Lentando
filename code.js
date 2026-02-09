@@ -239,6 +239,10 @@ function escapeHTML(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 function timeOfDayMin(ts) {
   const d = new Date(ts);
   return d.getHours() * 60 + d.getMinutes();
@@ -962,7 +966,7 @@ function renderMetrics() {
   const resistSub = maxResistStreak > 1 ? `Longest streak: ${maxResistStreak}` : '';
 
   $('metrics').innerHTML = [
-    tileHTML(used.length, 'Sessions', `${totalAmt} Total ${profile.amountUnit}`),
+    tileHTML(used.length, 'Sessions', `${totalAmt} Total ${capitalize(profile.amountUnit)}`),
     buildSinceLastUsedTile(used),
     tileHTML(resisted.length, 'Urges Resisted', resistSub),
     tileHTML(allHabits, 'Healthy Actions', exerciseSub)
