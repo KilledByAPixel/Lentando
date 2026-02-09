@@ -731,24 +731,27 @@ function chipGroupHTML(label, field, values, activeVal, displayFn) {
 function getUsedEventDetail(evt) {
   const profile = getProfile();
   
-  // Look up icon and display name from any profile (not just current) so history shows correct icons
-  let icon = profile.icons[evt.substance];
-  let title = profile.substanceDisplay[evt.substance];
-  if (!icon || !title) {
+  // Find the profile that owns this substance (may differ from current profile for historical events)
+  let matchedProfile = profile;
+  if (!profile.icons[evt.substance] && !profile.substanceDisplay[evt.substance]) {
     for (const p of Object.values(ADDICTION_PROFILES)) {
-      if (!icon && p.icons[evt.substance]) icon = p.icons[evt.substance];
-      if (!title && p.substanceDisplay[evt.substance]) title = p.substanceDisplay[evt.substance];
+      if (p.icons[evt.substance] || p.substanceDisplay[evt.substance]) {
+        matchedProfile = p;
+        break;
+      }
     }
   }
-  icon = icon || '⚡';
-  title = title || evt.substance.toUpperCase();
+  
+  const icon = matchedProfile.icons[evt.substance] || '⚡';
+  const title = matchedProfile.substanceDisplay[evt.substance] || evt.substance.toUpperCase();
+  const unit = matchedProfile.amountUnit;
   
   return {
     icon,
     title,
     detail: [
       evt.method,
-      evt.amount != null && `${evt.amount} ${evt.amount === 1 ? profile.amountUnit.replace(/s$/, '') : profile.amountUnit}`,
+      evt.amount != null && `${evt.amount} ${evt.amount === 1 ? unit.replace(/s$/, '') : unit}`,
       evt.reason
     ].filter(Boolean).join(' · ')
   };
@@ -2235,7 +2238,11 @@ window.App = {
     if (events.length === 0) return;
     const label = friendlyDate(currentHistoryDay);
     if (!confirm(`🗑️ Delete all ${events.length} events for ${label}?\n\nThis cannot be undone.`)) return;
-    for (const e of events) DB.deleteEvent(e.id);
+    // Batch delete — single filter + save instead of N individual deletions
+    const idsToDelete = new Set(events.map(e => e.id));
+    DB.loadEvents();
+    DB._events = DB._events.filter(e => !idsToDelete.has(e.id));
+    DB.saveEvents();
     calculateAndUpdateWins();
     render();
     if (window.FirebaseSync) {
