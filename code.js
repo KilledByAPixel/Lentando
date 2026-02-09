@@ -898,9 +898,21 @@ function renderMetrics() {
   const allHabits = sumHabitCounts(events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
   const exerciseSub = exerciseMins > 0 ? `${exerciseMins}m exercise` : '';
 
+  // Calculate longest resist streak today (max consecutive resists between uses)
+  let maxResistStreak = 0, currentResistStreak = 0;
+  for (const e of events) {
+    if (e.type === 'resisted') {
+      currentResistStreak++;
+      if (currentResistStreak > maxResistStreak) maxResistStreak = currentResistStreak;
+    } else if (e.type === 'used') {
+      currentResistStreak = 0;
+    }
+  }
+  const resistSub = maxResistStreak > 0 ? `longest streak: ${maxResistStreak}` : '';
+
   $('metrics').innerHTML = [
     tileHTML(used.length, 'Sessions', `${totalAmt} ${profile.amountUnit} total`),
-    tileHTML(resisted.length, 'Urges Resisted'),
+    tileHTML(resisted.length, 'Urges Resisted', resistSub),
     buildSinceLastUsedTile(used),
     tileHTML(allHabits, 'Healthy Actions', exerciseSub)
   ].join('');
