@@ -150,7 +150,7 @@ const WIN_DEFINITIONS = {
   'gap-8h': { label: 'Gap Win (8h+)', icon: '⏱️', desc: 'Maintained a gap of 8+ hours between sessions' },
   'gap-12h': { label: 'Gap Win (12h+)', icon: '⏱️', desc: 'Maintained a gap of 12+ hours between sessions' },
   'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Today\'s longest gap between sessions exceeded your average' },
-  'held-off-afternoon': { label: 'Held Off Until Afternoon', icon: '🌅', desc: 'Waited until afternoon before first session' },
+  'held-off-afternoon': { label: 'Delayed Start', icon: '🌅', desc: 'No use before noon today' },
   'fewer-sessions': { label: 'Fewer sessions than yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
   'lower-amount': { label: 'Lower amount than yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'first-later': { label: 'First session later than yesterday', icon: '⏰', desc: 'Started your first session later than yesterday' },
@@ -564,12 +564,14 @@ const Wins = {
       }
     }
 
-    // Filter out late-night sessions (before 6 AM) when checking for "first session of the day"
+    // Delayed Start — no use before noon (awarded if it's past noon and no sessions occurred before noon)
     const daytimeSessions = profileUsed.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
-    if (daytimeSessions.length > 0) {
-      const firstHour = new Date(daytimeSessions[0].ts).getHours();
-      addWin(firstHour >= AFTERNOON_HOUR, 'held-off-afternoon');
-    }
+    const isPastNoon = new Date().getHours() >= AFTERNOON_HOUR;
+    const noUseBeforeNoon = !profileUsed.some(u => {
+      const h = new Date(u.ts).getHours();
+      return h >= DAYTIME_START_HOUR && h < AFTERNOON_HOUR;
+    });
+    addWin(isPastNoon && noUseBeforeNoon, 'held-off-afternoon');
 
     // --- Comparison wins ---
     if (yesterdayEvents && yesterdayEvents.length > 0) {
