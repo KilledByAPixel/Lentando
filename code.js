@@ -907,7 +907,7 @@ function buildSinceLastUsedTile(used) {
 function renderMetrics() {
   const events   = DB.forDate(todayKey());
   const profile  = getProfile();
-  const used     = filterUsed(events);
+  const used     = filterProfileUsed(events);
   const resisted = filterByType(events, 'resisted');
   const totalAmt = sumAmount(used);
 
@@ -1157,7 +1157,7 @@ function renderDayHistory() {
   }
 
   // Calculate summary stats
-  const used = filterUsed(events);
+  const used = filterProfileUsed(events);
   const resisted = filterByType(events, 'resisted');
   const exerciseMins = getHabits(events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
   const totalAmt = sumAmount(used);
