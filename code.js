@@ -147,8 +147,7 @@ const WIN_DEFINITIONS = {
   'cleaned': { label: 'Cleaned', icon: '🧹', desc: 'Cleaned or tidied something today' },
   'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside today' },
   'habit-stack': { label: 'Habit Stack', icon: '🥞', desc: 'Logged multiple different habit types in one day' },
-  'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '🌊', desc: 'Logged both exercise and water today' },
-  'gap-1h': { label: 'Gap Win (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions' },
+  'gap-1h': { label: 'Gap Medal (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions' },
   'gap-2h': { label: 'Gap Win (2h+)', icon: '⏱️', desc: 'Maintained a gap of 2+ hours between sessions' },
   'gap-4h': { label: 'Gap Win (4h+)', icon: '⏱️', desc: 'Maintained a gap of 4+ hours between sessions' },
   'gap-8h': { label: 'Gap Win (8h+)', icon: '⏱️', desc: 'Maintained a gap of 8+ hours between sessions' },
@@ -683,10 +682,6 @@ const Wins = {
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
     addWin(uniqueHabits.size >= 2, 'habit-stack');
-    
-    // Exercise + Water combo
-    const hasWater = habits.some(e => e.habit === 'water');
-    addWin(hasExercise && hasWater, 'exercise-water-combo');
 
     // --- Timing-based wins ---
     // Gap wins — include all sessions but skip gaps that cross the 4am boundary (sleep gap)
