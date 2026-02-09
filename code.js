@@ -626,9 +626,9 @@ const Wins = {
         addWin(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
       }
       
-      // Last session earlier than yesterday — only awarded if you used today
-      if (profileUsed.length > 0 && yProfile.length > 0) {
-        addWin(timeOfDayMin(profileUsed[profileUsed.length - 1].ts) < timeOfDayMin(yProfile[yProfile.length - 1].ts), 'last-earlier');
+      // Last session earlier than yesterday — compare last use after 4am
+      if (todayDaytime.length > 0 && yesterdayDaytime.length > 0) {
+        addWin(timeOfDayMin(todayDaytime[todayDaytime.length - 1].ts) < timeOfDayMin(yesterdayDaytime[yesterdayDaytime.length - 1].ts), 'last-earlier');
       }
     }
     
@@ -875,7 +875,7 @@ function buildSinceLastUsedTile(used) {
   } else {
     const allKeys = DB.getAllDayKeys();
     for (const key of allKeys) {
-      const dayUsed = filterUsed(DB.forDate(key));
+      const dayUsed = filterProfileUsed(DB.forDate(key));
       if (dayUsed.length > 0) {
         lastUsedTs = dayUsed[dayUsed.length - 1].ts;
         break;
@@ -897,7 +897,7 @@ function buildSinceLastUsedTile(used) {
       sinceLastVal = formatDuration(elapsedMs);
       
       // Show 7-day average gap as subtitle when under a day
-      const avg = avgWithinDayGapMs(getLastNDays(7), filterUsed);
+      const avg = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
       if (avg >= 60000) {
         sinceLastSub = `7-Day average: ${formatDuration(avg)}`;
       }
