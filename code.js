@@ -141,7 +141,7 @@ const WIN_DEFINITIONS = {
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
   'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
-  'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 3 times today' },
+  'hydrated': { label: 'Hydrated', icon: '🌊', desc: 'Drank water at least 5 times today' },
   'exercised': { label: 'Exercised', icon: '🏃', desc: 'Logged exercise today' },
   'breathwork': { label: 'Breathwork', icon: '🌬️', desc: 'Did breathing exercises today' },
   'cleaned': { label: 'Cleaned', icon: '🧹', desc: 'Cleaned or tidied something today' },
@@ -665,7 +665,7 @@ const Wins = {
 
     // --- Habit-based wins ---
     const waterCount = getHabits(todayEvents, 'water').length;
-    addWin(waterCount >= 3, 'hydrated');
+    addWin(waterCount >= 5, 'hydrated');
     
     // Individual habit medals
     const hasExercise = habits.some(e => e.habit === 'exercise');
