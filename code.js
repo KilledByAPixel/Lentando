@@ -472,6 +472,18 @@ function getMilestoneWins(gapHours, milestones) {
   return milestones.filter(h => gapHours >= h);
 }
 
+/** Average within-day gap (ms) across the given day keys. Uses filterFn to get sessions per day. */
+function avgWithinDayGapMs(dayKeys, filterFn) {
+  const gaps = [];
+  for (const dk of dayKeys) {
+    const daySessions = filterFn(DB.forDate(dk));
+    for (let i = 1; i < daySessions.length; i++) {
+      gaps.push(daySessions[i].ts - daySessions[i - 1].ts);
+    }
+  }
+  return gaps.length > 0 ? gaps.reduce((s, g) => s + g, 0) / gaps.length : 0;
+}
+
 // ========== WIN STORAGE ==========
 function loadWinData() {
   try {
@@ -570,16 +582,8 @@ const Wins = {
       earned.forEach(h => addWin(true, `gap-${h}h`));
       
       // Gap longer than 7-day historical average (within-day gaps only)
-      const weekDays = getLastNDays(7);
-      const withinDayGaps = [];
-      for (const dk of weekDays) {
-        const daySessions = filterProfileUsed(DB.forDate(dk));
-        for (let i = 1; i < daySessions.length; i++) {
-          withinDayGaps.push(daySessions[i].ts - daySessions[i - 1].ts);
-        }
-      }
-      if (withinDayGaps.length > 0) {
-        const avgGap = withinDayGaps.reduce((s, g) => s + g, 0) / withinDayGaps.length;
+      const avgGap = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
+      if (avgGap > 0) {
         const todayGaps = profileUsed.slice(1).map((u, i) => u.ts - profileUsed[i].ts);
         addWin(Math.max(...todayGaps) > avgGap, 'gap-above-avg');
       }
@@ -866,20 +870,10 @@ function buildSinceLastUsedTile(used) {
     } else {
       sinceLastVal = formatDuration(elapsedMs);
       
-      // Show 7-day average gap as subtitle when under a day (within-day gaps only)
-      const last7Days = getLastNDays(7);
-      const withinDayGaps = [];
-      for (const dk of last7Days) {
-        const dayUsed = filterUsed(DB.forDate(dk));
-        for (let i = 1; i < dayUsed.length; i++) {
-          withinDayGaps.push(dayUsed[i].ts - dayUsed[i - 1].ts);
-        }
-      }
-      if (withinDayGaps.length > 0) {
-        const avgGapMs = withinDayGaps.reduce((sum, gap) => sum + gap, 0) / withinDayGaps.length;
-        if (avgGapMs >= 60000) {
-          sinceLastSub = `7-day avg: ${formatDuration(avgGapMs)}`;
-        }
+      // Show 7-day average gap as subtitle when under a day
+      const avg = avgWithinDayGapMs(getLastNDays(7), filterUsed);
+      if (avg >= 60000) {
+        sinceLastSub = `7-day avg: ${formatDuration(avg)}`;
       }
     }
   }
@@ -959,6 +953,8 @@ function renderProgress() {
 
   const longestGapMs = getMaxGapHours(thisWeek.profileUsed) * 3600000;
   const gapStr = longestGapMs > 0 ? formatDuration(longestGapMs) : '—';
+  const avgGapMs = avgWithinDayGapMs(last7Days, filterProfileUsed);
+  const gapSub = avgGapMs >= 60000 ? `avg gap: ${formatDuration(avgGapMs)}` : 'this week';
 
   const ratioTile = getRatioTile(thisWeek.used);
 
@@ -967,7 +963,7 @@ function renderProgress() {
 
   $('progress').innerHTML = [
     tileHTML(dailyAvg, 'Sessions/Day', sessionsSub),
-    tileHTML(gapStr, 'Longest Gap', 'this week'),
+    tileHTML(gapStr, 'Longest Gap', gapSub),
     ratioTile,
     tileHTML(`${exercisePerDay}m`, 'Exercise/Day', 'last 7 days')
   ].join('');
