@@ -133,8 +133,8 @@ const WIN_DEFINITIONS = {
   'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
   'resist': { label: 'Resist Win', icon: '💪', desc: 'Logged an urge but resisted using' },
   'delay-15m': { label: 'Delay Win (15m+)', icon: '⏳', desc: 'Resisted and didn\'t use for at least 15 minutes after' },
-  'replacement-cbd': { label: 'Replacement Win (CBD)', icon: '🌿', desc: 'Used CBD during daytime (6am-8pm) instead of THC' },
-  'harm-reduction-vape': { label: 'Harm Reduction (vape)', icon: '🌡️', desc: 'Chose vaping as a safer consumption method' },
+  'replacement-cbd': { label: 'Replacement Win (CBD)', icon: '🔄', desc: 'Used CBD instead of THC today' },
+  'harm-reduction-vape': { label: 'Harm Reduction (vape)', icon: '🌡️', desc: 'Chose vape over smoke' },
   'dose-half': { label: 'Low Dose', icon: '⚖️', desc: 'Used less than a full dose' },
   'mindful': { label: 'Mindful Session', icon: '🧠', desc: 'Logged the reason for using, showing mindful awareness' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
@@ -513,9 +513,9 @@ const Wins = {
     const isCannabis = settings.addictionProfile === 'cannabis';
     if (isCannabis) {
       const cbdUsed = filterCBD(used);
-      const replacementCount = cbdUsed.filter(u => isDaytime(u.ts)).length;
-      for (let i = 0; i < replacementCount; i++) addWin(true, 'replacement-cbd');
-      addWin(cbdUsed.length > 0 && filterTHC(used).length === 0, 'cbd-only');
+      const thcUsed = filterTHC(used);
+      addWin(cbdUsed.length > 0 && thcUsed.length === 0, 'replacement-cbd');
+      addWin(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
     }
 
     const vapeCount = isCannabis ? used.filter(e => e.method === 'vape').length : 0;
