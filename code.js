@@ -143,6 +143,9 @@ const WIN_DEFINITIONS = {
   'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
   'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 3 times today' },
   'exercised': { label: 'Exercised', icon: '🏃', desc: 'Logged exercise today' },
+  'breathwork': { label: 'Breathwork', icon: '🌬️', desc: 'Did breathing exercises today' },
+  'cleaned': { label: 'Cleaned', icon: '🧹', desc: 'Cleaned or tidied something today' },
+  'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside today' },
   'habit-stack': { label: 'Habit Stack', icon: '🥞', desc: 'Logged multiple different habit types in one day' },
   'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '🌊', desc: 'Logged both exercise and water today' },
   'gap-1h': { label: 'Gap Win (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions' },
@@ -666,9 +669,18 @@ const Wins = {
     const waterCount = getHabits(todayEvents, 'water').length;
     addWin(waterCount >= 3, 'hydrated');
     
-    // Exercise medal
+    // Individual habit medals
     const hasExercise = habits.some(e => e.habit === 'exercise');
     addWin(hasExercise, 'exercised');
+    
+    const hasBreaths = habits.some(e => e.habit === 'breaths');
+    addWin(hasBreaths, 'breathwork');
+    
+    const hasClean = habits.some(e => e.habit === 'clean');
+    addWin(hasClean, 'cleaned');
+    
+    const hasOutside = habits.some(e => e.habit === 'outside');
+    addWin(hasOutside, 'went-outside');
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
     addWin(uniqueHabits.size >= 2, 'habit-stack');
