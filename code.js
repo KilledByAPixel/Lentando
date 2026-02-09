@@ -80,7 +80,7 @@ const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
 // Win calculation thresholds
 const GAP_MILESTONES = [1, 2, 4, 8, 12];
-const DAYTIME_START_HOUR = 6;
+const EARLY_HOUR = 4;
 const AFTERNOON_HOUR = 12;
 const MAX_STREAK_DAYS = 60;
 const LOW_DAY_THRESHOLD = 2;
@@ -150,7 +150,7 @@ const WIN_DEFINITIONS = {
   'gap-8h': { label: 'Gap Win (8h+)', icon: '⏱️', desc: 'Maintained a gap of 8+ hours between sessions' },
   'gap-12h': { label: 'Gap Win (12h+)', icon: '⏱️', desc: 'Maintained a gap of 12+ hours between sessions' },
   'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Today\'s longest gap between sessions exceeded your average' },
-  'held-off-afternoon': { label: 'Delayed Start', icon: '🌅', desc: 'No use before noon today' },
+  'held-off-afternoon': { label: 'Delayed Start', icon: '🌅', desc: 'No use between 4am and noon today' },
   'fewer-sessions': { label: 'Fewer sessions than yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
   'lower-amount': { label: 'Lower amount than yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'first-later': { label: 'First session later than yesterday', icon: '⏰', desc: 'Started your first session later than yesterday' },
@@ -591,12 +591,11 @@ const Wins = {
       }
     }
 
-    // Delayed Start — no use before noon (awarded if it's past noon and no sessions occurred before noon)
-    const daytimeSessions = profileUsed.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
+    // Delayed Start — no use between 4am and noon (ignores late-night use before 4am)
     const isPastNoon = new Date().getHours() >= AFTERNOON_HOUR;
     const noUseBeforeNoon = !profileUsed.some(u => {
       const h = new Date(u.ts).getHours();
-      return h >= DAYTIME_START_HOUR && h < AFTERNOON_HOUR;
+      return h >= EARLY_HOUR && h < AFTERNOON_HOUR;
     });
     addWin(isPastNoon && noUseBeforeNoon, 'held-off-afternoon');
 
@@ -607,16 +606,16 @@ const Wins = {
       addWin(profileUsed.length < yProfile.length, 'fewer-sessions');
       addWin(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
       
-      // First session later than yesterday — award if current time is past yesterday's first
-      // session time and no today sessions occurred before that time
-      const yesterdayDaytime = yProfile.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
+      // First session later than yesterday — compares first use after 4am (ignores late-night)
+      const todayDaytime = profileUsed.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
+      const yesterdayDaytime = yProfile.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
       
       if (yesterdayDaytime.length > 0) {
         const yFirstMin = timeOfDayMin(yesterdayDaytime[0].ts);
-        if (daytimeSessions.length > 0) {
-          addWin(timeOfDayMin(daytimeSessions[0].ts) > yFirstMin, 'first-later');
+        if (todayDaytime.length > 0) {
+          addWin(timeOfDayMin(todayDaytime[0].ts) > yFirstMin, 'first-later');
         } else {
-          // No daytime use yet — award if we're already past yesterday's first session time
+          // No use after 4am yet — award if we're already past yesterday's first session time
           addWin(timeOfDayMin(Date.now()) > yFirstMin, 'first-later');
         }
       }
@@ -971,7 +970,7 @@ function renderProgress() {
 }
 
 function winCardHTML(w) {
-  return `<li class="win-item" title="${w.desc || ''}"><span class="win-badge">${w.count}</span><div class="win-icon">${w.icon}</div><div class="win-label">${w.label}</div></li>`;
+  return `<li class="win-item" title="${escapeHTML(w.desc || '')}"><span class="win-badge">${w.count}</span><div class="win-icon">${w.icon}</div><div class="win-label">${escapeHTML(w.label)}</div></li>`;
 }
 
 function calculateAndUpdateWins() {
