@@ -132,7 +132,7 @@ const HABIT_LABELS = {
 // Win definitions - maps win IDs to their display properties
 const WIN_DEFINITIONS = {
   'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
-  'resist': { label: 'Resist Win', icon: '💪', desc: 'Logged an urge but resisted using' },
+  'resist': { label: 'Resisted', icon: '💪', desc: 'Logged an urge but resisted using' },
   'urge-surfed': { label: 'Urge Surfed (15m+)', icon: '🧘', desc: 'Logged an urge and didn\'t use for at least 15 minutes after' },
   'swap-completed': { label: 'Swap Completed', icon: '🛠️', desc: 'Logged an urge, then a healthy action within 15 minutes' },
   'harm-reduction-vape': { label: 'Harm Reduction (vape)', icon: '🌡️', desc: 'Chose vape over smoke' },
@@ -616,7 +616,7 @@ const Wins = {
     }
 
     // --- Session-based wins ---
-    for (let i = 0; i < resisted.length; i++) addWin(true, 'resist');
+    addWin(resisted.length > 0, 'resist');
 
     const urgeSurfedCount = countUrgeSurfed(resisted, used);
     for (let i = 0; i < urgeSurfedCount; i++) addWin(true, 'urge-surfed');
