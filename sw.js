@@ -1,5 +1,5 @@
 // Service Worker for Lentando PWA
-const CACHE_NAME = 'lentando-v72';
+const CACHE_NAME = 'lentando-v73';
 const urlsToCache = [
   './index.html',
   './code.js',
@@ -8,7 +8,9 @@ const urlsToCache = [
   './logo.png',
   './favicon.png',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './privacy.html',
+  './terms.html'
 ];
 
 // Install service worker and cache core files

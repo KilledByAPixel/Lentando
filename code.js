@@ -916,10 +916,10 @@ function getRatioTile(weekUsed, dayKeys) {
   const settings = DB.loadSettings();
   
   const ratioMap = {
-    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', label: 'THC Ratio', freeLabel: 'THC-free days' },
-    alcohol: { badFilter: e => e.substance === 'liquor', label: 'Liquor Ratio', freeLabel: 'Liquor-free days' },
-    nicotine: { badFilter: e => e.substance === 'cigarette', label: 'Cigarette Ratio', freeLabel: 'Smoke-free days' },
-    other: { badFilter: e => e.substance === 'type1', label: 'Better Choice', freeLabel: 'Free days' }
+    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', label: 'THC ratio', freeLabel: 'THC-free days' },
+    alcohol: { badFilter: e => e.substance === 'liquor', label: 'Liquor ratio', freeLabel: 'Liquor-free days' },
+    nicotine: { badFilter: e => e.substance === 'cigarette', label: 'Cigarette ratio', freeLabel: 'Smoke-free days' },
+    other: { badFilter: e => e.substance === 'type1', label: 'Better choice ratio', freeLabel: 'Free days' }
   };
   
   const config = ratioMap[settings.addictionProfile];
@@ -965,14 +965,14 @@ function getWeekData(days) {
 function renderProgress() {
   const last7Days = getLastNDays(7);
   const thisWeek = getWeekData(last7Days);
-  const dailyAvg = (thisWeek.used.length / 7).toFixed(1);
+  const dailyAvg = (thisWeek.profileUsed.length / 7).toFixed(1);
 
   // Previous week (14 days ago to 7 days ago) for comparison
   const prevWeekDays = getLastNDays(7, 7);
   const prevWeek = getWeekData(prevWeekDays);
-  const prevDailyAvg = (prevWeek.used.length / 7).toFixed(1);
+  const prevDailyAvg = (prevWeek.profileUsed.length / 7).toFixed(1);
   let sessionsSub = '';
-  if (prevWeek.used.length > 0) {
+  if (prevWeek.profileUsed.length > 0) {
     sessionsSub = `Last week: ${prevDailyAvg}`;
   }
 
@@ -987,7 +987,7 @@ function renderProgress() {
   const avgGapMs = avgWithinDayGapMs(last7Days, filterProfileUsed);
   const gapSub = avgGapMs >= 60000 ? `Average gap: ${formatDuration(avgGapMs)}` : '';
 
-  const ratioTile = getRatioTile(thisWeek.used, last7Days);
+  const ratioTile = getRatioTile(thisWeek.profileUsed, last7Days);
 
   const exerciseMins = getHabits(thisWeek.events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
   const exercisePerDay = (exerciseMins / 7).toFixed(1);
@@ -996,7 +996,7 @@ function renderProgress() {
 
   $('progress').innerHTML = [
     tileHTML(dailyAvg, 'Sessions/Day', sessionsSub),
-    tileHTML(gapStr, 'Longest Gap', gapSub),
+    tileHTML(gapStr, 'Longest gap', gapSub),
     ratioTile,
     tileHTML(`${exercisePerDay}m`, 'Exercise/Day', exerciseSub)
   ].join('');
