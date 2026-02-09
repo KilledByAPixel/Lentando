@@ -1812,6 +1812,9 @@ function showLoginScreen() {
   const splash = $('splash-screen');
   if (splash) splash.classList.add('hidden');
   
+  // Switch to Today tab when showing login screen
+  switchTab('today');
+  
   const overlay = $('login-overlay');
   overlay.classList.remove('hidden');
   // Inject auth inputs only when login screen is visible
