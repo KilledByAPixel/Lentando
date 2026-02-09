@@ -600,28 +600,17 @@ const Wins = {
       addWin(profileUsed.length < yProfile.length, 'fewer-sessions');
       addWin(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
       
-      // First session later than yesterday — compares first use after 4am (ignores late-night)
+      // First session later than yesterday — only awarded if you used today (compares first use after 4am)
       const todayDaytime = profileUsed.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
       const yesterdayDaytime = yProfile.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
       
-      if (yesterdayDaytime.length > 0) {
-        const yFirstMin = timeOfDayMin(yesterdayDaytime[0].ts);
-        if (todayDaytime.length > 0) {
-          addWin(timeOfDayMin(todayDaytime[0].ts) > yFirstMin, 'first-later');
-        } else {
-          // No use after 4am yet — award if we're already past yesterday's first session time
-          addWin(timeOfDayMin(Date.now()) > yFirstMin, 'first-later');
-        }
+      if (todayDaytime.length > 0 && yesterdayDaytime.length > 0) {
+        addWin(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
       }
       
-      // Last session earlier than yesterday — award if no use today (you haven't used at all)
-      // or if your last use today is earlier in the day than yesterday's last use
-      if (yProfile.length > 0) {
-        if (profileUsed.length === 0) {
-          addWin(true, 'last-earlier');
-        } else {
-          addWin(timeOfDayMin(profileUsed[profileUsed.length - 1].ts) < timeOfDayMin(yProfile[yProfile.length - 1].ts), 'last-earlier');
-        }
+      // Last session earlier than yesterday — only awarded if you used today
+      if (profileUsed.length > 0 && yProfile.length > 0) {
+        addWin(timeOfDayMin(profileUsed[profileUsed.length - 1].ts) < timeOfDayMin(yProfile[yProfile.length - 1].ts), 'last-earlier');
       }
     }
     
