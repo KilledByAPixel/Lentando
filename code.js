@@ -1841,7 +1841,10 @@ function showLoginScreen() {
     loginInputs.innerHTML = `
       <form id="login-form" onsubmit="return false" style="display:flex;flex-direction:column;gap:8px">
         <input type="email" id="login-email" name="email" autocomplete="username" placeholder="Email" class="login-input">
-        <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Password" class="login-input">
+        <div class="password-wrap">
+          <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Password" class="login-input">
+          <button type="button" class="password-toggle" onclick="App.togglePasswordVisibility(this)" title="Show password">👁️</button>
+        </div>
       </form>`;
   }
 }
@@ -2323,6 +2326,14 @@ window.App = {
   switchTab,
   logWaterFromReminder,
   loadMoreHistory,
+  togglePasswordVisibility(btn) {
+    const input = btn.parentElement.querySelector('input');
+    if (!input) return;
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.textContent = isHidden ? '🙈' : '👁️';
+    btn.title = isHidden ? 'Hide password' : 'Show password';
+  },
   toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     applyTheme(getToggleTheme(currentTheme));

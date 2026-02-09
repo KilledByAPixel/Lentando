@@ -491,6 +491,27 @@ header .date { font-size: 14px; color: var(--muted); }
   font-size: 14px;
   min-width: 0;
 }
+.password-wrap {
+  position: relative;
+  display: flex;
+}
+.password-wrap input {
+  flex: 1;
+  padding-right: 40px;
+}
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--muted);
+  line-height: 1;
+}
 
 /* ===== MODAL ===== */
 .modal-overlay {
