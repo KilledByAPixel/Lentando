@@ -31,10 +31,8 @@ const ADDICTION_PROFILES = {
     name: 'Alcohol',
     sessionLabel: 'Drank',
     substanceLabel: 'Type',
-    methodLabel: 'Location',
     substances: ['beer', 'wine', 'liquor'],
     substanceDisplay: { beer: 'Beer', wine: 'Wine', liquor: 'Liquor' },
-    methods: ['home', 'work', 'bar', 'restaurant', 'other'],
     amounts: [0.5, 1, 2, 3, 4, 5],
     amountUnit: 'drinks',
     icons: { beer: '🍺', wine: '🍷', liquor: '🥃' }
@@ -43,10 +41,8 @@ const ADDICTION_PROFILES = {
     name: 'Smoking',
     sessionLabel: 'Smoked',
     substanceLabel: 'Type',
-    methodLabel: 'Location',
     substances: ['cigarette', 'vape', 'other'],
     substanceDisplay: { cigarette: 'Cigarette', vape: 'Vape', other: 'Other' },
-    methods: ['inside', 'outside', 'home', 'work', 'car'],
     amounts: [0.5, 1, 2, 3, 5, 10],
     amountUnit: 'count',
     icons: { cigarette: '🚬', vape: '💨', other: '⚡' }
@@ -58,7 +54,7 @@ const ADDICTION_PROFILES = {
     methodLabel: 'Method',
     substances: ['type1', 'type2', 'type3'],
     substanceDisplay: { type1: 'Type 1', type2: 'Type 2', type3: 'Type 3' },
-    methods: ['method1', 'method2', 'method3', 'method4', 'other'],
+    methods: ['method1', 'method2', 'method3', 'other'],
     amounts: [0.5, 1.0, 1.5, 2.0],
     amountUnit: 'units',
     icons: { type1: '⚡', type2: '✨', type3: '🔥' }
@@ -480,7 +476,7 @@ function createUsedEvent(substance, method, amount, reason) {
   const sub = substance || 'thc';
   return {
     id: uid(), type: 'used', ts: Date.now(),
-    substance: sub, method: method || 'bong',
+    substance: sub, method: method || null,
     amount: amount != null ? amount : 1.0,
     reason: reason || null,
   };
@@ -1730,14 +1726,19 @@ function buildTimeChips(eventTs) {
 
 function buildUsedChips(evt) {
   const profile = getProfile();
-  return [
-    chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v]),
-    chipGroupHTML(profile.methodLabel, 'method', profile.methods, evt.method),
+  const chips = [
+    chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v])
+  ];
+  if (profile.methods) {
+    chips.push(chipGroupHTML(profile.methodLabel, 'method', profile.methods, evt.method));
+  }
+  chips.push(
     chipGroupHTML('Amount', 'amount', profile.amounts, evt.amount),
     buildTimeChips(evt.ts),
     chipGroupHTML('Reason (optional)', 'reason', REASONS, evt.reason),
     chipDismissBtn('dismiss ✕', 'App.hideUsedChips()')
-  ].join('');
+  );
+  return chips.join('');
 }
 
 function buildResistedChips(evt) {
@@ -1771,7 +1772,10 @@ const hideResistedChips = () => hideChips('resisted-chips', true);
 function persistFieldDefault(field, val) {
   const settings = DB.loadSettings();
   if (field === 'substance') settings.lastSubstance = val;
-  else if (field === 'method') settings.lastMethod = val;
+  else if (field === 'method') {
+    const profile = getProfile();
+    if (profile.methods) settings.lastMethod = val;
+  }
   else if (field === 'amount') settings.lastAmount = val;
   // Don't persist reason - it should reset each time
   else return;
@@ -1836,12 +1840,19 @@ function openEditModal(eventId) {
   const profile = getProfile();
 
   const fieldBuilders = {
-    used: () => [
-      chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v]),
-      chipGroupHTML(profile.methodLabel, 'method', profile.methods, evt.method),
-      chipGroupHTML('Amount', 'amount', profile.amounts, evt.amount),
-      chipGroupHTML('Reason', 'reason', REASONS, evt.reason)
-    ],
+    used: () => {
+      const fields = [
+        chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v])
+      ];
+      if (profile.methods) {
+        fields.push(chipGroupHTML(profile.methodLabel, 'method', profile.methods, evt.method));
+      }
+      fields.push(
+        chipGroupHTML('Amount', 'amount', profile.amounts, evt.amount),
+        chipGroupHTML('Reason', 'reason', REASONS, evt.reason)
+      );
+      return fields;
+    },
     resisted: () => [
       chipGroupHTML('Urge Intensity', 'intensity', INTENSITIES, evt.intensity),
       chipGroupHTML('Trigger', 'trigger', REASONS, evt.trigger)
@@ -2035,12 +2046,17 @@ function selectProfile(profileKey) {
   // Default to 1.0 or closest amount to 1.0 in the profile's amounts array
   const defaultAmount = profile.amounts.find(a => a >= 1) || profile.amounts[0];
   
-  Object.assign(settings, {
+  const newSettings = {
     addictionProfile: profileKey,
     lastSubstance: profile.substances[0],
-    lastMethod: profile.methods[0],
     lastAmount: defaultAmount
-  });
+  };
+  
+  if (profile.methods) {
+    newSettings.lastMethod = profile.methods[0];
+  }
+  
+  Object.assign(settings, newSettings);
   
   DB._settings = settings;
   DB.saveSettings();
@@ -2097,7 +2113,9 @@ function undoLastUsed() {
 
 function logUsed() {
   const s = DB.loadSettings();
-  const evt = createUsedEvent(s.lastSubstance, s.lastMethod, s.lastAmount);
+  const profile = getProfile();
+  const method = profile.methods ? s.lastMethod : null;
+  const evt = createUsedEvent(s.lastSubstance, method, s.lastAmount);
   DB.addEvent(evt);
   stampActivity();
   calculateAndUpdateWins();
@@ -2112,7 +2130,6 @@ function logUsed() {
   hapticFeedback();
   pulseEl(btn);
   
-  const profile = getProfile();
   showToast(`✅ ${profile.sessionLabel}`);
   
   showUndo(evt.id);
