@@ -873,7 +873,7 @@ function buildSinceLastUsedTile(used) {
       // Show 7-day average gap as subtitle when under a day
       const avg = avgWithinDayGapMs(getLastNDays(7), filterUsed);
       if (avg >= 60000) {
-        sinceLastSub = `7-day avg: ${formatDuration(avg)}`;
+        sinceLastSub = `7-Day avg: ${formatDuration(avg)}`;
       }
     }
   }
@@ -902,10 +902,10 @@ function renderMetrics() {
       currentResistStreak = 0;
     }
   }
-  const resistSub = maxResistStreak > 1 ? `longest streak: ${maxResistStreak}` : '';
+  const resistSub = maxResistStreak > 1 ? `Longest streak: ${maxResistStreak}` : '';
 
   $('metrics').innerHTML = [
-    tileHTML(used.length, 'Sessions', `${totalAmt} ${profile.amountUnit} total`),
+    tileHTML(used.length, 'Sessions', `${totalAmt} total ${profile.amountUnit}`),
     tileHTML(resisted.length, 'Urges Resisted', resistSub),
     buildSinceLastUsedTile(used),
     tileHTML(allHabits, 'Healthy Actions', exerciseSub)
@@ -959,14 +959,13 @@ function renderProgress() {
   const prevDailyAvg = (prevWeek.used.length / 7).toFixed(1);
   let sessionsSub = '';
   if (prevWeek.used.length > 0) {
-    const direction = parseFloat(dailyAvg) > parseFloat(prevDailyAvg) ? 'up' : parseFloat(dailyAvg) < parseFloat(prevDailyAvg) ? 'down' : 'same';
-    sessionsSub = `${direction} from last week: ${prevDailyAvg}`;
+    sessionsSub = `Last week: ${prevDailyAvg}`;
   }
 
   const longestGapMs = getMaxGapHours(thisWeek.profileUsed) * 3600000;
   const gapStr = longestGapMs > 0 ? formatDuration(longestGapMs) : '—';
   const avgGapMs = avgWithinDayGapMs(last7Days, filterProfileUsed);
-  const gapSub = avgGapMs >= 60000 ? `avg gap: ${formatDuration(avgGapMs)}` : 'this week';
+  const gapSub = avgGapMs >= 60000 ? `Avg gap: ${formatDuration(avgGapMs)}` : '';
 
   const ratioTile = getRatioTile(thisWeek.used, last7Days);
 
