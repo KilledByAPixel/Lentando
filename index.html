@@ -476,12 +476,13 @@ header .date { font-size: 14px; color: var(--muted); }
 }
 
 /* Login screen inputs */
-.login-inputs {
+#login-form {
   display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 .login-input {
-  flex: 1;
+  width: 100%;
   padding: 12px;
   border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
@@ -489,14 +490,6 @@ header .date { font-size: 14px; color: var(--muted); }
   color: var(--text);
   font-size: 14px;
   min-width: 0;
-}
-@media (max-width: 400px) {
-  .login-inputs {
-    flex-direction: column;
-  }
-  .login-input {
-    width: 100%;
-  }
 }
 
 /* ===== MODAL ===== */

@@ -1839,8 +1839,10 @@ function showLoginScreen() {
   const loginInputs = overlay.querySelector('.login-inputs');
   if (loginInputs && !loginInputs.children.length) {
     loginInputs.innerHTML = `
-      <input type="email" id="login-email" placeholder="Email" class="login-input">
-      <input type="password" id="login-password" placeholder="Password (8+ chars)" class="login-input">`;
+      <form id="login-form" onsubmit="return false" style="display:flex;flex-direction:column;gap:8px">
+        <input type="email" id="login-email" name="email" autocomplete="email" placeholder="Email" class="login-input">
+        <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Password (8+ chars)" class="login-input">
+      </form>`;
   }
 }
 
