@@ -20,7 +20,7 @@ It's designed for harm reduction, not judgment. Every small win counts.
 ### Features
 
 - **One-tap logging** - Log sessions, resisted urges, or healthy habits with a single tap
-- **Multi-profile support** - Cannabis, alcohol, nicotine, or custom tracking with profile-aware wins
+- **Multi-profile support** - Cannabis, alcohol, nicotine, or custom tracking with profile-aware medals
 - **Cloud sync** - Sign in with Google or email to sync across devices (optional)
 - **40+ win awards** - Automatic recognition of streaks, gaps, timing improvements, and healthy habits
 - **Visual analytics** - Graphs for sessions, amounts, time of day usage, and more
@@ -32,7 +32,7 @@ It's designed for harm reduction, not judgment. Every small win counts.
 ### Win Categories
 
 - **Daily Progress** - Clean Day, First Resist, Cut Use by 50%, Hydrated (3+ waters), Exercise Today, All 5 Habits
-- **Timing Wins** - Delayed First Session, Earlier Last Session, Daytime Only, Gap Above Average
+- **Timing Medals** - Delayed First Session, Earlier Last Session, Daytime Only, Gap Above Average
 - **Streaks** - 3-Day Break, 1-Week Resist Streak, Reducing for 3 Days
 - **Gap Milestones** - 1-Hour through 24-Hour gaps between sessions
 - **Break Milestones** - 1 Day through 1 Year of consecutive clean days
