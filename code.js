@@ -1615,6 +1615,8 @@ function openEditModal(eventId) {
 
 function closeModal() {
   $('modal-overlay').classList.add('hidden');
+  calculateAndUpdateWins();
+  render();
 }
 
 function saveModal() {
@@ -1646,9 +1648,7 @@ function saveModal() {
     }
   }
   
-  calculateAndUpdateWins();
   closeModal();
-  render();
 }
 
 function handleModalChipClick(e) {
@@ -2066,7 +2066,10 @@ function editTodo(idx) {
   input.maxLength = 120;
   input.dataset.idx = idx;
   
+  let saved = false;
   const saveEdit = () => {
+    if (saved) return;
+    saved = true;
     const newText = input.value.trim();
     if (newText && newText !== currentText) {
       todos[idx].text = newText;
@@ -2078,7 +2081,7 @@ function editTodo(idx) {
   input.addEventListener('blur', saveEdit);
   input.addEventListener('keydown', e => {
     if (e.key === 'Enter') saveEdit();
-    if (e.key === 'Escape') renderTodos();
+    if (e.key === 'Escape') { saved = true; renderTodos(); }
   });
   
   textSpan.replaceWith(input);
