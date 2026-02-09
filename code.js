@@ -133,6 +133,8 @@ const WIN_DEFINITIONS = {
   'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
   'resist': { label: 'Resist Win', icon: '💪', desc: 'Logged an urge but resisted using' },
   'delay-15m': { label: 'Delay Win (15m+)', icon: '⏳', desc: 'Resisted and didn\'t use for at least 15 minutes after' },
+  'urge-surfed': { label: 'Urge Surfed (5m+)', icon: '🧘', desc: 'Logged an urge and didn\'t use for at least 5 minutes after' },
+  'swap-completed': { label: 'Swap Completed', icon: '🛠️', desc: 'Logged an urge, then a healthy action within 15 minutes' },
   'replacement-cbd': { label: 'Replacement Win (CBD)', icon: '🔄', desc: 'Used CBD instead of THC today' },
   'harm-reduction-vape': { label: 'Harm Reduction (vape)', icon: '🌡️', desc: 'Chose vape over smoke' },
   'dose-half': { label: 'Low Dose', icon: '⚖️', desc: 'Used less than a full dose' },
@@ -440,6 +442,29 @@ function countDelayedResists(resisted, used) {
   ).length;
 }
 
+function countUrgeSurfed(resisted, used) {
+  const FIVE_MINUTES_MS = 5 * 60 * 1000;
+  const sorted = [...resisted].sort((a, b) => a.ts - b.ts);
+  
+  return sorted.filter((r, i) => {
+    // Skip if this resist is within 5 minutes of the previous resist (not first in cluster)
+    if (i > 0 && r.ts - sorted[i - 1].ts <= FIVE_MINUTES_MS) {
+      return false;
+    }
+    
+    // Check if 5+ minutes have passed and no use occurred after this resist
+    const timeSinceResist = Date.now() - r.ts;
+    const usedAfter = used.some(u => u.ts > r.ts && u.ts - r.ts <= FIVE_MINUTES_MS);
+    return timeSinceResist >= FIVE_MINUTES_MS && !usedAfter;
+  }).length;
+}
+
+function countSwapCompleted(resisted, habits) {
+  return resisted.filter(r => 
+    habits.some(h => h.ts > r.ts && h.ts - r.ts <= FIFTEEN_MINUTES_MS)
+  ).length;
+}
+
 function getMaxGapHours(sessions) {
   if (sessions.length === 0) return 0;
   if (sessions.length === 1) {
@@ -508,6 +533,12 @@ const Wins = {
 
     const delayCount = countDelayedResists(resisted, used);
     for (let i = 0; i < delayCount; i++) addWin(true, 'delay-15m');
+
+    const urgeSurfedCount = countUrgeSurfed(resisted, used);
+    for (let i = 0; i < urgeSurfedCount; i++) addWin(true, 'urge-surfed');
+
+    const swapCount = countSwapCompleted(resisted, habits);
+    for (let i = 0; i < swapCount; i++) addWin(true, 'swap-completed');
 
     // Cannabis-specific wins
     const isCannabis = settings.addictionProfile === 'cannabis';
