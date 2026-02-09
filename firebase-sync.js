@@ -285,6 +285,13 @@ if (isConfigured) {
     if (currentUser && Date.now() - _lastFocusPull > 30000) {
       _lastFocusPull = Date.now();
       try {
+        // Flush any pending local changes before pulling to avoid cloud overwriting them
+        // (e.g., confirm() dialogs trigger blur/focus, and the debounced push hasn't fired yet)
+        if (_syncTimer) {
+          clearTimeout(_syncTimer);
+          _syncTimer = null;
+          await pushToCloud(currentUser.uid);
+        }
         await pullFromCloud(currentUser.uid);
         if (typeof render === 'function') {
           render();

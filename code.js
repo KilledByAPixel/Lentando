@@ -1050,9 +1050,15 @@ function renderDayHistory() {
   
   labelEl.textContent = friendlyDate(currentHistoryDay);
   
-  // Update next button disabled state (before possible early return)
+  // Update navigation button disabled states (before possible early return)
   const nextBtn = $('next-day');
   if (nextBtn) nextBtn.disabled = (currentHistoryDay === todayKey());
+  const prevBtn = $('prev-day');
+  if (prevBtn) {
+    const allKeys = DB.getAllDayKeys(); // sorted reverse (newest first)
+    const earliest = allKeys.length > 0 ? allKeys[allKeys.length - 1] : null;
+    prevBtn.disabled = !earliest || currentHistoryDay <= earliest;
+  }
   
   if (events.length === 0) {
     historyEl.innerHTML = emptyStateHTML('No events for this day');
