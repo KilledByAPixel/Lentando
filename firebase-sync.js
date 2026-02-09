@@ -400,6 +400,7 @@ function debouncedSync() {
   if (!currentUser) return;
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(() => {
+    _syncTimer = null;
     pushToCloud(currentUser.uid).catch(err => console.error('[Sync] Push failed:', err));
   }, 3000); // Wait 3 seconds after last change before syncing
 }

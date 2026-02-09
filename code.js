@@ -267,7 +267,9 @@ function formatDuration(ms) {
   const totalMin = Math.floor(ms / 60000);
   if (totalMin < 60) return totalMin + 'm';
   const h = Math.floor(totalMin / 60);
-  return h + 'h ' + (totalMin % 60) + 'm';
+  if (h < 24) return h + 'h ' + (totalMin % 60) + 'm';
+  const d = Math.floor(h / 24);
+  return d + 'd ' + (h % 24) + 'h ' + (totalMin % 60) + 'm';
 }
 
 function getLastNDays(n, offset = 0) {
@@ -515,7 +517,6 @@ const Wins = {
     const vapeCount = isCannabis ? used.filter(e => e.method === 'vape').length : 0;
     for (let i = 0; i < vapeCount; i++) addWin(true, 'harm-reduction-vape');
 
-    const profile = getProfile();
     const doseCount = used.filter(e => e.amount < 1).length;
     for (let i = 0; i < doseCount; i++) addWin(true, 'dose-half');
 
@@ -807,10 +808,7 @@ function sumHabitCounts(events, habitTypes) {
   return habitTypes.reduce((sum, h) => sum + getHabits(events, h).length, 0);
 }
 
-function buildCannabisTiles(used) {
-  const thcUsed = filterTHC(used);
-  const cbdCount = filterCBD(used).length + used.filter(e => e.substance === 'mix').length;
-  
+function buildSinceLastUsedTile(used) {
   // Find last used event across all history (any substance)
   let lastUsedTs = null;
   if (used.length > 0) {
@@ -854,10 +852,7 @@ function buildCannabisTiles(used) {
     }
   }
   
-  return [
-    `<div class="tile"><div class="val" style="color:var(--thc)">${thcUsed.length}</div><div class="label">THC</div><div class="sub" style="color:var(--cbd)">${cbdCount} CBD</div></div>`,
-    `<div class="tile"><div class="val">${sinceLastVal}</div><div class="label">Since Last Used</div>${sinceLastSub ? `<div class="sub">${sinceLastSub}</div>` : ''}</div>`
-  ].join('');
+  return tileHTML(sinceLastVal, 'Since Last Used', sinceLastSub);
 }
 
 function renderMetrics() {
@@ -868,17 +863,14 @@ function renderMetrics() {
   const totalAmt = sumAmount(used);
 
   const exerciseMins = getHabits(events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
-  const exerciseTotal = sumHabitCounts(events, ['exercise', 'outside', 'clean']);
-  const goodHabits = sumHabitCounts(events, ['water', 'breaths', 'clean', 'outside']);
-
-  const cannabisTiles = DB.loadSettings().addictionProfile === 'cannabis' ? buildCannabisTiles(used) : '';
+  const allHabits = sumHabitCounts(events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
+  const exerciseSub = exerciseMins > 0 ? `${exerciseMins}m exercise` : 'today';
 
   $('metrics').innerHTML = [
     tileHTML(used.length, 'Sessions', `${totalAmt} total ${profile.amountUnit}`),
     tileHTML(resisted.length, 'Urges Resisted'),
-    cannabisTiles,
-    tileHTML(`${exerciseMins}m`, 'Exercise', `${exerciseTotal} total activities`),
-    tileHTML(goodHabits, 'Good Habits', 'today')
+    buildSinceLastUsedTile(used),
+    tileHTML(allHabits, 'Good Habits', exerciseSub)
   ].join('');
 }
 
@@ -2156,6 +2148,8 @@ window.App = {
     DB.deleteEvent(id);
     calculateAndUpdateWins();
     render();
+    // Flush to cloud immediately so focus-triggered pull doesn't restore the deleted event
+    if (window.FirebaseSync) FirebaseSync.pushNow().catch(() => {});
     return true;
   },
   exportJSON,
