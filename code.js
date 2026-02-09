@@ -934,7 +934,7 @@ function buildSinceLastUsedTile(used) {
       // Show 7-day average gap as subtitle when under a day
       const avg = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
       if (avg >= 60000) {
-        sinceLastSub = `7-Day average: ${formatDuration(avg)}`;
+        sinceLastSub = `7-Day Average: ${formatDuration(avg)}`;
       }
     }
   }
@@ -963,7 +963,7 @@ function renderMetrics() {
       currentResistStreak = 0;
     }
   }
-  const resistSub = maxResistStreak > 1 ? `Longest streak: ${maxResistStreak}` : '';
+  const resistSub = maxResistStreak > 1 ? `Longest Streak: ${maxResistStreak}` : '';
 
   $('metrics').innerHTML = [
     tileHTML(used.length, 'Sessions', `${totalAmt} Total ${capitalize(profile.amountUnit)}`),
@@ -977,10 +977,10 @@ function getRatioTile(weekUsed, dayKeys) {
   const settings = DB.loadSettings();
   
   const ratioMap = {
-    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC ratio', freeLabel: 'THC-Free Days' },
-    alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor ratio', freeLabel: 'Liquor-Free Days' },
-    nicotine: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette ratio', freeLabel: 'Smoke-Free Days' },
-    other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1 ratio', freeLabel: 'Free Days' }
+    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC Ratio', freeLabel: 'THC-Free Days' },
+    alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor Ratio', freeLabel: 'Liquor-Free Days' },
+    nicotine: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette Ratio', freeLabel: 'Smoke-Free Days' },
+    other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1 Ratio', freeLabel: 'Free Days' }
   };
   
   const config = ratioMap[settings.addictionProfile];
@@ -1034,7 +1034,7 @@ function renderProgress() {
   const prevDailyAvg = (prevWeek.profileUsed.length / 7).toFixed(1);
   let sessionsSub = '';
   if (prevWeek.profileUsed.length > 0) {
-    sessionsSub = `Last week: ${prevDailyAvg}`;
+    sessionsSub = `Last Week: ${prevDailyAvg}`;
   }
 
   // Longest gap between consecutive sessions this week (cross-day OK, excludes gap-to-now)
@@ -1046,14 +1046,14 @@ function renderProgress() {
   }
   const gapStr = maxGapMs > 0 ? formatDuration(maxGapMs) : '—';
   const avgGapMs = avgWithinDayGapMs(last7Days, filterProfileUsed);
-  const gapSub = avgGapMs >= 60000 ? `Average gap: ${formatDuration(avgGapMs)}` : '';
+  const gapSub = avgGapMs >= 60000 ? `Average: ${formatDuration(avgGapMs)}` : '';
 
   const ratioTile = getRatioTile(thisWeek.profileUsed, last7Days);
 
   const exerciseMins = getHabits(thisWeek.events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
   const exercisePerDay = (exerciseMins / 7).toFixed(1);
   const weekHabits = sumHabitCounts(thisWeek.events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
-  const exerciseSub = weekHabits > 0 ? `${weekHabits} Healthy actions` : '';
+  const exerciseSub = weekHabits > 0 ? `${weekHabits} Healthy Actions` : '';
 
   $('progress').innerHTML = [
     ratioTile,
