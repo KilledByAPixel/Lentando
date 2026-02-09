@@ -39,12 +39,12 @@ const ADDICTION_PROFILES = {
     name: 'Nicotine',
     sessionLabel: 'Smoked',
     substanceLabel: 'Type',
-    substances: ['cigarette', 'vape', 'gum', 'other'],
-    substanceDisplay: { cigarette: 'Cigarette', vape: 'Vape', gum: 'Gum', other: 'Other' },
+    substances: ['cigarette', 'vape', 'other'],
+    substanceDisplay: { cigarette: 'Cigarette', vape: 'Vape', other: 'Other' },
     methods: ['outside', 'inside', 'car', 'work', 'social', 'other'],
     amounts: [0.5, 1, 2, 3, 5, 10],
     amountUnit: 'count',
-    icons: { cigarette: '🚬', vape: '💨', gum: '🍬', other: '⚡' }
+    icons: { cigarette: '🚬', vape: '💨', other: '⚡' }
   },
   other: {
     name: 'Other',

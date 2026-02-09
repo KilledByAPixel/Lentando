@@ -443,6 +443,7 @@ window.FirebaseSync = {
   deleteAccount: deleteAccountAndData,
   mountAuthForm,
   unmountAuthForm,
+  showWelcome: showWelcomeMessage,
 
   async forgotPasswordForm() {
     const email = document.getElementById('auth-email')?.value;
