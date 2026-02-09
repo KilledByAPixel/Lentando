@@ -157,7 +157,7 @@ const WIN_DEFINITIONS = {
   'last-earlier': { label: 'Last session earlier than yesterday', icon: '🌙', desc: 'Finished your last session earlier than yesterday' },
   'good-start': { label: 'Good Start', icon: '🌟', desc: 'Started your day with a positive action instead of using' },
   'resist-streak': { label: 'Resist Streak', icon: '🔥', desc: 'Resisted urges for multiple days in a row' },
-  'habit-streak': { label: 'Habit Streak', icon: '⛓️', desc: 'Logged healthy habits for consecutive days' },
+  'habit-streak': { label: 'Habit Streak', icon: '🐢', desc: 'Logged healthy habits for consecutive days' },
   'taper': { label: 'Taper Win', icon: '📐', desc: 'Gradually reduced usage over consecutive days' },
   'app-streak': { label: 'App Streak', icon: '📱', desc: 'Used the app multiple days in a row' },
   'week-streak': { label: 'Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
