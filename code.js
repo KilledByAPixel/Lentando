@@ -881,7 +881,7 @@ function buildSinceLastUsedTile(used) {
     }
   }
   
-  return tileHTML(sinceLastVal, 'Since Last Used', sinceLastSub);
+  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub);
 }
 
 function renderMetrics() {
@@ -896,7 +896,7 @@ function renderMetrics() {
   const exerciseSub = exerciseMins > 0 ? `${exerciseMins}m exercise` : 'today';
 
   $('metrics').innerHTML = [
-    tileHTML(used.length, 'Sessions', `${totalAmt} total ${profile.amountUnit}`),
+    tileHTML(used.length, 'Sessions', `${totalAmt} ${profile.amountUnit} total`),
     tileHTML(resisted.length, 'Urges Resisted'),
     buildSinceLastUsedTile(used),
     tileHTML(allHabits, 'Good Habits', exerciseSub)
