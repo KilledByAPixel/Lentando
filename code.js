@@ -1264,7 +1264,7 @@ function renderWins() {
   if (!totalEl) return;
   
   if (winData.lifetimeWins.length === 0) {
-    totalEl.innerHTML = emptyStateHTML('Total medals will accumulate here at the end of each day');
+    totalEl.innerHTML = emptyStateHTML('Daily medals earned are saved here permanently');
   } else {
     const lifetimeWinsWithDef = winData.lifetimeWins.map(w => ({ ...w, ...getWinDef(w.id) }));
     totalEl.innerHTML = lifetimeWinsWithDef.map(winCardHTML).join('');
