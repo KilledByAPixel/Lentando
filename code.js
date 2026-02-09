@@ -940,7 +940,7 @@ function buildSinceLastUsedTile(used) {
     }
   }
   
-  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub, 'Time elapsed since your last session — helps track your current gap');
+  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub, 'Time since your last session');
 }
 
 function renderMetrics() {
@@ -967,10 +967,10 @@ function renderMetrics() {
   const resistSub = maxResistStreak > 1 ? `Longest Streak: ${maxResistStreak}` : '';
 
   $('metrics').innerHTML = [
-    tileHTML(used.length, 'Sessions', `${totalAmt} Total ${capitalize(profile.amountUnit)}`, 'Number of times you used today and total amount'),
+    tileHTML(used.length, 'Sessions', `${totalAmt} Total ${capitalize(profile.amountUnit)}`, 'Times you used today and total amount'),
     buildSinceLastUsedTile(used),
-    tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Number of urges you successfully resisted today'),
-    tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Number of healthy habits logged today (water, breaths, clean, outside, exercise)')
+    tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Urges you successfully resisted today'),
+    tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today')
   ].join('');
 }
 
@@ -988,7 +988,7 @@ function getRatioTile(weekUsed, dayKeys) {
   
   // If no profile is set, return a placeholder tile
   if (!config) {
-    return tileHTML('—', 'Free Days', '', 'Days without the primary substance (select a profile first)');
+    return tileHTML('—', 'Free Days', '', 'Days without primary substance');
   }
   
   // Calculate bad ratio — for cannabis, mix counts as 0.5 since it's half THC
@@ -1015,7 +1015,7 @@ function getRatioTile(weekUsed, dayKeys) {
   }).length;
   const ratioSub = total > 0 ? `${ratio} ${config.ratioLabel}` : '';
 
-  return tileHTML(freeDays, config.freeLabel, ratioSub, `Days this week without the primary substance tracked in your profile`);
+  return tileHTML(freeDays, config.freeLabel, ratioSub, `Days without primary substance this week`);
 }
 
 function getWeekData(days) {
@@ -1058,9 +1058,9 @@ function renderProgress() {
 
   $('progress').innerHTML = [
     ratioTile,
-    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average number of sessions per day over the past 7 days'),
-    tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest time between consecutive sessions this week'),
-    tileHTML(`${exercisePerDay}m`, 'Exercise/Day', exerciseSub, 'Average minutes of exercise per day over the past 7 days')
+    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average sessions per day this week'),
+    tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions this week'),
+    tileHTML(`${exercisePerDay}m`, 'Exercise/Day', exerciseSub, 'Average exercise per day this week')
   ].join('');
 }
 
