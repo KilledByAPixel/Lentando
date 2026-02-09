@@ -170,6 +170,10 @@ const WIN_DEFINITIONS = {
   'tbreak-365d': { label: 'Break: 1 Year', icon: '👑', desc: 'One year with no use!' },
   'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider — shows mindful decision-making' },
   'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing today — showing up is a win' },
+  'intensity-logged': { label: 'Intensity Logged', icon: '📊', desc: 'Tracked how strong the urge was — building self-awareness' },
+  'trigger-noted': { label: 'Trigger Identified', icon: '🔍', desc: 'Identified what triggered the urge — key to breaking patterns' },
+  'full-report': { label: 'Full Report', icon: '📋', desc: 'Logged both intensity and trigger — complete urge awareness' },
+  'tough-resist': { label: 'Tough Resist', icon: '🦁', desc: 'Resisted a strong urge (intensity 4+) — that takes real strength' },
 };
 
 function getWinDef(id) {
@@ -539,6 +543,14 @@ const Wins = {
 
     const swapCount = countSwapCompleted(resisted, habits);
     for (let i = 0; i < swapCount; i++) addWin(true, 'swap-completed');
+
+    // --- Resist awareness wins ---
+    for (const r of resisted) {
+      addWin(r.intensity != null, 'intensity-logged');
+      addWin(r.trigger != null, 'trigger-noted');
+      addWin(r.intensity != null && r.trigger != null, 'full-report');
+      addWin(r.intensity >= 4, 'tough-resist');
+    }
 
     // Cannabis-specific wins
     const isCannabis = settings.addictionProfile === 'cannabis';
@@ -1943,10 +1955,10 @@ function logResisted() {
   clearTimeout(exerciseTimeout);
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
 
-  // Only show coaching if resisted was already clicked within the past hour
-  const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  // Only show coaching if resisted was already clicked within the past 30 minutes
+  const thirtyMinAgo = Date.now() - 30 * 60 * 1000;
   const todayResisted = filterByType(DB.forDate(todayKey()), 'resisted');
-  if (todayResisted.some(r => r.id !== evt.id && r.ts >= oneHourAgo)) {
+  if (todayResisted.some(r => r.id !== evt.id && r.ts >= thirtyMinAgo)) {
     showCoaching();
   }
   
