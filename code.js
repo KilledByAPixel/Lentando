@@ -139,7 +139,7 @@ const WIN_DEFINITIONS = {
   'mindful': { label: 'Mindful Session', icon: '🧠', desc: 'Logged the reason for using, showing mindful awareness' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
-  'zero-thc': { label: 'Clean Day', icon: '🏆', desc: 'No use today while staying engaged with tracking' },
+  'zero-thc': { label: 'No Use Day', icon: '🏆', desc: 'No use today while staying engaged with tracking' },
   'tbreak-day': { label: 'Break Day', icon: '🚫', desc: 'Went a full day without using while staying engaged' },
   'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 3 times today' },
   'habit-stack': { label: 'Habit Stack', icon: '🔗', desc: 'Logged multiple different habit types in one day' },
@@ -163,13 +163,14 @@ const WIN_DEFINITIONS = {
   'week-streak': { label: 'Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
   'month-streak': { label: 'Month Streak', icon: '🗓️', desc: 'Used the app every day for a month' },
   'year-streak': { label: 'Year Streak', icon: '🎉', desc: 'Used the app every day for a year!' },
-  'tbreak-1d': { label: 'Break: 1 Day', icon: '🌱', desc: 'One full day clean' },
-  'tbreak-7d': { label: 'Break: 1 Week', icon: '🌿', desc: 'One week clean' },
-  'tbreak-14d': { label: 'Break: 2 Weeks', icon: '🍀', desc: 'Two weeks clean' },
-  'tbreak-21d': { label: 'Break: 3 Weeks', icon: '🌳', desc: 'Three weeks clean' },
-  'tbreak-30d': { label: 'Break: 1 Month', icon: '🏆', desc: 'One month clean' },
-  'tbreak-365d': { label: 'Break: 1 Year', icon: '👑', desc: 'One year clean!' },
+  'tbreak-1d': { label: 'Break: 1 Day', icon: '🌱', desc: 'One full day with no use' },
+  'tbreak-7d': { label: 'Break: 1 Week', icon: '🌿', desc: 'One week with no use' },
+  'tbreak-14d': { label: 'Break: 2 Weeks', icon: '🍀', desc: 'Two weeks with no use' },
+  'tbreak-21d': { label: 'Break: 3 Weeks', icon: '🌳', desc: 'Three weeks with no use' },
+  'tbreak-30d': { label: 'Break: 1 Month', icon: '🏆', desc: 'One month with no use' },
+  'tbreak-365d': { label: 'Break: 1 Year', icon: '👑', desc: 'One year with no use!' },
   'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider — shows mindful decision-making' },
+  'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing today — showing up is a win' },
 };
 
 function getWinDef(id) {
@@ -492,6 +493,9 @@ const Wins = {
     const habits   = filterByType(todayEvents, 'habit');
     const subs = new Set(getProfile().substances);
     const profileUsed = used.filter(e => subs.has(e.substance)); // Profile-aware: only substances in current profile
+
+    // --- Daily Check-in win ---
+    addWin(todayEvents.length > 0, 'daily-checkin');
 
     // --- Welcome Back win ---
     const settings = DB.loadSettings();
