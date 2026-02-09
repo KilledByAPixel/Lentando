@@ -916,10 +916,10 @@ function getRatioTile(weekUsed, dayKeys) {
   const settings = DB.loadSettings();
   
   const ratioMap = {
-    cannabis: { filter: e => e.substance === 'cbd', badFilter: e => e.substance === 'thc' || e.substance === 'mix', label: 'CBD Ratio', freeLabel: 'THC-free Days' },
-    alcohol: { filter: e => e.substance === 'liquor', badFilter: e => e.substance === 'liquor', label: 'Liquor Ratio', freeLabel: 'Liquor-free Days' },
-    nicotine: { filter: e => e.substance === 'cigarette', badFilter: e => e.substance === 'cigarette', label: 'Cigarette Ratio', freeLabel: 'Smoke-free Days' },
-    other: { filter: e => e.substance === 'type2', badFilter: e => e.substance === 'type1', label: 'Better Choice', freeLabel: 'Free days' }
+    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', label: 'THC Ratio', freeLabel: 'THC-free Days' },
+    alcohol: { badFilter: e => e.substance === 'liquor', label: 'Liquor Ratio', freeLabel: 'Liquor-free Days' },
+    nicotine: { badFilter: e => e.substance === 'cigarette', label: 'Cigarette Ratio', freeLabel: 'Smoke-free Days' },
+    other: { badFilter: e => e.substance === 'type1', label: 'Better Choice', freeLabel: 'Free days' }
   };
   
   const config = ratioMap[settings.addictionProfile];
@@ -929,8 +929,19 @@ function getRatioTile(weekUsed, dayKeys) {
     return tileHTML('—', 'Better Choice', '');
   }
   
+  // Calculate bad ratio — for cannabis, mix counts as 0.5 since it's half THC
   const total = weekUsed.length;
-  const ratio = total > 0 ? ((weekUsed.filter(config.filter).length / total) * 100).toFixed(0) + '%' : '—';
+  let badCount;
+  if (settings.addictionProfile === 'cannabis') {
+    badCount = weekUsed.reduce((sum, e) => {
+      if (e.substance === 'thc') return sum + 1;
+      if (e.substance === 'mix') return sum + 0.5;
+      return sum;
+    }, 0);
+  } else {
+    badCount = weekUsed.filter(config.badFilter).length;
+  }
+  const ratio = total > 0 ? ((badCount / total) * 100).toFixed(0) + '%' : '—';
 
   // Count days without the "bad" substance this week — only count days since first-ever event
   const allDayKeys = DB.getAllDayKeys(); // sorted newest first
