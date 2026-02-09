@@ -951,6 +951,12 @@ function renderProgress() {
   const thisWeek = getWeekData(last7Days);
   const dailyAvg = (thisWeek.used.length / 7).toFixed(1);
 
+  // Previous week (14 days ago to 7 days ago) for comparison
+  const prevWeekDays = getLastNDays(7, 7);
+  const prevWeek = getWeekData(prevWeekDays);
+  const prevDailyAvg = (prevWeek.used.length / 7).toFixed(1);
+  const sessionsSub = prevWeek.used.length > 0 ? `last week: ${prevDailyAvg}` : 'last 7 days';
+
   const longestGapMs = getMaxGapHours(thisWeek.profileUsed) * 3600000;
   const gapStr = longestGapMs > 0 ? formatDuration(longestGapMs) : '—';
 
@@ -960,7 +966,7 @@ function renderProgress() {
   const exercisePerDay = (exerciseMins / 7).toFixed(1);
 
   $('progress').innerHTML = [
-    tileHTML(dailyAvg, 'Sessions/Day', 'last 7 days'),
+    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub),
     tileHTML(gapStr, 'Longest Gap', 'this week'),
     ratioTile,
     tileHTML(`${exercisePerDay}m`, 'Exercise/Day', 'last 7 days')
