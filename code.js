@@ -1123,7 +1123,7 @@ function navigateDay(offset) {
 const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)) },
   { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
-  { label: '🏃 Exercise Minutes / Day', color: '#e74c3c',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
+  { label: '🏃 Exercise Minutes / Day', color: '#e67e22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
 ];
 
 function formatGraphValue(val) {
@@ -1227,7 +1227,7 @@ function renderGraphs() {
   const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
   hourHtml += `<div class="graph-container"><div class="graph-title">⚡ Average Usage by Hour</div>`;
   hourHtml += hasHeatmapData
-    ? buildHourGraphBars(hourAverages, maxAvg, '#e67e22')
+    ? buildHourGraphBars(hourAverages, maxAvg, '#e53935')
     : emptyStateHTML('No data yet', 'padding:12px 0');
   hourHtml += `</div>`;
   
