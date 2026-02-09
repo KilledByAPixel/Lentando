@@ -459,8 +459,8 @@ function countSwapCompleted(resisted, habits) {
   }).length;
 }
 
-function getMaxGapHours(sessions) {
-  if (sessions.length === 0) return 0;
+function getAllGapHours(sessions) {
+  if (sessions.length === 0) return [];
   const sorted = [...sessions].sort((a, b) => a.ts - b.ts);
   const gaps = [];
 
@@ -470,17 +470,22 @@ function getMaxGapHours(sessions) {
     const prevHour = new Date(sorted[i - 1].ts).getHours();
     const currHour = new Date(sorted[i].ts).getHours();
     if (prevHour < EARLY_HOUR && currHour >= EARLY_HOUR) continue;
-    gaps.push(sorted[i].ts - sorted[i - 1].ts);
+    gaps.push((sorted[i].ts - sorted[i - 1].ts) / 3600000);
   }
 
   // Include gap from last session to now (skip if it crosses 4am boundary)
   const lastHour = new Date(sorted[sorted.length - 1].ts).getHours();
   const nowHour = new Date().getHours();
   if (!(lastHour < EARLY_HOUR && nowHour >= EARLY_HOUR)) {
-    gaps.push(Date.now() - sorted[sorted.length - 1].ts);
+    gaps.push((Date.now() - sorted[sorted.length - 1].ts) / 3600000);
   }
 
-  return gaps.length > 0 ? Math.max(...gaps) / 3600000 : 0;
+  return gaps;
+}
+
+function getMaxGapHours(sessions) {
+  const gaps = getAllGapHours(sessions);
+  return gaps.length > 0 ? Math.max(...gaps) : 0;
 }
 
 function getMilestoneWins(gapHours, milestones) {
@@ -603,9 +608,12 @@ const Wins = {
     // --- Timing-based wins ---
     // Gap wins — include all sessions but skip gaps that cross the 4am boundary (sleep gap)
     if (profileUsed.length >= 1) {
-      const maxGap = getMaxGapHours(profileUsed);
-      const earned = getMilestoneWins(maxGap, GAP_MILESTONES);
-      earned.forEach(h => addWin(true, `gap-${h}h`));
+      const allGaps = getAllGapHours(profileUsed);
+      // Award the highest milestone for each gap
+      for (const gapHours of allGaps) {
+        const milestone = getMilestoneWins(gapHours, GAP_MILESTONES);
+        milestone.forEach(h => addWin(true, `gap-${h}h`));
+      }
       
       // Gap longer than 7-day historical average (within-day gaps only)
       if (profileUsed.length >= 2) {
