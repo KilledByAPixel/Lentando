@@ -39,8 +39,8 @@ const ADDICTION_PROFILES = {
     amountUnit: 'drinks',
     icons: { beer: '🍺', wine: '🍷', liquor: '🥃' }
   },
-  nicotine: {
-    name: 'Nicotine',
+  smoking: {
+    name: 'Smoking',
     sessionLabel: 'Smoked',
     substanceLabel: 'Type',
     methodLabel: 'Location',
@@ -347,6 +347,18 @@ const DB = {
         } catch (e) {
           console.error('Failed to migrate wins data:', e);
         }
+
+        // Migrate nicotine profile to smoking profile
+        try {
+          const settings = JSON.parse(localStorage.getItem(STORAGE_SETTINGS));
+          if (settings && settings.addictionProfile === 'nicotine') {
+            settings.addictionProfile = 'smoking';
+            localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings));
+            console.log('Migrated addiction profile from nicotine to smoking');
+          }
+        } catch (e) {
+          console.error('Failed to migrate addiction profile:', e);
+        }
       }
 
       // Future migrations go here
@@ -626,7 +638,7 @@ const Wins = {
 
     // Harm reduction vape win
     const isCannabis = settings.addictionProfile === 'cannabis';
-    const isNicotine = settings.addictionProfile === 'nicotine';
+    const isNicotine = settings.addictionProfile === 'smoking';
     
     let vapeCount = 0;
     if (isCannabis) {
@@ -1040,7 +1052,7 @@ function getRatioTile(weekUsed, dayKeys) {
   const ratioMap = {
     cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC Ratio', freeLabel: 'No THC Days' },
     alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor Ratio', freeLabel: 'No Liquor Days' },
-    nicotine: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette Ratio', freeLabel: 'No Cigarette Days' },
+    smoking: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette Ratio', freeLabel: 'No Cigarette Days' },
     other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1 Ratio', freeLabel: 'Free Days' }
   };
   

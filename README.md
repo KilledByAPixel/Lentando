@@ -20,7 +20,7 @@ It's designed for harm reduction, not judgment. Every small win counts.
 ### Features
 
 - **One-tap logging** — Log sessions, resisted urges, or healthy habits with a single tap
-- **Multi-profile support** — Cannabis, alcohol, nicotine, or custom tracking
+- **Multi-profile support** — Cannabis, alcohol, smoking, or custom tracking
 - **Cloud sync** — Sign in with Google or email to sync across devices (optional)
 - **45+ win awards** — Automatic recognition of streaks, gaps, timing improvements, and healthy choices
 - **Visual analytics** — Graphs for sessions, amounts, time-of-day usage, and more
