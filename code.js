@@ -985,7 +985,7 @@ function renderProgress() {
   }
   const gapStr = maxGapMs > 0 ? formatDuration(maxGapMs) : '—';
   const avgGapMs = avgWithinDayGapMs(last7Days, filterProfileUsed);
-  const gapSub = avgGapMs >= 60000 ? `Avgerage gap: ${formatDuration(avgGapMs)}` : '';
+  const gapSub = avgGapMs >= 60000 ? `Average gap: ${formatDuration(avgGapMs)}` : '';
 
   const ratioTile = getRatioTile(thisWeek.used, last7Days);
 
