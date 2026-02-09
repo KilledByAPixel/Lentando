@@ -460,10 +460,14 @@ function countSwapCompleted(resisted, habits) {
 }
 
 function getMaxGapHours(sessions) {
-  // Only consider sessions after 4am to avoid overnight inflation
-  const daytime = sessions.filter(s => new Date(s.ts).getHours() >= EARLY_HOUR);
-  if (daytime.length === 0) return 0;
-  const sorted = [...daytime].sort((a, b) => a.ts - b.ts);
+  // Only filter pre-4am sessions when it's past 4am (to avoid overnight inflation).
+  // Before 4am, include all sessions so current gaps still count.
+  const nowHour = new Date().getHours();
+  const relevant = nowHour >= EARLY_HOUR
+    ? sessions.filter(s => new Date(s.ts).getHours() >= EARLY_HOUR)
+    : sessions;
+  if (relevant.length === 0) return 0;
+  const sorted = [...relevant].sort((a, b) => a.ts - b.ts);
   const gaps = sorted.slice(1).map((u, i) => u.ts - sorted[i].ts);
   // Include gap from last session to now
   gaps.push(Date.now() - sorted[sorted.length - 1].ts);
@@ -586,18 +590,21 @@ const Wins = {
     addWin(hasExercise && hasWater, 'exercise-water-combo');
 
     // --- Timing-based wins ---
-    // Gap wins — getMaxGapHours already filters pre-4am sessions and includes gap-to-now
-    const daytimeUsed = profileUsed.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
-    if (daytimeUsed.length >= 1) {
+    // Gap wins — before 4am include all sessions; after 4am filter pre-4am to avoid overnight inflation
+    const nowHour = new Date().getHours();
+    const gapUsed = nowHour >= EARLY_HOUR
+      ? profileUsed.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR)
+      : profileUsed;
+    if (gapUsed.length >= 1) {
       const maxGap = getMaxGapHours(profileUsed);
       const earned = getMilestoneWins(maxGap, GAP_MILESTONES);
       earned.forEach(h => addWin(true, `gap-${h}h`));
       
       // Gap longer than 7-day historical average (within-day gaps only)
-      if (daytimeUsed.length >= 2) {
+      if (gapUsed.length >= 2) {
         const avgGap = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
         if (avgGap > 0) {
-          const todayGaps = daytimeUsed.slice(1).map((u, i) => u.ts - daytimeUsed[i].ts);
+          const todayGaps = gapUsed.slice(1).map((u, i) => u.ts - gapUsed[i].ts);
           addWin(Math.max(...todayGaps) > avgGap, 'gap-above-avg');
         }
       }
