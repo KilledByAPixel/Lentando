@@ -1840,8 +1840,8 @@ function showLoginScreen() {
   if (loginInputs && !loginInputs.children.length) {
     loginInputs.innerHTML = `
       <form id="login-form" onsubmit="return false" style="display:flex;flex-direction:column;gap:8px">
-        <input type="email" id="login-email" name="email" autocomplete="email" placeholder="Email" class="login-input">
-        <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Password (8+ chars)" class="login-input">
+        <input type="email" id="login-email" name="email" autocomplete="username" placeholder="Email" class="login-input">
+        <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Password" class="login-input">
       </form>`;
   }
 }
@@ -2379,7 +2379,10 @@ window.App = {
     const password = $('login-password')?.value;
     if (!email || !password) return alert('Enter email and password');
     if (password.length < 8) return alert('Password must be at least 8 characters');
-    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return alert('Password must contain both letters and numbers');
+    if (!/[a-z]/.test(password)) return alert('Password must contain a lowercase letter');
+    if (!/[A-Z]/.test(password)) return alert('Password must contain an uppercase letter');
+    if (!/[0-9]/.test(password)) return alert('Password must contain a number');
+    if (!/[^a-zA-Z0-9]/.test(password)) return alert('Password must contain a special character');
     try {
       if (window.FirebaseSync) {
         await FirebaseSync.signupWithEmail(email, password);
