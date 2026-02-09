@@ -1236,7 +1236,9 @@ function renderWins() {
     } else {
       // Sort by todayOrder (most recently incremented first)
       const todayOrder = winData.todayOrder || [];
-      const todayWinsWithDef = winData.todayWins.map(w => ({ ...w, ...getWinDef(w.id) }));
+      const todayWinsWithDef = winData.todayWins
+        .map(w => ({ ...w, ...getWinDef(w.id) }))
+        .filter(w => WIN_DEFINITIONS[w.id]); // Filter out unknown medals
       
       // Sort using todayOrder - wins not in order go to end alphabetically
       todayWinsWithDef.sort((a, b) => {
@@ -1266,7 +1268,9 @@ function renderWins() {
   if (winData.lifetimeWins.length === 0) {
     totalEl.innerHTML = emptyStateHTML('Daily medals earned are saved here permanently');
   } else {
-    const lifetimeWinsWithDef = winData.lifetimeWins.map(w => ({ ...w, ...getWinDef(w.id) }));
+    const lifetimeWinsWithDef = winData.lifetimeWins
+      .map(w => ({ ...w, ...getWinDef(w.id) }))
+      .filter(w => WIN_DEFINITIONS[w.id]); // Filter out unknown medals
     totalEl.innerHTML = lifetimeWinsWithDef.map(winCardHTML).join('');
   }
 }
