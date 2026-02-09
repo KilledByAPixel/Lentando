@@ -731,8 +731,17 @@ function chipGroupHTML(label, field, values, activeVal, displayFn) {
 function getUsedEventDetail(evt) {
   const profile = getProfile();
   
-  const icon = profile.icons[evt.substance] || '💊';
-  const title = profile.substanceDisplay[evt.substance] || evt.substance.toUpperCase();
+  // Look up icon and display name from any profile (not just current) so history shows correct icons
+  let icon = profile.icons[evt.substance];
+  let title = profile.substanceDisplay[evt.substance];
+  if (!icon || !title) {
+    for (const p of Object.values(ADDICTION_PROFILES)) {
+      if (!icon && p.icons[evt.substance]) icon = p.icons[evt.substance];
+      if (!title && p.substanceDisplay[evt.substance]) title = p.substanceDisplay[evt.substance];
+    }
+  }
+  icon = icon || '💊';
+  title = title || evt.substance.toUpperCase();
   
   return {
     icon,
