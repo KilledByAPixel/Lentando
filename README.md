@@ -1,6 +1,6 @@
 # Lentando
 
-**Mindful progress tracking** — A zero-friction habit and substance use tracker that runs in your browser.
+**Progress At Your Pace** — A zero-friction habit and substance use tracker that runs in your browser.
 
 ![Lentando Logo](logo.png)
 
