@@ -487,9 +487,16 @@ window.FirebaseSync = {
   async logout() {
     await logout();
     currentUser = null;
-    updateAuthUI(null);
-    // Clear the "skipped login" flag so user sees login screen again
+    
+    // Clear all local data on sign out
+    localStorage.removeItem(STORAGE_KEYS.events);
+    localStorage.removeItem(STORAGE_KEYS.settings);
+    localStorage.removeItem(STORAGE_KEYS.wins);
+    localStorage.removeItem(STORAGE_KEYS.todos);
     localStorage.removeItem(STORAGE_KEYS.loginSkipped);
+    invalidateDBCaches();
+    
+    updateAuthUI(null);
     // Show login screen
     if (typeof showLoginScreen === 'function') {
       showLoginScreen();
