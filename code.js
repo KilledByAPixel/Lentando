@@ -616,7 +616,7 @@ const Wins = {
     }
 
     // --- Session-based wins ---
-    addWin(resisted.length > 0, 'resist');
+    for (let i = 0; i < resisted.length; i++) addWin(true, 'resist');
 
     const urgeSurfedCount = countUrgeSurfed(resisted, used);
     for (let i = 0; i < urgeSurfedCount; i++) addWin(true, 'urge-surfed');
