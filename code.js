@@ -530,8 +530,8 @@ const Wins = {
 
     const profileAmt = sumAmount(profileUsed);
     addWin(profileUsed.length > 0 && profileAmt <= LOW_DAY_THRESHOLD, 'low-day');
-    addWin(profileUsed.length === 0 && (resisted.length > 0 || habits.length > 0), 'zero-thc');
-    addWin(used.length === 0 && (resisted.length > 0 || habits.length > 0), 'tbreak-day');
+    addWin(profileUsed.length === 0, 'zero-thc');
+    addWin(used.length === 0, 'tbreak-day');
 
     // --- Habit-based wins ---
     const waterCount = getHabits(todayEvents, 'water').length;
@@ -580,16 +580,28 @@ const Wins = {
       addWin(profileUsed.length < yProfile.length, 'fewer-sessions');
       addWin(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
       
-      // Reuse daytimeSessions from above for "first session" comparison
+      // First session later than yesterday — award if current time is past yesterday's first
+      // session time and no today sessions occurred before that time
       const yesterdayDaytime = yProfile.filter(u => new Date(u.ts).getHours() >= DAYTIME_START_HOUR);
       
-      if (daytimeSessions.length > 0 && yesterdayDaytime.length > 0) {
-        addWin(timeOfDayMin(daytimeSessions[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
+      if (yesterdayDaytime.length > 0) {
+        const yFirstMin = timeOfDayMin(yesterdayDaytime[0].ts);
+        if (daytimeSessions.length > 0) {
+          addWin(timeOfDayMin(daytimeSessions[0].ts) > yFirstMin, 'first-later');
+        } else {
+          // No daytime use yet — award if we're already past yesterday's first session time
+          addWin(timeOfDayMin(Date.now()) > yFirstMin, 'first-later');
+        }
       }
       
-      // Last session comparison uses all sessions (late-night sessions are relevant for when you stopped)
-      if (profileUsed.length > 0 && yProfile.length > 0) {
-        addWin(timeOfDayMin(profileUsed[profileUsed.length - 1].ts) < timeOfDayMin(yProfile[yProfile.length - 1].ts), 'last-earlier');
+      // Last session earlier than yesterday — award if no use today (you haven't used at all)
+      // or if your last use today is earlier in the day than yesterday's last use
+      if (yProfile.length > 0) {
+        if (profileUsed.length === 0) {
+          addWin(true, 'last-earlier');
+        } else {
+          addWin(timeOfDayMin(profileUsed[profileUsed.length - 1].ts) < timeOfDayMin(yProfile[yProfile.length - 1].ts), 'last-earlier');
+        }
       }
     }
     
