@@ -978,9 +978,9 @@ function getRatioTile(weekUsed, dayKeys) {
   const settings = DB.loadSettings();
   
   const ratioMap = {
-    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC Ratio', freeLabel: 'THC-Free Days' },
-    alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor Ratio', freeLabel: 'Liquor-Free Days' },
-    nicotine: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette Ratio', freeLabel: 'Smoke-Free Days' },
+    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC Ratio', freeLabel: 'No THC Days' },
+    alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor Ratio', freeLabel: 'No Liquor Days' },
+    nicotine: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette Ratio', freeLabel: 'No Cigarette Days' },
     other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1 Ratio', freeLabel: 'Free Days' }
   };
   
