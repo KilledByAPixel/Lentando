@@ -642,7 +642,7 @@ const Wins = {
     } else if (isNicotine) {
       vapeCount = profileUsed.filter(e => e.substance === 'vape').length;
     }
-    for (let i = 0; i < vapeCount; i++) addWin(true, 'harm-reduction-vape');
+    addWin(vapeCount > 0, 'harm-reduction-vape');
 
     // Cannabis-specific wins
     if (isCannabis) {
