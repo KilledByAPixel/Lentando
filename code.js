@@ -139,8 +139,7 @@ const WIN_DEFINITIONS = {
   'mindful': { label: 'Mindful Session', icon: '🧠', desc: 'Logged the reason for using, showing mindful awareness' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
-  'zero-thc': { label: 'No Use Day', icon: '🏆', desc: 'No use today while staying engaged with tracking' },
-  'tbreak-day': { label: 'Break Day', icon: '🚫', desc: 'Went a full day without using while staying engaged' },
+  'zero-thc': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
   'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 3 times today' },
   'habit-stack': { label: 'Habit Stack', icon: '🔗', desc: 'Logged multiple different habit types in one day' },
   'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '🏃💧', desc: 'Logged both exercise and water today' },
@@ -531,7 +530,6 @@ const Wins = {
     const profileAmt = sumAmount(profileUsed);
     addWin(profileUsed.length > 0 && profileAmt <= LOW_DAY_THRESHOLD, 'low-day');
     addWin(profileUsed.length === 0, 'zero-thc');
-    addWin(used.length === 0, 'tbreak-day');
 
     // --- Habit-based wins ---
     const waterCount = getHabits(todayEvents, 'water').length;
