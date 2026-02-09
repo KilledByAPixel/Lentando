@@ -402,10 +402,8 @@ header .date { font-size: 14px; color: var(--muted); }
 #onboarding-overlay:not(.hidden) { display: block; background: var(--bg); }
 .onboarding-sheet {
   max-width: 440px;
-  max-height: 100vh;
   margin: 0 auto;
   padding: 24px 20px;
-  overflow-y: auto;
 }
 .onboarding-header {
   text-align: center;
@@ -508,7 +506,8 @@ header .date { font-size: 14px; color: var(--muted); }
 #login-overlay,
 #onboarding-overlay {
   background: var(--bg);
-  align-items: center;
+  align-items: flex-start;
+  overflow-y: auto;
 }
 
 .modal-sheet {
