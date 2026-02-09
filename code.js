@@ -28,12 +28,12 @@ const ADDICTION_PROFILES = {
     name: 'Alcohol',
     sessionLabel: 'Drank',
     substanceLabel: 'Type',
-    substances: ['beer', 'wine', 'liquor', 'mixed'],
-    substanceDisplay: { beer: 'Beer', wine: 'Wine', liquor: 'Liquor', mixed: 'Mixed' },
+    substances: ['beer', 'wine', 'liquor'],
+    substanceDisplay: { beer: 'Beer', wine: 'Wine', liquor: 'Liquor' },
     methods: ['home', 'bar', 'restaurant', 'social', 'other'],
     amounts: [0.5, 1, 2, 3, 4, 5],
     amountUnit: 'drinks',
-    icons: { beer: '🍺', wine: '🍷', liquor: '🥃', mixed: '🍹' }
+    icons: { beer: '🍺', wine: '🍷', liquor: '🥃' }
   },
   nicotine: {
     name: 'Nicotine',
@@ -917,7 +917,7 @@ function getRatioTile(weekUsed) {
   
   const ratioMap = {
     cannabis: { filter: e => e.substance === 'cbd', label: 'CBD Ratio' },
-    alcohol: { filter: e => e.substance === 'beer' || e.substance === 'wine', label: 'Beer/Wine Ratio' },
+    alcohol: { filter: e => e.substance === 'liquor', label: 'Liquor Ratio' },
     nicotine: { filter: e => e.substance === 'vape', label: 'Vape Ratio' },
     other: { filter: e => e.substance === 'type2', label: 'Better Choice' }
   };
