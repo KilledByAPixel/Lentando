@@ -2088,7 +2088,8 @@ function logHabit(habit, minutes) {
   
   hapticFeedback();
   const label = HABIT_LABELS[habit] || habit;
-  const message = habit === 'exercise' && minutes ? `${label} +${minutes} min` : label;
+  const icon = HABIT_ICONS[habit] || '';
+  const message = habit === 'exercise' && minutes ? `${icon} ${label} +${minutes} min` : `${icon} ${label}`;
   showToast(message);
 }
 
