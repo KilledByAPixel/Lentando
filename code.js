@@ -1087,26 +1087,25 @@ function calculateAndUpdateWins() {
   const today = todayKey();
   const isSameDay = winData.todayDate === today;
   
-  // Step 1: Create lifetime map and get previous today counts
+  // Step 1: If it's a new day, add yesterday's wins to lifetime before clearing
   const lifetimeMap = new Map();
   winData.lifetimeWins.forEach(w => {
     lifetimeMap.set(w.id, w.count);
   });
+  
+  if (!isSameDay && winData.todayWins) {
+    // New day detected - add yesterday's wins to lifetime
+    winData.todayWins.forEach(w => {
+      const current = lifetimeMap.get(w.id) || 0;
+      lifetimeMap.set(w.id, current + w.count);
+    });
+  }
   
   // Save previous today's win counts to detect new increments
   const prevTodayCountMap = new Map();
   if (isSameDay && winData.todayWins) {
     winData.todayWins.forEach(w => {
       prevTodayCountMap.set(w.id, w.count || 1);
-    });
-  }
-  
-  // Only subtract old today's wins if we're recalculating the SAME day.
-  // On a new day, the old today's wins are already part of lifetime history.
-  if (isSameDay && winData.todayWins) {
-    winData.todayWins.forEach(w => {
-      const current = lifetimeMap.get(w.id) || 0;
-      lifetimeMap.set(w.id, Math.max(0, current - (w.count || 1)));
     });
   }
   
@@ -1151,13 +1150,7 @@ function calculateAndUpdateWins() {
   const todayIds = new Set(freshTodayWins.map(w => w.id));
   const cleanedOrder = newOrder.filter(id => todayIds.has(id));
   
-  // Step 4: Add fresh today's wins to lifetime
-  freshTodayWins.forEach(w => {
-    const current = lifetimeMap.get(w.id) || 0;
-    lifetimeMap.set(w.id, current + w.count);
-  });
-  
-  // Step 5: Convert map back to array and save
+  // Step 4: Convert lifetime map to array (today's wins NOT included)
   const updatedLifetimeWins = Array.from(lifetimeMap.entries())
     .filter(([, count]) => count > 0)
     .map(([id, count]) => ({ id, count }))
