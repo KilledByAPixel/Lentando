@@ -533,11 +533,10 @@ const Wins = {
     if (isCannabis) {
       const cbdUsed = filterCBD(used);
       const thcUsed = filterTHC(used);
-      addWin(cbdUsed.length > 0 && thcUsed.length === 0, 'replacement-cbd');
       addWin(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
     }
 
-    const vapeCount = isCannabis ? used.filter(e => e.method === 'vape').length : 0;
+    const vapeCount = isCannabis ? profileUsed.filter(e => e.method === 'vape').length : 0;
     for (let i = 0; i < vapeCount; i++) addWin(true, 'harm-reduction-vape');
 
     const doseCount = used.filter(e => e.amount < 1).length;
@@ -570,12 +569,17 @@ const Wins = {
       const earned = getMilestoneWins(maxGap, GAP_MILESTONES);
       earned.forEach(h => addWin(true, `gap-${h}h`));
       
-      // Gap longer than 7-day historical average
+      // Gap longer than 7-day historical average (within-day gaps only)
       const weekDays = getLastNDays(7);
-      const weekSessions = weekDays.flatMap(k => filterProfileUsed(DB.forDate(k)));
-      if (weekSessions.length >= 2) {
-        const weekGaps = weekSessions.slice(1).map((u, i) => u.ts - weekSessions[i].ts);
-        const avgGap = weekGaps.reduce((s, g) => s + g, 0) / weekGaps.length;
+      const withinDayGaps = [];
+      for (const dk of weekDays) {
+        const daySessions = filterProfileUsed(DB.forDate(dk));
+        for (let i = 1; i < daySessions.length; i++) {
+          withinDayGaps.push(daySessions[i].ts - daySessions[i - 1].ts);
+        }
+      }
+      if (withinDayGaps.length > 0) {
+        const avgGap = withinDayGaps.reduce((s, g) => s + g, 0) / withinDayGaps.length;
         const todayGaps = profileUsed.slice(1).map((u, i) => u.ts - profileUsed[i].ts);
         addWin(Math.max(...todayGaps) > avgGap, 'gap-above-avg');
       }
