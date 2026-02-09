@@ -120,11 +120,11 @@ const COACHING_MESSAGES = [
 
 const HABIT_ICONS = { water: '💧', breaths: '🌬️', clean: '🧹', exercise: '🏃', outside: '🌳' };
 const HABIT_LABELS = {
-  water: `${HABIT_ICONS.water} Water`,
-  breaths: `${HABIT_ICONS.breaths} 10 Breaths`,
-  clean: `${HABIT_ICONS.clean} Clean Room`,
-  exercise: `${HABIT_ICONS.exercise} Exercise`,
-  outside: `${HABIT_ICONS.outside} Outside`
+  water: 'Water',
+  breaths: '10 Breaths',
+  clean: 'Clean Room',
+  exercise: 'Exercise',
+  outside: 'Outside'
 };
 
 // Win definitions - maps win IDs to their display properties
