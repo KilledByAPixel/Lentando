@@ -17,6 +17,7 @@ const ADDICTION_PROFILES = {
     name: 'Cannabis',
     sessionLabel: 'Used',
     substanceLabel: 'Substance',
+    methodLabel: 'Method',
     substances: ['thc', 'cbd', 'mix'],
     substanceDisplay: { thc: 'THC', cbd: 'CBD', mix: 'Mix' },
     methods: ['bong', 'vape', 'pipe', 'joint', 'edible', 'other'],
@@ -28,9 +29,10 @@ const ADDICTION_PROFILES = {
     name: 'Alcohol',
     sessionLabel: 'Drank',
     substanceLabel: 'Type',
+    methodLabel: 'Location',
     substances: ['beer', 'wine', 'liquor'],
     substanceDisplay: { beer: 'Beer', wine: 'Wine', liquor: 'Liquor' },
-    methods: ['home', 'bar', 'restaurant', 'social', 'other'],
+    methods: ['home', 'work', 'bar', 'restaurant', 'other'],
     amounts: [0.5, 1, 2, 3, 4, 5],
     amountUnit: 'drinks',
     icons: { beer: '🍺', wine: '🍷', liquor: '🥃' }
@@ -39,9 +41,10 @@ const ADDICTION_PROFILES = {
     name: 'Nicotine',
     sessionLabel: 'Smoked',
     substanceLabel: 'Type',
+    methodLabel: 'Location',
     substances: ['cigarette', 'vape', 'other'],
     substanceDisplay: { cigarette: 'Cigarette', vape: 'Vape', other: 'Other' },
-    methods: ['outside', 'inside', 'car', 'work', 'social', 'other'],
+    methods: ['inside', 'outside', 'home', 'work', 'car'],
     amounts: [0.5, 1, 2, 3, 5, 10],
     amountUnit: 'count',
     icons: { cigarette: '🚬', vape: '💨', other: '⚡' }
@@ -50,6 +53,7 @@ const ADDICTION_PROFILES = {
     name: 'Other',
     sessionLabel: 'Used',
     substanceLabel: 'Type',
+    methodLabel: 'Method',
     substances: ['type1', 'type2', 'type3'],
     substanceDisplay: { type1: 'Type 1', type2: 'Type 2', type3: 'Type 3' },
     methods: ['method1', 'method2', 'method3', 'method4', 'other'],
@@ -574,16 +578,24 @@ const Wins = {
       addWin(r.intensity >= 4, 'tough-resist');
     }
 
-    // Cannabis-specific wins
+    // Harm reduction vape win
     const isCannabis = settings.addictionProfile === 'cannabis';
+    const isNicotine = settings.addictionProfile === 'nicotine';
+    
+    let vapeCount = 0;
+    if (isCannabis) {
+      vapeCount = profileUsed.filter(e => e.method === 'vape').length;
+    } else if (isNicotine) {
+      vapeCount = profileUsed.filter(e => e.substance === 'vape').length;
+    }
+    for (let i = 0; i < vapeCount; i++) addWin(true, 'harm-reduction-vape');
+
+    // Cannabis-specific wins
     if (isCannabis) {
       const cbdUsed = filterCBD(used);
       const thcUsed = filterTHC(used);
       addWin(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
     }
-
-    const vapeCount = isCannabis ? profileUsed.filter(e => e.method === 'vape').length : 0;
-    for (let i = 0; i < vapeCount; i++) addWin(true, 'harm-reduction-vape');
 
     const doseCount = used.filter(e => e.amount < 1).length;
     for (let i = 0; i < doseCount; i++) addWin(true, 'dose-half');
@@ -1667,7 +1679,7 @@ function buildUsedChips(evt) {
   const profile = getProfile();
   return [
     chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v]),
-    chipGroupHTML('Method', 'method', profile.methods, evt.method),
+    chipGroupHTML(profile.methodLabel, 'method', profile.methods, evt.method),
     chipGroupHTML('Amount', 'amount', profile.amounts, evt.amount),
     buildTimeChips(evt.ts),
     chipGroupHTML('Reason (optional)', 'reason', REASONS, evt.reason),
@@ -1773,7 +1785,7 @@ function openEditModal(eventId) {
   const fieldBuilders = {
     used: () => [
       chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v]),
-      chipGroupHTML('Method', 'method', profile.methods, evt.method),
+      chipGroupHTML(profile.methodLabel, 'method', profile.methods, evt.method),
       chipGroupHTML('Amount', 'amount', profile.amounts, evt.amount),
       chipGroupHTML('Reason', 'reason', REASONS, evt.reason)
     ],
