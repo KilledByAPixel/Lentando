@@ -889,7 +889,7 @@ function sumHabitCounts(events, habitTypes) {
 }
 
 function buildSinceLastUsedTile(used) {
-  // Find last used event across all history (any substance)
+  // Find last used event across all history (current profile's substances)
   let lastUsedTs = null;
   if (used.length > 0) {
     lastUsedTs = used[used.length - 1].ts;
