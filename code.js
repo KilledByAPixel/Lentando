@@ -932,8 +932,11 @@ function getRatioTile(weekUsed, dayKeys) {
   const total = weekUsed.length;
   const ratio = total > 0 ? ((weekUsed.filter(config.filter).length / total) * 100).toFixed(0) + '%' : '—';
 
-  // Count days without the "bad" substance this week (other substances like vape/cbd are fine)
-  const freeDays = dayKeys.filter(dk => {
+  // Count days without the "bad" substance this week — only count days since first-ever event
+  const allDayKeys = DB.getAllDayKeys(); // sorted newest first
+  const earliestKey = allDayKeys.length > 0 ? allDayKeys[allDayKeys.length - 1] : null;
+  const activeDays = earliestKey ? dayKeys.filter(dk => dk >= earliestKey) : [];
+  const freeDays = activeDays.filter(dk => {
     const dayUsed = filterUsed(DB.forDate(dk));
     return !dayUsed.some(config.badFilter);
   }).length;
