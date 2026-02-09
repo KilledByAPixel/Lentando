@@ -2048,18 +2048,25 @@ function toggleTodo(idx) {
   renderTodos();
 }
 
-function deleteTodo(idx) {
+async function deleteTodo(idx) {
   if (!confirm('Delete this task?')) return;
   const todos = loadTodos();
   todos.splice(idx, 1);
   saveTodos(todos);
   renderTodos();
+  // Push immediately so focus-triggered pull doesn't restore the deleted item
+  if (window.FirebaseSync) {
+    try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
+  }
 }
 
-function clearTodos() {
+async function clearTodos() {
   if (!confirm('Clear all to-do items?')) return;
   saveTodos([]);
   renderTodos();
+  if (window.FirebaseSync) {
+    try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
+  }
 }
 
 function moveUpTodo(idx) {
