@@ -906,8 +906,8 @@ function renderMetrics() {
 
   $('metrics').innerHTML = [
     tileHTML(used.length, 'Sessions', `${totalAmt} Total ${profile.amountUnit}`),
-    tileHTML(resisted.length, 'Urges Resisted', resistSub),
     buildSinceLastUsedTile(used),
+    tileHTML(resisted.length, 'Urges Resisted', resistSub),
     tileHTML(allHabits, 'Healthy Actions', exerciseSub)
   ].join('');
 }
@@ -995,9 +995,9 @@ function renderProgress() {
   const exerciseSub = weekHabits > 0 ? `${weekHabits} Healthy actions` : '';
 
   $('progress').innerHTML = [
-    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub),
-    tileHTML(gapStr, 'Longest gap', gapSub),
     ratioTile,
+    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub),
+    tileHTML(gapStr, 'Longest Gap', gapSub),
     tileHTML(`${exercisePerDay}m`, 'Exercise/Day', exerciseSub)
   ].join('');
 }
