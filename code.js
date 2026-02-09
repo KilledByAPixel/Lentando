@@ -908,7 +908,7 @@ function renderMetrics() {
       currentResistStreak = 0;
     }
   }
-  const resistSub = maxResistStreak > 0 ? `longest streak: ${maxResistStreak}` : '';
+  const resistSub = maxResistStreak > 1 ? `longest streak: ${maxResistStreak}` : '';
 
   $('metrics').innerHTML = [
     tileHTML(used.length, 'Sessions', `${totalAmt} ${profile.amountUnit} total`),
