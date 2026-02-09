@@ -949,7 +949,11 @@ function renderProgress() {
   const prevWeekDays = getLastNDays(7, 7);
   const prevWeek = getWeekData(prevWeekDays);
   const prevDailyAvg = (prevWeek.used.length / 7).toFixed(1);
-  const sessionsSub = prevWeek.used.length > 0 ? `last week: ${prevDailyAvg}` : 'last 7 days';
+  let sessionsSub = '';
+  if (prevWeek.used.length > 0) {
+    const direction = parseFloat(dailyAvg) > parseFloat(prevDailyAvg) ? 'up' : parseFloat(dailyAvg) < parseFloat(prevDailyAvg) ? 'down' : 'same';
+    sessionsSub = `${direction} from last week: ${prevDailyAvg}`;
+  }
 
   const longestGapMs = getMaxGapHours(thisWeek.profileUsed) * 3600000;
   const gapStr = longestGapMs > 0 ? formatDuration(longestGapMs) : '—';
