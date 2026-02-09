@@ -209,7 +209,7 @@ function flashEl(el) {
 
 function pulseEl(el) {
   el.classList.add('pulse');
-  setTimeout(() => el.classList.remove('pulse'), 300);
+  setTimeout(() => el.classList.remove('pulse'), 400);
 }
 
 function hapticFeedback() {
