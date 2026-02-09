@@ -916,17 +916,17 @@ function getRatioTile(weekUsed, dayKeys) {
   const settings = DB.loadSettings();
   
   const ratioMap = {
-    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', label: 'THC ratio', freeLabel: 'THC-free days' },
-    alcohol: { badFilter: e => e.substance === 'liquor', label: 'Liquor ratio', freeLabel: 'Liquor-free days' },
-    nicotine: { badFilter: e => e.substance === 'cigarette', label: 'Cigarette ratio', freeLabel: 'Smoke-free days' },
-    other: { badFilter: e => e.substance === 'type1', label: 'Better choice ratio', freeLabel: 'Free days' }
+    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC ratio', freeLabel: 'THC-Free Days' },
+    alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor ratio', freeLabel: 'Liquor-Free Days' },
+    nicotine: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette ratio', freeLabel: 'Smoke-Free Days' },
+    other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1 ratio', freeLabel: 'Free Days' }
   };
   
   const config = ratioMap[settings.addictionProfile];
   
   // If no profile is set, return a placeholder tile
   if (!config) {
-    return tileHTML('—', 'Better Choice', '');
+    return tileHTML('—', 'Free Days', '');
   }
   
   // Calculate bad ratio — for cannabis, mix counts as 0.5 since it's half THC
@@ -951,9 +951,9 @@ function getRatioTile(weekUsed, dayKeys) {
     const dayUsed = filterUsed(DB.forDate(dk));
     return !dayUsed.some(config.badFilter);
   }).length;
-  const freeSub = freeDays > 0 ? `${freeDays} ${config.freeLabel}` : '';
+  const ratioSub = total > 0 ? `${ratio} ${config.ratioLabel}` : '';
 
-  return tileHTML(ratio, config.label, freeSub);
+  return tileHTML(freeDays, config.freeLabel, ratioSub);
 }
 
 function getWeekData(days) {
