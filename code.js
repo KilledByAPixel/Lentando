@@ -1840,6 +1840,11 @@ function skipLogin() {
   }
   localStorage.setItem(STORAGE_LOGIN_SKIPPED, 'true');
   hideLoginScreen();
+  
+  // Hide delete account button when continuing without account
+  const deleteAccountBar = $('delete-account-bar');
+  if (deleteAccountBar) deleteAccountBar.classList.add('hidden');
+  
   continueToApp();
 }
 
