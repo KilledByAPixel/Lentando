@@ -976,8 +976,14 @@ function renderProgress() {
     sessionsSub = `Last Week: ${prevDailyAvg}`;
   }
 
-  const longestGapMs = getMaxGapHours(thisWeek.profileUsed) * 3600000;
-  const gapStr = longestGapMs > 0 ? formatDuration(longestGapMs) : '—';
+  // Longest gap between consecutive sessions this week (cross-day OK, excludes gap-to-now)
+  const weekSessions = [...thisWeek.profileUsed].sort((a, b) => a.ts - b.ts);
+  let maxGapMs = 0;
+  for (let i = 1; i < weekSessions.length; i++) {
+    const gap = weekSessions[i].ts - weekSessions[i - 1].ts;
+    if (gap > maxGapMs) maxGapMs = gap;
+  }
+  const gapStr = maxGapMs > 0 ? formatDuration(maxGapMs) : '—';
   const avgGapMs = avgWithinDayGapMs(last7Days, filterProfileUsed);
   const gapSub = avgGapMs >= 60000 ? `Avg Gap: ${formatDuration(avgGapMs)}` : '';
 
