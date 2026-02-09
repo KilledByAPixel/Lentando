@@ -1073,11 +1073,19 @@ function calculateAndUpdateWins() {
   const today = todayKey();
   const isSameDay = winData.todayDate === today;
   
-  // Step 1: Create lifetime map
+  // Step 1: Create lifetime map and get previous today counts
   const lifetimeMap = new Map();
   winData.lifetimeWins.forEach(w => {
     lifetimeMap.set(w.id, w.count);
   });
+  
+  // Save previous today's win counts to detect new increments
+  const prevTodayCountMap = new Map();
+  if (isSameDay && winData.todayWins) {
+    winData.todayWins.forEach(w => {
+      prevTodayCountMap.set(w.id, w.count || 1);
+    });
+  }
   
   // Only subtract old today's wins if we're recalculating the SAME day.
   // On a new day, the old today's wins are already part of lifetime history.
@@ -1105,13 +1113,37 @@ function calculateAndUpdateWins() {
   const freshTodayWins = Array.from(todayCountMap.entries())
     .map(([id, count]) => ({ id, count }));
   
-  // Step 3: Add fresh today's wins to lifetime
+  // Step 3: Build todayOrder - track which wins were incremented (move to front)
+  const prevOrder = (isSameDay && winData.todayOrder) ? winData.todayOrder : [];
+  const newOrder = [...prevOrder];
+  
+  freshTodayWins.forEach(w => {
+    const prevCount = prevTodayCountMap.get(w.id) || 0;
+    const wasIncremented = w.count > prevCount;
+    
+    if (wasIncremented) {
+      // Remove from current position if exists
+      const idx = newOrder.indexOf(w.id);
+      if (idx !== -1) newOrder.splice(idx, 1);
+      // Add to front
+      newOrder.unshift(w.id);
+    } else if (!newOrder.includes(w.id)) {
+      // New win that wasn't in previous order
+      newOrder.unshift(w.id);
+    }
+  });
+  
+  // Clean up order array - remove IDs that are no longer in today's wins
+  const todayIds = new Set(freshTodayWins.map(w => w.id));
+  const cleanedOrder = newOrder.filter(id => todayIds.has(id));
+  
+  // Step 4: Add fresh today's wins to lifetime
   freshTodayWins.forEach(w => {
     const current = lifetimeMap.get(w.id) || 0;
     lifetimeMap.set(w.id, current + w.count);
   });
   
-  // Step 4: Convert map back to array and save
+  // Step 5: Convert map back to array and save
   const updatedLifetimeWins = Array.from(lifetimeMap.entries())
     .filter(([, count]) => count > 0)
     .map(([id, count]) => ({ id, count }))
@@ -1124,6 +1156,7 @@ function calculateAndUpdateWins() {
   const updatedWinData = {
     todayDate: today,
     todayWins: freshTodayWins,
+    todayOrder: cleanedOrder,
     lifetimeWins: updatedLifetimeWins,
     todayUndoCount: undoCount
   };
@@ -1140,9 +1173,28 @@ function renderWins() {
     if (winData.todayWins.length === 0) {
       todayEl.innerHTML = emptyStateHTML('Wins appear here as you go');
     } else {
-      const todayWinsWithDef = winData.todayWins
-        .map(w => ({ ...w, ...getWinDef(w.id) }))
-        .sort((a, b) => a.label.localeCompare(b.label));
+      // Sort by todayOrder (most recently incremented first)
+      const todayOrder = winData.todayOrder || [];
+      const todayWinsWithDef = winData.todayWins.map(w => ({ ...w, ...getWinDef(w.id) }));
+      
+      // Sort using todayOrder - wins not in order go to end alphabetically
+      todayWinsWithDef.sort((a, b) => {
+        const aIdx = todayOrder.indexOf(a.id);
+        const bIdx = todayOrder.indexOf(b.id);
+        
+        // Both in order - sort by order position
+        if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+        
+        // Only a in order - a comes first
+        if (aIdx !== -1) return -1;
+        
+        // Only b in order - b comes first
+        if (bIdx !== -1) return 1;
+        
+        // Neither in order - alphabetical
+        return a.label.localeCompare(b.label);
+      });
+      
       todayEl.innerHTML = todayWinsWithDef.map(winCardHTML).join('');
     }
   }
