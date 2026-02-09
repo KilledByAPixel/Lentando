@@ -178,7 +178,7 @@ const WIN_DEFINITIONS = {
 };
 
 function getWinDef(id) {
-  return WIN_DEFINITIONS[id] || { label: 'Unknown Win', icon: '❓', desc: '' };
+  return WIN_DEFINITIONS[id] || { label: 'Unknown Medal', icon: '❓', desc: '' };
 }
 
 const DEFAULT_SETTINGS = {
@@ -1264,7 +1264,7 @@ function renderWins() {
   if (!totalEl) return;
   
   if (winData.lifetimeWins.length === 0) {
-    totalEl.innerHTML = emptyStateHTML('Total wins will appear here');
+    totalEl.innerHTML = emptyStateHTML('Total medals will accumulate here at the end of each day');
   } else {
     const lifetimeWinsWithDef = winData.lifetimeWins.map(w => ({ ...w, ...getWinDef(w.id) }));
     totalEl.innerHTML = lifetimeWinsWithDef.map(winCardHTML).join('');
