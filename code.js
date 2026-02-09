@@ -914,44 +914,19 @@ function getRatioTile(weekUsed) {
   return tileHTML(ratio, config.label, 'this week');
 }
 
-function getTrendDisplay(trendPct) {
-  const arrow = trendPct < -10 ? '↓' : trendPct > 10 ? '↑' : '→';
-  const color = trendPct < -10 ? 'var(--win)' : 'var(--muted)';
-  const label = Math.abs(trendPct) > 1 ? Math.abs(trendPct).toFixed(0) + '%' : 'stable';
-  return { arrow, color, label };
-}
-
 function getWeekData(days) {
   const events = days.flatMap(k => DB.forDate(k));
   const used = filterUsed(events);
   return { events, used, profileUsed: filterProfileUsed(events) };
 }
 
-function countLateStarts(days) {
-  return days.filter(day => {
-    const dayUsed = filterProfileUsed(DB.forDate(day));
-    return dayUsed.length > 0 && new Date(dayUsed[0].ts).getHours() >= AFTERNOON_HOUR;
-  }).length;
-}
-
 function renderProgress() {
   const last7Days = getLastNDays(7);
-  const prev7Days = getLastNDays(7, 7);
-
   const thisWeek = getWeekData(last7Days);
-  const prevWeek = getWeekData(prev7Days);
-  
-  const thisWeekAvg = thisWeek.used.length / 7;
-  const prevWeekAvg = prevWeek.used.length / 7;
-  const trendPct = prevWeekAvg > 0 ? ((thisWeekAvg - prevWeekAvg) / prevWeekAvg) * 100 : 0;
-  const trend = getTrendDisplay(trendPct);
-
-  const dailyAvg = thisWeekAvg.toFixed(1);
+  const dailyAvg = (thisWeek.used.length / 7).toFixed(1);
 
   const longestGapMs = getMaxGapHours(thisWeek.profileUsed) * 3600000;
   const gapStr = longestGapMs > 0 ? formatDuration(longestGapMs) : '—';
-
-  const lateStarts = countLateStarts(last7Days);
 
   const ratioTile = getRatioTile(thisWeek.used);
 
@@ -959,10 +934,8 @@ function renderProgress() {
   const exercisePerDay = (exerciseMins / 7).toFixed(1);
 
   $('progress').innerHTML = [
-    `<div class="tile"><div class="val" style="color:${trend.color}">${trend.arrow} ${trend.label}</div><div class="label">7-Day Trend</div><div class="sub">vs prev week</div></div>`,
     tileHTML(dailyAvg, 'Sessions/Day', 'last 7 days'),
     tileHTML(gapStr, 'Longest Gap', 'this week'),
-    tileHTML(`${lateStarts} / 7`, 'Late Starts', 'past noon'),
     ratioTile,
     tileHTML(`${exercisePerDay}m`, 'Exercise/Day', 'last 7 days')
   ].join('');
