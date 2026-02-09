@@ -142,8 +142,9 @@ const WIN_DEFINITIONS = {
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
   'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
   'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 3 times today' },
-  'habit-stack': { label: 'Habit Stack', icon: '🧩', desc: 'Logged multiple different habit types in one day' },
-  'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '🏃💧', desc: 'Logged both exercise and water today' },
+  'exercised': { label: 'Exercised', icon: '🏃', desc: 'Logged exercise today' },
+  'habit-stack': { label: 'Habit Stack', icon: '🥞', desc: 'Logged multiple different habit types in one day' },
+  'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '🌊', desc: 'Logged both exercise and water today' },
   'gap-1h': { label: 'Gap Win (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions' },
   'gap-2h': { label: 'Gap Win (2h+)', icon: '⏱️', desc: 'Maintained a gap of 2+ hours between sessions' },
   'gap-4h': { label: 'Gap Win (4h+)', icon: '⏱️', desc: 'Maintained a gap of 4+ hours between sessions' },
@@ -154,7 +155,7 @@ const WIN_DEFINITIONS = {
   'fewer-sessions': { label: 'Fewer sessions than yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
   'lower-amount': { label: 'Lower amount than yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'first-later': { label: 'First session later than yesterday', icon: '⏰', desc: 'Started your first session later than yesterday' },
-  'last-earlier': { label: 'Last session earlier than yesterday', icon: '🌙', desc: 'Finished your last session earlier than yesterday' },
+  'last-earlier': { label: 'Last session earlier than yesterday', icon: '🛏️', desc: 'Finished your last session earlier than yesterday' },
   'good-start': { label: 'Good Start', icon: '🌟', desc: 'Started your day with a positive action instead of using' },
   'resist-streak': { label: 'Resist Streak', icon: '🔥', desc: 'Resisted urges for multiple days in a row' },
   'habit-streak': { label: 'Habit Streak', icon: '🐢', desc: 'Logged healthy habits for consecutive days' },
@@ -665,11 +666,14 @@ const Wins = {
     const waterCount = getHabits(todayEvents, 'water').length;
     addWin(waterCount >= 3, 'hydrated');
     
+    // Exercise medal
+    const hasExercise = habits.some(e => e.habit === 'exercise');
+    addWin(hasExercise, 'exercised');
+    
     const uniqueHabits = new Set(habits.map(e => e.habit));
     addWin(uniqueHabits.size >= 2, 'habit-stack');
     
     // Exercise + Water combo
-    const hasExercise = habits.some(e => e.habit === 'exercise');
     const hasWater = habits.some(e => e.habit === 'water');
     addWin(hasExercise && hasWater, 'exercise-water-combo');
 
