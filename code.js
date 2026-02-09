@@ -1089,6 +1089,10 @@ function renderDayHistory() {
   }
   
   historyEl.innerHTML = html;
+
+  // Update next button disabled state
+  const nextBtn = $('next-day');
+  if (nextBtn) nextBtn.disabled = (currentHistoryDay === todayKey());
 }
 
 function loadMoreHistory() {
@@ -1288,13 +1292,17 @@ function exportJSON() {
   downloadFile(JSON.stringify(data, null, 2), 'lentando-' + todayKey() + '.json', 'application/json');
 }
 
-function clearDatabase() {
+async function clearDatabase() {
   if (!confirm('⚠️ This will permanently delete ALL events and reset settings. This cannot be undone.\n\nAre you sure?')) return;
   localStorage.removeItem(STORAGE_EVENTS);
   localStorage.removeItem(STORAGE_SETTINGS);
   localStorage.removeItem(STORAGE_TODOS);
   localStorage.removeItem(STORAGE_THEME);
   localStorage.removeItem(STORAGE_WINS);
+  // Push cleared state to cloud so data doesn't restore on reload
+  if (window.FirebaseSync) {
+    try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
+  }
   location.reload();
 }
 
@@ -1629,13 +1637,12 @@ function saveModal() {
           if (oldDateKey !== newDateKey && currentHistoryDay === oldDateKey) {
             renderDayHistory();
           }
-          
-          calculateAndUpdateWins();
         }
       }
     }
   }
   
+  calculateAndUpdateWins();
   closeModal();
   render();
 }

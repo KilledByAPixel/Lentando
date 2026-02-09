@@ -478,13 +478,10 @@ window.FirebaseSync = {
   async sync() {
     if (!currentUser) return alert('Sign in first');
     try {
-      // Pull first to get latest data from cloud
       await pullFromCloud(currentUser.uid);
-      // Then push local changes
       await pushToCloud(currentUser.uid);
       
-      // Invalidate caches and re-render
-      invalidateDBCaches();
+      // pullFromCloud already invalidated caches; just re-render
       if (typeof render === 'function') {
         render();
       }
@@ -500,6 +497,12 @@ window.FirebaseSync = {
   /** Called by code.js whenever data changes */
   onDataChanged() {
     debouncedSync();
+  },
+
+  /** Push current localStorage to cloud immediately (used by clearDatabase) */
+  async pushNow() {
+    if (!currentUser) return;
+    await pushToCloud(currentUser.uid);
   },
   
   /** Export showWelcomeMessage for use in code.js */
