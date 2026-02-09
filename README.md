@@ -1,6 +1,6 @@
 # Lentando
 
-**Mindful habit tracking** - A zero-friction habit and substance use tracker that runs in your browser.
+**Mindful progress tracking** — A zero-friction habit and substance use tracker that runs in your browser.
 
 ![Lentando Logo](logo.png)
 
@@ -19,24 +19,26 @@ It's designed for harm reduction, not judgment. Every small win counts.
 
 ### Features
 
-- **One-tap logging** - Log sessions, resisted urges, or healthy habits with a single tap
-- **Multi-profile support** - Cannabis, alcohol, nicotine, or custom tracking with profile-aware medals
-- **Cloud sync** - Sign in with Google or email to sync across devices (optional)
-- **40+ win awards** - Automatic recognition of streaks, gaps, timing improvements, and healthy habits
-- **Visual analytics** - Graphs for sessions, amounts, time of day usage, and more
-- **Day-by-day history** - Browse and edit previous days with full event details
-- **Coaching tips** - Gentle nudges toward alternative healty habits
-- **To-do list** - Built-in task tracking system
-- **PWA support** - Install to home screen, works offline
+- **One-tap logging** — Log sessions, resisted urges, or healthy habits with a single tap
+- **Multi-profile support** — Cannabis, alcohol, nicotine, or custom tracking
+- **Cloud sync** — Sign in with Google or email to sync across devices (optional)
+- **45+ win awards** — Automatic recognition of streaks, gaps, timing improvements, and healthy choices
+- **Visual analytics** — Graphs for sessions, amounts, time-of-day usage, and more
+- **Day-by-day history** — Browse and edit previous days with full event details
+- **Coaching tips** — Gentle nudges toward alternative healthy habits
+- **My Plan** — Built-in task list to set goals and track progress
+- **PWA support** — Install to home screen, works offline
 
 ### Win Categories
 
-- **Daily Progress** - Clean Day, First Resist, Cut Use by 50%, Hydrated (3+ waters), Exercise Today, All 5 Habits
-- **Timing Medals** - Delayed First Session, Earlier Last Session, Daytime Only, Gap Above Average
-- **Streaks** - 3-Day Break, 1-Week Resist Streak, Reducing for 3 Days
-- **Gap Milestones** - 1-Hour through 24-Hour gaps between sessions
-- **Break Milestones** - 1 Day through 1 Year of consecutive clean days
-- **Mindful Choices** - Delayed Resist (wait before using), Low Dose, Second Thought
+- **Daily Progress** — No Use Day, Low Day, Daily Check-in, Good Start, Hydrated
+- **Session Wins** — Resist, Urge Surfed, Swap Completed, Low Dose, Mindful Session
+- **Resist Awareness** — Intensity Logged, Trigger Identified, Full Report, Tough Resist
+- **Timing Wins** — Delayed Start, First Later, Last Earlier, Fewer Sessions, Lower Amount
+- **Gap Milestones** — 1h, 2h, 4h, 8h, and 12h gaps between sessions
+- **Break Milestones** — 1 Day through 1 Year of consecutive clean days
+- **Streaks** — Resist Streak, Habit Streak, Taper Win, App Streak, Week/Month/Year Streak
+- **Mindful Choices** — Second Thought, Harm Reduction, CBD-Only Day, Exercise + Water Combo
 
 ## Getting Started
 
