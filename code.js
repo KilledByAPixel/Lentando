@@ -810,29 +810,53 @@ function sumHabitCounts(events, habitTypes) {
 function buildCannabisTiles(used) {
   const thcUsed = filterTHC(used);
   const cbdCount = filterCBD(used).length + used.filter(e => e.substance === 'mix').length;
-  const timeSinceTHC = thcUsed.length > 0 ? formatDuration(Date.now() - thcUsed[thcUsed.length - 1].ts) : '—';
   
-  // Calculate average gap from last 7 days
-  let avgGapStr = '';
-  if (thcUsed.length > 0) {
-    const last7Days = getLastNDays(7);
-    const weekTHC = last7Days.flatMap(k => filterTHC(filterUsed(DB.forDate(k))));
-    if (weekTHC.length >= 2) {
-      const gaps = weekTHC.slice(1).map((u, i) => u.ts - weekTHC[i].ts);
-      const avgGapMs = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
-      // Only show if average is meaningful (more than 1 minute)
-      if (avgGapMs >= 60000) {
-        const currentGapMs = Date.now() - thcUsed[thcUsed.length - 1].ts;
-        const avgFormatted = formatDuration(avgGapMs);
-        const comparison = currentGapMs > avgGapMs ? '↑ longer' : currentGapMs < avgGapMs ? '↓ shorter' : '= equal';
-        avgGapStr = `avg ${avgFormatted} (${comparison})`;
+  // Find last used event across all history (any substance)
+  let lastUsedTs = null;
+  if (used.length > 0) {
+    lastUsedTs = used[used.length - 1].ts;
+  } else {
+    const allKeys = DB.getAllDayKeys();
+    for (const key of allKeys) {
+      const dayUsed = filterUsed(DB.forDate(key));
+      if (dayUsed.length > 0) {
+        lastUsedTs = dayUsed[dayUsed.length - 1].ts;
+        break;
+      }
+    }
+  }
+  
+  let sinceLastVal = '—';
+  let sinceLastSub = '';
+  
+  if (lastUsedTs) {
+    const elapsedMs = Date.now() - lastUsedTs;
+    const elapsedDays = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
+    
+    if (elapsedDays >= 1) {
+      sinceLastVal = `${elapsedDays} day${elapsedDays !== 1 ? 's' : ''}`;
+      sinceLastSub = formatDuration(elapsedMs);
+    } else {
+      sinceLastVal = formatDuration(elapsedMs);
+      
+      // Show average gap comparison as subtitle when under a day
+      const last7Days = getLastNDays(7);
+      const weekUsed = last7Days.flatMap(k => filterUsed(DB.forDate(k)));
+      if (weekUsed.length >= 2) {
+        const gaps = weekUsed.slice(1).map((u, i) => u.ts - weekUsed[i].ts);
+        const avgGapMs = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
+        if (avgGapMs >= 60000) {
+          const avgFormatted = formatDuration(avgGapMs);
+          const comparison = elapsedMs > avgGapMs ? '↑ longer' : elapsedMs < avgGapMs ? '↓ shorter' : '= equal';
+          sinceLastSub = `avg ${avgFormatted} (${comparison})`;
+        }
       }
     }
   }
   
   return [
     `<div class="tile"><div class="val" style="color:var(--thc)">${thcUsed.length}</div><div class="label">THC</div><div class="sub" style="color:var(--cbd)">${cbdCount} CBD</div></div>`,
-    `<div class="tile"><div class="val">${timeSinceTHC}</div><div class="label">Since Last THC</div>${avgGapStr ? `<div class="sub">${avgGapStr}</div>` : ''}</div>`
+    `<div class="tile"><div class="val">${sinceLastVal}</div><div class="label">Since Last Used</div>${sinceLastSub ? `<div class="sub">${sinceLastSub}</div>` : ''}</div>`
   ].join('');
 }
 
