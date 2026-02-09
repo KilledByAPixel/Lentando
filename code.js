@@ -98,7 +98,7 @@ const COACHING_MESSAGES = [
   '🧹 Tidy up one small thing',
   '💪 You got this',
   '🏆 Every resist is a win',
-  '🧠 This too shall pass',
+  '🗿 This too shall pass',
   '🎮 Play a quick game',
   '📞 Text a friend',
   '🎨 Do something creative',
