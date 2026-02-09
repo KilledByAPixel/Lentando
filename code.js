@@ -2028,6 +2028,8 @@ function renderTodos() {
         <button class="tl-act-btn" data-idx="${i}" title="Edit">✏️</button>
         <button class="tl-act-btn" data-idx="${i}" title="Delete">🗑️</button>
       </li>`).join('');
+  const clearBtn = $('todo-clear-btn');
+  if (clearBtn) clearBtn.classList.toggle('hidden', todos.length === 0);
 }
 
 function addTodo(text) {
@@ -2047,9 +2049,16 @@ function toggleTodo(idx) {
 }
 
 function deleteTodo(idx) {
+  if (!confirm('Delete this task?')) return;
   const todos = loadTodos();
   todos.splice(idx, 1);
   saveTodos(todos);
+  renderTodos();
+}
+
+function clearTodos() {
+  if (!confirm('Clear all to-do items?')) return;
+  saveTodos([]);
   renderTodos();
 }
 
@@ -2145,6 +2154,7 @@ window.App = {
   exportJSON,
   importJSON,
   clearDatabase,
+  clearTodos,
   changeAddiction,
   switchTab,
   logWaterFromReminder,
