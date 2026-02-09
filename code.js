@@ -11,6 +11,8 @@ const STORAGE_TODOS = 'ht_todos';
 const STORAGE_THEME = 'ht_theme';
 const STORAGE_WINS = 'ht_wins';
 const STORAGE_LOGIN_SKIPPED = 'ht_login_skipped';
+const STORAGE_VERSION = 'ht_data_version';
+const DATA_VERSION = 1;
 
 const ADDICTION_PROFILES = {
   cannabis: {
@@ -315,10 +317,29 @@ const DB = {
     this._dateIndex = null;
   },
 
+  _migrateDataIfNeeded() {
+    try {
+      const storedVersion = parseInt(localStorage.getItem(STORAGE_VERSION)) || 0;
+      if (storedVersion === DATA_VERSION) return;
+
+      console.log(`Migrating data from version ${storedVersion} to ${DATA_VERSION}`);
+
+      // Future migrations go here
+      // if (storedVersion < 2) { /* migrate to v2 */ }
+      // if (storedVersion < 3) { /* migrate to v3 */ }
+
+      localStorage.setItem(STORAGE_VERSION, DATA_VERSION.toString());
+    } catch (e) {
+      console.error('Data migration failed:', e);
+    }
+  },
+
   loadEvents() {
     if (this._events) return this._events;
     try {
-      this._events = JSON.parse(localStorage.getItem(STORAGE_EVENTS)) || [];
+      const data = localStorage.getItem(STORAGE_EVENTS);
+      this._events = data ? JSON.parse(data) : [];
+      this._migrateDataIfNeeded();
     } catch {
       this._events = [];
     }
@@ -329,6 +350,7 @@ const DB = {
   saveEvents() {
     try {
       localStorage.setItem(STORAGE_EVENTS, JSON.stringify(this._events));
+      localStorage.setItem(STORAGE_VERSION, DATA_VERSION.toString());
       this._invalidateDateIndex();
       if (window.FirebaseSync) FirebaseSync.onDataChanged();
     } catch (e) {
