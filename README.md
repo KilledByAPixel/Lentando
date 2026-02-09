@@ -26,7 +26,7 @@ It's designed for harm reduction, not judgment. Every small win counts.
 - **Visual analytics** — Graphs for sessions, amounts, time-of-day usage, and more
 - **Day-by-day history** — Browse and edit previous days with full event details
 - **Coaching tips** — Gentle nudges toward alternative healthy habits
-- **My Plan** — Built-in task list to set goals and track progress
+- **Goals Tracking** — Built-in task list to set goals and track progress
 - **PWA support** — Install to home screen, works offline
 
 ### Win Categories

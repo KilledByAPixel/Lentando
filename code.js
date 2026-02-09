@@ -140,7 +140,7 @@ const WIN_DEFINITIONS = {
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
   'zero-thc': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
   'hydrated': { label: 'Hydrated', icon: '💧', desc: 'Drank water at least 3 times today' },
-  'habit-stack': { label: 'Habit Stack', icon: '🔗', desc: 'Logged multiple different habit types in one day' },
+  'habit-stack': { label: 'Habit Stack', icon: '🧩', desc: 'Logged multiple different habit types in one day' },
   'exercise-water-combo': { label: 'Exercise + Water Combo', icon: '🏃💧', desc: 'Logged both exercise and water today' },
   'gap-1h': { label: 'Gap Win (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions' },
   'gap-2h': { label: 'Gap Win (2h+)', icon: '⏱️', desc: 'Maintained a gap of 2+ hours between sessions' },
@@ -2256,7 +2256,7 @@ async function deleteTodo(idx) {
 }
 
 async function clearTodos() {
-  if (!confirm('Clear all plan items?')) return;
+  if (!confirm('Clear all goal items?')) return;
   saveTodos([]);
   renderTodos();
   if (window.FirebaseSync) {
