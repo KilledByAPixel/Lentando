@@ -2,7 +2,7 @@
 
 **Progress At Your Pace** — A compassionate, zero-friction habit and substance use tracker that runs entirely in your browser.
 
-![Lentando Logo](logo.png)
+![Lentando Logo](icon-192.png)
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/Vanilla_JS-F7DF1E?style=flat&logo=javascript&logoColor=black)
