@@ -762,9 +762,10 @@ function emptyStateHTML(message, style) {
   return `<div class="empty-state"${attr}>${message}</div>`;
 }
 
-function tileHTML(val, label, sub = '') {
+function tileHTML(val, label, sub = '', tooltip = '') {
   const subHTML = sub ? `<div class="sub">${sub}</div>` : '';
-  return `<div class="tile"><div class="val">${val}</div><div class="label">${label}</div>${subHTML}</div>`;
+  const titleAttr = tooltip ? ` title="${escapeHTML(tooltip)}"` : '';
+  return `<div class="tile"${titleAttr}><div class="val">${val}</div><div class="label">${label}</div>${subHTML}</div>`;
 }
 
 /** Generates a labelled chip group. displayFn defaults to String(v). */
@@ -939,7 +940,7 @@ function buildSinceLastUsedTile(used) {
     }
   }
   
-  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub);
+  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub, 'Time elapsed since your last session — helps track your current gap');
 }
 
 function renderMetrics() {
@@ -966,10 +967,10 @@ function renderMetrics() {
   const resistSub = maxResistStreak > 1 ? `Longest Streak: ${maxResistStreak}` : '';
 
   $('metrics').innerHTML = [
-    tileHTML(used.length, 'Sessions', `${totalAmt} Total ${capitalize(profile.amountUnit)}`),
+    tileHTML(used.length, 'Sessions', `${totalAmt} Total ${capitalize(profile.amountUnit)}`, 'Number of times you used today and total amount'),
     buildSinceLastUsedTile(used),
-    tileHTML(resisted.length, 'Urges Resisted', resistSub),
-    tileHTML(allHabits, 'Healthy Actions', exerciseSub)
+    tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Number of urges you successfully resisted today'),
+    tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Number of healthy habits logged today (water, breaths, clean, outside, exercise)')
   ].join('');
 }
 
@@ -987,7 +988,7 @@ function getRatioTile(weekUsed, dayKeys) {
   
   // If no profile is set, return a placeholder tile
   if (!config) {
-    return tileHTML('—', 'Free Days', '');
+    return tileHTML('—', 'Free Days', '', 'Days without the primary substance (select a profile first)');
   }
   
   // Calculate bad ratio — for cannabis, mix counts as 0.5 since it's half THC
@@ -1014,7 +1015,7 @@ function getRatioTile(weekUsed, dayKeys) {
   }).length;
   const ratioSub = total > 0 ? `${ratio} ${config.ratioLabel}` : '';
 
-  return tileHTML(freeDays, config.freeLabel, ratioSub);
+  return tileHTML(freeDays, config.freeLabel, ratioSub, `Days this week without the primary substance tracked in your profile`);
 }
 
 function getWeekData(days) {
@@ -1057,9 +1058,9 @@ function renderProgress() {
 
   $('progress').innerHTML = [
     ratioTile,
-    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub),
-    tileHTML(gapStr, 'Longest Gap', gapSub),
-    tileHTML(`${exercisePerDay}m`, 'Exercise/Day', exerciseSub)
+    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average number of sessions per day over the past 7 days'),
+    tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest time between consecutive sessions this week'),
+    tileHTML(`${exercisePerDay}m`, 'Exercise/Day', exerciseSub, 'Average minutes of exercise per day over the past 7 days')
   ].join('');
 }
 
