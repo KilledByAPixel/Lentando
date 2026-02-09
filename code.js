@@ -460,18 +460,27 @@ function countSwapCompleted(resisted, habits) {
 }
 
 function getMaxGapHours(sessions) {
-  // Only filter pre-4am sessions when it's past 4am (to avoid overnight inflation).
-  // Before 4am, include all sessions so current gaps still count.
+  if (sessions.length === 0) return 0;
+  const sorted = [...sessions].sort((a, b) => a.ts - b.ts);
+  const gaps = [];
+
+  // Include gaps between consecutive sessions, but skip any gap that
+  // crosses the 4am boundary (overnight sleep gap, not a real achievement).
+  for (let i = 1; i < sorted.length; i++) {
+    const prevHour = new Date(sorted[i - 1].ts).getHours();
+    const currHour = new Date(sorted[i].ts).getHours();
+    if (prevHour < EARLY_HOUR && currHour >= EARLY_HOUR) continue;
+    gaps.push(sorted[i].ts - sorted[i - 1].ts);
+  }
+
+  // Include gap from last session to now (skip if it crosses 4am boundary)
+  const lastHour = new Date(sorted[sorted.length - 1].ts).getHours();
   const nowHour = new Date().getHours();
-  const relevant = nowHour >= EARLY_HOUR
-    ? sessions.filter(s => new Date(s.ts).getHours() >= EARLY_HOUR)
-    : sessions;
-  if (relevant.length === 0) return 0;
-  const sorted = [...relevant].sort((a, b) => a.ts - b.ts);
-  const gaps = sorted.slice(1).map((u, i) => u.ts - sorted[i].ts);
-  // Include gap from last session to now
-  gaps.push(Date.now() - sorted[sorted.length - 1].ts);
-  return Math.max(...gaps) / 3600000;
+  if (!(lastHour < EARLY_HOUR && nowHour >= EARLY_HOUR)) {
+    gaps.push(Date.now() - sorted[sorted.length - 1].ts);
+  }
+
+  return gaps.length > 0 ? Math.max(...gaps) / 3600000 : 0;
 }
 
 function getMilestoneWins(gapHours, milestones) {
@@ -590,22 +599,27 @@ const Wins = {
     addWin(hasExercise && hasWater, 'exercise-water-combo');
 
     // --- Timing-based wins ---
-    // Gap wins — before 4am include all sessions; after 4am filter pre-4am to avoid overnight inflation
-    const nowHour = new Date().getHours();
-    const gapUsed = nowHour >= EARLY_HOUR
-      ? profileUsed.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR)
-      : profileUsed;
-    if (gapUsed.length >= 1) {
+    // Gap wins — include all sessions but skip gaps that cross the 4am boundary (sleep gap)
+    if (profileUsed.length >= 1) {
       const maxGap = getMaxGapHours(profileUsed);
       const earned = getMilestoneWins(maxGap, GAP_MILESTONES);
       earned.forEach(h => addWin(true, `gap-${h}h`));
       
       // Gap longer than 7-day historical average (within-day gaps only)
-      if (gapUsed.length >= 2) {
+      if (profileUsed.length >= 2) {
         const avgGap = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
         if (avgGap > 0) {
-          const todayGaps = gapUsed.slice(1).map((u, i) => u.ts - gapUsed[i].ts);
-          addWin(Math.max(...todayGaps) > avgGap, 'gap-above-avg');
+          const sorted = [...profileUsed].sort((a, b) => a.ts - b.ts);
+          const todayGaps = [];
+          for (let i = 1; i < sorted.length; i++) {
+            const prevHour = new Date(sorted[i - 1].ts).getHours();
+            const currHour = new Date(sorted[i].ts).getHours();
+            if (prevHour < EARLY_HOUR && currHour >= EARLY_HOUR) continue;
+            todayGaps.push(sorted[i].ts - sorted[i - 1].ts);
+          }
+          if (todayGaps.length > 0) {
+            addWin(Math.max(...todayGaps) > avgGap, 'gap-above-avg');
+          }
         }
       }
     }
