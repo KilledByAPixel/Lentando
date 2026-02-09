@@ -2079,7 +2079,7 @@ async function deleteTodo(idx) {
 }
 
 async function clearTodos() {
-  if (!confirm('Clear all to-do items?')) return;
+  if (!confirm('Clear all plan items?')) return;
   saveTodos([]);
   renderTodos();
   if (window.FirebaseSync) {
