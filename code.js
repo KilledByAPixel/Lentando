@@ -687,17 +687,17 @@ const Wins = {
 
     // --- Streak wins ---
     const resistStreak = this._countStreak('resisted');
-    for (let i = 0; i < resistStreak - 1; i++) addWin(true, 'resist-streak');
+    addWin(resistStreak >= 2, 'resist-streak');
     
     const habitStreak = this._countStreak('habit');
-    for (let i = 0; i < habitStreak - 2; i++) addWin(true, 'habit-streak');
+    addWin(habitStreak >= 3, 'habit-streak');
 
     const taperDays = this._countTaper();
-    for (let i = 0; i < taperDays - 2; i++) addWin(true, 'taper');
+    addWin(taperDays >= 3, 'taper');
     
     // App usage streaks
     const appStreak = this._countAppUsageStreak();
-    for (let i = 0; i < appStreak - 1; i++) addWin(true, 'app-streak');
+    addWin(appStreak >= 2, 'app-streak');
     addWin(appStreak >= 7, 'week-streak');
     addWin(appStreak >= 30, 'month-streak');
     addWin(appStreak >= 365, 'year-streak');
