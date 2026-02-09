@@ -567,7 +567,6 @@ const Wins = {
 
     // --- Comparison wins ---
     if (yesterdayEvents && yesterdayEvents.length > 0) {
-      const yUsed = filterUsed(yesterdayEvents);
       const yProfile = filterProfileUsed(yesterdayEvents);
 
       addWin(profileUsed.length < yProfile.length, 'fewer-sessions');
@@ -1286,7 +1285,7 @@ function exportJSON() {
     lifetimeWins: winData.lifetimeWins,
     exportedAt: new Date().toISOString() 
   };
-  downloadFile(JSON.stringify(data, null, 2), 'habit-tracker-' + todayKey() + '.json', 'application/json');
+  downloadFile(JSON.stringify(data, null, 2), 'lentando-' + todayKey() + '.json', 'application/json');
 }
 
 function clearDatabase() {
@@ -1375,6 +1374,14 @@ function importJSON(inputEl) {
       // Import todos if present and local list is empty
       if (data.todos && Array.isArray(data.todos) && loadTodos().length === 0) {
         saveTodos(data.todos);
+      }
+
+      // Restore settings if no profile configured (e.g., after clear + reimport)
+      if (data.settings && data.settings.addictionProfile && !DB.loadSettings().addictionProfile) {
+        const settings = DB.loadSettings();
+        Object.assign(settings, data.settings);
+        DB._settings = settings;
+        DB.saveSettings();
       }
 
       const added = newEvents.length;

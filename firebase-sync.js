@@ -279,9 +279,11 @@ function checkAuthAndContinue() {
 }
 
 // Pull fresh data when app regains focus (e.g., switching back from another tab/app)
+let _lastFocusPull = 0;
 if (isConfigured) {
   window.addEventListener('focus', async () => {
-    if (currentUser) {
+    if (currentUser && Date.now() - _lastFocusPull > 30000) {
+      _lastFocusPull = Date.now();
       try {
         await pullFromCloud(currentUser.uid);
         if (typeof render === 'function') {
