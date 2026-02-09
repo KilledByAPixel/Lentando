@@ -233,7 +233,7 @@ function showToast(message, durationMs = 2000) {
 }
 
 function escapeHTML(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function timeOfDayMin(ts) {
@@ -751,7 +751,7 @@ function eventRowHTML(e, editable) {
           <button class="tl-act-btn" onclick="App.deleteEvent('${safeId}')" title="Delete">🗑️</button>
         </div>` : '';
 
-  return `<li class="timeline-item" data-id="${e.id}" ${editable ? '' : 'style="padding:4px 0"'}>
+  return `<li class="timeline-item" data-id="${safeId}" ${editable ? '' : 'style="padding:4px 0"'}>
     <span class="tl-time">${time}</span>
     <span class="tl-icon">${icon}</span>
     <div class="tl-body"><div class="tl-title">${escapeHTML(title)}</div><div class="tl-detail">${escapeHTML(detail)}</div></div>
@@ -1344,6 +1344,11 @@ function validateImportData(data) {
   if (validEvents.length === 0) {
     return { valid: false, error: '❌ No valid events found in file.' };
   }
+  // Sanitize IDs — regenerate any with characters outside safe set to prevent injection
+  const SAFE_ID = /^[a-z0-9-]+$/;
+  validEvents.forEach(e => {
+    if (typeof e.id !== 'string' || !SAFE_ID.test(e.id)) e.id = uid();
+  });
   return { valid: true, events: validEvents };
 }
 
@@ -1402,7 +1407,8 @@ function importJSON(inputEl) {
 
       // Import todos if present and local list is empty
       if (data.todos && Array.isArray(data.todos) && loadTodos().length === 0) {
-        saveTodos(data.todos);
+        const validTodos = data.todos.filter(t => t && typeof t.text === 'string' && t.text.trim());
+        if (validTodos.length > 0) saveTodos(validTodos);
       }
 
       // Restore settings if no profile configured (e.g., after clear + reimport)
@@ -1894,7 +1900,6 @@ function logHabit(habit, minutes) {
 function logWaterFromReminder() {
   logHabit('water');
   const btn = $('water-reminder-btn');
-  hapticFeedback();
   pulseEl(btn);
 }
 
