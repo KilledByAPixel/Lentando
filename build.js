@@ -45,9 +45,11 @@ const STATIC_FILES = [
     if (fs.existsSync(file)) {
       const original = fs.readFileSync(file, 'utf8');
       const originalKB = (Buffer.byteLength(original) / 1024).toFixed(1);
+      const isModule = file === 'firebase-sync.js';
       const result = await minify(original, {
         compress: { passes: 2 },
-        mangle: true
+        mangle: true,
+        module: isModule
       });
       fs.writeFileSync(path.join(BUILD_DIR, file), result.code);
       const minKB = (Buffer.byteLength(result.code) / 1024).toFixed(1);
