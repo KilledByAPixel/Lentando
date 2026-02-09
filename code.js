@@ -484,7 +484,9 @@ function getMaxGapHours(sessions) {
 }
 
 function getMilestoneWins(gapHours, milestones) {
-  return milestones.filter(h => gapHours >= h);
+  // Return only the highest milestone reached, not all of them
+  const reached = milestones.filter(h => gapHours >= h);
+  return reached.length > 0 ? [reached[reached.length - 1]] : [];
 }
 
 /** Average within-day gap (ms) across the given day keys. Uses filterFn to get sessions per day. */
