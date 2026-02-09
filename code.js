@@ -1908,7 +1908,13 @@ function logResisted() {
   $('exercise-chips').classList.add('hidden');
   clearTimeout(exerciseTimeout);
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
-  showCoaching();
+
+  // Only show coaching if resisted was already clicked within the past hour
+  const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  const todayResisted = filterByType(DB.forDate(todayKey()), 'resisted');
+  if (todayResisted.some(r => r.id !== evt.id && r.ts >= oneHourAgo)) {
+    showCoaching();
+  }
   
   const btn = $('btn-resisted');
   hapticFeedback();
