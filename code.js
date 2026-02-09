@@ -158,7 +158,6 @@ const WIN_DEFINITIONS = {
   'fewer-sessions': { label: 'Fewer sessions than yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
   'lower-amount': { label: 'Lower amount than yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'first-later': { label: 'First session later than yesterday', icon: '⏰', desc: 'Started your first session later than yesterday' },
-  'last-earlier': { label: 'Last session earlier than yesterday', icon: '🛏️', desc: 'Finished your last session earlier than yesterday' },
   'good-start': { label: 'Good Start', icon: '🌟', desc: 'Started your day with a positive action instead of using' },
   'resist-streak': { label: 'Resist Streak', icon: '🔥', desc: 'Resisted urges for multiple days in a row' },
   'habit-streak': { label: 'Habit Streak', icon: '🐢', desc: 'Logged healthy habits for consecutive days' },
@@ -743,11 +742,6 @@ const Wins = {
       
       if (todayDaytime.length > 0 && yesterdayDaytime.length > 0) {
         addWin(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
-      }
-      
-      // Last session earlier than yesterday — compare last use after 4am
-      if (todayDaytime.length > 0 && yesterdayDaytime.length > 0) {
-        addWin(timeOfDayMin(todayDaytime[todayDaytime.length - 1].ts) < timeOfDayMin(yesterdayDaytime[yesterdayDaytime.length - 1].ts), 'last-earlier');
       }
     }
     
