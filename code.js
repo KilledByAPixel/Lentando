@@ -896,13 +896,13 @@ function renderMetrics() {
 
   const exerciseMins = getHabits(events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
   const allHabits = sumHabitCounts(events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
-  const exerciseSub = exerciseMins > 0 ? `${exerciseMins}m exercise` : 'today';
+  const exerciseSub = exerciseMins > 0 ? `${exerciseMins}m exercise` : '';
 
   $('metrics').innerHTML = [
     tileHTML(used.length, 'Sessions', `${totalAmt} ${profile.amountUnit} total`),
     tileHTML(resisted.length, 'Urges Resisted'),
     buildSinceLastUsedTile(used),
-    tileHTML(allHabits, 'Good Habits', exerciseSub)
+    tileHTML(allHabits, 'Healthy Actions', exerciseSub)
   ].join('');
 }
 
