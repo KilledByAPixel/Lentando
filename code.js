@@ -81,7 +81,6 @@ const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 // Win calculation thresholds
 const GAP_MILESTONES = [1, 2, 4, 8, 12];
 const DAYTIME_START_HOUR = 6;
-const DAYTIME_END_HOUR = 20;
 const AFTERNOON_HOUR = 12;
 const MAX_STREAK_DAYS = 60;
 const LOW_DAY_THRESHOLD = 2;
@@ -431,11 +430,6 @@ function createHabitEvent(habit, minutes) {
 }
 
 // ========== WIN CALCULATION HELPERS ==========
-function isDaytime(ts) {
-  const h = new Date(ts).getHours();
-  return h >= DAYTIME_START_HOUR && h < DAYTIME_END_HOUR;
-}
-
 function countDelayedResists(resisted, used) {
   return resisted.filter(r => 
     !used.some(u => u.ts > r.ts && u.ts - r.ts <= FIFTEEN_MINUTES_MS)
@@ -460,9 +454,13 @@ function countUrgeSurfed(resisted, used) {
 }
 
 function countSwapCompleted(resisted, habits) {
-  return resisted.filter(r => 
-    habits.some(h => h.ts > r.ts && h.ts - r.ts <= FIFTEEN_MINUTES_MS)
-  ).length;
+  const FIVE_MINUTES_MS = 5 * 60 * 1000;
+  const sorted = [...resisted].sort((a, b) => a.ts - b.ts);
+  return sorted.filter((r, i) => {
+    // Skip if this resist is within 5 minutes of the previous resist (not first in cluster)
+    if (i > 0 && r.ts - sorted[i - 1].ts <= FIVE_MINUTES_MS) return false;
+    return habits.some(h => h.ts > r.ts && h.ts - r.ts <= FIFTEEN_MINUTES_MS);
+  }).length;
 }
 
 function getMaxGapHours(sessions) {
