@@ -1121,7 +1121,7 @@ function getRatioTile(weekUsed, dayKeys) {
   }).length;
   const ratioSub = totalAmount > 0 ? `${ratio} ${config.ratioLabel}` : '';
 
-  return tileHTML(freeDays, config.freeLabel, ratioSub, `Days without primary substance this week`);
+  return tileHTML(freeDays, config.freeLabel, ratioSub, `Days without primary substance and ratio this week`);
 }
 
 function getWeekData(days) {
