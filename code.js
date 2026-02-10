@@ -1673,7 +1673,23 @@ function renderGraphs() {
 
 // ========== TAB SWITCHING ==========
 function switchTab(tabName) {
-  hideUndo();
+  // When switching away, just visually hide the undo button (don't clear the event ID)
+  // When switching back to today during cooldown, restore it
+  if (tabName === 'today') {
+    const lastUsedTime = _lastActionTime['used'];
+    if (lastUsedTime && lastUndoEventId) {
+      const timeSinceUse = Date.now() - lastUsedTime;
+      if (timeSinceUse < COOLDOWN_MS) {
+        showUndo(lastUndoEventId);
+      } else {
+        hideUndo();
+      }
+    }
+  } else {
+    // Only remove the CSS class, preserve lastUndoEventId so we can restore on return
+    const row = $('used-row');
+    if (row) row.classList.remove('has-undo');
+  }
   hideUsedChips();
   hideResistedChips();
   $('exercise-chips').classList.add('hidden');
@@ -2299,6 +2315,9 @@ function undoLastUsed() {
   saveWinData(winData);
   
   calculateAndUpdateWins();
+  
+  // Clear the undo state immediately so it won't restore on tab switch
+  lastUndoEventId = null;
   
   // Delay hiding undo button until after animation completes
   setTimeout(() => {
