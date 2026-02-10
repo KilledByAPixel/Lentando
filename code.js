@@ -1406,8 +1406,8 @@ function renderWins() {
     
     unearnedWins.sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
     
-    const allWins = [...earnedWins, ...unearnedWins];
-    todayEl.innerHTML = allWins.map(w => winCardHTML(w, false)).join('');
+    // Today's badges: only show earned badges
+    todayEl.innerHTML = earnedWins.map(w => winCardHTML(w, false)).join('');
   }
 
   const totalEl = $('wins-total');
