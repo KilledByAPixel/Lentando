@@ -1955,7 +1955,7 @@ function openEditModal(eventId) {
       // Use the profile that owns this event's substance (not necessarily the current profile)
       const { key, profile } = getProfileForSubstance(evt.substance);
       const fields = [
-        `<label>Substance</label><div style="font-size:16px">${key[0].toUpperCase() + key.slice(1)}</div>`,
+        `<label>Tracking</label><div style="font-size:16px">${key[0].toUpperCase() + key.slice(1)}</div>`,
         chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v])
       ];
       if (profile.methods) {
