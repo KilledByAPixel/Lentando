@@ -592,11 +592,6 @@ function getAllGapHours(sessions) {
   return gaps;
 }
 
-function getMaxGapHours(sessions) {
-  const gaps = getAllGapHours(sessions);
-  return gaps.length > 0 ? Math.max(...gaps) : 0;
-}
-
 function getMilestoneWins(gapHours, milestones) {
   // Return only the highest milestone reached, not all of them
   const reached = milestones.filter(h => gapHours >= h);
@@ -1260,14 +1255,6 @@ function calculateAndUpdateWins() {
     winData.todayWins.forEach(w => {
       const current = lifetimeMap.get(w.id) || 0;
       lifetimeMap.set(w.id, current + w.count);
-    });
-  }
-  
-  // Save previous today's win counts to detect new increments
-  const prevTodayCountMap = new Map();
-  if (isSameDay && winData.todayWins) {
-    winData.todayWins.forEach(w => {
-      prevTodayCountMap.set(w.id, w.count || 1);
     });
   }
   
@@ -2642,7 +2629,7 @@ window.App = {
   toggleSound() {
     const settings = DB.loadSettings();
     settings.soundEnabled = !settings.soundEnabled;
-    DB.saveSettings(settings);
+    DB.saveSettings();
     setSoundButton(settings.soundEnabled);
   },
   toggleTheme() {

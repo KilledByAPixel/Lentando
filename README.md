@@ -38,7 +38,7 @@ Whether you're working toward complete abstinence, harm reduction, or just under
 ### 🔒 **Privacy-First**
 - **Works offline** — All data stored locally in your browser by default
 - **Optional cloud sync** — Sign in with Google or email to sync across devices
-- **No ads, no tracking** — Your data stays yours
+- **No ads, no data selling** — Your data stays yours
 
 ### 📱 **Modern & Accessible**
 - **PWA support** — Install to your home screen like a native app
