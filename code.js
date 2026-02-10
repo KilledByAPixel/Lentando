@@ -130,24 +130,32 @@ const HABIT_LABELS = {
 };
 
 // Win definitions - maps win IDs to their display properties
+// Order matters! sortOrder is auto-assigned based on position in this object
 const WIN_DEFINITIONS = {
+  'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing today — showing up is a win' },
   'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
   'resist': { label: 'Resisted', icon: '💪', desc: 'Resisted an urge' },
   'urge-surfed': { label: 'Urge Surfed (15m+)', icon: '🧘', desc: 'Logged an urge and didn\'t use for at least 15 minutes after' },
+  'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider — shows mindful decision-making' },
   'swap-completed': { label: 'Swap Completed', icon: '🛠️', desc: 'Logged an urge, then a healthy action within 15 minutes' },
-  'harm-reduction-vape': { label: 'Harm Reduction (vape)', icon: '🌡️', desc: 'Chose vape over smoke' },
-  'dose-half': { label: 'Low Dose', icon: '⚖️', desc: 'Used less than a full dose' },
+  'intensity-logged': { label: 'Intensity Logged', icon: '📊', desc: 'Tracked how strong the urge was — building self-awareness' },
+  'trigger-noted': { label: 'Trigger Identified', icon: '🔍', desc: 'Identified what triggered the urge — key to breaking patterns' },
+  'full-report': { label: 'Full Report', icon: '📋', desc: 'Logged both intensity and trigger — complete urge awareness' },
+  'tough-resist': { label: 'Tough Resist', icon: '🦁', desc: 'Resisted a strong urge (intensity 4+) — that takes real strength' },
   'mindful': { label: 'Mindful Session', icon: '🧠', desc: 'Logged the reason for using, showing mindful awareness' },
+  'dose-half': { label: 'Low Dose', icon: '⚖️', desc: 'Used less than a full dose' },
+  'harm-reduction-vape': { label: 'Harm Reduction (vape)', icon: '🌡️', desc: 'Chose vape over smoke' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
   'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
-  'hydrated': { label: 'Well Hydrated', icon: '🌊', desc: 'Drank water at least 5 times today' },
   'drank-water': { label: 'Drank Water', icon: '💧', desc: 'Logged water today' },
+  'hydrated': { label: 'Well Hydrated', icon: '🌊', desc: 'Drank water at least 5 times today' },
   'exercised': { label: 'Exercised', icon: '🏃', desc: 'Logged exercise today' },
   'breathwork': { label: 'Breathwork', icon: '🌬️', desc: 'Did breathing exercises today' },
   'cleaned': { label: 'Cleaned', icon: '🧹', desc: 'Cleaned or tidied something today' },
   'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside today' },
   'habit-stack': { label: 'Habit Stack', icon: '🥞', desc: 'Logged multiple different habit types in one day' },
+  'good-start': { label: 'Good Start', icon: '🌟', desc: 'Started your day with a positive action instead of using' },
   'gap-1h': { label: 'Gap Medal (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions' },
   'gap-2h': { label: 'Gap Win (2h+)', icon: '⏱️', desc: 'Maintained a gap of 2+ hours between sessions' },
   'gap-4h': { label: 'Gap Win (4h+)', icon: '⏱️', desc: 'Maintained a gap of 4+ hours between sessions' },
@@ -158,27 +166,25 @@ const WIN_DEFINITIONS = {
   'fewer-sessions': { label: 'Fewer sessions than yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
   'lower-amount': { label: 'Lower amount than yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'first-later': { label: 'First session later than yesterday', icon: '⏰', desc: 'Started your first session later than yesterday' },
-  'good-start': { label: 'Good Start', icon: '🌟', desc: 'Started your day with a positive action instead of using' },
   'resist-streak': { label: 'Resist Streak', icon: '🔥', desc: 'Resisted urges for multiple days in a row' },
   'habit-streak': { label: 'Habit Streak', icon: '🐢', desc: 'Logged healthy habits for consecutive days' },
   'taper': { label: 'Taper Win', icon: '📐', desc: 'Gradually reduced usage over consecutive days' },
   'app-streak': { label: 'App Streak', icon: '📱', desc: 'Used the app multiple days in a row' },
-  'week-streak': { label: 'Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
-  'month-streak': { label: 'Month Streak', icon: '🗓️', desc: 'Used the app every day for a month' },
-  'year-streak': { label: 'Year Streak', icon: '🎉', desc: 'Used the app every day for a year!' },
+  'week-streak': { label: 'App Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
+  'month-streak': { label: 'App Month Streak', icon: '🗓️', desc: 'Used the app every day for a month' },
+  'year-streak': { label: 'App Year Streak', icon: '🎉', desc: 'Used the app every day for a year!' },
   'tbreak-1d': { label: 'Break: 1 Day', icon: '🌱', desc: 'One full day with no use' },
   'tbreak-7d': { label: 'Break: 1 Week', icon: '🌿', desc: 'One week with no use' },
   'tbreak-14d': { label: 'Break: 2 Weeks', icon: '🍀', desc: 'Two weeks with no use' },
   'tbreak-21d': { label: 'Break: 3 Weeks', icon: '🌳', desc: 'Three weeks with no use' },
   'tbreak-30d': { label: 'Break: 1 Month', icon: '🏆', desc: 'One month with no use' },
   'tbreak-365d': { label: 'Break: 1 Year', icon: '👑', desc: 'One year with no use!' },
-  'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider — shows mindful decision-making' },
-  'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing today — showing up is a win' },
-  'intensity-logged': { label: 'Intensity Logged', icon: '📊', desc: 'Tracked how strong the urge was — building self-awareness' },
-  'trigger-noted': { label: 'Trigger Identified', icon: '🔍', desc: 'Identified what triggered the urge — key to breaking patterns' },
-  'full-report': { label: 'Full Report', icon: '📋', desc: 'Logged both intensity and trigger — complete urge awareness' },
-  'tough-resist': { label: 'Tough Resist', icon: '🦁', desc: 'Resisted a strong urge (intensity 4+) — that takes real strength' },
 };
+
+// Auto-assign sortOrder based on position in WIN_DEFINITIONS object
+Object.keys(WIN_DEFINITIONS).forEach((key, index) => {
+  WIN_DEFINITIONS[key].sortOrder = index;
+});
 
 function getWinDef(id) {
   return WIN_DEFINITIONS[id] || { label: 'Unknown Medal', icon: '❓', desc: '' };
@@ -1253,7 +1259,7 @@ function renderWins() {
       if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
       if (aIdx !== -1) return -1;
       if (bIdx !== -1) return 1;
-      return a.label.localeCompare(b.label);
+      return (WIN_DEFINITIONS[a.id]?.sortOrder || 999) - (WIN_DEFINITIONS[b.id]?.sortOrder || 999);
     });
     
     // Get unearned medals (all medals not in earned list)
@@ -1287,7 +1293,7 @@ function renderWins() {
       return true;
     });
     
-    unearnedWins.sort((a, b) => a.label.localeCompare(b.label));
+    unearnedWins.sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder || 999) - (WIN_DEFINITIONS[b.id]?.sortOrder || 999));
     
     const allWins = [...earnedWins, ...unearnedWins];
     todayEl.innerHTML = allWins.map(winCardHTML).join('');
@@ -1300,14 +1306,14 @@ function renderWins() {
   const earnedLifetime = winData.lifetimeWins
     .map(w => ({ ...w, ...getWinDef(w.id) }))
     .filter(w => WIN_DEFINITIONS[w.id])
-    .sort((a, b) => a.label.localeCompare(b.label));
+    .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder || 999) - (WIN_DEFINITIONS[b.id]?.sortOrder || 999));
   
   // Get unearned medals (show ALL for lifetime)
   const earnedLifetimeIds = new Set(earnedLifetime.map(w => w.id));
   const unearnedLifetime = Object.keys(WIN_DEFINITIONS)
     .filter(id => !earnedLifetimeIds.has(id))
     .map(id => ({ id, count: 0, ...getWinDef(id) }))
-    .sort((a, b) => a.label.localeCompare(b.label));
+    .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder || 999) - (WIN_DEFINITIONS[b.id]?.sortOrder || 999));
   
   const allLifetime = [...earnedLifetime, ...unearnedLifetime];
   totalEl.innerHTML = allLifetime.map(winCardHTML).join('');
