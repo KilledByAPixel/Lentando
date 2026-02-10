@@ -120,7 +120,7 @@ const HABIT_ICONS = { water: '💧', breaths: '🌬️', clean: '🧹', exercise
 const HABIT_LABELS = {
   water: 'Water',
   breaths: 'Breaths',
-  clean: 'Clean',
+  clean: 'Tidy',
   exercise: 'Exercise',
   outside: 'Outside'
 };
@@ -151,7 +151,7 @@ const WIN_DEFINITIONS = {
   'hydrated': { label: 'Well Hydrated', icon: '🌊', desc: 'Drank water at least 5 times today' },
   'exercised': { label: 'Exercised', icon: '🏃', desc: 'Logged exercise today' },
   'breathwork': { label: 'Breathwork', icon: '🌬️', desc: 'Did breathing exercises today' },
-  'cleaned': { label: 'Cleaned', icon: '🧹', desc: 'Cleaned or tidied something today' },
+  'cleaned': { label: 'Tidied', icon: '🧹', desc: 'Tidied up something today' },
   'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside today' },
   'habit-stack': { label: 'Habit Stack', icon: '🥞', desc: 'Logged multiple different habit types in one day' },
   'five-star-day': { label: 'Five Star Day', icon: '🌟', desc: 'Logged all 5 good habits today' },
