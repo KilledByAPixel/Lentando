@@ -909,13 +909,14 @@ const Wins = {
   },
   
   _countAppUsageStreak() {
+    const MAX_APP_STREAK = 366; // Must exceed 365 for year-streak badge
     const d = new Date();
-    for (let streak = 0; streak < MAX_STREAK_DAYS; streak++) {
+    for (let streak = 0; streak < MAX_APP_STREAK; streak++) {
       const dayEvents = DB.forDate(dateKey(d));
       if (dayEvents.length === 0) return streak;
       d.setDate(d.getDate() - 1);
     }
-    return MAX_STREAK_DAYS;
+    return MAX_APP_STREAK;
   },
   
   _countDaysSinceLastUse() {

@@ -545,9 +545,8 @@ window.FirebaseSync = {
     if (!currentUser) return alert('Sign in first');
     try {
       await pullFromCloud(currentUser.uid);
-      await pushToCloud(currentUser.uid);
       
-      // pullFromCloud already invalidated caches; just re-render
+      // pullFromCloud already merges and pushes; just re-render
       if (typeof render === 'function') {
         render();
       }
