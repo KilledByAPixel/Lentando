@@ -345,10 +345,14 @@ function formatDuration(ms) {
   if (ms < 0) return '—';
   const totalMin = Math.floor(ms / 60000);
   if (totalMin < 60) return totalMin + 'm';
-  const h = Math.floor(totalMin / 60);
-  if (h < 24) return h + 'h ' + (totalMin % 60) + 'm';
-  const d = Math.floor(h / 24);
-  return d + 'd ' + (h % 24) + 'h ' + (totalMin % 60) + 'm';
+  const totalHours = Math.floor(totalMin / 60);
+  if (totalHours < 24) return totalHours + 'h ' + (totalMin % 60) + 'm';
+  const totalDays = Math.floor(totalHours / 24);
+  if (totalDays < 365) return totalDays + 'd ' + (totalHours % 24) + 'h ' + (totalMin % 60) + 'm';
+  const years = Math.floor(totalDays / 365);
+  const days = totalDays % 365;
+  const hours = totalHours % 24;
+  return years + 'y ' + days + 'd ' + hours + 'h ' + (totalMin % 60) + 'm';
 }
 
 function getLastNDays(n, offset = 0) {
