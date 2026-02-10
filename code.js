@@ -799,18 +799,23 @@ const Wins = {
     }
 
     // Delayed Start — no use between 5am and noon (ignores late-night use before 5am)
-    const isPastNoon = new Date().getHours() >= AFTERNOON_HOUR;
+    // Awarded as soon as it's 5am, removed if use happens between 5am-noon
+    const currentHour = new Date().getHours();
+    const isPast5am = currentHour >= EARLY_HOUR;
     const noUseBeforeNoon = !profileUsed.some(u => {
       const h = new Date(u.ts).getHours();
       return h >= EARLY_HOUR && h < AFTERNOON_HOUR;
     });
-    addWin(isPastNoon && noUseBeforeNoon, 'held-off-afternoon');
+    addWin(isPast5am && noUseBeforeNoon, 'held-off-afternoon');
     
-    // Night Skip — stopped using before 8pm (only if there was use today)
-    if (profileUsed.length > 0) {
+    // Night Skip — stopped using before 8pm
+    // Awarded as soon as it's 8pm, removed if use happens after 8pm
+    const isPast8pm = currentHour >= 20;
+    if (isPast8pm) {
+      // Award if either: no use today, OR last use was before 8pm
       const lastUse = profileUsed[profileUsed.length - 1];
-      const lastUseHour = new Date(lastUse.ts).getHours();
-      addWin(lastUseHour < 20, 'night-skip');
+      const lastUseHour = lastUse ? new Date(lastUse.ts).getHours() : -1;
+      addWin(profileUsed.length === 0 || lastUseHour < 20, 'night-skip');
     }
     
     // Lighter Day — below 7-day average
