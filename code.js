@@ -163,7 +163,6 @@ const WIN_DEFINITIONS = {
   'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Longest gap exceeded your average (excludes overnight sleep)' },
   'held-off-afternoon': { label: 'Morning Skip', icon: '🌅', desc: 'No use between 6am and noon' },
   'night-skip': { label: 'Night Skip', icon: '🌙', desc: 'No use between midnight and 6am' },
-  'lighter-day': { label: 'Lighter Day', icon: '🎈', desc: 'Used below your 7-day average' },
   'later-first': { label: 'Later First Use', icon: '🕰️', desc: 'First session later than your 7-day average' },
   'lower-amount': { label: 'Less Than Yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'first-later': { label: 'Later Than Yesterday', icon: '⏰', desc: 'First session later than yesterday (after 6am)' },
@@ -815,16 +814,6 @@ const Wins = {
         return h >= 0 && h < EARLY_HOUR;
       });
       addWin(noUseOvernight, 'night-skip');
-    }
-    
-    // Lighter Day — below 7-day average
-    const last7Days = getLastNDays(7).filter(k => k !== todayKey());
-    if (last7Days.length > 0) {
-      const totalAmounts = last7Days.map(k => sumAmount(filterProfileUsed(DB.forDate(k))));
-      const avg7Day = totalAmounts.reduce((sum, amt) => sum + amt, 0) / totalAmounts.length;
-      if (profileUsed.length > 0 && profileAmt < avg7Day) {
-        addWin(true, 'lighter-day');
-      }
     }
     
     // Later First Use — first session later than 7-day average
