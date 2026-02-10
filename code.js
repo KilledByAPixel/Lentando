@@ -135,7 +135,6 @@ const WIN_DEFINITIONS = {
   'resist': { label: 'Resisted', icon: '💪', desc: 'Resisted an urge' },
   'urge-surfed': { label: 'Urge Surfed', icon: '🧘', desc: 'Logged an urge and didn\'t use for 15+ minutes' },
   'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider' },
-  'swap-completed': { label: 'Swap Completed', icon: '🛠️', desc: 'Logged an urge, then did a healthy action within 15 minutes' },
   'intensity-logged': { label: 'Intensity Logged', icon: '📊', desc: 'Tracked urge intensity' },
   'trigger-noted': { label: 'Trigger Identified', icon: '🔍', desc: 'Identified what triggered the urge' },
   'full-report': { label: 'Full Report', icon: '📋', desc: 'Logged both intensity and trigger' },
@@ -165,7 +164,6 @@ const WIN_DEFINITIONS = {
   'night-skip': { label: 'Night Skip', icon: '🌙', desc: 'No use between midnight and 6am' },
   'lighter-day': { label: 'Lighter Day', icon: '🎈', desc: 'Used below your 7-day average' },
   'later-first': { label: 'Later First Use', icon: '🕰️', desc: 'First session later than your 7-day average' },
-  'fewer-sessions': { label: 'Fewer Than Yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
   'lower-amount': { label: 'Less Than Yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'first-later': { label: 'Later Than Yesterday', icon: '⏰', desc: 'First session later than yesterday (after 6am)' },
   'resist-streak': { label: 'Resist Streak', icon: '🛡️', desc: 'Resisted urges for multiple days in a row' },
@@ -588,16 +586,6 @@ function countUrgeSurfed(resisted, used) {
   }).length;
 }
 
-function countSwapCompleted(resisted, habits) {
-  const FIVE_MINUTES_MS = 5 * 60 * 1000;
-  const sorted = [...resisted].sort((a, b) => a.ts - b.ts);
-  return sorted.filter((r, i) => {
-    // Skip if this resist is within 5 minutes of the previous resist (not first in cluster)
-    if (i > 0 && r.ts - sorted[i - 1].ts <= FIVE_MINUTES_MS) return false;
-    return habits.some(h => h.ts > r.ts && h.ts - r.ts <= FIFTEEN_MINUTES_MS);
-  }).length;
-}
-
 function getAllGapHours(sessions) {
   if (sessions.length === 0) return [];
   const sorted = [...sessions].sort((a, b) => a.ts - b.ts);
@@ -702,9 +690,6 @@ const Wins = {
 
     const urgeSurfedCount = countUrgeSurfed(resisted, used);
     for (let i = 0; i < urgeSurfedCount; i++) addWin(true, 'urge-surfed');
-
-    const swapCount = countSwapCompleted(resisted, habits);
-    for (let i = 0; i < swapCount; i++) addWin(true, 'swap-completed');
 
     // --- Resist awareness wins ---
     for (const r of resisted) {
@@ -849,7 +834,6 @@ const Wins = {
     if (yesterdayEvents && yesterdayEvents.length > 0) {
       const yProfile = filterProfileUsed(yesterdayEvents);
 
-      addWin(profileUsed.length < yProfile.length, 'fewer-sessions');
       addWin(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
       
       // First session later than yesterday — only awarded if you used today (compares first use after 6am)
