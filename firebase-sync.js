@@ -172,16 +172,10 @@ async function pullFromCloud(uid) {
 
   const cloud = snap.data();
 
-  // --- Merge events by ID (union of both, cloud wins on conflict) ---
-  const localEvents = JSON.parse(localStorage.getItem(STORAGE_KEYS.events) || '[]');
+  // --- Events: last write wins (cloud replaces local) ---
+  // Simple approach: cloud is the source of truth since it was the last device to push
   const cloudEvents = cloud.events || [];
-
-  const merged = new Map();
-  for (const e of localEvents) merged.set(e.id, e);
-  for (const e of cloudEvents) merged.set(e.id, e); // cloud overwrites conflicts
-  const mergedEvents = Array.from(merged.values()).sort((a, b) => a.ts - b.ts);
-
-  localStorage.setItem(STORAGE_KEYS.events, JSON.stringify(mergedEvents));
+  localStorage.setItem(STORAGE_KEYS.events, JSON.stringify(cloudEvents));
 
   // --- Merge wins (keep higher lifetime counts) ---
   if (cloud.wins && cloud.wins.lifetimeWins) {
@@ -221,7 +215,7 @@ async function pullFromCloud(uid) {
   // This ensures continueToApp() will read fresh data
   invalidateDBCaches();
 
-  console.log('[Sync] Pulled from cloud, merged', mergedEvents.length, 'events');
+  console.log('[Sync] Pulled from cloud,', cloudEvents.length, 'events');
 }
 
 // ========== AUTH STATE LISTENER ==========
