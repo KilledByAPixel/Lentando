@@ -2305,7 +2305,7 @@ function checkCooldown(actionKey) {
   if (last && (now - last) < COOLDOWN_MS) {
     const secsLeft = Math.ceil((COOLDOWN_MS - (now - last)) / 1000);
     playSound('cooldown');
-    showToast(`⏳ Wait ${secsLeft}s before logging again`);
+    showToast(`⏳ Wait ${secsLeft}s before logging the same event again`);
     return false;
   }
   _lastActionTime[actionKey] = now;
