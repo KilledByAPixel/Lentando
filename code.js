@@ -200,8 +200,41 @@ const DEFAULT_SETTINGS = {
   lastAmount: 1.0,
   showCoaching: true,
   lastActivityTimestamp: null,
-  graphDays: 7
+  graphDays: 7,
+  soundEnabled: true
 };
+
+// ========== SOUND SYSTEM ==========
+let zzfx = null;
+let SOUNDS = null;
+
+// Initialize sounds on startup
+async function initSounds() {
+  try {
+    const zzfxModule = await import('./zzfx.js');
+    zzfx = zzfxModule.zzfx;
+    
+    // Pre-build sound samples (params will be tuned later)
+    SOUNDS = {
+      used: [,,200,.02,.05,.1,,1,,,,,,,,.2],
+      resist: [,,400,.02,.1,.2,,2,5,,,,,,,,.3],
+      habit: [,,300,.01,.05,.15,,1.5,3,,,,,,,,.25],
+      exercise: [,,350,.02,.08,.18,,1.8,4,,,,,,,,.28],
+      undo: [,,150,.01,.05,.1,,.5,-2,,,,,,,,.15]
+    };
+  } catch (e) {
+    console.error('Failed to load sound system:', e);
+  }
+}
+
+function playSound(soundName) {
+  if (!zzfx || !SOUNDS || !DB.loadSettings().soundEnabled) return;
+  try {
+    zzfx(...SOUNDS[soundName]);
+  } catch (e) {
+    console.error('Failed to play sound:', soundName, e);
+  }
+}
 
 // ========== TINY HELPERS ==========
 const $ = id => document.getElementById(id);
@@ -2168,6 +2201,7 @@ function undoLastUsed() {
     hideUsedChips();
   }, 400);
   
+  playSound('undo');
   hapticFeedback();
   showToast('↩️ Undone');
   render();
@@ -2189,6 +2223,7 @@ function logUsed() {
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
   
   const btn = $('btn-used');
+  playSound('used');
   hapticFeedback();
   pulseEl(btn);
   
@@ -2217,6 +2252,7 @@ function logResisted() {
   }
   
   const btn = $('btn-resisted');
+  playSound('resist');
   hapticFeedback();
   pulseEl(btn);
   showToast('🛡️ Resisted!');
@@ -2230,6 +2266,7 @@ function logHabit(habit, minutes) {
   render();
   hideUndo();
   
+  playSound('habit');
   hapticFeedback();
   const label = HABIT_LABELS[habit] || habit;
   const icon = HABIT_ICONS[habit] || '';
@@ -2277,6 +2314,7 @@ function bindEvents() {
     const habit = btn.dataset.habit;
     
     if (habit === 'exercise') {
+      playSound('exercise');
       hapticFeedback();
       pulseEl(btn);
       const picker = $('exercise-chips');
@@ -2784,6 +2822,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Don't preload events or settings - let them load lazily to avoid caching stale data before Firebase sync
   
   applyTheme(localStorage.getItem(STORAGE_THEME) || 'dark');
+  
+  // Initialize sound system
+  initSounds();
   
   // Register service worker for PWA support
   if ('serviceWorker' in navigator) {
