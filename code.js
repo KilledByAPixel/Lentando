@@ -1666,6 +1666,7 @@ function changeAddiction() {
   settings.addictionProfile = null;
   DB._settings = settings;
   DB.saveSettings();
+  switchTab('today');
   showOnboarding();
 }
 
