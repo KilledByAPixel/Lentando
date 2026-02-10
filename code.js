@@ -1235,9 +1235,10 @@ function renderProgress() {
   ].join('');
 }
 
-function winCardHTML(w) {
+function winCardHTML(w, showCount = true) {
   const unearnedClass = w.count === 0 ? ' unearned' : '';
-  return `<li class="win-item${unearnedClass}" title="${escapeHTML(w.desc || '')}"><span class="win-badge">${w.count}</span><div class="win-icon">${w.icon}</div><div class="win-label">${escapeHTML(w.label)}</div></li>`;
+  const badgeHTML = showCount ? `<span class="win-badge">${w.count}</span>` : '';
+  return `<li class="win-item${unearnedClass}" title="${escapeHTML(w.desc || '')}\">${badgeHTML}<div class="win-icon">${w.icon}</div><div class="win-label">${escapeHTML(w.label)}</div></li>`;
 }
 
 function calculateAndUpdateWins() {
@@ -1266,15 +1267,11 @@ function calculateAndUpdateWins() {
   
   // Add undo wins (tracked separately since undos aren't events)
   const undoCount = isSameDay ? (winData.todayUndoCount || 0) : 0;
-  for (let i = 0; i < undoCount; i++) freshTodayIds.push('second-thought');
+  if (undoCount > 0) freshTodayIds.push('second-thought');
   
-  // Aggregate today's wins into {id, count} pairs
-  const todayCountMap = new Map();
-  freshTodayIds.forEach(id => {
-    todayCountMap.set(id, (todayCountMap.get(id) || 0) + 1);
-  });
-  const freshTodayWins = Array.from(todayCountMap.entries())
-    .map(([id, count]) => ({ id, count }));
+  // Today's wins: max 1 per badge type (deduplicate)
+  const uniqueTodayIds = [...new Set(freshTodayIds)];
+  const freshTodayWins = uniqueTodayIds.map(id => ({ id, count: 1 }));
   
   // Step 3: Convert lifetime map to array (today's wins NOT included)
   const updatedLifetimeWins = Array.from(lifetimeMap.entries())
@@ -1353,7 +1350,7 @@ function renderWins() {
     unearnedWins.sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
     
     const allWins = [...earnedWins, ...unearnedWins];
-    todayEl.innerHTML = allWins.map(winCardHTML).join('');
+    todayEl.innerHTML = allWins.map(w => winCardHTML(w, false)).join('');
   }
 
   const totalEl = $('wins-total');
@@ -1373,7 +1370,7 @@ function renderWins() {
     .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
   
   const allLifetime = [...earnedLifetime, ...unearnedLifetime];
-  totalEl.innerHTML = allLifetime.map(winCardHTML).join('');
+  totalEl.innerHTML = allLifetime.map(w => winCardHTML(w, true)).join('');
 }
 
 function hasRecentWater() {
