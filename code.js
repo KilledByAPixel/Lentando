@@ -218,10 +218,10 @@ async function initSounds() {
     
     // Pre-build sound samples using ZZFXSound class (params will be tuned later)
     SOUNDS = {
-      used: new ZZFXSound([,,224,.02,.02,.08,1,1.7,-13.9,,,,,,6.7]),
-      resist: new ZZFXSound([,,539,,.04,.29,1,1.92,,,567,.02,.02,,,,.04]),
-      habit: new ZZFXSound([1.99,,330,.01,.04,.04,,.8,,-2,27,.06,,,,,.1,.52,.03,.1,-1662]),
-      exercise: new ZZFXSound([,,1004,,,.06,,27,13,,-157,.29]),
+      used: new ZZFXSound([,,224,.02,.02,.08,1,1.7,-14,,,,,,6.7]),
+      resist: new ZZFXSound([,,422,.08,.26,.19,1,1.1,,-144,18,.07,.1,,,,,.84,.21,.5,520]),
+      habit: new ZZFXSound([2,,330,.01,.04,.04,,.8,,-2,27,.06,,,,,.1,.5,.03,.1,-1600]),
+      exercise: new ZZFXSound([,,990,,,.05,,9,20]),
       undo: new ZZFXSound([,,150,.05,,.05,,1.3,,,,,,3])
     };
   } catch (e) {
