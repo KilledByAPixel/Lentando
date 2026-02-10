@@ -69,7 +69,7 @@ function getProfile() {
 // User input options
 const REASONS = ['habit', 'stress', 'break', 'social', 'sleep', 'pain'];
 const INTENSITIES = [1, 2, 3, 4, 5];
-const EXERCISE_DURATIONS = [5, 10, 15, 20, 30, 45, 60];
+const EXERCISE_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60];
 const OPTIONAL_FIELDS = new Set(['reason', 'trigger']);
 
 // Timeouts and durations
@@ -205,7 +205,6 @@ const DEFAULT_SETTINGS = {
 };
 
 // ========== SOUND SYSTEM ==========
-let ZZFX = null;
 let ZZFXSound = null;
 let SOUNDS = null;
 
@@ -213,7 +212,6 @@ let SOUNDS = null;
 async function initSounds() {
   try {
     const zzfxModule = await import('./zzfx.js');
-    ZZFX = zzfxModule.ZZFX;
     ZZFXSound = zzfxModule.ZZFXSound;
     
     // Pre-build sound samples using ZZFXSound class (params will be tuned later)
@@ -290,6 +288,29 @@ function escapeHTML(str) {
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/** Clear all app localStorage keys and invalidate DB caches */
+function clearAllStorage() {
+  localStorage.removeItem(STORAGE_EVENTS);
+  localStorage.removeItem(STORAGE_SETTINGS);
+  localStorage.removeItem(STORAGE_TODOS);
+  localStorage.removeItem(STORAGE_THEME);
+  localStorage.removeItem(STORAGE_WINS);
+  localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
+  DB._events = null;
+  DB._settings = null;
+  DB._dateIndex = null;
+}
+
+/** Validate password strength. Returns error message or null if valid. */
+function validatePassword(password) {
+  if (password.length < 8) return 'Password must be at least 8 characters';
+  if (!/[a-z]/.test(password)) return 'Password must contain a lowercase letter';
+  if (!/[A-Z]/.test(password)) return 'Password must contain an uppercase letter';
+  if (!/[0-9]/.test(password)) return 'Password must contain a number';
+  if (!/[^a-zA-Z0-9]/.test(password)) return 'Password must contain a special character';
+  return null;
 }
 
 function timeOfDayMin(ts) {
@@ -501,6 +522,10 @@ const DB = {
 
 // Expose DB globally so firebase-sync.js can invalidate caches after cloud sync
 window.DB = DB;
+
+// Expose shared helpers for firebase-sync.js (ES module can't access code.js scope directly)
+window.clearAllStorage = clearAllStorage;
+window.validatePassword = validatePassword;
 
 // ========== EVENT QUERY HELPERS ==========
 function filterByType(events, type) { return events.filter(e => e.type === type); }
@@ -1651,12 +1676,7 @@ async function clearDatabase() {
     ? '⚠️ This will permanently delete ALL local AND cloud data and reset settings. This cannot be undone.\n\nAre you sure?'
     : '⚠️ This will permanently delete ALL events and reset settings. This cannot be undone.\n\nAre you sure?';
   if (!confirm(msg)) return;
-  localStorage.removeItem(STORAGE_EVENTS);
-  localStorage.removeItem(STORAGE_SETTINGS);
-  localStorage.removeItem(STORAGE_TODOS);
-  localStorage.removeItem(STORAGE_THEME);
-  localStorage.removeItem(STORAGE_WINS);
-  localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
+  clearAllStorage();
   // Push cleared state to cloud so data doesn't restore on reload
   if (window.FirebaseSync) {
     try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
@@ -1965,7 +1985,7 @@ function openEditModal(eventId) {
     habit: () => {
       const fields = [`<label>Habit</label><div style="font-size:16px">${HABIT_LABELS[evt.habit] || evt.habit}</div>`];
       if (evt.habit === 'exercise') {
-        fields.push(chipGroupHTML('Minutes', 'minutes', EXERCISE_DURATIONS, evt.minutes));
+        fields.push(chipGroupHTML('Minutes', 'minutes', EXERCISE_DURATIONS, evt.minutes ?? 0));
       }
       return fields;
     }
@@ -2672,12 +2692,7 @@ window.App = {
       if (window.FirebaseSync) {
         await FirebaseSync.deleteAccount();
       }
-      localStorage.removeItem(STORAGE_EVENTS);
-      localStorage.removeItem(STORAGE_SETTINGS);
-      localStorage.removeItem(STORAGE_TODOS);
-      localStorage.removeItem(STORAGE_THEME);
-      localStorage.removeItem(STORAGE_WINS);
-      localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
+      clearAllStorage();
       location.reload();
     } catch (err) {
       alert('Failed to delete account: ' + err.message);
@@ -2687,11 +2702,8 @@ window.App = {
     const email = $('login-email')?.value;
     const password = $('login-password')?.value;
     if (!email || !password) return alert('Enter email and password');
-    if (password.length < 8) return alert('Password must be at least 8 characters');
-    if (!/[a-z]/.test(password)) return alert('Password must contain a lowercase letter');
-    if (!/[A-Z]/.test(password)) return alert('Password must contain an uppercase letter');
-    if (!/[0-9]/.test(password)) return alert('Password must contain a number');
-    if (!/[^a-zA-Z0-9]/.test(password)) return alert('Password must contain a special character');
+    const pwError = validatePassword(password);
+    if (pwError) return alert(pwError);
     try {
       if (window.FirebaseSync) {
         await FirebaseSync.signupWithEmail(email, password);

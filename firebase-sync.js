@@ -476,11 +476,8 @@ window.FirebaseSync = {
     const email = document.getElementById('auth-email')?.value;
     const password = document.getElementById('auth-password')?.value;
     if (!email || !password) return alert('Enter email and password');
-    if (password.length < 8) return alert('Password must be at least 8 characters');
-    if (!/[a-z]/.test(password)) return alert('Password must contain a lowercase letter');
-    if (!/[A-Z]/.test(password)) return alert('Password must contain an uppercase letter');
-    if (!/[0-9]/.test(password)) return alert('Password must contain a number');
-    if (!/[^a-zA-Z0-9]/.test(password)) return alert('Password must contain a special character');
+    const pwError = window.validatePassword?.(password);
+    if (pwError) return alert(pwError);
     try {
       await signupWithEmail(email, password);
       showWelcomeMessage(email);
@@ -498,13 +495,9 @@ window.FirebaseSync = {
     currentUser = null;
     
     // Clear all local data on sign out
-    localStorage.removeItem(STORAGE_KEYS.events);
-    localStorage.removeItem(STORAGE_KEYS.settings);
-    localStorage.removeItem(STORAGE_KEYS.wins);
-    localStorage.removeItem(STORAGE_KEYS.todos);
-    localStorage.removeItem(STORAGE_KEYS.loginSkipped);
-    localStorage.removeItem('ht_theme');
-    invalidateDBCaches();
+    if (window.clearAllStorage) {
+      window.clearAllStorage();
+    }
     
     // Reset theme to default
     document.documentElement.setAttribute('data-theme', 'dark');
