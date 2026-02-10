@@ -2966,12 +2966,53 @@ function generateTestWins() {
   console.log('Sample lifetime wins:', verify.lifetimeWins.slice(0, 5));
 }
 
+// DEBUG: Generate a use event X days ago
+function debugAddUseEvent(daysAgo) {
+  const settings = DB.loadSettings();
+  const profile = getProfile();
+  
+  // Parse input
+  const days = parseInt(daysAgo);
+  if (isNaN(days) || days < 0) {
+    showToast('❌ Please enter a valid number of days');
+    return;
+  }
+  
+  // Calculate timestamp
+  const now = Date.now();
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const targetTimestamp = now - (days * msPerDay);
+  
+  // Create event with current settings
+  const substance = settings.lastSubstance || profile.substances[0];
+  const method = profile.methods ? (settings.lastMethod || profile.methods[0]) : null;
+  const amount = settings.lastAmount || profile.amounts[0];
+  
+  const evt = {
+    id: uid(),
+    type: 'used',
+    ts: targetTimestamp,
+    substance,
+    method,
+    amount
+  };
+  
+  DB.addEvent(evt);
+  stampActivity();
+  calculateAndUpdateWins();
+  render();
+  
+  console.log(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago:`, evt);
+  showToast(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago`);
+}
+
 // Dev tools — uncomment to expose in browser console:
 // window.generateAllTestData = generateAllTestData;
 // window.generateTestData = generateTestData;
 // window.generateTestHabits = generateTestHabits;
 // window.generateTestResists = generateTestResists;
 // window.generateTestWins = generateTestWins;
+// window.debugAddUseEvent = debugAddUseEvent;
 
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
