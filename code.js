@@ -801,12 +801,12 @@ const Wins = {
     // Delayed Start — no use between 6am and noon (ignores late-night use before 6am)
     // Awarded as soon as it's 6am, removed if use happens between 6am-noon
     const currentHour = new Date().getHours();
-    const isPast5am = currentHour >= EARLY_HOUR;
+    const isPast6am = currentHour >= EARLY_HOUR;
     const noUseBeforeNoon = !profileUsed.some(u => {
       const h = new Date(u.ts).getHours();
       return h >= EARLY_HOUR && h < AFTERNOON_HOUR;
     });
-    addWin(isPast5am && noUseBeforeNoon, 'held-off-afternoon');
+    addWin(isPast6am && noUseBeforeNoon, 'held-off-afternoon');
     
     // Night Skip — stopped using before 8pm
     // Awarded as soon as it's 8pm, removed if use happens after 8pm
@@ -852,7 +852,7 @@ const Wins = {
       addWin(profileUsed.length < yProfile.length, 'fewer-sessions');
       addWin(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
       
-      // First session later than yesterday — only awarded if you used today (compares first use after 5am)
+      // First session later than yesterday — only awarded if you used today (compares first use after 6am)
       const todayDaytime = profileUsed.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
       const yesterdayDaytime = yProfile.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
       
@@ -1274,7 +1274,7 @@ function renderProgress() {
     sessionsSub = `Last Week: ${prevDailyAvg}`;
   }
 
-  // Longest gap within a single day (5am to 5am boundaries)
+  // Longest gap within a single day (6am to 6am boundaries)
   let maxGapMs = 0;
   let totalGapMs = 0;
   let gapCount = 0;
@@ -1307,7 +1307,7 @@ function renderProgress() {
   $('progress').innerHTML = [
     ratioTile,
     tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average sessions per day for this week and previous week'),
-    tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 5am)'),
+    tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 6am)'),
     tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day this week')
   ].join('');
 }
