@@ -172,10 +172,19 @@ async function pullFromCloud(uid) {
 
   const cloud = snap.data();
 
-  // --- Events: last write wins (cloud replaces local) ---
-  // Simple approach: cloud is the source of truth since it was the last device to push
+  // --- Events: merge by ID (union of local + cloud, deduplicated) ---
   const cloudEvents = cloud.events || [];
-  localStorage.setItem(STORAGE_KEYS.events, JSON.stringify(cloudEvents));
+  const localEvents = JSON.parse(localStorage.getItem(STORAGE_KEYS.events) || '[]');
+  const seenIds = new Set();
+  const merged = [];
+  for (const e of [...cloudEvents, ...localEvents]) {
+    if (e.id && !seenIds.has(e.id)) {
+      seenIds.add(e.id);
+      merged.push(e);
+    }
+  }
+  merged.sort((a, b) => a.ts - b.ts);
+  localStorage.setItem(STORAGE_KEYS.events, JSON.stringify(merged));
 
   // --- Merge wins (keep higher lifetime counts) ---
   if (cloud.wins && cloud.wins.lifetimeWins) {
@@ -206,16 +215,29 @@ async function pullFromCloud(uid) {
     localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(mergedSettings));
   }
 
-  // --- Todos: cloud wins ---
+  // --- Todos: merge by text (union, deduplicated) ---
   if (cloud.todos) {
-    localStorage.setItem(STORAGE_KEYS.todos, JSON.stringify(cloud.todos));
+    const localTodos = JSON.parse(localStorage.getItem(STORAGE_KEYS.todos) || '[]');
+    const seenTexts = new Set();
+    const mergedTodos = [];
+    for (const t of [...cloud.todos, ...localTodos]) {
+      const key = t && t.text;
+      if (key && !seenTexts.has(key)) {
+        seenTexts.add(key);
+        mergedTodos.push(t);
+      }
+    }
+    localStorage.setItem(STORAGE_KEYS.todos, JSON.stringify(mergedTodos));
   }
 
   // Invalidate DB caches immediately after localStorage is updated
   // This ensures continueToApp() will read fresh data
   invalidateDBCaches();
 
-  console.log('[Sync] Pulled from cloud,', cloudEvents.length, 'events');
+  // Push merged state back so cloud reflects the union
+  await pushToCloud(uid);
+
+  console.log('[Sync] Pulled & merged,', merged.length, 'events');
 }
 
 // ========== AUTH STATE LISTENER ==========
