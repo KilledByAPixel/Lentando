@@ -16,7 +16,6 @@ const DATA_VERSION = 1;
 
 const ADDICTION_PROFILES = {
   cannabis: {
-    name: 'Cannabis',
     sessionLabel: 'Use',
     substanceLabel: 'Substance',
     methodLabel: 'Method',
@@ -28,7 +27,6 @@ const ADDICTION_PROFILES = {
     icons: { thc: '🌿', cbd: '🌿', mix: '🌿' }
   },
   alcohol: {
-    name: 'Alcohol',
     sessionLabel: 'Drink',
     substanceLabel: 'Type',
     substances: ['beer', 'wine', 'liquor'],
@@ -38,7 +36,6 @@ const ADDICTION_PROFILES = {
     icons: { beer: '🍺', wine: '🍷', liquor: '🥃' }
   },
   smoking: {
-    name: 'Smoking',
     sessionLabel: 'Smoke',
     substanceLabel: 'Type',
     substances: ['cigarette', 'vape', 'other'],
@@ -48,7 +45,6 @@ const ADDICTION_PROFILES = {
     icons: { cigarette: '🚬', vape: '💨', other: '⚡' }
   },
   other: {
-    name: 'Other',
     sessionLabel: 'Use',
     substanceLabel: 'Type',
     methodLabel: 'Method',
@@ -973,22 +969,19 @@ const EVENT_DETAIL_BUILDERS = {
 };
 
 /** Renders a single event as a timeline row. */
-function eventRowHTML(e, editable) {
+function eventRowHTML(e) {
   const time = formatTime(e.ts);
   const { icon, title, detail } = EVENT_DETAIL_BUILDERS[e.type]?.(e) || { icon: '', title: '', detail: '' };
   const safeId = escapeHTML(e.id);
 
-  const actions = editable
-    ? `<div class="tl-actions">
-          <button class="tl-act-btn" onclick="App.editEvent('${safeId}')" title="Edit">✏️</button>
-          <button class="tl-act-btn" onclick="App.deleteEvent('${safeId}')" title="Delete">🗑️</button>
-        </div>` : '';
-
-  return `<li class="timeline-item" data-id="${safeId}" ${editable ? '' : 'style="padding:4px 0"'}>
+  return `<li class="timeline-item" data-id="${safeId}">
     <span class="tl-time">${time}</span>
     <span class="tl-icon">${icon}</span>
     <div class="tl-body"><div class="tl-title">${escapeHTML(title)}</div><div class="tl-detail">${escapeHTML(detail)}</div></div>
-    ${actions}
+    <div class="tl-actions">
+          <button class="tl-act-btn" onclick="App.editEvent('${safeId}')" title="Edit">✏️</button>
+          <button class="tl-act-btn" onclick="App.deleteEvent('${safeId}')" title="Delete">🗑️</button>
+        </div>
   </li>`;
 }
 
@@ -1193,8 +1186,7 @@ function getRatioTile(weekUsed, dayKeys) {
 
 function getWeekData(days) {
   const events = days.flatMap(k => DB.forDate(k));
-  const used = filterUsed(events);
-  return { events, used, profileUsed: filterProfileUsed(events) };
+  return { events, profileUsed: filterProfileUsed(events) };
 }
 
 function renderProgress() {
@@ -1457,7 +1449,7 @@ function renderDayHistory() {
   const start = Math.max(0, len - historyShowCount);
   let html = summary;
   for (let i = len - 1; i >= start; i--) {
-    html += eventRowHTML(events[i], true);
+    html += eventRowHTML(events[i]);
   }
   
   // Show "Load More" button if there are more events
