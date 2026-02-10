@@ -162,6 +162,8 @@ const WIN_DEFINITIONS = {
   'gap-12h': { label: 'Gap Win (12h+)', icon: '🕛', desc: 'Maintained a gap of 12+ hours between sessions (excludes overnight sleep — gaps crossing 6am don\'t count)' },
   'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Longest gap exceeded your average (excludes overnight sleep)' },
   'held-off-afternoon': { label: 'Morning Skip', icon: '🌅', desc: 'No use between 6am and noon' },
+  'day-skip': { label: 'Day Skip', icon: '☀️', desc: 'No use between noon and 6pm' },
+  'evening-skip': { label: 'Evening Skip', icon: '🌆', desc: 'No use between 6pm and midnight' },
   'night-skip': { label: 'Night Skip', icon: '🌙', desc: 'No use between midnight and 6am' },
   'later-first': { label: 'Later First Use', icon: '🕰️', desc: 'First session later than your 7-day average' },
   'lower-amount': { label: 'Less Than Yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
@@ -806,6 +808,32 @@ const Wins = {
     });
     addWin(isPast6am && noUseBeforeNoon, 'held-off-afternoon');
     
+    // Day Skip — no use between noon and 6pm
+    // Awarded as soon as it's 6pm, removed if use happens between noon and 6pm
+    const isPast6pm = currentHour >= 18;
+    if (isPast6pm) {
+      const noUseAfternoon = !profileUsed.some(u => {
+        const h = new Date(u.ts).getHours();
+        return h >= 12 && h < 18;
+      });
+      addWin(noUseAfternoon, 'day-skip');
+    }
+    
+    // Evening Skip — no use between 6pm and midnight
+    // Awarded as soon as it's midnight (or later), removed if use happens between 6pm and midnight
+    const isPastMidnight = currentHour >= 0; // Always true, but check for evening window
+    // Award if current time is past 6pm OR it's after midnight (new day)
+    if (currentHour >= 18 || currentHour < EARLY_HOUR) {
+      const noUseEvening = !profileUsed.some(u => {
+        const h = new Date(u.ts).getHours();
+        return h >= 18 && h < 24;
+      });
+      // Only award if we're past the evening window (after midnight or still in early morning before 6am)
+      if (currentHour < EARLY_HOUR) {
+        addWin(noUseEvening, 'evening-skip');
+      }
+    }
+    
     // Night Skip — no use between midnight and 6am
     // Awarded as soon as it's 6am, removed if use happens between midnight and 6am
     if (isPast6am) {
@@ -848,10 +876,13 @@ const Wins = {
       }
     }
     
-    // Good Start win - logged habit or resist before first use
-    const firstEvent = todayEvents[0];
-    if (firstEvent && (firstEvent.type === 'habit' || firstEvent.type === 'resisted')) {
-      addWin(true, 'good-start');
+    // Good Start win - first event after 6am is a habit or resist (not use)
+    if (isPast6am) {
+      const daytimeEvents = todayEvents.filter(e => new Date(e.ts).getHours() >= EARLY_HOUR);
+      const firstDaytimeEvent = daytimeEvents[0];
+      if (firstDaytimeEvent && (firstDaytimeEvent.type === 'habit' || firstDaytimeEvent.type === 'resisted')) {
+        addWin(true, 'good-start');
+      }
     }
 
     // --- Streak wins ---
