@@ -73,6 +73,13 @@ export const ZZFX =
     // play an array of samples
     playSamples: function(sampleChannels, volumeScale=1, rate=1, pan=0, loop=false)
     {
+        if (this.audioContext.state !== 'running')
+        {
+            // fix stalled audio, this sound won't be able to play yet
+            this.audioContext.resume();
+            return;
+        }
+        
         // create buffer and source
         const channelCount = sampleChannels.length;
         const sampleLength = sampleChannels[0].length;
