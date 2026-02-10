@@ -1198,16 +1198,26 @@ function renderProgress() {
     sessionsSub = `Last Week: ${prevDailyAvg}`;
   }
 
-  // Longest gap between consecutive sessions this week (cross-day OK, excludes gap-to-now)
-  const weekSessions = [...thisWeek.profileUsed].sort((a, b) => a.ts - b.ts);
+  // Longest gap within a single day (4am to 4am boundaries)
   let maxGapMs = 0;
-  for (let i = 1; i < weekSessions.length; i++) {
-    const gap = weekSessions[i].ts - weekSessions[i - 1].ts;
-    if (gap > maxGapMs) maxGapMs = gap;
+  let totalGapMs = 0;
+  let gapCount = 0;
+  
+  for (const dayKey of last7Days) {
+    const dayEvents = filterProfileUsed(DB.forDate(dayKey)).sort((a, b) => a.ts - b.ts);
+    if (dayEvents.length < 2) continue; // Need at least 2 events to have a gap
+    
+    for (let i = 1; i < dayEvents.length; i++) {
+      const gap = dayEvents[i].ts - dayEvents[i - 1].ts;
+      totalGapMs += gap;
+      gapCount++;
+      if (gap > maxGapMs) maxGapMs = gap;
+    }
   }
+  
   const gapStr = maxGapMs > 0 ? formatDuration(maxGapMs) : '—';
-  const avgGapMs = avgWithinDayGapMs(last7Days, filterProfileUsed);
-  const gapSub = avgGapMs >= 60000 ? `Average: ${formatDuration(avgGapMs)}` : '';
+  const gapSub = gapCount > 0 ? `Average: ${formatDuration(totalGapMs / gapCount)}` : '';
+
 
   const ratioTile = getRatioTile(thisWeek.profileUsed, last7Days);
 
