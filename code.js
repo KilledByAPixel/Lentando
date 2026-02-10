@@ -221,7 +221,8 @@ async function initSounds() {
       exercise: new ZZFXSound([,,990,,,.05,,9,20]),
       undo: new ZZFXSound([,,150,.05,,.05,,1.3,,,,,,3]),
       cooldown: new ZZFXSound([2,0,260,,.2,.2,,,,,,,,,,,.12,.3,.1]),
-      badge: new ZZFXSound([3,.02,988,,,.4,,33,,,331,.1,,,,,,,,,-340])
+      badge: new ZZFXSound([3,.02,988,,,.4,,33,,,331,.1,,,,,,,,,-340]),
+      tab: new ZZFXSound([1.5,,300,,,.01,,,29,,,,,,,,,.5])
     };
   } catch (e) {
     console.error('Failed to load sound system:', e);
@@ -1717,6 +1718,7 @@ function switchTab(tabName) {
   hideResistedChips();
   $('exercise-chips').classList.add('hidden');
   clearTimeout(exerciseTimeout);
+  playSound('tab');
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabName));
   
