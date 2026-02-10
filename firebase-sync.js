@@ -412,6 +412,22 @@ function debouncedSync() {
   }, 3000); // Wait 3 seconds after last change before syncing
 }
 
+/** Flush any pending sync immediately (best-effort on tab hide / close) */
+function flushPendingSync() {
+  if (!_syncTimer || !currentUser) return;
+  clearTimeout(_syncTimer);
+  _syncTimer = null;
+  pushToCloud(currentUser.uid).catch(err => console.error('[Sync] Flush on close failed:', err));
+}
+
+// Flush pending writes when the user hides or closes the tab
+if (isConfigured) {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushPendingSync();
+  });
+  window.addEventListener('beforeunload', () => flushPendingSync());
+}
+
 // ========== WELCOME MESSAGE ==========
 
 function showWelcomeMessage(nameOrEmail) {

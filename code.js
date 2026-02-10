@@ -1709,7 +1709,11 @@ async function clearDatabase() {
   clearAllStorage();
   // Push cleared state to cloud so data doesn't restore on reload
   if (window.FirebaseSync) {
-    try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
+    try {
+      await FirebaseSync.pushNow();
+    } catch (e) {
+      alert('⚠️ Local data was cleared, but we could not clear your cloud data. Next time you sign in, your old data may reappear. Please try syncing again when you have a connection.');
+    }
   }
   location.reload();
 }
