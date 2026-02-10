@@ -677,11 +677,21 @@ const Wins = {
     addWin(todayEvents.length > 0, 'daily-checkin');
 
     // --- Welcome Back win ---
-    const settings = DB.loadSettings();
-    if (settings.lastActivityTimestamp) {
-      const hoursSinceLastActivity = (Date.now() - settings.lastActivityTimestamp) / (1000 * 60 * 60);
-      addWin(hoursSinceLastActivity >= 24, 'welcome-back');
+    // Use event timestamps (stable) instead of lastActivityTimestamp (mutable)
+    // so the badge doesn't disappear after stampActivity() updates the timestamp.
+    if (todayEvents.length > 0) {
+      const allKeys = DB.getAllDayKeys(); // sorted most recent first
+      for (const key of allKeys) {
+        if (key >= todayKey()) continue; // skip today
+        const prevDayEvents = DB.forDate(key);
+        if (prevDayEvents.length > 0) {
+          const lastPrevTs = prevDayEvents[prevDayEvents.length - 1].ts;
+          addWin((todayEvents[0].ts - lastPrevTs) >= 24 * 3600000, 'welcome-back');
+          break;
+        }
+      }
     }
+    const settings = DB.loadSettings();
 
     // --- Session-based wins ---
     for (let i = 0; i < resisted.length; i++) addWin(true, 'resist');
@@ -856,7 +866,7 @@ const Wins = {
     addWin(habitStreak >= 3, 'habit-streak');
 
     const taperDays = this._countTaper();
-    addWin(taperDays >= 3, 'taper');
+    addWin(taperDays >= 2, 'taper');
     
     // App usage streaks
     const appStreak = this._countAppUsageStreak();
