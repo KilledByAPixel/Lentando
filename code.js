@@ -219,7 +219,9 @@ async function initSounds() {
       resist: new ZZFXSound([,,422,.08,.26,.19,1,1.1,,-144,18,.07,.1,,,,,.84,.21,.5,520]),
       habit: new ZZFXSound([2,,330,.01,.04,.04,,.8,,-2,27,.06,,,,,.1,.5,.03,.1,-1600]),
       exercise: new ZZFXSound([,,990,,,.05,,9,20]),
-      undo: new ZZFXSound([,,150,.05,,.05,,1.3,,,,,,3])
+      undo: new ZZFXSound([,,150,.05,,.05,,1.3,,,,,,3]),
+      cooldown: new ZZFXSound([2,0,260,,.2,.2,,,,,,,,,,,.12,.3,.1]),
+      badge: new ZZFXSound([3,.02,988,,,.4,,33,,,331,.1,,,,,,,,,-340])
     };
   } catch (e) {
     console.error('Failed to load sound system:', e);
@@ -2302,6 +2304,7 @@ function checkCooldown(actionKey) {
   const last = _lastActionTime[actionKey];
   if (last && (now - last) < COOLDOWN_MS) {
     const secsLeft = Math.ceil((COOLDOWN_MS - (now - last)) / 1000);
+    playSound('cooldown');
     showToast(`⏳ Wait ${secsLeft}s before logging again`);
     return false;
   }
@@ -2996,6 +2999,8 @@ function setupBadgeTooltips() {
   // Show tooltip
   function showTooltip(element, text) {
     if (!text) return;
+    
+    playSound('badge');
     
     const tooltip = getTooltipElement();
     tooltip.textContent = text;
