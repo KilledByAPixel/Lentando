@@ -2951,4 +2951,84 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Firebase will handle initial auth check and call continueToApp() or show login screen
   // If Firebase is not configured, checkAuthAndContinue will be called after a short delay
+  
+  // Mobile badge tooltip handling
+  setupBadgeTooltips();
 });
+
+// Mobile badge tooltip system
+function setupBadgeTooltips() {
+  let activeTooltip = null;
+  
+  // Create tooltip element if it doesn't exist
+  function getTooltipElement() {
+    let tooltip = document.querySelector('.badge-tooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.className = 'badge-tooltip';
+      document.body.appendChild(tooltip);
+    }
+    return tooltip;
+  }
+  
+  // Show tooltip
+  function showTooltip(element, text) {
+    if (!text) return;
+    
+    const tooltip = getTooltipElement();
+    tooltip.textContent = text;
+    
+    // Position tooltip
+    const rect = element.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    
+    // Center horizontally on the badge, adjust if it goes off screen
+    let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+    left = Math.max(10, Math.min(left, window.innerWidth - tooltipRect.width - 10));
+    
+    // Position above the badge, or below if no room
+    let top = rect.top - tooltipRect.height - 10;
+    if (top < 10) {
+      top = rect.bottom + 10;
+    }
+    
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+    tooltip.classList.add('visible');
+    
+    activeTooltip = tooltip;
+  }
+  
+  // Hide tooltip
+  function hideTooltip() {
+    if (activeTooltip) {
+      activeTooltip.classList.remove('visible');
+      activeTooltip = null;
+    }
+  }
+  
+  // Event delegation for badge items
+  document.addEventListener('click', (e) => {
+    const winItem = e.target.closest('.win-item');
+    
+    if (winItem) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const tooltipText = winItem.getAttribute('title');
+      
+      // If clicking the same badge, toggle it off
+      if (activeTooltip && activeTooltip.textContent === tooltipText) {
+        hideTooltip();
+      } else {
+        showTooltip(winItem, tooltipText);
+      }
+    } else {
+      // Clicked outside, hide tooltip
+      hideTooltip();
+    }
+  });
+  
+  // Hide tooltip on scroll
+  window.addEventListener('scroll', hideTooltip, { passive: true });
+}
