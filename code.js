@@ -119,8 +119,8 @@ const COACHING_MESSAGES = [
 const HABIT_ICONS = { water: '💧', breaths: '🌬️', clean: '🧹', exercise: '🏃', outside: '🌳' };
 const HABIT_LABELS = {
   water: 'Water',
-  breaths: '10 Breaths',
-  clean: 'Clean Room',
+  breaths: 'Breaths',
+  clean: 'Clean',
   exercise: 'Exercise',
   outside: 'Outside'
 };
