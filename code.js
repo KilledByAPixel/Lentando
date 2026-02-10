@@ -162,7 +162,7 @@ const WIN_DEFINITIONS = {
   'gap-12h': { label: 'Gap Win (12h+)', icon: '🕛', desc: 'Maintained a gap of 12+ hours between sessions (excludes overnight sleep — gaps crossing 6am don\'t count)' },
   'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Longest gap exceeded your average (excludes overnight sleep)' },
   'held-off-afternoon': { label: 'Morning Skip', icon: '🌅', desc: 'No use between 6am and noon' },
-  'night-skip': { label: 'Night Skip', icon: '🌙', desc: 'Stopped using before 8pm' },
+  'night-skip': { label: 'Night Skip', icon: '🌙', desc: 'No use between midnight and 6am' },
   'lighter-day': { label: 'Lighter Day', icon: '🎈', desc: 'Used below your 7-day average' },
   'later-first': { label: 'Later First Use', icon: '🕰️', desc: 'First session later than your 7-day average' },
   'fewer-sessions': { label: 'Fewer Than Yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
@@ -808,14 +808,14 @@ const Wins = {
     });
     addWin(isPast6am && noUseBeforeNoon, 'held-off-afternoon');
     
-    // Night Skip — stopped using before 8pm
-    // Awarded as soon as it's 8pm, removed if use happens after 8pm
-    const isPast8pm = currentHour >= 20;
-    if (isPast8pm) {
-      // Award if either: no use today, OR last use was before 8pm
-      const lastUse = profileUsed[profileUsed.length - 1];
-      const lastUseHour = lastUse ? new Date(lastUse.ts).getHours() : -1;
-      addWin(profileUsed.length === 0 || lastUseHour < 20, 'night-skip');
+    // Night Skip — no use between midnight and 6am
+    // Awarded as soon as it's 6am, removed if use happens between midnight and 6am
+    if (isPast6am) {
+      const noUseOvernight = !profileUsed.some(u => {
+        const h = new Date(u.ts).getHours();
+        return h >= 0 && h < EARLY_HOUR;
+      });
+      addWin(noUseOvernight, 'night-skip');
     }
     
     // Lighter Day — below 7-day average
