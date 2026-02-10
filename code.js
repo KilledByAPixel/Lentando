@@ -1279,10 +1279,21 @@ function renderWins() {
     const allowedBreaks = new Set(filterSequence(breakSequence));
     const allowedAppStreaks = new Set(filterSequence(appStreakSequence));
     
+    // Get current addiction profile for filtering profile-specific medals
+    const settings = DB.loadSettings();
+    const currentProfile = settings.addictionProfile;
+    
     unearnedWins = unearnedWins.filter(w => {
+      // Filter out sequential medals that aren't the next in sequence
       if (gapSequence.includes(w.id)) return allowedGaps.has(w.id);
       if (breakSequence.includes(w.id)) return allowedBreaks.has(w.id);
       if (appStreakSequence.includes(w.id)) return allowedAppStreaks.has(w.id);
+      
+      // Filter out profile-specific medals for today's unearned
+      if (w.id === 'welcome-back') return false; // Can't earn it today
+      if (w.id === 'harm-reduction-vape' && currentProfile !== 'cannabis' && currentProfile !== 'smoking') return false;
+      if (w.id === 'cbd-only' && currentProfile !== 'cannabis') return false;
+      
       return true;
     });
     
