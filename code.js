@@ -915,18 +915,8 @@ function chipGroupHTML(label, field, values, activeVal, displayFn) {
 }
 
 function getUsedEventDetail(evt) {
-  const profile = getProfile();
-  
   // Find the profile that owns this substance (may differ from current profile for historical events)
-  let matchedProfile = profile;
-  if (!profile.icons[evt.substance] && !profile.substanceDisplay[evt.substance]) {
-    for (const p of Object.values(ADDICTION_PROFILES)) {
-      if (p.icons[evt.substance] || p.substanceDisplay[evt.substance]) {
-        matchedProfile = p;
-        break;
-      }
-    }
-  }
+  const matchedProfile = getProfileForSubstance(evt.substance);
   
   const icon = matchedProfile.icons[evt.substance] || '⚡';
   const title = matchedProfile.substanceDisplay[evt.substance] || evt.substance.toUpperCase();
@@ -1948,17 +1938,30 @@ function modalFieldWrap(html) {
   return `<div class="modal-field">${html}</div>`;
 }
 
+/** Find the addiction profile that owns a given substance key */
+function getProfileForSubstance(substance) {
+  const current = getProfile();
+  if (current.substanceDisplay[substance]) return current;
+  for (const p of Object.values(ADDICTION_PROFILES)) {
+    if (p.substanceDisplay[substance]) return p;
+  }
+  return current; // fallback
+}
+
 function openEditModal(eventId) {
   hideUsedChips();
   hideResistedChips();
   hideUndo();
   const evt = DB.loadEvents().find(e => e.id === eventId);
   if (!evt) return;
-  const profile = getProfile();
 
   const fieldBuilders = {
     used: () => {
+      // Use the profile that owns this event's substance (not necessarily the current profile)
+      const profile = getProfileForSubstance(evt.substance);
+      const substanceName = profile.substanceDisplay[evt.substance] || evt.substance.toUpperCase();
       const fields = [
+        `<label>${profile.substanceLabel}</label><div style="font-size:16px">${substanceName}</div>`,
         chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v])
       ];
       if (profile.methods) {
@@ -1994,8 +1997,8 @@ function openEditModal(eventId) {
 
   $('modal-sheet').innerHTML = `
     <div class="modal-header"><h2>Edit Event</h2><button class="modal-close" onclick="App.closeModal()">✕</button></div>
-    <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
     ${fieldsHTML}
+    <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
     <div class="modal-actions">
       <button class="btn-delete" onclick="App.deleteEvent('${escapeHTML(evt.id)}') && App.closeModal()">Delete</button>
       <button class="btn-save" onclick="App.saveModal()">Done</button>
