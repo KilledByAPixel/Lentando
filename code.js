@@ -82,7 +82,7 @@ const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
 // Win calculation thresholds
 const GAP_MILESTONES = [1, 2, 4, 8, 12];
-const EARLY_HOUR = 4;
+const EARLY_HOUR = 5;
 const AFTERNOON_HOUR = 12;
 const MAX_STREAK_DAYS = 60;
 const LOW_DAY_THRESHOLD = 2;
@@ -159,16 +159,16 @@ const WIN_DEFINITIONS = {
   'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside today' },
   'habit-stack': { label: 'Habit Stack', icon: '🥞', desc: 'Logged multiple different habit types in one day' },
   'five-star-day': { label: 'Five Star Day', icon: '🌟', desc: 'Logged all 5 good habits today' },
-  'gap-1h': { label: 'Gap Medal (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions (excludes overnight sleep — gaps crossing 4am don\'t count)' },
-  'gap-2h': { label: 'Gap Win (2h+)', icon: '⏱️', desc: 'Maintained a gap of 2+ hours between sessions (excludes overnight sleep — gaps crossing 4am don\'t count)' },
-  'gap-4h': { label: 'Gap Win (4h+)', icon: '⏱️', desc: 'Maintained a gap of 4+ hours between sessions (excludes overnight sleep — gaps crossing 4am don\'t count)' },
-  'gap-8h': { label: 'Gap Win (8h+)', icon: '⏱️', desc: 'Maintained a gap of 8+ hours between sessions (excludes overnight sleep — gaps crossing 4am don\'t count)' },
-  'gap-12h': { label: 'Gap Win (12h+)', icon: '⏱️', desc: 'Maintained a gap of 12+ hours between sessions (excludes overnight sleep — gaps crossing 4am don\'t count)' },
-  'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Today\'s longest gap between sessions exceeded your average (excludes overnight sleep — gaps crossing 4am don\'t count)' },
-  'held-off-afternoon': { label: 'Delayed Start', icon: '🌅', desc: 'No use between 4am and noon today' },
+  'gap-1h': { label: 'Gap Medal (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
+  'gap-2h': { label: 'Gap Win (2h+)', icon: '⏱️', desc: 'Maintained a gap of 2+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
+  'gap-4h': { label: 'Gap Win (4h+)', icon: '⏱️', desc: 'Maintained a gap of 4+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
+  'gap-8h': { label: 'Gap Win (8h+)', icon: '⏱️', desc: 'Maintained a gap of 8+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
+  'gap-12h': { label: 'Gap Win (12h+)', icon: '⏱️', desc: 'Maintained a gap of 12+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
+  'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Today\'s longest gap between sessions exceeded your average (excludes overnight sleep — gaps crossing 5am don\'t count)' },
+  'held-off-afternoon': { label: 'Delayed Start', icon: '🌅', desc: 'No use between 5am and noon today' },
   'fewer-sessions': { label: 'Fewer sessions than yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
   'lower-amount': { label: 'Lower amount than yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
-  'first-later': { label: 'First session later than yesterday', icon: '⏰', desc: 'Started your first session later than yesterday (compares first use after 4am each day)' },
+  'first-later': { label: 'First session later than yesterday', icon: '⏰', desc: 'Started your first session later than yesterday (compares first use after 5am each day)' },
   'resist-streak': { label: 'Resist Streak', icon: '🔥', desc: 'Resisted urges for multiple days in a row' },
   'habit-streak': { label: 'Habit Streak', icon: '🐢', desc: 'Logged healthy habits for consecutive days' },
   'taper': { label: 'Taper Win', icon: '📐', desc: 'Gradually reduced usage over consecutive days' },
@@ -574,7 +574,7 @@ function getAllGapHours(sessions) {
   const gaps = [];
 
   // Include gaps between consecutive sessions, but skip any gap that
-  // crosses the 4am boundary (overnight sleep gap, not a real achievement).
+  // crosses the 5am boundary (overnight sleep gap, not a real achievement).
   for (let i = 1; i < sorted.length; i++) {
     const prevHour = new Date(sorted[i - 1].ts).getHours();
     const currHour = new Date(sorted[i].ts).getHours();
@@ -582,7 +582,7 @@ function getAllGapHours(sessions) {
     gaps.push((sorted[i].ts - sorted[i - 1].ts) / 3600000);
   }
 
-  // Include gap from last session to now (skip if it crosses 4am boundary)
+  // Include gap from last session to now (skip if it crosses 5am boundary)
   const lastHour = new Date(sorted[sorted.length - 1].ts).getHours();
   const nowHour = new Date().getHours();
   if (!(lastHour < EARLY_HOUR && nowHour >= EARLY_HOUR)) {
@@ -731,7 +731,7 @@ const Wins = {
     addWin(uniqueHabits.size === 5, 'five-star-day');
 
     // --- Timing-based wins ---
-    // Gap wins — include all sessions but skip gaps that cross the 4am boundary (sleep gap)
+    // Gap wins — include all sessions but skip gaps that cross the 5am boundary (sleep gap)
     if (profileUsed.length >= 1) {
       const allGaps = getAllGapHours(profileUsed);
       // Award only the highest milestone achieved today
@@ -763,7 +763,7 @@ const Wins = {
       }
     }
 
-    // Delayed Start — no use between 4am and noon (ignores late-night use before 4am)
+    // Delayed Start — no use between 5am and noon (ignores late-night use before 5am)
     const isPastNoon = new Date().getHours() >= AFTERNOON_HOUR;
     const noUseBeforeNoon = !profileUsed.some(u => {
       const h = new Date(u.ts).getHours();
@@ -778,7 +778,7 @@ const Wins = {
       addWin(profileUsed.length < yProfile.length, 'fewer-sessions');
       addWin(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
       
-      // First session later than yesterday — only awarded if you used today (compares first use after 4am)
+      // First session later than yesterday — only awarded if you used today (compares first use after 5am)
       const todayDaytime = profileUsed.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
       const yesterdayDaytime = yProfile.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
       
@@ -1198,7 +1198,7 @@ function renderProgress() {
     sessionsSub = `Last Week: ${prevDailyAvg}`;
   }
 
-  // Longest gap within a single day (4am to 4am boundaries)
+  // Longest gap within a single day (5am to 5am boundaries)
   let maxGapMs = 0;
   let totalGapMs = 0;
   let gapCount = 0;
