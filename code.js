@@ -2338,7 +2338,7 @@ function logUsed() {
   hapticFeedback();
   pulseEl(btn);
   
-  showToast(`✅ ${profile.sessionLabel}`);
+  showToast(`✅ Logged ${profile.sessionLabel}`);
   
   showUndo(evt.id);
 }
@@ -2383,7 +2383,7 @@ function logHabit(habit, minutes) {
   hapticFeedback();
   const label = HABIT_LABELS[habit] || habit;
   const icon = HABIT_ICONS[habit] || '';
-  const message = (habit === 'exercise' && minutes && minutes > 0) ? `${icon} ${label} +${minutes} min` : `${icon} ${label}`;
+  const message = (habit === 'exercise' && minutes && minutes > 0) ? `${icon} Logged ${label} +${minutes} min` : `${icon} Logged ${label}`;
   showToast(message);
 }
 
