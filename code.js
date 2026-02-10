@@ -17,7 +17,7 @@ const DATA_VERSION = 1;
 const ADDICTION_PROFILES = {
   cannabis: {
     sessionLabel: 'Use',
-    substanceLabel: 'Substance',
+    substanceLabel: 'Type',
     methodLabel: 'Method',
     substances: ['thc', 'cbd', 'mix'],
     substanceDisplay: { thc: 'THC', cbd: 'CBD', mix: 'Mix' },
