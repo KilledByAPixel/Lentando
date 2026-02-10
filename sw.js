@@ -3,6 +3,7 @@ const CACHE_NAME = 'lentando-v106';
 const urlsToCache = [
   './index.html',
   './code.js',
+  './zzfx.js',
   './firebase-sync.js',
   './manifest.json',
   './favicon.png',

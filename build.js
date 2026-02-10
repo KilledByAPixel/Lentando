@@ -5,7 +5,7 @@ const { minify } = require('terser');
 const BUILD_DIR = 'dist';
 
 // JS files to minify
-const JS_FILES = ['code.js', 'firebase-sync.js', 'sw.js'];
+const JS_FILES = ['code.js', 'firebase-sync.js', 'zzfx.js', 'sw.js'];
 
 // Other files to copy as-is
 const STATIC_FILES = [
@@ -44,7 +44,7 @@ const STATIC_FILES = [
     if (fs.existsSync(file)) {
       const original = fs.readFileSync(file, 'utf8');
       const originalKB = (Buffer.byteLength(original) / 1024).toFixed(1);
-      const isModule = file === 'firebase-sync.js';
+      const isModule = file === 'firebase-sync.js' || file === 'zzfx.js';
       const result = await minify(original, {
         compress: { passes: 2 },
         mangle: true,
