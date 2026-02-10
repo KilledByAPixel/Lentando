@@ -1047,8 +1047,33 @@ function renderMetrics() {
   }
   const resistSub = maxResistStreak > 1 ? `Longest Streak: ${maxResistStreak}` : '';
 
+  // Calculate ratio for the first tile
+  const settings = DB.loadSettings();
+  const ratioMap = {
+    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC' },
+    alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor' },
+    smoking: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarettes' },
+    other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1' }
+  };
+  const config = ratioMap[settings.addictionProfile];
+  let ratioSub = '';
+  if (config && totalAmt > 0) {
+    let badAmount;
+    if (settings.addictionProfile === 'cannabis') {
+      badAmount = used.reduce((sum, e) => {
+        if (e.substance === 'thc') return sum + (e.amount || 0);
+        if (e.substance === 'mix') return sum + (e.amount || 0) * 0.5;
+        return sum;
+      }, 0);
+    } else {
+      badAmount = used.filter(config.badFilter).reduce((sum, e) => sum + (e.amount || 0), 0);
+    }
+    const ratio = ((badAmount / totalAmt) * 100).toFixed(0);
+    ratioSub = `${ratio}% ${config.ratioLabel}`;
+  }
+
   $('metrics').innerHTML = [
-    tileHTML(used.length, 'Sessions', `${totalAmt} Total ${capitalize(profile.amountUnit)}`, 'Times you used today and total amount'),
+    tileHTML(totalAmt, capitalize(profile.amountUnit), ratioSub, `Total amount used today and substance ratio`),
     buildSinceLastUsedTile(used),
     tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Urges you successfully resisted today'),
     tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today')
@@ -1072,19 +1097,19 @@ function getRatioTile(weekUsed, dayKeys) {
     return tileHTML('—', 'Free Days', '', 'Days without primary substance');
   }
   
-  // Calculate bad ratio — for cannabis, mix counts as 0.5 since it's half THC
-  const total = weekUsed.length;
-  let badCount;
+  // Calculate bad ratio by amount — for cannabis, mix counts as 0.5 since it's half THC
+  const totalAmount = weekUsed.reduce((sum, e) => sum + (e.amount || 0), 0);
+  let badAmount;
   if (settings.addictionProfile === 'cannabis') {
-    badCount = weekUsed.reduce((sum, e) => {
-      if (e.substance === 'thc') return sum + 1;
-      if (e.substance === 'mix') return sum + 0.5;
+    badAmount = weekUsed.reduce((sum, e) => {
+      if (e.substance === 'thc') return sum + (e.amount || 0);
+      if (e.substance === 'mix') return sum + (e.amount || 0) * 0.5;
       return sum;
     }, 0);
   } else {
-    badCount = weekUsed.filter(config.badFilter).length;
+    badAmount = weekUsed.filter(config.badFilter).reduce((sum, e) => sum + (e.amount || 0), 0);
   }
-  const ratio = total > 0 ? ((badCount / total) * 100).toFixed(0) + '%' : '—';
+  const ratio = totalAmount > 0 ? ((badAmount / totalAmount) * 100).toFixed(0) + '%' : '—';
 
   // Count days without the "bad" substance this week — only count days since first-ever event
   const allDayKeys = DB.getAllDayKeys(); // sorted newest first
@@ -1094,7 +1119,7 @@ function getRatioTile(weekUsed, dayKeys) {
     const dayUsed = filterUsed(DB.forDate(dk));
     return !dayUsed.some(config.badFilter);
   }).length;
-  const ratioSub = total > 0 ? `${ratio} ${config.ratioLabel}` : '';
+  const ratioSub = totalAmount > 0 ? `${ratio} ${config.ratioLabel}` : '';
 
   return tileHTML(freeDays, config.freeLabel, ratioSub, `Days without primary substance this week`);
 }
