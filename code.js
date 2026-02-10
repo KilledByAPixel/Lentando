@@ -2186,6 +2186,9 @@ function undoLastUsed() {
   const undoBtn = $('btn-undo');
   if (undoBtn) pulseEl(undoBtn);
   
+  // Hide used chips immediately
+  hideUsedChips();
+  
   DB.deleteEvent(lastUndoEventId);
   
   // Track undo for "Second Thought" win
@@ -2197,10 +2200,9 @@ function undoLastUsed() {
   
   calculateAndUpdateWins();
   
-  // Delay hiding undo until after animation completes
+  // Delay hiding undo button until after animation completes
   setTimeout(() => {
     hideUndo();
-    hideUsedChips();
   }, 400);
   
   playSound('undo');
