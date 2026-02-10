@@ -2464,6 +2464,7 @@ function bindEvents() {
   $('graph-range').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
     if (!chip) return;
+    playSound('tab');
     graphDays = +chip.dataset.days;
     const settings = DB.loadSettings();
     settings.graphDays = graphDays;
