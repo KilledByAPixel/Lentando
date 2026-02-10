@@ -1645,12 +1645,16 @@ function renderGraphs() {
     : emptyStateHTML('No data yet', 'padding:12px 0');
   hourHtml += `</div>`;
   
-  // Add average usage by hour heatmap
-  const allDayKeys = DB.getAllDayKeys();
+  hourContainer.innerHTML = hourHtml;
+  
+  // Day-based graphs (affected by 7/14/30 day selector)
+  let dayHtml = '';
+  
+  // Add average usage by hour (filtered by selected time window)
   const hourTotals = {};
   let daysWithUse = 0;
   
-  allDayKeys.forEach(dayKey => {
+  days.forEach(dayKey => {
     const dayUsed = filterProfileUsed(DB.forDate(dayKey));
     if (dayUsed.length > 0) {
       daysWithUse++;
@@ -1671,16 +1675,12 @@ function renderGraphs() {
   
   const hasHeatmapData = Object.keys(hourAverages).length > 0;
   const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
-  hourHtml += `<div class="graph-container"><div class="graph-title">⚡ Average Usage by Hour</div>`;
-  hourHtml += hasHeatmapData
+  dayHtml += `<div class="graph-container"><div class="graph-title">⚡ Average Usage by Hour</div>`;
+  dayHtml += hasHeatmapData
     ? buildHourGraphBars(hourAverages, maxAvg, '#e53935')
     : emptyStateHTML('No data yet', 'padding:12px 0');
-  hourHtml += `</div>`;
+  dayHtml += `</div>`;
   
-  hourContainer.innerHTML = hourHtml;
-  
-  // Day-based graphs (affected by 7/14/30 day selector)
-  let dayHtml = '';
   for (const def of GRAPH_DEFS) {
     const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
     const max  = Math.max(...vals, 1);
