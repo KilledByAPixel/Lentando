@@ -130,6 +130,7 @@ Add to `ADDICTION_PROFILES` constant. Ensure all substances have icons.
 - **Firestore merge is NOT a true merge** - Last write wins, except events (union by ID) and wins (max count)
 - **Tab switching hides chips/undo** - But undo restores if cooldown active when returning to 'today' tab
 - **6am is the day boundary** - Not midnight. Critical for gap calculations.
+- **Do not run build.js when making changes** - This will be called manually only when we want to build.
 
 ## Code Style
 - Vanilla JS, ES6+ features OK (arrow functions, destructuring, optional chaining)
