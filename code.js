@@ -942,7 +942,7 @@ function getHabitEventDetail(evt) {
   return {
     icon: HABIT_ICONS[evt.habit] || '✅',
     title: HABIT_LABELS[evt.habit] || evt.habit,
-    detail: evt.minutes ? evt.minutes + ' min' : ''
+    detail: (evt.minutes && evt.minutes > 0) ? evt.minutes + ' min' : ''
   };
 }
 
@@ -2274,7 +2274,7 @@ function logHabit(habit, minutes) {
   hapticFeedback();
   const label = HABIT_LABELS[habit] || habit;
   const icon = HABIT_ICONS[habit] || '';
-  const message = habit === 'exercise' && minutes ? `${icon} ${label} +${minutes} min` : `${icon} ${label}`;
+  const message = (habit === 'exercise' && minutes && minutes > 0) ? `${icon} ${label} +${minutes} min` : `${icon} ${label}`;
   showToast(message);
 }
 
@@ -2318,15 +2318,15 @@ function bindEvents() {
     const habit = btn.dataset.habit;
     
     if (habit === 'exercise') {
-      playSound('habit');
-      hapticFeedback();
-      pulseEl(btn);
+      // Immediately log exercise with 0 minutes
+      logHabit('exercise', 0);
+      flashEl(btn);
+      
+      // Show chips so user can optionally add duration
       const picker = $('exercise-chips');
-      const isNowHidden = picker.classList.toggle('hidden');
+      picker.classList.remove('hidden');
       clearTimeout(exerciseTimeout);
-      if (!isNowHidden) {
-        exerciseTimeout = setTimeout(() => picker.classList.add('hidden'), CHIP_TIMEOUT_MS);
-      }
+      exerciseTimeout = setTimeout(() => picker.classList.add('hidden'), CHIP_TIMEOUT_MS);
       return;
     }
     
@@ -2342,10 +2342,24 @@ function bindEvents() {
   $('exercise-chips').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
     if (!chip) return;
+    
+    // Find the most recent exercise event and update its minutes
+    const events = DB.loadEvents();
+    const recentExercise = events
+      .filter(evt => evt.type === 'habit' && evt.habit === 'exercise')
+      .sort((a, b) => b.ts - a.ts)[0];
+    
+    if (recentExercise) {
+      recentExercise.minutes = parseInt(chip.dataset.min, 10);
+      DB._events = events;
+      DB._saveEvents();
+      calculateAndUpdateWins();
+      render();
+    }
+    
     const exerciseBtn = document.querySelector('[data-habit="exercise"]');
     if (exerciseBtn) pulseEl(exerciseBtn);
     playSound('exercise');
-    logHabit('exercise', parseInt(chip.dataset.min, 10));
     $('exercise-chips').classList.add('hidden');
   });
 
