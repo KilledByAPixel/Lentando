@@ -1231,7 +1231,7 @@ function renderProgress() {
   $('progress').innerHTML = [
     ratioTile,
     tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average sessions per day for this week and previous week'),
-    tileHTML(gapStr, 'Longest Day Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 5am)'),
+    tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 5am)'),
     tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day this week')
   ].join('');
 }
