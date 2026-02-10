@@ -1046,12 +1046,16 @@ function buildSinceLastUsedTile(used) {
     const elapsedMs = Date.now() - lastUsedTs;
     const elapsedDays = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
     
+    // Always show full duration in main value
+    sinceLastVal = formatDuration(elapsedMs);
+    
     if (elapsedDays >= 1) {
-      sinceLastVal = `${elapsedDays} day${elapsedDays !== 1 ? 's' : ''}`;
-      sinceLastSub = formatDuration(elapsedMs);
+      // Show date of last use if over a day
+      const lastUsedDate = new Date(lastUsedTs);
+      const options = { month: 'short', day: 'numeric' };
+      const dateStr = lastUsedDate.toLocaleDateString('en-US', options);
+      sinceLastSub = `Last used on ${dateStr}`;
     } else {
-      sinceLastVal = formatDuration(elapsedMs);
-      
       // Show 7-day average gap as subtitle when under a day
       const avg = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
       if (avg >= 60000) {
