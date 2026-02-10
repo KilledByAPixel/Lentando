@@ -161,10 +161,10 @@ const WIN_DEFINITIONS = {
   'gap-8h': { label: 'Gap Win (8h+)', icon: '🕗', desc: 'Maintained a gap of 8+ hours between sessions (excludes overnight sleep — gaps crossing 6am don\'t count)' },
   'gap-12h': { label: 'Gap Win (12h+)', icon: '🕛', desc: 'Maintained a gap of 12+ hours between sessions (excludes overnight sleep — gaps crossing 6am don\'t count)' },
   'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Longest gap exceeded your average (excludes overnight sleep)' },
-  'held-off-afternoon': { label: 'Morning Skip', icon: '🌅', desc: 'No use between 6am and noon' },
+  'night-skip': { label: 'Night Skip', icon: '🌙', desc: 'No use between midnight and 6am' },
+  'morning-skip': { label: 'Morning Skip', icon: '🌅', desc: 'No use between 6am and noon' },
   'day-skip': { label: 'Day Skip', icon: '☀️', desc: 'No use between noon and 6pm' },
   'evening-skip': { label: 'Evening Skip', icon: '🌆', desc: 'No use between 6pm and midnight' },
-  'night-skip': { label: 'Night Skip', icon: '🌙', desc: 'No use between midnight and 6am' },
   'later-first': { label: 'Later First Use', icon: '🕰️', desc: 'First session later than your 7-day average' },
   'lower-amount': { label: 'Less Than Yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'first-later': { label: 'Later Than Yesterday', icon: '⏰', desc: 'First session later than yesterday (after 6am)' },
@@ -806,7 +806,7 @@ const Wins = {
       const h = new Date(u.ts).getHours();
       return h >= EARLY_HOUR && h < AFTERNOON_HOUR;
     });
-    addWin(isPast6am && noUseBeforeNoon, 'held-off-afternoon');
+    addWin(isPast6am && noUseBeforeNoon, 'morning-skip');
     
     // Day Skip — no use between noon and 6pm
     // Awarded as soon as it's 6pm, removed if use happens between noon and 6pm
