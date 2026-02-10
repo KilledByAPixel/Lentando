@@ -205,22 +205,24 @@ const DEFAULT_SETTINGS = {
 };
 
 // ========== SOUND SYSTEM ==========
-let zzfx = null;
+let ZZFX = null;
+let ZZFXSound = null;
 let SOUNDS = null;
 
 // Initialize sounds on startup
 async function initSounds() {
   try {
     const zzfxModule = await import('./zzfx.js');
-    zzfx = zzfxModule.zzfx;
+    ZZFX = zzfxModule.ZZFX;
+    ZZFXSound = zzfxModule.ZZFXSound;
     
-    // Pre-build sound samples (params will be tuned later)
+    // Pre-build sound samples using ZZFXSound class (params will be tuned later)
     SOUNDS = {
-      used: [,,200,.02,.05,.1,,1,,,,,,,,.2],
-      resist: [,,400,.02,.1,.2,,2,5,,,,,,,,.3],
-      habit: [,,300,.01,.05,.15,,1.5,3,,,,,,,,.25],
-      exercise: [,,350,.02,.08,.18,,1.8,4,,,,,,,,.28],
-      undo: [,,150,.01,.05,.1,,.5,-2,,,,,,,,.15]
+      used: new ZZFXSound([,,200,.02,.05,.1,,1,,,,,,,,.2]),
+      resist: new ZZFXSound([,,400,.02,.1,.2,,2,5,,,,,,,,.3]),
+      habit: new ZZFXSound([,,300,.01,.05,.15,,1.5,3,,,,,,,,.25]),
+      exercise: new ZZFXSound([,,350,.02,.08,.18,,1.8,4,,,,,,,,.28]),
+      undo: new ZZFXSound([,,150,.01,.05,.1,,.5,-2,,,,,,,,.15])
     };
   } catch (e) {
     console.error('Failed to load sound system:', e);
@@ -228,9 +230,9 @@ async function initSounds() {
 }
 
 function playSound(soundName) {
-  if (!zzfx || !SOUNDS || !DB.loadSettings().soundEnabled) return;
+  if (!SOUNDS || !DB.loadSettings().soundEnabled) return;
   try {
-    zzfx(...SOUNDS[soundName]);
+    SOUNDS[soundName]?.play();
   } catch (e) {
     console.error('Failed to play sound:', soundName, e);
   }
