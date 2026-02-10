@@ -1017,6 +1017,9 @@ function renderDate() {
   const profile = getProfile();
   const usedLabel = $('used-label');
   if (usedLabel) usedLabel.textContent = profile.sessionLabel;
+  
+  // Update sound button to reflect current setting
+  setSoundButton(DB.loadSettings().soundEnabled);
 }
 
 function sumHabitCounts(events, habitTypes) {
@@ -2554,8 +2557,29 @@ function editTodo(idx) {
 
 // ========== PUBLIC API ==========
 function setThemeIcon(theme) {
-  const el = $('theme-icon-settings');
-  if (el) el.textContent = theme === 'light' ? '🌙' : '☀️';
+  const icon = $('theme-icon-settings');
+  const text = $('theme-text-settings');
+  // Show what you'll toggle TO
+  if (theme === 'light') {
+    if (icon) icon.textContent = '🌙';
+    if (text) text.textContent = 'Enable Dark Theme';
+  } else {
+    if (icon) icon.textContent = '☀️';
+    if (text) text.textContent = 'Enable Light Theme';
+  }
+}
+
+function setSoundButton(soundEnabled) {
+  const icon = $('sound-icon-settings');
+  const text = $('sound-text-settings');
+  // Show what you'll toggle TO
+  if (soundEnabled) {
+    if (icon) icon.textContent = '🔇';
+    if (text) text.textContent = 'Disable Sounds';
+  } else {
+    if (icon) icon.textContent = '🔊';
+    if (text) text.textContent = 'Enable Sounds';
+  }
 }
 
 function getToggleTheme(current) {
@@ -2614,6 +2638,12 @@ window.App = {
     input.type = isHidden ? 'text' : 'password';
     btn.textContent = isHidden ? '🙈' : '👁️';
     btn.title = isHidden ? 'Hide password' : 'Show password';
+  },
+  toggleSound() {
+    const settings = DB.loadSettings();
+    settings.soundEnabled = !settings.soundEnabled;
+    DB.saveSettings(settings);
+    setSoundButton(settings.soundEnabled);
   },
   toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');

@@ -1029,7 +1029,12 @@ header .date { font-size: 14px; color: var(--muted); }
   <div class="section-label" style="margin-top:20px">Customization</div>
   <div class="export-bar">
     <button class="export-btn" id="btn-theme-toggle-settings" onclick="App.toggleTheme()">
-      <span id="theme-icon-settings">🌙</span> Toggle Theme
+      <span id="theme-icon-settings">🌙</span> <span id="theme-text-settings">Enable Dark Theme</span>
+    </button>
+  </div>
+  <div class="export-bar">
+    <button class="export-btn" id="btn-sound-toggle" onclick="App.toggleSound()">
+      <span id="sound-icon-settings">🔊</span> <span id="sound-text-settings">Disable Sounds</span>
     </button>
   </div>
   <div class="export-bar">
