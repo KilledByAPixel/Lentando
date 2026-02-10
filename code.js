@@ -1173,7 +1173,17 @@ function getWeekData(days) {
 function renderProgress() {
   const last7Days = getLastNDays(7);
   const thisWeek = getWeekData(last7Days);
-  const dailyAvg = (thisWeek.profileUsed.length / 7).toFixed(1);
+  
+  // Calculate actual days of app usage (clamped between 1 and 7)
+  const allEvents = DB.loadEvents();
+  let daysOfUse = 7;
+  if (allEvents.length > 0) {
+    const earliestTs = Math.min(...allEvents.map(e => e.ts));
+    const daysSinceFirstUse = Math.ceil((Date.now() - earliestTs) / (24 * 60 * 60 * 1000));
+    daysOfUse = Math.max(1, Math.min(7, daysSinceFirstUse));
+  }
+  
+  const dailyAvg = (thisWeek.profileUsed.length / daysOfUse).toFixed(1);
 
   // Previous week (14 days ago to 7 days ago) for comparison
   const prevWeekDays = getLastNDays(7, 7);
@@ -1199,7 +1209,7 @@ function renderProgress() {
 
   const exerciseEvents = getHabits(thisWeek.events, 'exercise');
   const exerciseMins = exerciseEvents.reduce((sum, e) => sum + (e.minutes || 0), 0);
-  const exercisePerDay = exerciseMins > 0 ? (exerciseMins / 7).toFixed(1) : (exerciseEvents.length / 7).toFixed(1);
+  const exercisePerDay = exerciseMins > 0 ? (exerciseMins / daysOfUse).toFixed(1) : (exerciseEvents.length / daysOfUse).toFixed(1);
   const exerciseLabel = exerciseMins > 0 ? `${exercisePerDay}m` : exercisePerDay;
   const weekHabits = sumHabitCounts(thisWeek.events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
   const exerciseSub = weekHabits > 0 ? `${weekHabits} Healthy Actions` : '';
