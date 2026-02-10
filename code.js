@@ -163,7 +163,7 @@ const WIN_DEFINITIONS = {
   'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Longest gap exceeded your average (excludes overnight sleep)' },
   'held-off-afternoon': { label: 'Delayed Start', icon: '🌅', desc: 'No use between 5am and noon' },
   'night-skip': { label: 'Night Skip', icon: '🌙', desc: 'Stopped using before 8pm' },
-  'lighter-day': { label: 'Lighter Day', icon: '🎈', desc: 'Below your 7-day average' },
+  'lighter-day': { label: 'Lighter Day', icon: '🎈', desc: 'Used below your 7-day average' },
   'later-first': { label: 'Later First Use', icon: '🕰️', desc: 'First session later than your 7-day average' },
   'fewer-sessions': { label: 'Fewer sessions than yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
   'lower-amount': { label: 'Lower amount than yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
