@@ -95,6 +95,8 @@ Creative Commons Attribution-NonCommercial 4.0 International License
 
 ---
 
+![Lentando Screenshot](screenshot.png)
+
 **Made with ❤️ for recovery and harm reduction**
 
 *Remember: Progress at your pace. You've got this. 🐢*
