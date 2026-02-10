@@ -131,7 +131,7 @@ const HABIT_LABELS = {
 
 // Win definitions - maps win IDs to their display properties
 // Order matters! sortOrder is auto-assigned based on position in this object
-// Note: While we use "medals" as the primary user-facing term, it's fine to use "win"
+// Note: While we use "badges" as the primary user-facing term, it's fine to use "win"
 // in individual medal labels (e.g., "Gap Win", "Taper Win") when it sounds natural
 const WIN_DEFINITIONS = {
   'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing today — showing up is a win' },
@@ -388,7 +388,7 @@ const DB = {
 
       console.log(`Migrating data from version ${storedVersion} to ${DATA_VERSION}`);
 
-      // Migrate from v0 to v1: Subtract today's medals from lifetime
+      // Migrate from v0 to v1: Subtract today's badges from lifetime
       if (storedVersion < 1) {
         try {
           const winData = JSON.parse(localStorage.getItem(STORAGE_WINS));
@@ -406,7 +406,7 @@ const DB = {
             }).filter(w => w.count > 0);
             
             localStorage.setItem(STORAGE_WINS, JSON.stringify(winData));
-            console.log('Successfully migrated wins data: removed today\'s medals from lifetime');
+            console.log('Successfully migrated wins data: removed today\'s badges from lifetime');
           }
         } catch (e) {
           console.error('Failed to migrate wins data:', e);
@@ -733,7 +733,7 @@ const Wins = {
     addWin(waterCount >= 1, 'drank-water');
     addWin(waterCount >= 5, 'hydrated');
     
-    // Individual habit medals
+    // Individual habit badges
     const hasExercise = habits.some(e => e.habit === 'exercise');
     addWin(hasExercise, 'exercised');
     
@@ -1326,19 +1326,19 @@ function renderWins() {
   
   const todayEl = $('wins-today');
   if (todayEl) {
-    // Get earned medals
+    // Get earned badges
     const earnedWins = winData.todayWins
       .map(w => ({ ...w, ...getWinDef(w.id) }))
-      .filter(w => WIN_DEFINITIONS[w.id]) // Filter out unknown medals
+      .filter(w => WIN_DEFINITIONS[w.id]) // Filter out unknown badges
       .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
     
-    // Get unearned medals (all medals not in earned list)
+    // Get unearned badges (all badges not in earned list)
     const earnedIds = new Set(earnedWins.map(w => w.id));
     let unearnedWins = Object.keys(WIN_DEFINITIONS)
       .filter(id => !earnedIds.has(id))
       .map(id => ({ id, count: 0, ...getWinDef(id) }));
     
-    // For sequential medals, only show the next unearned one
+    // For sequential badges, only show the next unearned one
     const gapSequence = ['gap-1h', 'gap-2h', 'gap-4h', 'gap-8h', 'gap-12h'];
     const breakSequence = ['tbreak-1d', 'tbreak-7d', 'tbreak-14d', 'tbreak-21d', 'tbreak-30d', 'tbreak-365d'];
     const appStreakSequence = ['app-streak', 'week-streak', 'month-streak', 'year-streak'];
@@ -1356,17 +1356,17 @@ function renderWins() {
     const allowedBreaks = new Set(filterSequence(breakSequence));
     const allowedAppStreaks = new Set(filterSequence(appStreakSequence));
     
-    // Get current addiction profile for filtering profile-specific medals
+    // Get current addiction profile for filtering profile-specific badges
     const settings = DB.loadSettings();
     const currentProfile = settings.addictionProfile;
     
     unearnedWins = unearnedWins.filter(w => {
-      // Filter out sequential medals that aren't the next in sequence
+      // Filter out sequential badges that aren't the next in sequence
       if (gapSequence.includes(w.id)) return allowedGaps.has(w.id);
       if (breakSequence.includes(w.id)) return allowedBreaks.has(w.id);
       if (appStreakSequence.includes(w.id)) return allowedAppStreaks.has(w.id);
       
-      // Filter out profile-specific medals for today's unearned
+      // Filter out profile-specific badges for today's unearned
       if (w.id === 'welcome-back') return false; // Can't earn it today
       if (w.id === 'harm-reduction-vape' && currentProfile !== 'cannabis' && currentProfile !== 'smoking') return false;
       if (w.id === 'cbd-only' && currentProfile !== 'cannabis') return false;
@@ -1383,13 +1383,13 @@ function renderWins() {
   const totalEl = $('wins-total');
   if (!totalEl) return;
   
-  // Get earned lifetime medals
+  // Get earned lifetime badges
   const earnedLifetime = winData.lifetimeWins
     .map(w => ({ ...w, ...getWinDef(w.id) }))
     .filter(w => WIN_DEFINITIONS[w.id])
     .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
   
-  // Get unearned medals (show ALL for lifetime)
+  // Get unearned badges (show ALL for lifetime)
   const earnedLifetimeIds = new Set(earnedLifetime.map(w => w.id));
   const unearnedLifetime = Object.keys(WIN_DEFINITIONS)
     .filter(id => !earnedLifetimeIds.has(id))
