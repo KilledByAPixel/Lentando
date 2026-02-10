@@ -2292,6 +2292,7 @@ function selectProfile(profileKey) {
   DB.saveSettings();
   
   $('onboarding-overlay').classList.add('hidden');
+  playSound('resist');
   
   calculateAndUpdateWins();
   bindEvents();
