@@ -131,10 +131,11 @@ const HABIT_LABELS = {
 
 // Win definitions - maps win IDs to their display properties
 // Order matters! sortOrder is auto-assigned based on position in this object
+// Note: While we use "medals" as the primary user-facing term, it's fine to use "win"
+// in individual medal labels (e.g., "Gap Win", "Taper Win") when it sounds natural
 const WIN_DEFINITIONS = {
   'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing today — showing up is a win' },
   'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
-  'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
   'resist': { label: 'Resisted', icon: '💪', desc: 'Resisted an urge' },
   'urge-surfed': { label: 'Urge Surfed (15m+)', icon: '🧘', desc: 'Logged an urge and didn\'t use for at least 15 minutes after' },
   'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider — shows mindful decision-making' },
@@ -148,6 +149,7 @@ const WIN_DEFINITIONS = {
   'harm-reduction-vape': { label: 'Harm Reduction (vape)', icon: '🌡️', desc: 'Chose vape over smoke' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
+  'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
   'good-start': { label: 'Good Start', icon: '🌟', desc: 'Started your day with a positive action instead of using' },
   'drank-water': { label: 'Drank Water', icon: '💧', desc: 'Logged water today' },
   'hydrated': { label: 'Well Hydrated', icon: '🌊', desc: 'Drank water at least 5 times today' },
