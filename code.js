@@ -2351,8 +2351,7 @@ function bindEvents() {
     
     if (recentExercise) {
       recentExercise.minutes = parseInt(chip.dataset.min, 10);
-      DB._events = events;
-      DB._saveEvents();
+      DB.saveEvents(events);
       calculateAndUpdateWins();
       render();
     }
