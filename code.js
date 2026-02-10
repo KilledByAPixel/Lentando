@@ -150,7 +150,7 @@ const WIN_DEFINITIONS = {
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products today, no THC' },
   'low-day': { label: 'Low Day (≤2 units)', icon: '🤏', desc: 'Kept total usage to 2 units or less' },
   'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
-  'good-start': { label: 'Good Start', icon: '🌟', desc: 'Started your day with a positive action instead of using' },
+  'good-start': { label: 'Good Start', icon: '🌞', desc: 'Started your day with a positive action instead of using' },
   'drank-water': { label: 'Drank Water', icon: '💧', desc: 'Logged water today' },
   'hydrated': { label: 'Well Hydrated', icon: '🌊', desc: 'Drank water at least 5 times today' },
   'exercised': { label: 'Exercised', icon: '🏃', desc: 'Logged exercise today' },
@@ -158,6 +158,7 @@ const WIN_DEFINITIONS = {
   'cleaned': { label: 'Cleaned', icon: '🧹', desc: 'Cleaned or tidied something today' },
   'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside today' },
   'habit-stack': { label: 'Habit Stack', icon: '🥞', desc: 'Logged multiple different habit types in one day' },
+  'five-star-day': { label: 'Five Star Day', icon: '🌟', desc: 'Logged all 5 good habits today' },
   'gap-1h': { label: 'Gap Medal (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions (excludes overnight sleep — gaps crossing 4am don\'t count)' },
   'gap-2h': { label: 'Gap Win (2h+)', icon: '⏱️', desc: 'Maintained a gap of 2+ hours between sessions (excludes overnight sleep — gaps crossing 4am don\'t count)' },
   'gap-4h': { label: 'Gap Win (4h+)', icon: '⏱️', desc: 'Maintained a gap of 4+ hours between sessions (excludes overnight sleep — gaps crossing 4am don\'t count)' },
@@ -692,6 +693,7 @@ const Wins = {
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
     addWin(uniqueHabits.size >= 2, 'habit-stack');
+    addWin(uniqueHabits.size === 5, 'five-star-day');
 
     // --- Timing-based wins ---
     // Gap wins — include all sessions but skip gaps that cross the 4am boundary (sleep gap)
