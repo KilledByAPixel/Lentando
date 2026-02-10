@@ -16,6 +16,8 @@ ZzFX Features
 - Sounds can be saved out as wav files for offline playback.
 - No additional libraries or dependencies are required.
 
+AI should not make changes to this file!
+
 */
 /*
 
