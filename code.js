@@ -159,7 +159,7 @@ const WIN_DEFINITIONS = {
   'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside today' },
   'habit-stack': { label: 'Habit Stack', icon: '🥞', desc: 'Logged multiple different habit types in one day' },
   'five-star-day': { label: 'Five Star Day', icon: '🌟', desc: 'Logged all 5 good habits today' },
-  'gap-1h': { label: 'Gap Medal (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
+  'gap-1h': { label: 'Gap Win (1h+)', icon: '⏱️', desc: 'Maintained a gap of 1+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
   'gap-2h': { label: 'Gap Win (2h+)', icon: '⏱️', desc: 'Maintained a gap of 2+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
   'gap-4h': { label: 'Gap Win (4h+)', icon: '⏱️', desc: 'Maintained a gap of 4+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
   'gap-8h': { label: 'Gap Win (8h+)', icon: '⏱️', desc: 'Maintained a gap of 8+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
@@ -2381,7 +2381,7 @@ function bindEvents() {
     
     if (recentExercise) {
       recentExercise.minutes = parseInt(chip.dataset.min, 10);
-      DB.saveEvents(events);
+      DB.saveEvents();
       calculateAndUpdateWins();
       render();
     }

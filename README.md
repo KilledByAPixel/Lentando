@@ -56,11 +56,11 @@ Lentando recognizes progress in many forms:
 | **Daily Progress** | No Use Day, Low Day, Daily Check-in, Good Start, Hydrated |
 | **Session Wins** | Resist, Urge Surfed, Swap Completed, Low Dose, Mindful Session |
 | **Resist Awareness** | Intensity Logged, Trigger Identified, Full Report, Tough Resist |
-| **Timing Wins** | Delayed Start, First Later, Last Earlier, Fewer Sessions, Lower Amount |
+| **Timing Wins** | Delayed Start, First Later, Fewer Sessions, Lower Amount |
 | **Gap Milestones** | 1h, 2h, 4h, 8h, 12h gaps between sessions |
 | **Break Milestones** | 1 Day through 1 Year of consecutive clean days |
 | **Streaks** | Resist Streak, Habit Streak, Taper Win, App Streak, Week/Month/Year Streak |
-| **Mindful Choices** | Second Thought, Harm Reduction, CBD-Only Day, Exercise + Water Combo |
+| **Mindful Choices** | Second Thought, Harm Reduction, CBD-Only Day, Mindful Session, Low Dose |
 
 ---
 
@@ -71,8 +71,6 @@ Lentando recognizes progress in many forms:
 3. **Start logging** sessions, urges, and wins
 4. **Optional:** Sign in to sync across devices
 5. **Optional:** Install as a PWA for quick home screen access
-
-![Lentando Screenshot](screenshot.png)
 
 ---
 
