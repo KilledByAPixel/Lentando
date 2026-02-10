@@ -162,6 +162,9 @@ const WIN_DEFINITIONS = {
   'gap-12h': { label: 'Gap Win (12h+)', icon: '🕛', desc: 'Maintained a gap of 12+ hours between sessions (excludes overnight sleep — gaps crossing 5am don\'t count)' },
   'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Longest gap exceeded your average (excludes overnight sleep)' },
   'held-off-afternoon': { label: 'Delayed Start', icon: '🌅', desc: 'No use between 5am and noon' },
+  'night-skip': { label: 'Night Skip', icon: '🌙', desc: 'Stopped using before 8pm' },
+  'lighter-day': { label: 'Lighter Day', icon: '🎈', desc: 'Below your 7-day average' },
+  'later-first': { label: 'Later First Use', icon: '🕰️', desc: 'First session later than your 7-day average' },
   'fewer-sessions': { label: 'Fewer sessions than yesterday', icon: '📉', desc: 'Had fewer sessions than yesterday' },
   'lower-amount': { label: 'Lower amount than yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'first-later': { label: 'First session later than yesterday', icon: '⏰', desc: 'First session later than yesterday (after 5am)' },
@@ -786,6 +789,40 @@ const Wins = {
       return h >= EARLY_HOUR && h < AFTERNOON_HOUR;
     });
     addWin(isPastNoon && noUseBeforeNoon, 'held-off-afternoon');
+    
+    // Night Skip — stopped using before 8pm (only if there was use today)
+    if (profileUsed.length > 0) {
+      const lastUse = profileUsed[profileUsed.length - 1];
+      const lastUseHour = new Date(lastUse.ts).getHours();
+      addWin(lastUseHour < 20, 'night-skip');
+    }
+    
+    // Lighter Day — below 7-day average
+    const last7Days = getLastNDays(7).filter(k => k !== todayKey());
+    if (last7Days.length > 0) {
+      const totalAmounts = last7Days.map(k => sumAmount(filterProfileUsed(DB.forDate(k))));
+      const avg7Day = totalAmounts.reduce((sum, amt) => sum + amt, 0) / totalAmounts.length;
+      if (profileUsed.length > 0 && profileAmt < avg7Day) {
+        addWin(true, 'lighter-day');
+      }
+    }
+    
+    // Later First Use — first session later than 7-day average
+    if (profileUsed.length > 0) {
+      const last7UseDays = this._getLast7UseDays();
+      if (last7UseDays.length > 0) {
+        const firstUseTimes = last7UseDays.map(k => {
+          const dayUsed = filterProfileUsed(DB.forDate(k));
+          return dayUsed.length > 0 ? timeOfDayMin(dayUsed[0].ts) : null;
+        }).filter(t => t !== null);
+        
+        if (firstUseTimes.length > 0) {
+          const avgFirstUseTime = firstUseTimes.reduce((sum, t) => sum + t, 0) / firstUseTimes.length;
+          const todayFirstUseTime = timeOfDayMin(profileUsed[0].ts);
+          addWin(todayFirstUseTime > avgFirstUseTime, 'later-first');
+        }
+      }
+    }
 
     // --- Comparison wins ---
     if (yesterdayEvents && yesterdayEvents.length > 0) {
@@ -888,6 +925,24 @@ const Wins = {
       }
     }
     return 0;
+  },
+  
+  _getLast7UseDays() {
+    // Get up to 7 most recent days with usage (excluding today)
+    const today = todayKey();
+    const keys = DB.getAllDayKeys();
+    const useDays = [];
+    
+    for (const key of keys) {
+      if (key === today) continue;
+      const dayUsed = filterProfileUsed(DB.forDate(key));
+      if (dayUsed.length > 0) {
+        useDays.push(key);
+        if (useDays.length >= 7) break;
+      }
+    }
+    
+    return useDays;
   },
 };
 
