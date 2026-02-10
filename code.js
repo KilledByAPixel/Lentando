@@ -2288,9 +2288,29 @@ function undoLastUsed() {
   hapticFeedback();
   showToast('↩️ Undone');
   render();
+  
+  // Reset 'used' cooldown so user can log again immediately
+  delete _lastActionTime['used'];
+}
+
+// ========== BUTTON COOLDOWNS ==========
+const COOLDOWN_MS = 60 * 1000; // 1 minute
+const _lastActionTime = {};
+
+function checkCooldown(actionKey) {
+  const now = Date.now();
+  const last = _lastActionTime[actionKey];
+  if (last && (now - last) < COOLDOWN_MS) {
+    const secsLeft = Math.ceil((COOLDOWN_MS - (now - last)) / 1000);
+    showToast(`⏳ Wait ${secsLeft}s before logging again`);
+    return false;
+  }
+  _lastActionTime[actionKey] = now;
+  return true;
 }
 
 function logUsed() {
+  if (!checkCooldown('used')) return;
   const s = DB.loadSettings();
   const profile = getProfile();
   const method = profile.methods ? s.lastMethod : null;
@@ -2316,6 +2336,7 @@ function logUsed() {
 }
 
 function logResisted() {
+  if (!checkCooldown('resisted')) return;
   const evt = createResistedEvent();
   DB.addEvent(evt);
   stampActivity();
@@ -2342,6 +2363,7 @@ function logResisted() {
 }
 
 function logHabit(habit, minutes) {
+  if (!checkCooldown('habit_' + habit)) return;
   const evt = createHabitEvent(habit, minutes);
   DB.addEvent(evt);
   stampActivity();
