@@ -26,7 +26,7 @@ Whether you're working toward complete abstinence, harm reduction, or just under
 - **Day-by-day history** - Browse and edit previous days with full event details
 
 ### 🏆 **Celebrate Progress**
-- **40+ badges** - Automatic recognition for streaks, gaps, timing improvements, and healthy choices
+- **50+ badges** - Automatic recognition for streaks, gaps, timing improvements, and healthy choices
 - **Milestone tracking** - From 1-hour gaps to 1-year breaks
 - **Gentle coaching tips** - Supportive suggestions for alternative healthy habits
 
