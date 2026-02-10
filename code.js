@@ -1259,7 +1259,7 @@ function renderWins() {
       if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
       if (aIdx !== -1) return -1;
       if (bIdx !== -1) return 1;
-      return (WIN_DEFINITIONS[a.id]?.sortOrder || 999) - (WIN_DEFINITIONS[b.id]?.sortOrder || 999);
+      return (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999);
     });
     
     // Get unearned medals (all medals not in earned list)
@@ -1293,7 +1293,7 @@ function renderWins() {
       return true;
     });
     
-    unearnedWins.sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder || 999) - (WIN_DEFINITIONS[b.id]?.sortOrder || 999));
+    unearnedWins.sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
     
     const allWins = [...earnedWins, ...unearnedWins];
     todayEl.innerHTML = allWins.map(winCardHTML).join('');
@@ -1306,14 +1306,14 @@ function renderWins() {
   const earnedLifetime = winData.lifetimeWins
     .map(w => ({ ...w, ...getWinDef(w.id) }))
     .filter(w => WIN_DEFINITIONS[w.id])
-    .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder || 999) - (WIN_DEFINITIONS[b.id]?.sortOrder || 999));
+    .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
   
   // Get unearned medals (show ALL for lifetime)
   const earnedLifetimeIds = new Set(earnedLifetime.map(w => w.id));
   const unearnedLifetime = Object.keys(WIN_DEFINITIONS)
     .filter(id => !earnedLifetimeIds.has(id))
     .map(id => ({ id, count: 0, ...getWinDef(id) }))
-    .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder || 999) - (WIN_DEFINITIONS[b.id]?.sortOrder || 999));
+    .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
   
   const allLifetime = [...earnedLifetime, ...unearnedLifetime];
   totalEl.innerHTML = allLifetime.map(winCardHTML).join('');
