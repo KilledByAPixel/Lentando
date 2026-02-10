@@ -134,6 +134,7 @@ const HABIT_LABELS = {
 const WIN_DEFINITIONS = {
   'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing today — showing up is a win' },
   'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
+  'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
   'resist': { label: 'Resisted', icon: '💪', desc: 'Resisted an urge' },
   'urge-surfed': { label: 'Urge Surfed (15m+)', icon: '🧘', desc: 'Logged an urge and didn\'t use for at least 15 minutes after' },
   'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider — shows mindful decision-making' },
@@ -172,7 +173,6 @@ const WIN_DEFINITIONS = {
   'week-streak': { label: 'App Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
   'month-streak': { label: 'App Month Streak', icon: '🗓️', desc: 'Used the app every day for a month' },
   'year-streak': { label: 'App Year Streak', icon: '🎉', desc: 'Used the app every day for a year!' },
-  'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
   'tbreak-1d': { label: 'Break: 1 Day', icon: '🌱', desc: 'One full day with no use' },
   'tbreak-7d': { label: 'Break: 1 Week', icon: '🌿', desc: 'One week with no use' },
   'tbreak-14d': { label: 'Break: 2 Weeks', icon: '🍀', desc: 'Two weeks with no use' },
