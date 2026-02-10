@@ -1,141 +1,72 @@
 # Lentando - AI Agent Instructions
 
 ## Project Overview
-**Zero-friction substance use & habit tracker**. PWA. Vanilla JS (no frameworks). Mobile-first. Privacy-first (localStorage + optional Firebase sync). Target: 1-2 tap logging.
+Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mobile-first, offline-capable. localStorage is primary storage; Firebase is optional sync/backup. Never block UI on network.
 
 ## Architecture
+- `code.js` — All app logic, rendering, win calculations, event tracking (~3100 lines)
+- `index.html` — Single-page app with inline CSS
+- `firebase-sync.js` — Firebase Auth + Firestore merge logic (ES module)
+- `sw.js` — Service worker (cache: `lentando-v{N}`, increment on deploy)
+- `build.js` — Minifies JS via terser, copies static files to `dist/`
+- `local/` — Dev notes, not deployed
 
-### Core Files
-- `code.js` (3000+ lines) - All app logic, rendering, win calculations, event tracking
-- `index.html` - Single-page app with inline CSS, all UI components
-- `firebase-sync.js` - Firebase Auth + Firestore merge logic
-- `sw.js` - Service worker (cache: `lentando-v{N}`, increment on deploy)
-- `build.js` - Minifies JS, copies static files to `dist/`
+## Storage & Data
+**localStorage keys:** `ht_events`, `ht_settings`, `ht_todos`, `ht_theme`, `ht_wins`, `ht_login_skipped`
 
-### Storage Strategy
-**localStorage is truth, Firestore is backup**. Never block UI on network.
+**DB module** wraps localStorage with in-memory caches (`DB._events`, `DB._settings`, `DB._dateIndex`). The `_dateIndex` is a lazy `Map<dateKey, events[]>`.
 
-**Keys:** `ht_events`, `ht_settings`, `ht_todos`, `ht_theme`, `ht_wins`, `ht_login_skipped`
+**Data model:**
+- **Events** — `{id, type, ts, ...}` where type is `used`, `resisted`, or `habit`
+- **Wins** — `{todayDate, todayWins, lifetimeWins, todayUndoCount}`. Merge strategy: max count per win ID.
 
-**DB module:** Wraps localStorage with in-memory caches (`DB._events`, `DB._settings`, `DB._dateIndex`). The `_dateIndex` is a Map of `dateKey → events[]` built lazily.
+### Cache Invalidation (Critical)
+`firebase-sync.js` uses `invalidateDBCaches()` after cloud merges — this nulls `DB._events`, `DB._settings`, `DB._dateIndex`. Must happen **inside** the function that writes to localStorage, not after it returns.
 
-**Critical cache invalidation rule:** After ANY firebase sync that modifies localStorage, call `DB._events = null; DB._settings = null; DB._dateIndex = null;` INSIDE the function that writes, not after it returns. Example:
-```javascript
-function pullFromCloud(cloudData) {
-  localStorage.setItem(STORAGE_EVENTS, JSON.stringify(merged));
-  DB._events = null; DB._dateIndex = null; // HERE, critical!
-  return true;
-}
-```
-
-### Data Model
-- **Events** - Array of `{id, type, ts, ...}`. Types: `used`, `resisted`, `habit`
-- **Settings** - Single object with profile, last selections, theme
-- **Wins** - `{todayDate, todayWins: [{id, count}], lifetimeWins: [{id, count}]}`
-- **Date keys** - `YYYY-MM-DD` format for indexing events by day
-
-### Time Boundaries (Important!)
-- **Day boundaries:** 6am (not midnight). `EARLY_HOUR = 6`
-- **Gap wins:** Exclude gaps crossing 6am (overnight sleep)
-- **Morning Skip:** No use 6am-noon, awarded at 6am
-- **Night Skip:** No use midnight-6am, awarded at 6am
-
-## Development Workflows
-
-### Build & Deploy
-```bash
-npm run build      # Minifies to dist/, ready for deploy
-npm run clean      # Removes dist/
-```
-
-### Testing Tips
-- Use browser DevTools localStorage viewer to inspect `ht_*` keys
-- Test data generators (commented at bottom of code.js):
-  - `generateAllTestData()` - Mix of events/habits/wins
-  - `debugAddUseEvent(7)` - Add use event 7 days ago
-- Uncomment exports: `window.generateAllTestData = generateAllTestData;`
-
-### Debugging Common Issues
-1. **Badges not showing after sync?** → Check cache invalidation in pullFromCloud
-2. **Timer display stuck?** → `timerInterval` not cleared before re-setting
-3. **Duplicate event listeners?** → `eventsAreBound` flag prevents double-binding
-4. **Empty state not rendering?** → Check for `events.length === 0` in render functions
-
-## Code Patterns
-
-### Constants for Magic Numbers
-All timing/thresholds at top of code.js:
-```javascript
-const COOLDOWN_MS = 60 * 1000;
-const EARLY_HOUR = 6;
-const CHIP_TIMEOUT_MS = 5000;
-```
+## Key Patterns
 
 ### Event Lifecycle
-1. User action → `logUsed()`, `logResisted()`, or `logHabit()`
-2. Creates event object → `DB.addEvent(evt)`
-3. `stampActivity()` (updates last activity timestamp)
-4. `calculateAndUpdateWins()` (recalculates all badges)
-5. `render()` (updates UI)
-6. `FirebaseSync.onDataChanged()` → debounced push to cloud (3s)
+`logUsed()` / `logResisted()` / `logHabit()` → `DB.addEvent()` → `stampActivity()` → `calculateAndUpdateWins()` → `render()`. Cloud sync fires automatically: `DB.saveEvents()` calls `FirebaseSync.onDataChanged()` internally (debounced 3s push).
+
+### Win System
+`calculateAndUpdateWins()` recalculates all badges on every event change. Define new badges in `WIN_DEFINITIONS`, add logic using `addWin(condition, 'win-id')` inside `calculateAndUpdateWins()`.
+
+### Time Boundaries
+- **Day boundary:** 6am, not midnight (`EARLY_HOUR = 6`)
+- **Gap wins:** Exclude gaps crossing 6am (overnight sleep)
+- **Morning Skip:** No use 6am–noon, eligible once past 6am
+- **Night Skip:** No use midnight–6am, eligible once past 6am
 
 ### Undo System
-- `lastUndoEventId` persists during cooldown period (1 min)
-- `showUndo(id)` / `hideUndo()` toggle visibility
-- Tab switching: Preserve ID when switching away, restore if cooldown active on return
-- After actual undo, clear ID immediately so it won't restore
+`lastUndoEventId` persists during cooldown (1 min). Tab switching only hides the CSS class — ID is preserved so undo restores when returning to 'today' tab during cooldown.
 
-### Win Calculation
-`calculateAndUpdateWins()` is the brain. Runs on every event change. Compares today vs yesterday, checks streaks, gaps, habits. Wins stored separately from events (prevents recalculating history on every pull). Merge strategy: max count per win ID.
+### Firebase Sync
+- **Pull:** `onAuthStateChanged` → `pullFromCloud()` → merge events (union by ID), merge settings (`{...local, ...cloud}`), max wins → `invalidateDBCaches()` → `continueToApp()`
+- **Push:** Data change → `onDataChanged()` → debounced 3s → `pushToCloud()`
+- **Focus-pull:** App regains focus → flush pending push, then pull fresh data
 
-### Firebase Sync Flow
-**Pull:** `onAuthStateChanged` → `pullFromCloud()` → merge events (union by ID), max wins, replace settings → **invalidate caches** → `continueToApp()`
+## Profiles
+`ADDICTION_PROFILES`: cannabis, alcohol, smoking, other. Each has substances, methods, amounts, icons. Selected in onboarding, access via `getProfile()`.
 
-**Push:** Data change → `onDataChanged()` → `debouncedSync(3s)` → `pushToCloud()`
+## Development
 
-**Manual sync button:** Pull then push, show status.
-
-## Addiction Profiles
-`ADDICTION_PROFILES` constant defines 4 profiles (cannabis, alcohol, smoking, other). Each has: substances, methods, amounts, icons, labels. Selected during onboarding, drives all UI text/options. Access via `getProfile()`.
-
-## Adding Features
-
-### New Metric Tile
-Add to `renderProgress()`:
-```javascript
-tileHTML(value, 'Label', subtitle, 'Tooltip description')
+### Commands
+```bash
+npm run build      # Minifies to dist/
+npm run clean      # Removes dist/
 ```
-Handle empty data (`value = '—'` if no events).
+**Do not run build.js during development** — only when ready to deploy.
 
-### New Badge
-1. Add to `WIN_DEFINITIONS` object
-2. Add logic in `calculateAndUpdateWins()` using `addWin(condition, 'win-id')`
-3. Wins auto-merge on cloud sync via max count
-
-### New Profile
-Add to `ADDICTION_PROFILES` constant. Ensure all substances have icons.
-
-## Testing Before Release
-- [ ] Test offline mode (disable network in DevTools)
-- [ ] Test sync between 2 devices
-- [ ] Increment service worker version in `sw.js`
-- [ ] Test PWA install on mobile
-- [ ] Check localStorage quota on long-running test data
-- [ ] Verify undo button persists during cooldown across tab switches
+### Test Data Generators
+Defined at bottom of `code.js` (not currently exposed on `window`). To use, temporarily add `window.generateAllTestData = generateAllTestData;` etc:
+- `generateAllTestData()` — Mix of everything
+- `generateUseEvent(7)` — Single use event 7 days ago
 
 ## Common Gotchas
-- **Don't pre-load DB in DOMContentLoaded** - Let Firebase auth flow handle it
-- **Always escape user input** with `escapeHTML()` before innerHTML
-- **Old events may lack new fields** - Use `evt?.newField ?? defaultValue`
-- **Firestore merge is NOT a true merge** - Last write wins, except events (union by ID) and wins (max count)
-- **Tab switching hides chips/undo** - But undo restores if cooldown active when returning to 'today' tab
-- **6am is the day boundary** - Not midnight. Critical for gap calculations.
-- **Do not run build.js when making changes** - This will be called manually only when we want to build.
-
-## Code Style
-- Vanilla JS, ES6+ features OK (arrow functions, destructuring, optional chaining)
-- No JSX, no build-time transforms (just terser minify)
-- Mobile-first CSS: `flex-direction: column`, `width: 100%` for inputs
-- Test at 320px viewport
-- Use semantic HTML when possible
-- Keep functions focused, max ~50 lines
+- **Don't pre-load DB in DOMContentLoaded** — Firebase auth flow handles it
+- **Always `escapeHTML()`** before innerHTML with user text
+- **Old events may lack new fields** — Use `evt?.field ?? default`
+- **6am is the day boundary** — Not midnight. Critical for gaps, streaks, Morning/Night Skip
+- **Vanilla JS only** — ES6+ OK, no frameworks, no JSX, no build transforms
+- **Mobile-first CSS** — Test at 320px viewport
+- **Clear intervals before re-setting** — Prevents timer leaks
