@@ -24,26 +24,25 @@ Whether you're working toward complete abstinence, harm reduction, or just under
 ## ✨ Features
 
 ### 📊 **Track Your Way**
+- **Choose what to track** - Pick smoking, alcohol, cannabis, or custom
 - **One-tap logging** - Quickly log sessions, resisted urges, or healthy habits
-- **Multi-profile support** - Cannabis, alcohol, smoking, or custom tracking
 - **Visual analytics** - Graphs for sessions, amounts, time-of-day patterns, and trends
 - **Day-by-day history** - Browse and edit previous days with full event details
 
 ### 🏆 **Celebrate Progress**
-- **45+ badges** - Automatic recognition for streaks, gaps, timing improvements, and healthy choices
-- **Milestone tracking** - From 1-hour gaps to 1-year breaks
+- **40+ badges** - Automatic recognition for streaks, gaps, timing improvements, and healthy choices
+- **Milestone tracking** - From 1-minute gaps to 1-year breaks
 - **Gentle coaching tips** - Supportive suggestions for alternative healthy habits
-- **Goals tracker** - Set personal goals and track your progress
 
 ### 🔒 **Privacy-First**
-- **Works offline** - All data stored locally in your browser by default
-- **Optional cloud sync** - Sign in with Google or email to sync across devices
+- **Use anonymously** - No account required unless you want sync
+- **Optional Cloud sync** - Sign in with Google or email to sync across devices
 - **No ads, no data selling** - Your data stays yours
 
 ### 📱 **Modern & Accessible**
-- **PWA support** - Install to your home screen like a native app
 - **Cross-platform** - Works on phone, tablet, and desktop
 - **No downloads required** - Runs in any modern browser
+- **PWA support** - Install to your home screen like a native app
 
 ---
 
@@ -67,7 +66,7 @@ Lentando recognizes progress in many forms:
 ## 🚀 Getting Started
 
 1. **Visit** [lentando.3d2k.com](https://lentando.3d2k.com) in any modern browser
-2. **Select** the substance or habit you want to track
+2. **Select** the substance you want to track
 3. **Start logging** sessions, resists, and habits
 4. **Optional:** Sign in to sync across devices
 5. **Optional:** Install as a PWA for quick home screen access
@@ -86,14 +85,6 @@ Lentando recognizes progress in many forms:
 ## 🛠️ Built With
 
 Pure vanilla JavaScript, HTML5, and CSS3. No frameworks, no dependencies-just clean, fast code that works everywhere.
-
----
-
-## 📄 License
-
-Creative Commons Attribution-NonCommercial 4.0 International License
-
----
 
 ![Lentando Screenshot](screenshot.png)
 
