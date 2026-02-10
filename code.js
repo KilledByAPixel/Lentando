@@ -2813,6 +2813,7 @@ window.App = {
 // generateTestData(100) - adds 100 random usage events over past 30 days
 // generateTestHabits(20) - adds 20 random events per habit type
 // generateTestResists(50) - adds 50 random resist events
+// generateUseEvent(7) - adds a single use event 7 days ago
 
 function generateAllTestData() {
   console.log('🎲 Generating comprehensive test data...');
@@ -3009,14 +3010,6 @@ function generateUseEvent(daysAgo) {
   console.log(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago:`, evt);
   showToast(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago`);
 }
-
-// Dev tools — uncomment to expose in browser console:
-// window.generateAllTestData = generateAllTestData;
-// window.generateTestData = generateTestData;
-// window.generateTestHabits = generateTestHabits;
-// window.generateTestResists = generateTestResists;
-// window.generateTestWins = generateTestWins;
-// window.debugAddUseEvent = debugAddUseEvent;
 
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
