@@ -2310,15 +2310,25 @@ function stampActivity() {
 }
 
 let lastUndoEventId = null;
+let undoHideTimeout = null;
 
 function showUndo(eventId) {
   lastUndoEventId = eventId;
+  // Clear any pending hide timeout from a previous undo
+  if (undoHideTimeout) {
+    clearTimeout(undoHideTimeout);
+    undoHideTimeout = null;
+  }
   const row = $('used-row');
   if (row) row.classList.add('has-undo');
 }
 
 function hideUndo() {
   lastUndoEventId = null;
+  if (undoHideTimeout) {
+    clearTimeout(undoHideTimeout);
+    undoHideTimeout = null;
+  }
   const row = $('used-row');
   if (row) row.classList.remove('has-undo');
 }
@@ -2347,7 +2357,7 @@ function undoLastUsed() {
   lastUndoEventId = null;
   
   // Delay hiding undo button until after animation completes
-  setTimeout(() => {
+  undoHideTimeout = setTimeout(() => {
     hideUndo();
   }, 400);
   
