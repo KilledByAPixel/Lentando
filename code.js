@@ -1070,9 +1070,10 @@ function renderMetrics() {
   const resisted = filterByType(events, 'resisted');
   const totalAmt = sumAmount(used);
 
-  const exerciseMins = getHabits(events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
+  const exerciseEvents = getHabits(events, 'exercise');
+  const exerciseMins = exerciseEvents.reduce((sum, e) => sum + (e.minutes || 0), 0);
   const allHabits = sumHabitCounts(events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
-  const exerciseSub = exerciseMins > 0 ? `${exerciseMins}m Exercise` : '';
+  const exerciseSub = exerciseMins > 0 ? `${exerciseMins}m Exercise` : (exerciseEvents.length > 0 ? `${exerciseEvents.length} Exercise Actions` : '');
 
   // Calculate longest resist streak today (max consecutive resists between uses)
   let maxResistStreak = 0, currentResistStreak = 0;
@@ -1196,8 +1197,10 @@ function renderProgress() {
 
   const ratioTile = getRatioTile(thisWeek.profileUsed, last7Days);
 
-  const exerciseMins = getHabits(thisWeek.events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
-  const exercisePerDay = (exerciseMins / 7).toFixed(1);
+  const exerciseEvents = getHabits(thisWeek.events, 'exercise');
+  const exerciseMins = exerciseEvents.reduce((sum, e) => sum + (e.minutes || 0), 0);
+  const exercisePerDay = exerciseMins > 0 ? (exerciseMins / 7).toFixed(1) : (exerciseEvents.length / 7).toFixed(1);
+  const exerciseLabel = exerciseMins > 0 ? `${exercisePerDay}m` : exercisePerDay;
   const weekHabits = sumHabitCounts(thisWeek.events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
   const exerciseSub = weekHabits > 0 ? `${weekHabits} Healthy Actions` : '';
 
@@ -1205,7 +1208,7 @@ function renderProgress() {
     ratioTile,
     tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average sessions per day this week'),
     tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions this week'),
-    tileHTML(`${exercisePerDay}m`, 'Exercise/Day', exerciseSub, 'Average exercise per day this week')
+    tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day this week')
   ].join('');
 }
 
