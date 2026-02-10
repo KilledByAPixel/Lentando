@@ -2971,7 +2971,7 @@ function generateTestWins() {
 }
 
 // DEBUG: Generate a use event X days ago
-function debugAddUseEvent(daysAgo) {
+function generateUseEvent(daysAgo) {
   const settings = DB.loadSettings();
   const profile = getProfile();
   
