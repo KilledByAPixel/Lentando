@@ -1560,6 +1560,7 @@ function navigateDay(offset) {
   
   currentHistoryDay = newKey;
   historyShowCount = HISTORY_PAGE_SIZE;
+  playSound('tab');
   renderDayHistory();
 }
 
