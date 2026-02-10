@@ -17,7 +17,7 @@ const DATA_VERSION = 1;
 const ADDICTION_PROFILES = {
   cannabis: {
     name: 'Cannabis',
-    sessionLabel: 'Used',
+    sessionLabel: 'Use',
     substanceLabel: 'Substance',
     methodLabel: 'Method',
     substances: ['thc', 'cbd', 'mix'],
@@ -29,7 +29,7 @@ const ADDICTION_PROFILES = {
   },
   alcohol: {
     name: 'Alcohol',
-    sessionLabel: 'Drank',
+    sessionLabel: 'Drink',
     substanceLabel: 'Type',
     substances: ['beer', 'wine', 'liquor'],
     substanceDisplay: { beer: 'Beer', wine: 'Wine', liquor: 'Liquor' },
@@ -39,7 +39,7 @@ const ADDICTION_PROFILES = {
   },
   smoking: {
     name: 'Smoking',
-    sessionLabel: 'Smoked',
+    sessionLabel: 'Smoke',
     substanceLabel: 'Type',
     substances: ['cigarette', 'vape', 'other'],
     substanceDisplay: { cigarette: 'Cigarette', vape: 'Vape', other: 'Other' },
@@ -49,7 +49,7 @@ const ADDICTION_PROFILES = {
   },
   other: {
     name: 'Other',
-    sessionLabel: 'Used',
+    sessionLabel: 'Use',
     substanceLabel: 'Type',
     methodLabel: 'Method',
     substances: ['type1', 'type2', 'type3'],
