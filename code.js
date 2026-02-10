@@ -218,11 +218,11 @@ async function initSounds() {
     
     // Pre-build sound samples using ZZFXSound class (params will be tuned later)
     SOUNDS = {
-      used: new ZZFXSound([,,200,.02,.05,.1,,1,,,,,,,,.2]),
-      resist: new ZZFXSound([,,400,.02,.1,.2,,2,5,,,,,,,,.3]),
-      habit: new ZZFXSound([,,300,.01,.05,.15,,1.5,3,,,,,,,,.25]),
-      exercise: new ZZFXSound([,,350,.02,.08,.18,,1.8,4,,,,,,,,.28]),
-      undo: new ZZFXSound([,,150,.01,.05,.1,,.5,-2,,,,,,,,.15])
+      used: new ZZFXSound([,,224,.02,.02,.08,1,1.7,-13.9,,,,,,6.7]),
+      resist: new ZZFXSound([,,539,,.04,.29,1,1.92,,,567,.02,.02,,,,.04]),
+      habit: new ZZFXSound([1.99,,330,.01,.04,.04,,.8,,-2,27,.06,,,,,.1,.52,.03,.1,-1662]),
+      exercise: new ZZFXSound([,,1004,,,.06,,27,13,,-157,.29]),
+      undo: new ZZFXSound([,,150,.05,,.05,,1.3,,,,,,3])
     };
   } catch (e) {
     console.error('Failed to load sound system:', e);
@@ -2318,7 +2318,7 @@ function bindEvents() {
     const habit = btn.dataset.habit;
     
     if (habit === 'exercise') {
-      playSound('exercise');
+      playSound('habit');
       hapticFeedback();
       pulseEl(btn);
       const picker = $('exercise-chips');
@@ -2344,6 +2344,7 @@ function bindEvents() {
     if (!chip) return;
     const exerciseBtn = document.querySelector('[data-habit="exercise"]');
     if (exerciseBtn) pulseEl(exerciseBtn);
+    playSound('exercise');
     logHabit('exercise', parseInt(chip.dataset.min, 10));
     $('exercise-chips').classList.add('hidden');
   });
