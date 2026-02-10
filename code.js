@@ -1221,31 +1221,7 @@ function calculateAndUpdateWins() {
   const freshTodayWins = Array.from(todayCountMap.entries())
     .map(([id, count]) => ({ id, count }));
   
-  // Step 3: Build todayOrder - track which wins were incremented (move to front)
-  const prevOrder = (isSameDay && winData.todayOrder) ? winData.todayOrder : [];
-  const newOrder = [...prevOrder];
-  
-  freshTodayWins.forEach(w => {
-    const prevCount = prevTodayCountMap.get(w.id) || 0;
-    const wasIncremented = w.count > prevCount;
-    
-    if (wasIncremented) {
-      // Remove from current position if exists
-      const idx = newOrder.indexOf(w.id);
-      if (idx !== -1) newOrder.splice(idx, 1);
-      // Add to front
-      newOrder.unshift(w.id);
-    } else if (!newOrder.includes(w.id)) {
-      // New win that wasn't in previous order
-      newOrder.unshift(w.id);
-    }
-  });
-  
-  // Clean up order array - remove IDs that are no longer in today's wins
-  const todayIds = new Set(freshTodayWins.map(w => w.id));
-  const cleanedOrder = newOrder.filter(id => todayIds.has(id));
-  
-  // Step 4: Convert lifetime map to array (today's wins NOT included)
+  // Step 3: Convert lifetime map to array (today's wins NOT included)
   const updatedLifetimeWins = Array.from(lifetimeMap.entries())
     .filter(([, count]) => count > 0)
     .map(([id, count]) => ({ id, count }))
@@ -1258,7 +1234,6 @@ function calculateAndUpdateWins() {
   const updatedWinData = {
     todayDate: today,
     todayWins: freshTodayWins,
-    todayOrder: cleanedOrder,
     lifetimeWins: updatedLifetimeWins,
     todayUndoCount: undoCount
   };
@@ -1273,21 +1248,10 @@ function renderWins() {
   const todayEl = $('wins-today');
   if (todayEl) {
     // Get earned medals
-    const todayOrder = winData.todayOrder || [];
     const earnedWins = winData.todayWins
       .map(w => ({ ...w, ...getWinDef(w.id) }))
-      .filter(w => WIN_DEFINITIONS[w.id]); // Filter out unknown medals
-    
-    // Sort earned wins by todayOrder
-    earnedWins.sort((a, b) => {
-      const aIdx = todayOrder.indexOf(a.id);
-      const bIdx = todayOrder.indexOf(b.id);
-      
-      if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-      if (aIdx !== -1) return -1;
-      if (bIdx !== -1) return 1;
-      return (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999);
-    });
+      .filter(w => WIN_DEFINITIONS[w.id]) // Filter out unknown medals
+      .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
     
     // Get unearned medals (all medals not in earned list)
     const earnedIds = new Set(earnedWins.map(w => w.id));
