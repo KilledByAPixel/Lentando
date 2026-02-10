@@ -294,6 +294,7 @@ function clearAllStorage() {
   localStorage.removeItem(STORAGE_THEME);
   localStorage.removeItem(STORAGE_WINS);
   localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
+  localStorage.removeItem(STORAGE_VERSION);
   DB._events = null;
   DB._settings = null;
   DB._dateIndex = null;
@@ -446,7 +447,6 @@ const DB = {
   saveEvents() {
     try {
       localStorage.setItem(STORAGE_EVENTS, JSON.stringify(this._events));
-      localStorage.setItem(STORAGE_VERSION, DATA_VERSION.toString());
       this._invalidateDateIndex();
       if (window.FirebaseSync) FirebaseSync.onDataChanged();
     } catch (e) {
@@ -916,7 +916,7 @@ function chipGroupHTML(label, field, values, activeVal, displayFn) {
 
 function getUsedEventDetail(evt) {
   // Find the profile that owns this substance (may differ from current profile for historical events)
-  const matchedProfile = getProfileForSubstance(evt.substance);
+  const { profile: matchedProfile } = getProfileForSubstance(evt.substance);
   
   const icon = matchedProfile.icons[evt.substance] || '⚡';
   const title = matchedProfile.substanceDisplay[evt.substance] || evt.substance.toUpperCase();
@@ -1029,6 +1029,18 @@ function sumHabitCounts(events, habitTypes) {
   return habitTypes.reduce((sum, h) => sum + getHabits(events, h).length, 0);
 }
 
+/** Calculate "bad" substance amount — for cannabis, mix counts as 0.5 THC. */
+function calcBadAmount(usedEvents, profile, badFilter) {
+  if (profile === 'cannabis') {
+    return usedEvents.reduce((sum, e) => {
+      if (e.substance === 'thc') return sum + (e.amount || 0);
+      if (e.substance === 'mix') return sum + (e.amount || 0) * 0.5;
+      return sum;
+    }, 0);
+  }
+  return usedEvents.filter(badFilter).reduce((sum, e) => sum + (e.amount || 0), 0);
+}
+
 function buildSinceLastUsedTile(used) {
   // Find last used event across all history (current profile's substances)
   let lastUsedTs = null;
@@ -1108,16 +1120,7 @@ function renderMetrics() {
   const config = ratioMap[settings.addictionProfile];
   let ratioSub = '';
   if (config && totalAmt > 0) {
-    let badAmount;
-    if (settings.addictionProfile === 'cannabis') {
-      badAmount = used.reduce((sum, e) => {
-        if (e.substance === 'thc') return sum + (e.amount || 0);
-        if (e.substance === 'mix') return sum + (e.amount || 0) * 0.5;
-        return sum;
-      }, 0);
-    } else {
-      badAmount = used.filter(config.badFilter).reduce((sum, e) => sum + (e.amount || 0), 0);
-    }
+    const badAmount = calcBadAmount(used, settings.addictionProfile, config.badFilter);
     const ratio = ((badAmount / totalAmt) * 100).toFixed(0);
     ratioSub = `${ratio}% ${config.ratioLabel}`;
   }
@@ -1149,16 +1152,7 @@ function getRatioTile(weekUsed, dayKeys) {
   
   // Calculate bad ratio by amount — for cannabis, mix counts as 0.5 since it's half THC
   const totalAmount = weekUsed.reduce((sum, e) => sum + (e.amount || 0), 0);
-  let badAmount;
-  if (settings.addictionProfile === 'cannabis') {
-    badAmount = weekUsed.reduce((sum, e) => {
-      if (e.substance === 'thc') return sum + (e.amount || 0);
-      if (e.substance === 'mix') return sum + (e.amount || 0) * 0.5;
-      return sum;
-    }, 0);
-  } else {
-    badAmount = weekUsed.filter(config.badFilter).reduce((sum, e) => sum + (e.amount || 0), 0);
-  }
+  const badAmount = calcBadAmount(weekUsed, settings.addictionProfile, config.badFilter);
   const ratio = totalAmount > 0 ? ((badAmount / totalAmount) * 100).toFixed(0) + '%' : '—';
 
   // Count days without the "bad" substance this week — only count days since first-ever event
@@ -1940,12 +1934,13 @@ function modalFieldWrap(html) {
 
 /** Find the addiction profile that owns a given substance key */
 function getProfileForSubstance(substance) {
-  const current = getProfile();
-  if (current.substanceDisplay[substance]) return current;
-  for (const p of Object.values(ADDICTION_PROFILES)) {
-    if (p.substanceDisplay[substance]) return p;
+  const currentKey = DB.loadSettings().addictionProfile || 'cannabis';
+  const current = ADDICTION_PROFILES[currentKey];
+  if (current.substanceDisplay[substance]) return { key: currentKey, profile: current };
+  for (const [k, p] of Object.entries(ADDICTION_PROFILES)) {
+    if (p.substanceDisplay[substance]) return { key: k, profile: p };
   }
-  return current; // fallback
+  return { key: currentKey, profile: current }; // fallback
 }
 
 function openEditModal(eventId) {
@@ -1958,10 +1953,9 @@ function openEditModal(eventId) {
   const fieldBuilders = {
     used: () => {
       // Use the profile that owns this event's substance (not necessarily the current profile)
-      const profile = getProfileForSubstance(evt.substance);
-      const substanceName = profile.substanceDisplay[evt.substance] || evt.substance.toUpperCase();
+      const { key, profile } = getProfileForSubstance(evt.substance);
       const fields = [
-        `<label>${profile.substanceLabel}</label><div style="font-size:16px">${substanceName}</div>`,
+        `<label>Substance</label><div style="font-size:16px">${key[0].toUpperCase() + key.slice(1)}</div>`,
         chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v])
       ];
       if (profile.methods) {
