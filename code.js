@@ -1258,10 +1258,36 @@ function renderWins() {
     
     // Get unearned medals (all medals not in earned list)
     const earnedIds = new Set(earnedWins.map(w => w.id));
-    const unearnedWins = Object.keys(WIN_DEFINITIONS)
+    let unearnedWins = Object.keys(WIN_DEFINITIONS)
       .filter(id => !earnedIds.has(id))
-      .map(id => ({ id, count: 0, ...getWinDef(id) }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+      .map(id => ({ id, count: 0, ...getWinDef(id) }));
+    
+    // For sequential medals, only show the next unearned one
+    const gapSequence = ['gap-1h', 'gap-2h', 'gap-4h', 'gap-8h', 'gap-12h'];
+    const breakSequence = ['tbreak-1d', 'tbreak-7d', 'tbreak-14d', 'tbreak-21d', 'tbreak-30d', 'tbreak-365d'];
+    const appStreakSequence = ['app-streak', 'week-streak', 'month-streak', 'year-streak'];
+    
+    const filterSequence = (sequence) => {
+      const unearnedInSeq = sequence.filter(id => !earnedIds.has(id));
+      if (unearnedInSeq.length > 0) {
+        const nextUnearned = unearnedInSeq[0]; // First unearned in sequence
+        return sequence.filter(id => earnedIds.has(id) || id === nextUnearned);
+      }
+      return sequence;
+    };
+    
+    const allowedGaps = new Set(filterSequence(gapSequence));
+    const allowedBreaks = new Set(filterSequence(breakSequence));
+    const allowedAppStreaks = new Set(filterSequence(appStreakSequence));
+    
+    unearnedWins = unearnedWins.filter(w => {
+      if (gapSequence.includes(w.id)) return allowedGaps.has(w.id);
+      if (breakSequence.includes(w.id)) return allowedBreaks.has(w.id);
+      if (appStreakSequence.includes(w.id)) return allowedAppStreaks.has(w.id);
+      return true;
+    });
+    
+    unearnedWins.sort((a, b) => a.label.localeCompare(b.label));
     
     const allWins = [...earnedWins, ...unearnedWins];
     todayEl.innerHTML = allWins.map(winCardHTML).join('');
@@ -1276,7 +1302,7 @@ function renderWins() {
     .filter(w => WIN_DEFINITIONS[w.id])
     .sort((a, b) => a.label.localeCompare(b.label));
   
-  // Get unearned medals
+  // Get unearned medals (show ALL for lifetime)
   const earnedLifetimeIds = new Set(earnedLifetime.map(w => w.id));
   const unearnedLifetime = Object.keys(WIN_DEFINITIONS)
     .filter(id => !earnedLifetimeIds.has(id))
