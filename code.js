@@ -1143,16 +1143,16 @@ function buildSinceLastUsedTile(used) {
       const dateStr = lastUsedDate.toLocaleDateString('en-US', options);
       sinceLastSub = `Last Used On ${dateStr}`;
     } else {
-      // Show longest gap today (excludes gaps crossing 6am)
+      // Show average gap today (excludes gaps crossing 6am)
       const todayGaps = getGapsMs(used);
       if (todayGaps.length > 0) {
-        const longestGap = Math.max(...todayGaps);
-        sinceLastSub = `${formatDuration(longestGap)} Longest Gap`;
+        const avgGap = todayGaps.reduce((s, g) => s + g, 0) / todayGaps.length;
+        sinceLastSub = `${formatDuration(avgGap)} Average Gap`;
       }
     }
   }
   
-  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub, 'Time since your last session and longest gap today (excludes gaps crossing 6am)');
+  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub, 'Time since your last session and average gap today (excludes gaps crossing 6am)');
 }
 
 function buildTodayRatioTile(used) {
