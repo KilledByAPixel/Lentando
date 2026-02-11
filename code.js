@@ -305,6 +305,7 @@ function clearAllStorage() {
   localStorage.removeItem(STORAGE_WINS);
   localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
   localStorage.removeItem(STORAGE_VERSION);
+  localStorage.removeItem('ht_last_updated');
   DB._events = null;
   DB._settings = null;
   DB._dateIndex = null;

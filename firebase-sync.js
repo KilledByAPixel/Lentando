@@ -138,7 +138,12 @@ const STORAGE_KEYS = {
   todos: 'ht_todos',
   loginSkipped: 'ht_login_skipped',
   version: 'ht_data_version',
+  updatedAt: 'ht_last_updated',
 };
+
+function setLocalUpdatedAt() {
+  localStorage.setItem(STORAGE_KEYS.updatedAt, Date.now().toString());
+}
 
 function getLocalData() {
   return {
@@ -147,6 +152,7 @@ function getLocalData() {
     wins: JSON.parse(localStorage.getItem(STORAGE_KEYS.wins) || '{}'),
     todos: JSON.parse(localStorage.getItem(STORAGE_KEYS.todos) || '[]'),
     version: parseInt(localStorage.getItem(STORAGE_KEYS.version)) || 0,
+    updatedAt: parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt)) || 0,
     lastSynced: Date.now()
   };
 }
@@ -156,6 +162,11 @@ async function pushToCloud(uid) {
   if (!isConfigured || !uid) return;
   const userDoc = doc(db, 'users', uid);
   const data = getLocalData();
+  // Ensure updatedAt is set before pushing so the cloud can win/lose based on recency
+  if (!data.updatedAt) {
+    setLocalUpdatedAt();
+    data.updatedAt = parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt)) || Date.now();
+  }
   await setDoc(userDoc, data, { merge: true });
   console.log('[Sync] Pushed to cloud');
 }
@@ -173,13 +184,17 @@ async function pullFromCloud(uid) {
   }
 
   const cloud = snap.data();
+  const localUpdatedAt = parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt)) || 0;
+  const cloudUpdatedAt = parseInt(cloud.updatedAt) || 0;
+  const preferCloud = cloudUpdatedAt >= localUpdatedAt;
 
   // --- Events: merge by ID (union of local + cloud, deduplicated) ---
   const cloudEvents = cloud.events || [];
   const localEvents = JSON.parse(localStorage.getItem(STORAGE_KEYS.events) || '[]');
   const seenIds = new Set();
   const merged = [];
-  for (const e of [...cloudEvents, ...localEvents]) {
+  const orderedEvents = preferCloud ? [...cloudEvents, ...localEvents] : [...localEvents, ...cloudEvents];
+  for (const e of orderedEvents) {
     if (e.id && !seenIds.has(e.id)) {
       seenIds.add(e.id);
       merged.push(e);
@@ -201,19 +216,19 @@ async function pullFromCloud(uid) {
       mergedLifetime.push({ id, count: Math.max(localLifetime.get(id) || 0, cloudLifetime.get(id) || 0) });
     }
 
-    const mergedWinData = {
-      ...localWins,
-      ...cloud.wins,
-      lifetimeWins: mergedLifetime
-    };
+    const mergedWinData = preferCloud
+      ? { ...localWins, ...cloud.wins, lifetimeWins: mergedLifetime }
+      : { ...cloud.wins, ...localWins, lifetimeWins: mergedLifetime };
     localStorage.setItem(STORAGE_KEYS.wins, JSON.stringify(mergedWinData));
   }
 
   // --- Settings: cloud wins ---
   if (cloud.settings) {
     const localSettings = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}');
-    // Cloud settings take priority, but keep local if cloud doesn't have a value
-    const mergedSettings = { ...localSettings, ...cloud.settings };
+    // Prefer the more recent source
+    const mergedSettings = preferCloud
+      ? { ...localSettings, ...cloud.settings }
+      : { ...cloud.settings, ...localSettings };
     localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(mergedSettings));
   }
 
@@ -222,7 +237,8 @@ async function pullFromCloud(uid) {
     const localTodos = JSON.parse(localStorage.getItem(STORAGE_KEYS.todos) || '[]');
     const seenTexts = new Set();
     const mergedTodos = [];
-    for (const t of [...cloud.todos, ...localTodos]) {
+    const orderedTodos = preferCloud ? [...cloud.todos, ...localTodos] : [...localTodos, ...cloud.todos];
+    for (const t of orderedTodos) {
       const key = t && t.text;
       if (key && !seenTexts.has(key)) {
         seenTexts.add(key);
@@ -239,6 +255,9 @@ async function pullFromCloud(uid) {
     const maxVersion = Math.max(localVersion, cloudVersion);
     localStorage.setItem(STORAGE_KEYS.version, maxVersion.toString());
   }
+
+  // Stamp merge time so future pulls from other devices know this device is up-to-date
+  localStorage.setItem(STORAGE_KEYS.updatedAt, Date.now().toString());
 
   // Invalidate DB caches immediately after localStorage is updated
   // This ensures continueToApp() will read fresh data
@@ -576,12 +595,14 @@ window.FirebaseSync = {
 
   /** Called by code.js whenever data changes */
   onDataChanged() {
+    setLocalUpdatedAt();
     debouncedSync();
   },
 
   /** Push current localStorage to cloud immediately (used by clearDatabase) */
   async pushNow() {
     if (!currentUser) return;
+    setLocalUpdatedAt();
     await pushToCloud(currentUser.uid);
   },
   
