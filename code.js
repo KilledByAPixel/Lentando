@@ -1277,14 +1277,10 @@ function renderProgress() {
   
   const dailyAvg = (thisWeek.profileUsed.length / daysOfUse).toFixed(1);
 
-  // Previous week (14 days ago to 7 days ago) for comparison
-  const prevWeekDays = getLastNDays(7, 7);
-  const prevWeek = getWeekData(prevWeekDays);
-  const prevDailyAvg = (prevWeek.profileUsed.length / 7).toFixed(1);
-  let sessionsSub = '';
-  if (prevWeek.profileUsed.length > 0) {
-    sessionsSub = `Last Week: ${prevDailyAvg}`;
-  }
+  // Calculate average amount per day for this week
+  const weekTotalAmount = sumAmount(thisWeek.profileUsed);
+  const dailyAmountAvg = (weekTotalAmount / daysOfUse).toFixed(1);
+  const sessionsSub = `${dailyAmountAvg} ${getProfile().amountUnit}/day`;
 
   // Longest gap within a single day (6am to 6am boundaries)
   let maxGapMs = 0;
@@ -1318,7 +1314,7 @@ function renderProgress() {
 
   $('progress').innerHTML = [
     ratioTile,
-    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average sessions per day for this week and previous week'),
+    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average sessions per day and average amount per day this week'),
     tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 6am)'),
     tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day this week')
   ].join('');
