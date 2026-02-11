@@ -26,7 +26,7 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 ## Key Patterns
 
 ### Event Lifecycle
-`logUsed()` / `logResisted()` / `logHabit()` → `DB.addEvent()` → `stampActivity()` → `calculateAndUpdateWins()` → `render()`. Cloud sync fires automatically: `DB.saveEvents()` calls `FirebaseSync.onDataChanged()` internally (debounced 3s push).
+`logUsed()` / `logResisted()` / `logHabit()` → `DB.addEvent()` → `calculateAndUpdateWins()` → `render()`. Cloud sync fires automatically: `DB.saveEvents()` calls `FirebaseSync.onDataChanged()` internally (debounced 3s push).
 
 ### Win System
 `calculateAndUpdateWins()` recalculates all badges on every event change. Define new badges in `WIN_DEFINITIONS`, add logic using `addWin(condition, 'win-id')` inside `calculateAndUpdateWins()`.

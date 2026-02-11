@@ -198,7 +198,6 @@ const DEFAULT_SETTINGS = {
   lastMethod: 'bong',
   lastAmount: 1.0,
   showCoaching: true,
-  lastActivityTimestamp: null,
   graphDays: 7,
   soundEnabled: true
 };
@@ -691,8 +690,7 @@ const Wins = {
     addWin(todayEvents.length > 0, 'daily-checkin');
 
     // --- Welcome Back win ---
-    // Use event timestamps (stable) instead of lastActivityTimestamp (mutable)
-    // so the badge doesn't disappear after stampActivity() updates the timestamp.
+    // Use event timestamps (stable) so the badge is consistent across renders.
     if (todayEvents.length > 0) {
       const allKeys = DB.getAllDayKeys(); // sorted most recent first
       for (const key of allKeys) {
@@ -2316,12 +2314,6 @@ function selectProfile(profileKey) {
 }
 
 // ========== MAIN ACTIONS ==========
-function stampActivity() {
-  const s = DB.loadSettings();
-  s.lastActivityTimestamp = Date.now();
-  DB.saveSettings();
-}
-
 let lastUndoEventId = null;
 let undoHideTimeout = null;
 
@@ -2407,7 +2399,6 @@ function logUsed() {
   const method = profile.methods ? s.lastMethod : null;
   const evt = createUsedEvent(s.lastSubstance, method, s.lastAmount);
   DB.addEvent(evt);
-  stampActivity();
   calculateAndUpdateWins();
   render();
   hideResistedChips();
@@ -2430,7 +2421,6 @@ function logResisted() {
   if (!checkCooldown('resisted')) return;
   const evt = createResistedEvent();
   DB.addEvent(evt);
-  stampActivity();
   calculateAndUpdateWins();
   render();
   hideUsedChips();
@@ -2457,7 +2447,6 @@ function logHabit(habit, minutes) {
   if (!checkCooldown('habit_' + habit)) return;
   const evt = createHabitEvent(habit, minutes);
   DB.addEvent(evt);
-  stampActivity();
   calculateAndUpdateWins();
   render();
   hideUndo();
@@ -2516,7 +2505,6 @@ function bindEvents() {
       // Immediately log exercise with 0 minutes
       const evt = createHabitEvent('exercise', 0);
       DB.addEvent(evt);
-      stampActivity();
       calculateAndUpdateWins();
       render();
       hideUndo();
@@ -3085,7 +3073,6 @@ function generateUseEvent(daysAgo) {
   };
   
   DB.addEvent(evt);
-  stampActivity();
   calculateAndUpdateWins();
   render();
   
