@@ -1,6 +1,6 @@
 // Service Worker for Lentando PWA
 const SW_DEBUG = true; // Set to true to enable console logging
-const CACHE_NAME = 'lentando-v130';
+const CACHE_NAME = 'lentando-v131';
 const urlsToCache = [
   './index.html',
   './code.js',
