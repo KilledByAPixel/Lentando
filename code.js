@@ -1004,7 +1004,7 @@ function getUsedEventDetail(evt) {
     title,
     detail: [
       evt.method,
-      evt.amount != null && `${evt.amount} ${evt.amount === 1 ? unit.replace(/s$/, '') : unit}`,
+      evt.amount != null && `${evt.amount} ${unit}`,
       evt.reason
     ].filter(Boolean).join(' · ')
   };
