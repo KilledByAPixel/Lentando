@@ -411,43 +411,6 @@ const DB = {
 
       console.log(`Migrating data from version ${storedVersion} to ${DATA_VERSION}`);
 
-      // Migrate from v0 to v1: Subtract today's badges from lifetime
-      if (storedVersion < 1) {
-        try {
-          const winData = JSON.parse(localStorage.getItem(STORAGE_WINS));
-          if (winData && winData.todayWins && winData.lifetimeWins) {
-            // Create map of today's wins for quick lookup
-            const todayMap = new Map();
-            winData.todayWins.forEach(w => {
-              todayMap.set(w.id, w.count || 0);
-            });
-            
-            // Subtract today's wins from lifetime wins
-            winData.lifetimeWins = winData.lifetimeWins.map(w => {
-              const todayCount = todayMap.get(w.id) || 0;
-              return { id: w.id, count: Math.max(0, w.count - todayCount) };
-            }).filter(w => w.count > 0);
-            
-            localStorage.setItem(STORAGE_WINS, JSON.stringify(winData));
-            console.log('Successfully migrated wins data: removed today\'s badges from lifetime');
-          }
-        } catch (e) {
-          console.error('Failed to migrate wins data:', e);
-        }
-
-        // Migrate nicotine profile to smoking profile
-        try {
-          const settings = JSON.parse(localStorage.getItem(STORAGE_SETTINGS));
-          if (settings && settings.addictionProfile === 'nicotine') {
-            settings.addictionProfile = 'smoking';
-            localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings));
-            console.log('Migrated addiction profile from nicotine to smoking');
-          }
-        } catch (e) {
-          console.error('Failed to migrate addiction profile:', e);
-        }
-      }
-
       // Future migrations go here
       // if (storedVersion < 2) { /* migrate to v2 */ }
 
