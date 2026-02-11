@@ -1348,17 +1348,28 @@ function calculateAndUpdateWins() {
   
   // Save yesterday's wins before clearing
   let yesterdayWins = [];
-  if (!isSameDay && winData.todayWins) {
-    // New day detected - save yesterday's wins and add to lifetime
-    yesterdayWins = [...winData.todayWins];
+  if (!isSameDay && winData.todayWins && winData.todayDate) {
+    // New day detected - add to lifetime
     winData.todayWins.forEach(w => {
       const current = lifetimeMap.get(w.id) || 0;
       lifetimeMap.set(w.id, current + w.count);
     });
-  } else {
+    
+    // Calculate how many days have passed since last session
+    const lastDate = new Date(winData.todayDate + 'T12:00:00');
+    const currentDate = new Date(today + 'T12:00:00');
+    const daysPassed = Math.floor((currentDate - lastDate) / (24 * 60 * 60 * 1000));
+    
+    // Only save as "yesterday's" if exactly 1 day has passed
+    if (daysPassed === 1) {
+      yesterdayWins = [...winData.todayWins];
+    }
+    // If daysPassed > 1, yesterdayWins stays empty (cleared)
+  } else if (isSameDay) {
     // Same day - keep existing yesterday's wins
     yesterdayWins = winData.yesterdayWins || [];
   }
+  // If new day but no winData.todayDate (first time), yesterdayWins stays empty
   
   // Step 2: Calculate fresh today's wins
   const todayEvents = DB.forDate(today);
@@ -1464,7 +1475,7 @@ function renderWins() {
     
     yesterdayEl.innerHTML = yesterdayWins.length > 0
       ? yesterdayWins.map(w => winCardHTML(w, false)).join('')
-      : '<div class="empty-state" style="grid-column:1/-1">No recent badges</div>';
+      : '<div class="empty-state" style="grid-column:1/-1">No badges earned yesterday</div>';
   }
 
   const totalEl = $('wins-total');
