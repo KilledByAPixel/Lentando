@@ -1283,16 +1283,22 @@ function renderProgress() {
 
   const exerciseEvents = getHabits(thisWeek.events, 'exercise');
   const exerciseMins = exerciseEvents.reduce((sum, e) => sum + (e.minutes || 0), 0);
-  const exercisePerDay = exerciseMins > 0 ? (exerciseMins / daysOfUse).toFixed(1) : (exerciseEvents.length / daysOfUse).toFixed(1);
-  const exerciseLabel = exerciseMins > 0 ? `${exercisePerDay}m` : exercisePerDay;
   const weekHabits = sumHabitCounts(thisWeek.events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
-  const exerciseSub = weekHabits > 0 ? `${weekHabits} Healthy Actions` : '';
+  
+  // Exercise per day subtitle logic (similar to today section)
+  let exerciseSub = '';
+  if (exerciseMins > 0) {
+    const exercisePerDay = (exerciseMins / daysOfUse).toFixed(1);
+    exerciseSub = `${exercisePerDay}m Exercise/Day`;
+  } else if (exerciseEvents.length > 0) {
+    exerciseSub = `${exerciseEvents.length} Exercise Actions`;
+  }
 
   $('progress').innerHTML = [
     tileHTML(dailyAmountAvg, `${capitalize(getProfile().amountUnit)}/Day`, hitsSub, 'Average amount per day and average sessions per day'),
     tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 6am)'),
     ratioTile,
-    tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day and total healthy actions')
+    tileHTML(weekHabits, 'Healthy Actions', exerciseSub, 'Total healthy actions and average exercise per day')
   ].join('');
 }
 
