@@ -157,32 +157,32 @@ const WIN_DEFINITIONS = {
   'exercised': { label: 'Exercised', icon: '🏃', desc: 'Logged exercise' },
   'habit-stack': { label: 'Habit Stack', icon: '🧱', desc: 'Logged multiple different habit types' },
   'five-star-day': { label: 'Five Star Day', icon: '🌟', desc: 'Logged all 5 habit types' },
-  'gap-1h': { label: 'Gap Win (1h+)', icon: '🕐', desc: 'Maintained a gap of 1+ hours between sessions (excludes gaps crossing 6am)' },
-  'gap-2h': { label: 'Gap Win (2h+)', icon: '🕑', desc: 'Maintained a gap of 2+ hours between sessions (excludes gaps crossing 6am)' },
-  'gap-4h': { label: 'Gap Win (4h+)', icon: '🕓', desc: 'Maintained a gap of 4+ hours between sessions (excludes gaps crossing 6am)' },
-  'gap-8h': { label: 'Gap Win (8h+)', icon: '🕗', desc: 'Maintained a gap of 8+ hours between sessions (excludes gaps crossing 6am)' },
-  'gap-12h': { label: 'Gap Win (12h+)', icon: '🕛', desc: 'Maintained a gap of 12+ hours between sessions (excludes gaps crossing 6am)' },
-  'gap-above-avg': { label: 'Gap Longer Than Average', icon: '📏', desc: 'Longest gap exceeded your average (excludes gaps crossing 6am)' },
+  'gap-above-avg': { label: 'Longer Gap', icon: '📏', desc: 'Longest gap exceeded your average (excludes gaps crossing 6am)' },
+  'gap-1h': { label: 'Gap 1h', icon: '🕐', desc: 'Maintained a gap of 1+ hours between sessions (excludes gaps crossing 6am)' },
+  'gap-2h': { label: 'Gap 2h', icon: '🕑', desc: 'Maintained a gap of 2+ hours between sessions (excludes gaps crossing 6am)' },
+  'gap-4h': { label: 'Gap 4h', icon: '🕓', desc: 'Maintained a gap of 4+ hours between sessions (excludes gaps crossing 6am)' },
+  'gap-8h': { label: 'Gap 8h', icon: '🕗', desc: 'Maintained a gap of 8+ hours between sessions (excludes gaps crossing 6am)' },
+  'gap-12h': { label: 'Gap 12h', icon: '🕛', desc: 'Maintained a gap of 12+ hours between sessions (excludes gaps crossing 6am)' },
+  'night-gap': { label: 'Night Gap', icon: '⏰', desc: '12+ hour gap crossing the 6am threshold' },
   'night-skip': { label: 'Night Skip', icon: '🛏️', desc: 'No use between midnight and 6am' },
   'morning-skip': { label: 'Morning Skip', icon: '🌅', desc: 'No use between 6am and noon' },
   'day-skip': { label: 'Day Skip', icon: '☀️', desc: 'No use between noon and 6pm' },
   'evening-skip': { label: 'Evening Skip', icon: '🌙', desc: 'No use between 6pm and midnight' },
-  'later-first': { label: 'Later First Use', icon: '🕰️', desc: 'First session later than your 7-day average' },
   'lower-amount': { label: 'Less Than Yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
-  'first-later': { label: 'Later Than Yesterday', icon: '⏰', desc: 'First session later than yesterday (after 6am)' },
+  'first-later': { label: 'Later Than Yesterday', icon: '🕰️', desc: 'First session later than yesterday (after 6am)' },
   'resist-streak': { label: 'Resist Streak', icon: '🛡️', desc: 'Resisted urges for multiple days in a row' },
   'habit-streak': { label: 'Habit Streak', icon: '🐢', desc: 'Logged healthy habits for consecutive days' },
-  'taper': { label: 'Taper Win', icon: '📐', desc: 'Gradually reduced usage over 3 or more consecutive days' },
+  'taper': { label: 'Taper', icon: '📐', desc: 'Gradually reduced usage over 3 or more consecutive days' },
   'app-streak': { label: 'App Streak', icon: '📱', desc: 'Used the app multiple days in a row' },
   'week-streak': { label: 'App Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
   'month-streak': { label: 'App Month Streak', icon: '🗓️', desc: 'Used the app every day for a month' },
   'year-streak': { label: 'App Year Streak', icon: '🎉', desc: 'Used the app every day for a year!' },
-  'tbreak-1d': { label: 'Break: 1 Day', icon: '🌱', desc: 'One full day with no use' },
-  'tbreak-7d': { label: 'Break: 1 Week', icon: '🌿', desc: 'One week with no use' },
-  'tbreak-14d': { label: 'Break: 2 Weeks', icon: '🍀', desc: 'Two weeks with no use' },
-  'tbreak-21d': { label: 'Break: 3 Weeks', icon: '🌳', desc: 'Three weeks with no use' },
-  'tbreak-30d': { label: 'Break: 1 Month', icon: '🏆', desc: 'One month with no use' },
-  'tbreak-365d': { label: 'Break: 1 Year', icon: '👑', desc: 'One year with no use!' },
+  'tbreak-1d': { label: 'Day Break', icon: '🌱', desc: 'One full day with no use' },
+  'tbreak-7d': { label: 'Week Break', icon: '🌿', desc: 'One week with no use' },
+  'tbreak-14d': { label: '2 Week Break', icon: '🍀', desc: 'Two weeks with no use' },
+  'tbreak-21d': { label: '3 Week Break', icon: '🌳', desc: 'Three weeks with no use' },
+  'tbreak-30d': { label: '1 Month Break', icon: '🏆', desc: 'One month with no use' },
+  'tbreak-365d': { label: '1 Year Break', icon: '👑', desc: 'One year with no use!' },
 };
 
 // Auto-assign sortOrder based on position in WIN_DEFINITIONS object
@@ -848,25 +848,33 @@ const Wins = {
     });
     addWin(noUseOvernight, 'night-skip');
     
-    // Later First Use — first session later than 7-day average
-    if (profileUsed.length > 0) {
-      const last7UseDays = this._getLast7UseDays();
-      if (last7UseDays.length > 0) {
-        const firstUseTimes = last7UseDays.map(k => {
-          const dayUsed = filterProfileUsed(DB.forDate(k)).filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
-          return dayUsed.length > 0 ? timeOfDayMin(dayUsed[0].ts) : null;
-        }).filter(t => t !== null);
+    // Night Gap — 12+ hour gap that crosses 6am boundary (overnight break)
+    // Check both today's and yesterday's events (after 6am yesterday)
+    const yesterdayProfileUsed = yesterdayEvents ? filterProfileUsed(yesterdayEvents).filter(u => new Date(u.ts).getHours() >= EARLY_HOUR) : [];
+    const combinedUsed = [...yesterdayProfileUsed, ...profileUsed].sort((a, b) => a.ts - b.ts);
+    
+    let hasNightGap = false;
+    if (combinedUsed.length >= 2) {
+      for (let i = 1; i < combinedUsed.length; i++) {
+        const gapHours = (combinedUsed[i].ts - combinedUsed[i - 1].ts) / 3600000;
+        if (gapHours < 12) continue;
         
-        if (firstUseTimes.length > 0) {
-          const profileUsedDaytime = profileUsed.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
-          if (profileUsedDaytime.length > 0) {
-            const avgFirstUseTime = firstUseTimes.reduce((sum, t) => sum + t, 0) / firstUseTimes.length;
-            const todayFirstUseTime = timeOfDayMin(profileUsedDaytime[0].ts);
-            addWin(todayFirstUseTime > avgFirstUseTime, 'later-first');
-          }
+        // Check if a 6am boundary falls between the two timestamps
+        // Find the next 6am after the first event
+        const prevDate = new Date(combinedUsed[i - 1].ts);
+        const next6am = new Date(prevDate);
+        next6am.setHours(EARLY_HOUR, 0, 0, 0);
+        if (next6am.getTime() <= combinedUsed[i - 1].ts) {
+          next6am.setDate(next6am.getDate() + 1);
+        }
+        
+        if (next6am.getTime() <= combinedUsed[i].ts) {
+          hasNightGap = true;
+          break;
         }
       }
     }
+    addWin(hasNightGap, 'night-gap');
 
     // --- Comparison wins ---
     if (yesterdayEvents && yesterdayEvents.length > 0) {
