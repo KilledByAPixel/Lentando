@@ -819,6 +819,20 @@ const Wins = {
       return h >= start && h < end;
     });
 
+    // Check if this is the user's first day using the app
+    const allKeys = DB.getAllDayKeys();
+    const hasEventsBeforeToday = allKeys.some(key => key < todayKey() && DB.forDate(key).length > 0);
+    const isFirstDay = !hasEventsBeforeToday;
+    
+    // On first day only: user must have started before the badge period to be eligible
+    const isEligibleForSkipBadge = (start) => {
+      if (!isFirstDay) return true; // After first day, always eligible
+      if (todayEvents.length === 0) return false; // No events yet on first day, not eligible
+      const earliestEventTs = Math.min(...todayEvents.map(e => e.ts));
+      const firstEventHour = getHour(earliestEventTs);
+      return firstEventHour <= start; // Must have started at or before the period start
+    };
+
     const skipBadges = [
       { start: EARLY_HOUR, end: AFTERNOON_HOUR, id: 'morning-skip' },
       { start: 12, end: 18, id: 'day-skip' },
@@ -826,7 +840,8 @@ const Wins = {
       { start: 0,  end: EARLY_HOUR, id: 'night-skip' },
     ];
     for (const { start, end, id } of skipBadges) {
-      addWin(currentHour >= start && noUseInRange(start, end), id);
+      const eligible = isEligibleForSkipBadge(start);
+      addWin(eligible && currentHour >= start && noUseInRange(start, end), id);
     }
     
     // Night Gap — 12+ hour gap crossing today's 6am boundary (overnight break)
