@@ -1464,7 +1464,7 @@ function renderWins() {
     // Today's badges: only show earned badges
     todayEl.innerHTML = earnedWins.length > 0
       ? earnedWins.map(w => winCardHTML(w, false)).join('') + 
-        '<div class="empty-state" style="grid-column:1/-1;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">Daily badges update based on your activity.</div>'
+        '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">Daily badges update based on your activity.</div>'
       : '';
   }
 
@@ -1478,7 +1478,7 @@ function renderWins() {
     
     yesterdayEl.innerHTML = yesterdayWins.length > 0
       ? yesterdayWins.map(w => winCardHTML(w, false)).join('') + 
-        '<div class="empty-state" style="grid-column:1/-1;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">These are badges you earned yesterday and won\'t change.</div>'
+        '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">These are badges you earned yesterday and won\'t change.</div>'
       : '<div class="empty-state" style="grid-column:1/-1">No badges earned yesterday</div>';
   }
 
@@ -1500,7 +1500,7 @@ function renderWins() {
   
   const allLifetime = [...earnedLifetime, ...unearnedLifetime];
   totalEl.innerHTML = allLifetime.map(w => winCardHTML(w, true)).join('') + 
-    '<div class="empty-state" style="grid-column:1/-1;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">Every badge you\'ve earned accumulates here.</div>';
+    '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">Every badge you\'ve earned will accumulate here.</div>';
 }
 
 function hasRecentWater() {
