@@ -1462,7 +1462,10 @@ function renderWins() {
     unearnedWins.sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
     
     // Today's badges: only show earned badges
-    todayEl.innerHTML = earnedWins.map(w => winCardHTML(w, false)).join('');
+    todayEl.innerHTML = earnedWins.length > 0
+      ? earnedWins.map(w => winCardHTML(w, false)).join('') + 
+        '<div class="empty-state" style="grid-column:1/-1;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">Daily badges will be updated based on your activity.</div>'
+      : '';
   }
 
   // Render yesterday's badges
@@ -1474,7 +1477,8 @@ function renderWins() {
       .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
     
     yesterdayEl.innerHTML = yesterdayWins.length > 0
-      ? yesterdayWins.map(w => winCardHTML(w, false)).join('')
+      ? yesterdayWins.map(w => winCardHTML(w, false)).join('') + 
+        '<div class="empty-state" style="grid-column:1/-1;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">These are badges you earned yesterday and will not change.</div>'
       : '<div class="empty-state" style="grid-column:1/-1">No badges earned yesterday</div>';
   }
 
@@ -1495,7 +1499,8 @@ function renderWins() {
     .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
   
   const allLifetime = [...earnedLifetime, ...unearnedLifetime];
-  totalEl.innerHTML = allLifetime.map(w => winCardHTML(w, true)).join('');
+  totalEl.innerHTML = allLifetime.map(w => winCardHTML(w, true)).join('') + 
+    '<div class="empty-state" style="grid-column:1/-1;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">Every badge you\'ve earned will accumulate here.</div>';
 }
 
 function hasRecentWater() {
