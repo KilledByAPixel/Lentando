@@ -78,6 +78,7 @@ const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
 // Win calculation thresholds
 const GAP_MILESTONES = [1, 2, 4, 8, 12];
+const TBREAK_MILESTONES = [1, 7, 14, 21, 30, 365];
 const EARLY_HOUR = 6;
 const AFTERNOON_HOUR = 12;
 const MAX_STREAK_DAYS = 60;
@@ -911,12 +912,12 @@ const Wins = {
     if (profileUsed.length === 0) {
       const daysSinceLastUse = this._countDaysSinceLastUse();
       if (daysSinceLastUse >= 1) {
-        addWin(true, 'tbreak-1d');
-        addWin(daysSinceLastUse >= 7, 'tbreak-7d');
-        addWin(daysSinceLastUse >= 14, 'tbreak-14d');
-        addWin(daysSinceLastUse >= 21, 'tbreak-21d');
-        addWin(daysSinceLastUse >= 30, 'tbreak-30d');
-        addWin(daysSinceLastUse >= 365, 'tbreak-365d');
+        // Award only the highest T-break milestone achieved
+        const milestones = getMilestoneWins(daysSinceLastUse, TBREAK_MILESTONES);
+        if (milestones.length > 0) {
+          const highestMilestone = milestones[0];
+          addWin(true, `tbreak-${highestMilestone}d`);
+        }
       }
     }
 
