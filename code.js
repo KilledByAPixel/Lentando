@@ -220,7 +220,8 @@ async function initSounds() {
       exercise: new ZZFXSound([,,990,,,.05,,9,20]),
       undo: new ZZFXSound([,,150,.05,,.05,,1.3,,,,,,3]),
       cooldown: new ZZFXSound([2,0,260,,.2,.2,,,,,,,,,,,.12,.3,.1]),
-      badge: new ZZFXSound([3,.02,988,,,.4,,33,,,331,.1,,,,,,,,,-340])
+      badge: new ZZFXSound([3,.02,988,,,.4,,33,,,331,.1,,,,,,,,,-340]),
+      click: new ZZFXSound([1.5,,300,,,.008,,,300,,,,,,,,,.5])
     };
   } catch (e) {
     console.error('Failed to load sound system:', e);
@@ -998,7 +999,8 @@ function emptyStateHTML(message, style) {
 function tileHTML(val, label, sub = '', tooltip = '') {
   const subHTML = sub ? `<div class="sub">${sub}</div>` : '';
   const titleAttr = tooltip ? ` title="${escapeHTML(tooltip)}"` : '';
-  return `<div class="tile"${titleAttr}><div class="val">${val}</div><div class="label">${label}</div>${subHTML}</div>`;
+  const dataTooltip = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
+  return `<div class="tile"${titleAttr}${dataTooltip}><div class="val">${val}</div><div class="label">${label}</div>${subHTML}</div>`;
 }
 
 /** Generates a labelled chip group. displayFn defaults to String(v). */
@@ -3122,10 +3124,10 @@ function setupBadgeTooltips() {
   }
   
   // Show tooltip
-  function showTooltip(element, text) {
+  function showTooltip(element, text, soundName = 'click') {
     if (!text) return;
     
-    playSound('badge');
+    playSound(soundName);
     
     const tooltip = getTooltipElement();
     tooltip.textContent = text;
@@ -3159,9 +3161,10 @@ function setupBadgeTooltips() {
     }
   }
   
-  // Event delegation for badge items
+  // Event delegation for badge items and tiles
   document.addEventListener('click', (e) => {
     const winItem = e.target.closest('.win-item');
+    const tile = e.target.closest('.tile[data-tooltip]');
     
     if (winItem) {
       e.preventDefault();
@@ -3174,6 +3177,18 @@ function setupBadgeTooltips() {
         hideTooltip();
       } else {
         showTooltip(winItem, tooltipText);
+      }
+    } else if (tile) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const tooltipText = tile.getAttribute('data-tooltip');
+      
+      // If clicking the same tile, toggle it off
+      if (activeTooltip && activeTooltip.textContent === tooltipText) {
+        hideTooltip();
+      } else {
+        showTooltip(tile, tooltipText);
       }
     } else {
       // Clicked outside, hide tooltip
