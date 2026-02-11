@@ -16,7 +16,6 @@ const STATIC_FILES = [
   'favicon.png',
   'icon-192.png',
   'icon-512.png',
-  'sitemap.xml',
 ];
 
 (async () => {
