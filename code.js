@@ -654,10 +654,12 @@ function avgWithinDayGapMs(dayKeys, filterFn) {
 function loadWinData() {
   try {
     const data = JSON.parse(localStorage.getItem(STORAGE_WINS));
-    if (!data) return { todayDate: null, todayWins: [], lifetimeWins: [], todayUndoCount: 0 };
+    if (!data) return { todayDate: null, todayWins: [], yesterdayWins: [], lifetimeWins: [], todayUndoCount: 0 };
+    // Backfill yesterdayWins for existing data
+    if (!data.yesterdayWins) data.yesterdayWins = [];
     return data;
   } catch {
-    return { todayDate: null, todayWins: [], lifetimeWins: [], todayUndoCount: 0 };
+    return { todayDate: null, todayWins: [], yesterdayWins: [], lifetimeWins: [], todayUndoCount: 0 };
   }
 }
 
@@ -1344,12 +1346,18 @@ function calculateAndUpdateWins() {
     lifetimeMap.set(w.id, w.count);
   });
   
+  // Save yesterday's wins before clearing
+  let yesterdayWins = [];
   if (!isSameDay && winData.todayWins) {
-    // New day detected - add yesterday's wins to lifetime
+    // New day detected - save yesterday's wins and add to lifetime
+    yesterdayWins = [...winData.todayWins];
     winData.todayWins.forEach(w => {
       const current = lifetimeMap.get(w.id) || 0;
       lifetimeMap.set(w.id, current + w.count);
     });
+  } else {
+    // Same day - keep existing yesterday's wins
+    yesterdayWins = winData.yesterdayWins || [];
   }
   
   // Step 2: Calculate fresh today's wins
@@ -1378,6 +1386,7 @@ function calculateAndUpdateWins() {
   const updatedWinData = {
     todayDate: today,
     todayWins: freshTodayWins,
+    yesterdayWins: yesterdayWins,
     lifetimeWins: updatedLifetimeWins,
     todayUndoCount: undoCount
   };
@@ -1443,6 +1452,19 @@ function renderWins() {
     
     // Today's badges: only show earned badges
     todayEl.innerHTML = earnedWins.map(w => winCardHTML(w, false)).join('');
+  }
+
+  // Render yesterday's badges
+  const yesterdayEl = $('wins-yesterday');
+  if (yesterdayEl) {
+    const yesterdayWins = winData.yesterdayWins
+      .map(w => ({ ...w, ...getWinDef(w.id) }))
+      .filter(w => WIN_DEFINITIONS[w.id])
+      .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
+    
+    yesterdayEl.innerHTML = yesterdayWins.length > 0
+      ? yesterdayWins.map(w => winCardHTML(w, false)).join('')
+      : '<div class="empty-state" style="grid-column:1/-1">No recent badges</div>';
   }
 
   const totalEl = $('wins-total');
@@ -1840,6 +1862,7 @@ function importJSON(inputEl) {
         const mergedWinData = {
           todayDate: winData.todayDate,
           todayWins: winData.todayWins,
+          yesterdayWins: winData.yesterdayWins,
           todayUndoCount: winData.todayUndoCount || 0,
           lifetimeWins: Array.from(lifetimeMap.entries())
             .filter(([, count]) => count > 0)
@@ -3029,6 +3052,7 @@ function generateTestWins() {
   const updatedData = {
     todayDate: null,
     todayWins: [],
+    yesterdayWins: [],
     todayUndoCount: 0,
     lifetimeWins: Array.from(lifetimeMap.entries())
       .map(([id, count]) => ({ id, count }))
