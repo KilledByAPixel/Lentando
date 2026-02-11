@@ -1209,7 +1209,19 @@ function renderMetrics() {
   const exerciseEvents = getHabits(events, 'exercise');
   const exerciseMins = exerciseEvents.reduce((sum, e) => sum + (e.minutes || 0), 0);
   const allHabits = sumHabitCounts(events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
-  const exerciseSub = exerciseMins > 0 ? `${exerciseMins}m Exercise` : (exerciseEvents.length > 0 ? `${exerciseEvents.length} Exercise Actions` : '');
+  
+  // Build 4th tile based on whether there's exercise time
+  let fourthTile;
+  if (exerciseMins > 0) {
+    // Show exercise as main metric, healthy actions as subtitle
+    const exerciseMain = `${exerciseMins}m`;
+    const habitsSub = allHabits > 0 ? `${allHabits} Healthy Actions` : '';
+    fourthTile = tileHTML(exerciseMain, 'Exercise', habitsSub, 'Exercise minutes and healthy habits logged today');
+  } else {
+    // Show healthy actions as main metric, exercise actions (if any) as subtitle
+    const exerciseSub = exerciseEvents.length > 0 ? `${exerciseEvents.length} Exercise Actions` : '';
+    fourthTile = tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today and exercise minutes');
+  }
 
   // Calculate longest resist streak today (max consecutive resists between uses)
   let maxResistStreak = 0, currentResistStreak = 0;
@@ -1230,7 +1242,7 @@ function renderMetrics() {
     tileHTML(totalAmt, capitalize(profile.amountUnit), sessionsSub, `Total amount used today and number of sessions`),
     buildSinceLastUsedTile(used),
     buildTodayRatioTile(used),
-    tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today and exercise minutes')
+    fourthTile
   ].join('');
 }
 
@@ -1318,20 +1330,24 @@ function renderProgress() {
   const exerciseMins = exerciseEvents.reduce((sum, e) => sum + (e.minutes || 0), 0);
   const weekHabits = sumHabitCounts(thisWeek.events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
   
-  // Exercise per day subtitle logic (similar to today section)
-  let exerciseSub = '';
+  // Build 4th tile based on whether there's exercise time
+  let fourthTile;
   if (exerciseMins > 0) {
+    // Show exercise per day as main metric, healthy actions as subtitle
     const exercisePerDay = (exerciseMins / daysOfUse).toFixed(1);
-    exerciseSub = `${exercisePerDay}m Exercise/Day`;
-  } else if (exerciseEvents.length > 0) {
-    exerciseSub = `${exerciseEvents.length} Exercise Actions`;
+    const habitsSub = weekHabits > 0 ? `${weekHabits} Healthy Actions` : '';
+    fourthTile = tileHTML(exercisePerDay + 'm', 'Exercise/Day', habitsSub, 'Average exercise per day and total healthy actions');
+  } else {
+    // Show healthy actions as main metric, exercise actions (if any) as subtitle
+    const exerciseSub = exerciseEvents.length > 0 ? `${exerciseEvents.length} Exercise Actions` : '';
+    fourthTile = tileHTML(weekHabits, 'Healthy Actions', exerciseSub, 'Total healthy actions and average exercise per day');
   }
 
   $('progress').innerHTML = [
     tileHTML(dailyAmountAvg, `${capitalize(getProfile().amountUnit)}/Day`, hitsSub, 'Average amount per day and average sessions per day'),
     tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 6am)'),
     ratioTile,
-    tileHTML(weekHabits, 'Healthy Actions', exerciseSub, 'Total healthy actions and average exercise per day')
+    fourthTile
   ].join('');
 }
 
