@@ -1,7 +1,7 @@
 {
   "name": "Lentando - Mindful Progress Tracking",
   "short_name": "Lentando",
-  "description": "Zero-friction habit and usage tracker with wins system",
+  "description": "Free, open-source substance use tracker. Track cannabis, alcohol, smoking with harm reduction approach. Earn progress badges, resist urges, build healthy habits. Private, offline-first, no ads.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1a1a1a",

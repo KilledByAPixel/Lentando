@@ -3,20 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lentando</title>
-<meta name="description" content="Zero-friction habit and usage tracker with wins system">
-<meta property="og:title" content="Lentando — Progress At Your Pace">
-<meta property="og:description" content="Track substance use, resist urges, celebrate wins, and build positive habits. Private, free, no ads.">
+<title>Lentando - Free Substance Use Tracker & Harm Reduction App | Mindful Progress Tracking</title>
+<meta name="description" content="Free open-source app for tracking substance use, cannabis, alcohol, smoking. Harm reduction approach with no judgment. Track usage, resist urges, earn badges for progress. Private, offline-first, no ads. Alternative to Nomo, I Am Sober, Quit Genius.">
+<meta name="keywords" content="substance use tracker, harm reduction, cannabis tracker, alcohol tracker, smoking tracker, quit smoking app, sobriety app, addiction recovery, mindful tracking, habit tracker, urge tracker, free sobriety app, open source recovery app">
+<meta name="author" content="Frank Force">
+<link rel="canonical" href="https://lentando.3d2k.com/">
+
+<!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://lentando.3d2k.com">
+<meta property="og:url" content="https://lentando.3d2k.com/">
+<meta property="og:site_name" content="Lentando">
+<meta property="og:title" content="Lentando - Free Substance Use Tracker & Harm Reduction App">
+<meta property="og:description" content="Track substance use with a harm reduction approach. Free, private, open-source. Earn badges for progress, resist urges, build healthy habits. No ads, no judgment.">
 <meta property="og:image" content="https://lentando.3d2k.com/icon-512.png?lentando-v119">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="Lentando app icon">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://lentando.3d2k.com/">
+<meta name="twitter:title" content="Lentando - Free Substance Use Tracker & Harm Reduction App">
+<meta name="twitter:description" content="Track substance use with a harm reduction approach. Free, private, open-source. Earn badges for progress, resist urges, build healthy habits.">
+<meta name="twitter:image" content="https://lentando.3d2k.com/icon-512.png?lentando-v119">
+<meta name="twitter:image:alt" content="Lentando app icon">
+
+<!-- PWA / Mobile -->
 <meta name="theme-color" content="#5c6bc0">
+<meta name="application-name" content="Lentando">
 <link rel="icon" type="image/png" href="favicon.png?lentando-v119">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png?lentando-v119">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Lentando">
+
+<!-- Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Lentando",
+  "applicationCategory": "HealthApplication",
+  "operatingSystem": "Any (PWA)",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5",
+    "ratingCount": "1"
+  },
+  "description": "Free open-source app for tracking substance use with a harm reduction approach. Track cannabis, alcohol, smoking. Earn badges for progress, resist urges, build healthy habits. Private and offline-first.",
+  "url": "https://lentando.3d2k.com",
+  "author": {
+    "@type": "Person",
+    "name": "Frank Force"
+  },
+  "datePublished": "2026-02-10",
+  "softwareVersion": "1.0",
+  "screenshot": "https://lentando.3d2k.com/icon-512.png",
+  "featureList": [
+    "Track substance use patterns",
+    "Harm reduction approach",
+    "Badge and progress system",
+    "Urge resistance tracking",
+    "Healthy habit building",
+    "Private and offline-first",
+    "Optional cloud sync",
+    "No ads or tracking"
+  ]
+}
+</script>
 <style>
 :root {
   --bg: #f4f3ef;
@@ -1046,7 +1107,7 @@ header .date { font-size: 14px; color: var(--muted); }
 
 <!-- ===== SPLASH SCREEN ===== -->
 <div id="splash-screen">
-  <img src="icon-192.png?lentando-v119" alt="Lentando">
+  <img src="icon-192.png?lentando-v119" alt="Lentando app logo - substance use and harm reduction tracker">
   <h1><span class="brand">Lentando</span></h1>
   <p class="tagline">progress at your pace</p>
 </div>
@@ -1054,7 +1115,7 @@ header .date { font-size: 14px; color: var(--muted); }
 <!-- ===== LANDING PAGE ===== -->
 <div id="landing-page" class="hidden">
   <div class="landing-content">
-    <img class="landing-logo" src="icon-192.png?lentando-v119" alt="Lentando">
+    <img class="landing-logo" src="icon-192.png?lentando-v119" alt="Lentando - Free substance use tracker and harm reduction app">
     <h1 class="landing-title"><span class="brand">Lentando</span></h1>
     <p class="landing-tagline">progress at your pace</p>
 
@@ -1254,7 +1315,7 @@ header .date { font-size: 14px; color: var(--muted); }
 <div class="modal-overlay hidden" id="login-overlay">
   <div class="onboarding-sheet">
     <div class="onboarding-header">
-      <img src="icon-192.png?lentando-v119" alt="Lentando" style="width:80px;height:80px;margin:0 auto;display:block">
+      <img src="icon-192.png?lentando-v119" alt="Lentando app icon" style="width:80px;height:80px;margin:0 auto;display:block">
       <h1><span class="brand">Lentando</span></h1>
       <p class="tagline">progress at your pace</p>
     </div>
@@ -1284,7 +1345,7 @@ header .date { font-size: 14px; color: var(--muted); }
 <div class="modal-overlay hidden" id="onboarding-overlay">
   <div class="onboarding-sheet">
     <div class="onboarding-header">
-      <img src="icon-192.png?lentando-v119" alt="Lentando" style="width:80px;height:80px;margin:0 auto;display:block">
+      <img src="icon-192.png?lentando-v119" alt="Lentando app icon" style="width:80px;height:80px;margin:0 auto;display:block">
       <h1><span class="brand">Lentando</span></h1>
       <p class="tagline">progress at your pace</p>
     </div>

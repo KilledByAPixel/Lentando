@@ -1,0 +1,14 @@
+# Lentando - Substance Use Tracker
+# https://lentando.3d2k.com
+
+User-agent: *
+Allow: /
+Disallow: /dist/
+Disallow: /local/
+Disallow: /node_modules/
+
+# Sitemaps
+Sitemap: https://lentando.3d2k.com/sitemap.xml
+
+# Crawl-delay (be nice to servers)
+Crawl-delay: 1
