@@ -615,19 +615,15 @@ function gapCrosses6am(ts1, ts2) {
   return d.getTime() <= ts2;
 }
 
-function getAllGapHours(sessions) {
+/** Get all within-day gaps (ms) between consecutive sessions, excluding gaps crossing 6am */
+function getGapsMs(sessions) {
   if (sessions.length < 2) return [];
   const sorted = [...sessions].sort((a, b) => a.ts - b.ts);
   const gaps = [];
-
-  // Include gaps between consecutive sessions, but skip any gap that
-  // crosses the 6am boundary (overnight sleep gap, not a real achievement).
-  // Gaps are only between two actual events — no gap from last event to now.
   for (let i = 1; i < sorted.length; i++) {
     if (gapCrosses6am(sorted[i - 1].ts, sorted[i].ts)) continue;
-    gaps.push((sorted[i].ts - sorted[i - 1].ts) / 3600000);
+    gaps.push(sorted[i].ts - sorted[i - 1].ts);
   }
-
   return gaps;
 }
 
@@ -639,14 +635,7 @@ function getMilestoneWins(gapHours, milestones) {
 
 /** Average within-day gap (ms) across the given day keys. Uses filterFn to get sessions per day. */
 function avgWithinDayGapMs(dayKeys, filterFn) {
-  const gaps = [];
-  for (const dk of dayKeys) {
-    const daySessions = filterFn(DB.forDate(dk));
-    for (let i = 1; i < daySessions.length; i++) {
-      if (gapCrosses6am(daySessions[i - 1].ts, daySessions[i].ts)) continue; // skip sleep gaps crossing 6am
-      gaps.push(daySessions[i].ts - daySessions[i - 1].ts);
-    }
-  }
+  const gaps = dayKeys.flatMap(dk => getGapsMs(filterFn(DB.forDate(dk))));
   return gaps.length > 0 ? gaps.reduce((s, g) => s + g, 0) / gaps.length : 0;
 }
 
@@ -778,32 +767,22 @@ const Wins = {
 
     // --- Timing-based wins ---
     // Gap wins — include all sessions but skip gaps that cross the 6am boundary (sleep gap)
-    if (profileUsed.length >= 1) {
-      const allGaps = getAllGapHours(profileUsed);
-      // Award only the highest milestone achieved today
-      if (allGaps.length > 0) {
-        const maxGap = Math.max(...allGaps);
-        const milestones = getMilestoneWins(maxGap, GAP_MILESTONES);
+    if (profileUsed.length >= 2) {
+      const todayGapsMs = getGapsMs(profileUsed);
+      
+      // Award only the highest gap milestone achieved today
+      if (todayGapsMs.length > 0) {
+        const maxGapHours = Math.max(...todayGapsMs) / 3600000;
+        const milestones = getMilestoneWins(maxGapHours, GAP_MILESTONES);
         if (milestones.length > 0) {
-          const highestMilestone = Math.max(...milestones);
-          addWin(true, `gap-${highestMilestone}h`);
+          addWin(true, `gap-${milestones[0]}h`);
         }
       }
       
       // Gap longer than 7-day historical average (within-day gaps only)
-      if (profileUsed.length >= 2) {
-        const avgGap = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
-        if (avgGap > 0) {
-          const sorted = [...profileUsed].sort((a, b) => a.ts - b.ts);
-          const todayGaps = [];
-          for (let i = 1; i < sorted.length; i++) {
-            if (gapCrosses6am(sorted[i - 1].ts, sorted[i].ts)) continue;
-            todayGaps.push(sorted[i].ts - sorted[i - 1].ts);
-          }
-          if (todayGaps.length > 0) {
-            addWin(Math.max(...todayGaps) > avgGap, 'gap-above-avg');
-          }
-        }
+      const avgGap = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
+      if (avgGap > 0 && todayGapsMs.length > 0) {
+        addWin(Math.max(...todayGapsMs) > avgGap, 'gap-above-avg');
       }
     }
 
