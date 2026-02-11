@@ -221,7 +221,7 @@ async function initSounds() {
       undo: new ZZFXSound([,,150,.05,,.05,,1.3,,,,,,3]),
       cooldown: new ZZFXSound([2,0,260,,.2,.2,,,,,,,,,,,.12,.3,.1]),
       badge: new ZZFXSound([3,.02,988,,,.4,,33,,,331,.1,,,,,,,,,-340]),
-      click: new ZZFXSound([1.5,,300,,,.008,,,300,,,,,,,,,.5])
+      //click: new ZZFXSound([1.5,,300,,,.008,,,300,,,,,,,,,.5]), // short sound for UI clicks
     };
   } catch (e) {
     console.error('Failed to load sound system:', e);
@@ -3124,10 +3124,8 @@ function setupBadgeTooltips() {
   }
   
   // Show tooltip
-  function showTooltip(element, text, soundName = 'click') {
+  function showTooltip(element, text) {
     if (!text) return;
-    
-    playSound(soundName);
     
     const tooltip = getTooltipElement();
     tooltip.textContent = text;
