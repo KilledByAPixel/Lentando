@@ -136,6 +136,7 @@ const STORAGE_KEYS = {
   settings: 'ht_settings',
   wins: 'ht_wins',
   todos: 'ht_todos',
+  deletedIds: 'ht_deleted_ids',
   loginSkipped: 'ht_login_skipped',
   version: 'ht_data_version',
   updatedAt: 'ht_last_updated',
@@ -151,6 +152,7 @@ function getLocalData() {
     settings: JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}'),
     wins: JSON.parse(localStorage.getItem(STORAGE_KEYS.wins) || '{}'),
     todos: JSON.parse(localStorage.getItem(STORAGE_KEYS.todos) || '[]'),
+    deletedIds: JSON.parse(localStorage.getItem(STORAGE_KEYS.deletedIds) || '[]'),
     version: parseInt(localStorage.getItem(STORAGE_KEYS.version)) || 0,
     updatedAt: parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt)) || 0,
     lastSynced: Date.now()
@@ -188,14 +190,29 @@ async function pullFromCloud(uid) {
   const cloudUpdatedAt = parseInt(cloud.updatedAt) || 0;
   const preferCloud = cloudUpdatedAt >= localUpdatedAt;
 
-  // --- Events: merge by ID (union of local + cloud, deduplicated) ---
+  // --- Merge deletedIds (tombstones): union by id, clean old ones ---
+  const cloudDeleted = cloud.deletedIds || [];
+  const localDeleted = JSON.parse(localStorage.getItem(STORAGE_KEYS.deletedIds) || '[]');
+  const seenDeletedIds = new Set();
+  const mergedDeleted = [];
+  const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+  for (const t of [...cloudDeleted, ...localDeleted]) {
+    if (t.id && !seenDeletedIds.has(t.id) && t.deletedAt > ninetyDaysAgo) {
+      seenDeletedIds.add(t.id);
+      mergedDeleted.push(t);
+    }
+  }
+  (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.deletedIds, JSON.stringify(mergedDeleted));
+
+  // --- Events: merge by ID (union of local + cloud, deduplicated), filter deleted ---
   const cloudEvents = cloud.events || [];
   const localEvents = JSON.parse(localStorage.getItem(STORAGE_KEYS.events) || '[]');
   const seenIds = new Set();
   const merged = [];
   const orderedEvents = preferCloud ? [...cloudEvents, ...localEvents] : [...localEvents, ...cloudEvents];
   for (const e of orderedEvents) {
-    if (e.id && !seenIds.has(e.id)) {
+    // Skip events that have been deleted (tombstoned)
+    if (e.id && !seenIds.has(e.id) && !seenDeletedIds.has(e.id)) {
       seenIds.add(e.id);
       merged.push(e);
     }

@@ -14,6 +14,7 @@ const STORAGE_THEME = 'ht_theme';
 const STORAGE_WINS = 'ht_wins';
 const STORAGE_LOGIN_SKIPPED = 'ht_login_skipped';
 const STORAGE_VERSION = 'ht_data_version';
+const STORAGE_DELETED_IDS = 'ht_deleted_ids';
 const DATA_VERSION = 1;
 
 const ADDICTION_PROFILES = {
@@ -321,6 +322,7 @@ function clearAllStorage() {
   localStorage.removeItem(STORAGE_WINS);
   localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
   localStorage.removeItem(STORAGE_VERSION);
+  localStorage.removeItem(STORAGE_DELETED_IDS);
   localStorage.removeItem('ht_last_updated');
   DB._events = null;
   DB._settings = null;
@@ -443,11 +445,52 @@ const DB = {
       const data = localStorage.getItem(STORAGE_EVENTS);
       this._events = data ? JSON.parse(data) : [];
       this._migrateDataIfNeeded();
+      // Filter out deleted events using tombstone list
+      const deletedIds = this._getDeletedIds();
+      if (deletedIds.size > 0) {
+        this._events = this._events.filter(e => !deletedIds.has(e.id));
+      }
     } catch {
       this._events = [];
     }
     this._invalidateDateIndex();
     return this._events;
+  },
+
+  _getDeletedIds() {
+    try {
+      const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
+      return new Set(tombstones.map(t => t.id));
+    } catch {
+      return new Set();
+    }
+  },
+
+  _addTombstone(eventId) {
+    try {
+      const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
+      // Don't duplicate
+      if (tombstones.some(t => t.id === eventId)) return;
+      tombstones.push({ id: eventId, deletedAt: Date.now() });
+      safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(tombstones));
+      if (window.FirebaseSync) FirebaseSync.onDataChanged();
+    } catch (e) {
+      console.error('Failed to add tombstone:', e);
+    }
+  },
+
+  _cleanOldTombstones() {
+    try {
+      const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
+      const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+      const cleaned = tombstones.filter(t => t.deletedAt > ninetyDaysAgo);
+      if (cleaned.length < tombstones.length) {
+        safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(cleaned));
+        console.log(`[Tombstone] Cleaned ${tombstones.length - cleaned.length} old tombstones`);
+      }
+    } catch (e) {
+      console.error('Failed to clean tombstones:', e);
+    }
   },
 
   saveEvents() {
@@ -492,9 +535,13 @@ const DB = {
 
   deleteEvent(id) {
     this.loadEvents();
+    // Add to tombstone list before removing
+    this._addTombstone(id);
     this._events = this._events.filter(e => e.id !== id);
     this._invalidateDateIndex();
     this.saveEvents();
+    // Clean up old tombstones periodically (every delete is fine, it's cheap)
+    this._cleanOldTombstones();
   },
 
   forDate(key) {
