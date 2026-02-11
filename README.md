@@ -13,27 +13,27 @@
 
 Recovery isn't a race - it's a journey taken one step at a time. Like a turtle, steady progress wins over speed. Lentando helps you track substance use, resisted urges, and healthy habits without shame or judgment.
 
-Whether you're working toward complete abstinence, harm reduction, or just understanding your patterns better, Lentando meets you where you are.
+Whether you're working toward abstinence, harm reduction, or just understanding your patterns better, Lentando meets you where you are.
 
 **Every small win counts.**
 
 ## ✨ Features
 
 ### 📊 **Track Your Way**
-- **Choose what to track** - Pick from smoking, alcohol, cannabis, or custom
-- **One-tap logging** - Quickly log sessions, resisted urges, or healthy habits
-- **Visual analytics** - Graphs for sessions, amounts, time-of-day patterns, and trends
-- **Day-by-day history** - Browse and edit previous days with full event details
+- **Choose what to track** - Pick from smoking, alcohol, cannabis, or other
+- **One-tap logging** - Quickly log sessions, resists, or healthy habits
+- **Visual analytics** - Graphs for sessions, amounts, and other trends
+- **Day-by-day history** - Browse and edit previous days with full details
 
 ### 🏆 **Celebrate Progress**
-- **50+ badges** - Automatic recognition for streaks, gaps, timing improvements, and healthy choices
+- **50+ badges** - Streaks, gaps, timing improvements, and mindful choices
 - **Milestone tracking** - From 1-hour gaps to 1-year breaks
 - **Gentle coaching tips** - Supportive suggestions for alternative healthy habits
 
 ### 🔒 **Privacy-First**
 - **Use anonymously** - No account required unless you want sync
-- **Works offline** — All data stored in your browser by default
-- **Optional cloud sync** - Sign in with Google or email to sync across devices
+- **Works offline** - Data stays in your browser by default
+- **Optional cloud sync** - Sign in to sync across devices
 - **No ads, no data selling** - Your data stays yours
 
 ### 📱 **Modern & Accessible**
@@ -62,7 +62,7 @@ Lentando recognizes progress in many forms:
 2. **Select** the substance you want to track
 3. **Start logging** sessions, resists, and habits
 4. **Optional:** Sign in to sync across devices
-5. **Optional:** Install as a PWA for quick home screen access
+5. **Optional:** Install as a PWA for quick access
 
 ## 💭 Philosophy
 
