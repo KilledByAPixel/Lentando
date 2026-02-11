@@ -137,6 +137,7 @@ const STORAGE_KEYS = {
   wins: 'ht_wins',
   todos: 'ht_todos',
   loginSkipped: 'ht_login_skipped',
+  version: 'ht_data_version',
 };
 
 function getLocalData() {
@@ -145,6 +146,7 @@ function getLocalData() {
     settings: JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}'),
     wins: JSON.parse(localStorage.getItem(STORAGE_KEYS.wins) || '{}'),
     todos: JSON.parse(localStorage.getItem(STORAGE_KEYS.todos) || '[]'),
+    version: parseInt(localStorage.getItem(STORAGE_KEYS.version)) || 0,
     lastSynced: Date.now()
   };
 }
@@ -228,6 +230,14 @@ async function pullFromCloud(uid) {
       }
     }
     localStorage.setItem(STORAGE_KEYS.todos, JSON.stringify(mergedTodos));
+  }
+
+  // --- Version: take the higher version (most migrated) ---
+  if (cloud.version !== undefined) {
+    const localVersion = parseInt(localStorage.getItem(STORAGE_KEYS.version)) || 0;
+    const cloudVersion = parseInt(cloud.version) || 0;
+    const maxVersion = Math.max(localVersion, cloudVersion);
+    localStorage.setItem(STORAGE_KEYS.version, maxVersion.toString());
   }
 
   // Invalidate DB caches immediately after localStorage is updated
