@@ -1179,7 +1179,7 @@ function buildSinceLastUsedTile(used) {
     }
   }
   
-  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub, 'Time since your last session');
+  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub, 'Time since your last session and average (excludes gaps crossing 6am)');
 }
 
 function renderMetrics() {
@@ -1220,10 +1220,10 @@ function renderMetrics() {
   const avgSub = `7-Day Average: ${avg7Day}`;
 
   $('metrics').innerHTML = [
-    tileHTML(totalAmt, capitalize(profile.amountUnit), avgSub, `Total amount used today`),
+    tileHTML(totalAmt, capitalize(profile.amountUnit), avgSub, `Total amount used today and average per day`),
     buildSinceLastUsedTile(used),
-    tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Urges you resisted today'),
-    tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today')
+    tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Urges you resisted and longest resist streak today'),
+    tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today and exercise minutes')
   ].join('');
 }
 
@@ -1259,7 +1259,7 @@ function getRatioTile(weekUsed, dayKeys) {
   }).length;
   const ratioSub = totalAmount > 0 ? `${ratio} ${config.ratioLabel}` : '';
 
-  return tileHTML(freeDays, config.freeLabel, ratioSub, `Days without primary substance`);
+  return tileHTML(freeDays, config.freeLabel, ratioSub, `Days without primary substance and ratio`);
 }
 
 function getWeekData(days) {
@@ -1319,9 +1319,9 @@ function renderProgress() {
 
   $('progress').innerHTML = [
     ratioTile,
-    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average use per day'),
+    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average sessions and average amount per day'),
     tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 6am)'),
-    tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day')
+    tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day and total healthy actions')
   ].join('');
 }
 
