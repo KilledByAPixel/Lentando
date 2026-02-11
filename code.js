@@ -79,6 +79,7 @@ const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 // Win calculation thresholds
 const GAP_MILESTONES = [1, 2, 4, 8, 12];
 const TBREAK_MILESTONES = [1, 7, 14, 21, 30, 365];
+const APP_STREAK_MILESTONES = [2, 7, 30, 365];
 const EARLY_HOUR = 6;
 const AFTERNOON_HOUR = 12;
 const MAX_STREAK_DAYS = 60;
@@ -901,12 +902,17 @@ const Wins = {
     const taperDays = this._countTaper();
     addWin(taperDays >= 2, 'taper');
     
-    // App usage streaks
+    // App usage streaks - award only the highest milestone
     const appStreak = this._countAppUsageStreak();
-    addWin(appStreak >= 2, 'app-streak');
-    addWin(appStreak >= 7, 'week-streak');
-    addWin(appStreak >= 30, 'month-streak');
-    addWin(appStreak >= 365, 'year-streak');
+    if (appStreak >= 2) {
+      const milestones = getMilestoneWins(appStreak, APP_STREAK_MILESTONES);
+      if (milestones.length > 0) {
+        const highestMilestone = milestones[0];
+        // Map milestone values to badge IDs
+        const badgeMap = { 2: 'app-streak', 7: 'week-streak', 30: 'month-streak', 365: 'year-streak' };
+        addWin(true, badgeMap[highestMilestone]);
+      }
+    }
     
     // Break milestones (time since last use)
     if (profileUsed.length === 0) {
