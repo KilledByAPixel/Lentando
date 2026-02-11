@@ -3060,9 +3060,25 @@ function generateTestWins() {
     }
   }
   
+  // Generate yesterday's wins (subset of eligible wins)
+  console.log('Generating random yesterday wins...');
+  const fakeYesterdayWins = [];
+  // Pick 5-12 random wins for yesterday
+  const numYesterdayWins = Math.floor(Math.random() * 8) + 5; // 5-12
+  const shuffledEligible = [...eligibleIds].sort(() => Math.random() - 0.5);
+  
+  for (let i = 0; i < Math.min(numYesterdayWins, shuffledEligible.length); i++) {
+    const id = shuffledEligible[i];
+    // Most wins earned once, some 2-3 times
+    const count = Math.random() < 0.7 ? 1 : Math.floor(Math.random() * 2) + 2;
+    fakeYesterdayWins.push({ id, count });
+  }
+  
+  // Set todayDate to yesterday, and put the wins in todayWins
+  // When the app loads "today", it will auto-move them to yesterdayWins
   const updatedData = {
-    todayDate: null,
-    todayWins: [],
+    todayDate: daysAgoKey(1),  // Yesterday's date
+    todayWins: fakeYesterdayWins,  // These will become yesterday's wins on reload
     yesterdayWins: [],
     todayUndoCount: 0,
     lifetimeWins: Array.from(lifetimeMap.entries())
@@ -3074,7 +3090,9 @@ function generateTestWins() {
   
   // Verify save
   const verify = loadWinData();
-  console.log(`✅ Added random wins for ${updatedData.lifetimeWins.length} win types. Stored ${verify.lifetimeWins.length} in database.`);
+  console.log(`✅ Added random wins for ${updatedData.lifetimeWins.length} lifetime win types and ${fakeYesterdayWins.length} yesterday wins.`);
+  console.log('Generated as "today" wins for yesterday\'s date - will auto-move to yesterday on reload');
+  console.log('Sample wins:', verify.todayWins.slice(0, 5));
   console.log('Sample lifetime wins:', verify.lifetimeWins.slice(0, 5));
 }
 
