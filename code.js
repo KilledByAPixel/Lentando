@@ -1151,7 +1151,7 @@ function buildSinceLastUsedTile(used) {
       const lastUsedDate = new Date(lastUsedTs);
       const options = { month: 'short', day: 'numeric' };
       const dateStr = lastUsedDate.toLocaleDateString('en-US', options);
-      sinceLastSub = `Last used on ${dateStr}`;
+      sinceLastSub = `Last Used On ${dateStr}`;
     } else {
       // Show longest gap today (excludes gaps crossing 6am)
       const todayGaps = getGapsMs(used);
