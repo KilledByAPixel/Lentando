@@ -515,6 +515,14 @@ window.DB = DB;
 window.clearAllStorage = clearAllStorage;
 window.validatePassword = validatePassword;
 
+/** Stop all background timers (called on logout) */
+window.stopTimers = function() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  clearTimeout(chipTimeout);
+  clearTimeout(exerciseTimeout);
+  clearTimeout(undoHideTimeout);
+};
+
 // ========== EVENT QUERY HELPERS ==========
 function filterByType(events, type) { return events.filter(e => e.type === type); }
 function filterUsed(events) { return filterByType(events, 'used'); }

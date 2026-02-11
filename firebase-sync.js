@@ -565,6 +565,9 @@ window.FirebaseSync = {
       window.clearAllStorage();
     }
     
+    // Stop background timers
+    if (window.stopTimers) window.stopTimers();
+    
     // Reset theme to default
     document.documentElement.setAttribute('data-theme', 'dark');
     
