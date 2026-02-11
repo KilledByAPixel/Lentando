@@ -1153,15 +1153,16 @@ function buildSinceLastUsedTile(used) {
       const dateStr = lastUsedDate.toLocaleDateString('en-US', options);
       sinceLastSub = `Last used on ${dateStr}`;
     } else {
-      // Show 7-day average gap as subtitle when under a day
-      const avg = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
-      if (avg >= 60000) {
-        sinceLastSub = `7-Day Average: ${formatDuration(avg)}`;
+      // Show longest gap today (excludes gaps crossing 6am)
+      const todayGaps = getGapsMs(used);
+      if (todayGaps.length > 0) {
+        const longestGap = Math.max(...todayGaps);
+        sinceLastSub = `Longest gap today: ${formatDuration(longestGap)}`;
       }
     }
   }
   
-  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub, 'Time since your last session and average (excludes gaps crossing 6am)');
+  return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub, 'Time since your last session and longest gap today (excludes gaps crossing 6am)');
 }
 
 function renderMetrics() {
