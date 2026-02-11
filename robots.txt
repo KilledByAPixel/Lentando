@@ -1,7 +1,0 @@
-# Lentando - Substance Use Tracker
-# https://lentando.3d2k.com
-
-User-agent: *
-Allow: /
-
-Sitemap: https://lentando.3d2k.com/sitemap.xml
