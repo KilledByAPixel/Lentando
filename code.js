@@ -1230,9 +1230,9 @@ function getRatioTile(weekUsed, dayKeys) {
     const dayUsed = filterUsed(DB.forDate(dk));
     return !dayUsed.some(config.badFilter);
   }).length;
-  const ratioSub = totalAmount > 0 ? `${ratio} ${config.ratioLabel}` : '';
+  const freeDaysSub = freeDays > 0 ? `${freeDays} ${config.freeLabel}` : '';
 
-  return tileHTML(freeDays, config.freeLabel, ratioSub, `Days without primary substance and ratio`);
+  return tileHTML(ratio, config.ratioLabel, freeDaysSub, `Ratio and days without primary substance`);
 }
 
 function getWeekData(days) {
