@@ -2824,12 +2824,21 @@ window.App = {
     if (!confirm(`🗑️ Delete all ${events.length} events for ${label}?\n\nThis cannot be undone.`)) return;
     // Batch delete — single filter + save instead of N individual deletions
     const idsToDelete = new Set(events.map(e => e.id));
-    // Add tombstones so cloud sync won't restore these events
-    for (const id of idsToDelete) DB._addTombstone(id);
+    // Batch-add tombstones in one write (avoids N parse/stringify cycles)
+    try {
+      const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
+      const existingIds = new Set(tombstones.map(t => t.id));
+      const now = Date.now();
+      for (const id of idsToDelete) {
+        if (!existingIds.has(id)) tombstones.push({ id, deletedAt: now });
+      }
+      safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(tombstones));
+    } catch (e) { console.error('Failed to batch-add tombstones:', e); }
     DB.loadEvents();
     DB._events = DB._events.filter(e => !idsToDelete.has(e.id));
     DB._invalidateDateIndex();
     DB.saveEvents();
+    DB._cleanOldTombstones();
     calculateAndUpdateWins();
     render();
     if (window.FirebaseSync) {
