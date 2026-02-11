@@ -1256,13 +1256,12 @@ function getRatioTile(weekUsed, dayKeys) {
   const badAmount = calcBadAmount(weekUsed, settings.addictionProfile, config.badFilter);
   const ratio = totalAmount > 0 ? ((badAmount / totalAmount) * 100).toFixed(0) + '%' : '—';
 
-  // Count days without the "bad" substance this week — only count days since first-ever event
-  const allDayKeys = DB.getAllDayKeys(); // sorted newest first
-  const earliestKey = allDayKeys.length > 0 ? allDayKeys[allDayKeys.length - 1] : null;
-  const activeDays = earliestKey ? dayKeys.filter(dk => dk >= earliestKey) : [];
-  const freeDays = activeDays.filter(dk => {
+  // Count days without the "bad" substance this week — always consider full 7 days
+  // Days before first event are counted as free days
+  const freeDays = dayKeys.filter(dk => {
     const dayUsed = filterUsed(DB.forDate(dk));
-    return !dayUsed.some(config.badFilter);
+    // If no events for this day, count as free. If events exist, check for bad substance
+    return dayUsed.length === 0 || !dayUsed.some(config.badFilter);
   }).length;
   const freeDaysSub = freeDays > 0 ? `${freeDays} ${config.freeLabel}` : '';
 
