@@ -1,4 +1,5 @@
 // Service Worker for Lentando PWA
+const SW_DEBUG = false; // Set to true to enable console logging
 const CACHE_NAME = 'lentando-v129';
 const urlsToCache = [
   './index.html',
@@ -18,7 +19,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('[SW] Caching app shell');
+        if (SW_DEBUG) console.log('[SW] Caching app shell');
         return cache.addAll(urlsToCache);
       })
       .then(() => self.skipWaiting())
@@ -32,7 +33,7 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[SW] Removing old cache:', cacheName);
+            if (SW_DEBUG) console.log('[SW] Removing old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })

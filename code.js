@@ -4,7 +4,7 @@
 
 'use strict';
 
-const debugMode = true;
+const debugMode = false; // Set to true to enable debug logging
 
 // ========== CONSTANTS ==========
 const STORAGE_EVENTS = 'ht_events';
