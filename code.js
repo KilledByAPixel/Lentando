@@ -643,9 +643,7 @@ function avgWithinDayGapMs(dayKeys, filterFn) {
   for (const dk of dayKeys) {
     const daySessions = filterFn(DB.forDate(dk));
     for (let i = 1; i < daySessions.length; i++) {
-      const prevHour = new Date(daySessions[i - 1].ts).getHours();
-      const currHour = new Date(daySessions[i].ts).getHours();
-      if (prevHour < EARLY_HOUR && currHour >= EARLY_HOUR) continue; // skip sleep gaps crossing 6am
+      if (gapCrosses6am(daySessions[i - 1].ts, daySessions[i].ts)) continue; // skip sleep gaps crossing 6am
       gaps.push(daySessions[i].ts - daySessions[i - 1].ts);
     }
   }
