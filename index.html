@@ -924,6 +924,125 @@ header .date { font-size: 14px; color: var(--muted); }
   color: var(--muted);
   font-style: italic;
 }
+
+/* ===== LANDING PAGE ===== */
+#landing-page {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 9999;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#landing-page.hidden { display: none; }
+
+.landing-content {
+  width: 100%;
+  max-width: 480px;
+  padding: 48px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.landing-logo {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 12px;
+}
+
+.landing-title {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.landing-tagline {
+  font-size: 17px;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 32px;
+}
+
+.landing-hero {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.7;
+  text-align: center;
+  margin-bottom: 32px;
+  max-width: 380px;
+}
+
+.landing-features {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+
+.landing-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.landing-feature-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.landing-feature-text {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.landing-feature-text strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.landing-cta {
+  width: 100%;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  margin-bottom: 24px;
+  transition: opacity 0.15s;
+}
+.landing-cta:active { opacity: 0.85; }
+
+.landing-footer {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.6;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.landing-footer a {
+  color: var(--primary);
+  text-decoration: none;
+}
 </style>
 </head>
 <body>
@@ -933,6 +1052,53 @@ header .date { font-size: 14px; color: var(--muted); }
   <img src="icon-192.png?lentando-v119" alt="Lentando">
   <h1><span class="brand">Lentando</span></h1>
   <p class="tagline">progress at your pace</p>
+</div>
+
+<!-- ===== LANDING PAGE ===== -->
+<div id="landing-page" class="hidden">
+  <div class="landing-content">
+    <img class="landing-logo" src="icon-192.png?lentando-v119" alt="Lentando">
+    <h1 class="landing-title"><span class="brand">Lentando</span></h1>
+    <p class="landing-tagline">progress at your pace</p>
+
+    <p class="landing-hero">
+      A free, open-source tracker for mindful substance reduction.<br>
+      No judgment. No pressure to quit cold turkey.<br>
+      Just gradual progress on your terms.
+    </p>
+
+    <div class="landing-features">
+      <div class="landing-feature">
+        <span class="landing-feature-icon">📊</span>
+        <div class="landing-feature-text">
+          <strong>Track Mindfully</strong>
+          Log use, resist urges, and build healthy habits — all in one place.
+        </div>
+      </div>
+      <div class="landing-feature">
+        <span class="landing-feature-icon">🏆</span>
+        <div class="landing-feature-text">
+          <strong>Earn Badges</strong>
+          Celebrate every small win — delayed starts, longer gaps, resist streaks, and more.
+        </div>
+      </div>
+      <div class="landing-feature">
+        <span class="landing-feature-icon">🔒</span>
+        <div class="landing-feature-text">
+          <strong>Private &amp; Secure</strong>
+          Your data stays on your device. Optional cloud sync if you choose.
+        </div>
+      </div>
+    </div>
+
+    <button class="landing-cta" onclick="App.dismissLanding()">Get Started</button>
+
+    <div class="landing-footer">
+      Free &amp; open source · No ads · No tracking<br>
+      <a href="privacy.html" target="_blank">Privacy Policy</a> · <a href="terms.html" target="_blank">Terms of Use</a><br>
+      Lentando &copy; 2026 Frank Force
+    </div>
+  </div>
 </div>
 
 <header>

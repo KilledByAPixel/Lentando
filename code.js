@@ -2179,9 +2179,27 @@ function showCoaching() {
 // ========== ONBOARDING ==========
 // ========== LOGIN SCREEN ==========
 
+function showLandingPage() {
+  const splash = $('splash-screen');
+  if (splash) splash.classList.add('hidden');
+  
+  const landing = $('landing-page');
+  if (landing) landing.classList.remove('hidden');
+}
+
+function dismissLanding() {
+  const landing = $('landing-page');
+  if (landing) landing.classList.add('hidden');
+  showLoginScreen();
+}
+
 function showLoginScreen() {
   const splash = $('splash-screen');
   if (splash) splash.classList.add('hidden');
+  
+  // Hide landing page if still visible
+  const landing = $('landing-page');
+  if (landing) landing.classList.add('hidden');
   
   // Switch to Today tab when showing login screen
   switchTab('today');
@@ -2753,6 +2771,7 @@ window.App = {
   editEvent: openEditModal,
   closeModal,
   saveModal,
+  dismissLanding,
   deleteEvent(id) {
     if (!confirm('Delete this event?')) return false;
     DB.deleteEvent(id);

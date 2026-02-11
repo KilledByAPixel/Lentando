@@ -283,10 +283,15 @@ if (isConfigured) {
 
 function checkAuthAndContinue() {
   const hasSkippedLogin = localStorage.getItem(STORAGE_KEYS.loginSkipped) === 'true';
+  const hasEvents = !!localStorage.getItem(STORAGE_KEYS.events);
   
   if (!currentUser && !hasSkippedLogin) {
-    // Not logged in and hasn't skipped - show login screen
-    if (typeof showLoginScreen === 'function') {
+    // Not logged in and hasn't skipped
+    if (!hasEvents && typeof showLandingPage === 'function') {
+      // Brand new user — show landing page first
+      showLandingPage();
+    } else if (typeof showLoginScreen === 'function') {
+      // Returning user (has data but not logged in) — go straight to login
       showLoginScreen();
     }
   } else {
