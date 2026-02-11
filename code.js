@@ -1208,10 +1208,17 @@ function renderMetrics() {
   }
   const resistSub = maxResistStreak > 1 ? `Longest Streak: ${maxResistStreak}` : '';
 
-  // Calculate 7-day average for the first tile
+  // Calculate 7-day average for the first tile (clamp divisor for new users)
   const last7Days = getLastNDays(7);
   const week7Total = last7Days.reduce((sum, dk) => sum + sumAmount(filterProfileUsed(DB.forDate(dk))), 0);
-  const avg7Day = (week7Total / 7).toFixed(1);
+  const allEventsForAvg = DB.loadEvents();
+  let avgDivisor = 7;
+  if (allEventsForAvg.length > 0) {
+    const earliestTs = Math.min(...allEventsForAvg.map(e => e.ts));
+    const daysSinceFirst = Math.ceil((Date.now() - earliestTs) / (24 * 60 * 60 * 1000));
+    avgDivisor = Math.max(1, Math.min(7, daysSinceFirst));
+  }
+  const avg7Day = (week7Total / avgDivisor).toFixed(1);
   const avgSub = `7-Day Average: ${avg7Day}`;
 
   $('metrics').innerHTML = [
