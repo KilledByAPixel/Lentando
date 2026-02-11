@@ -786,42 +786,22 @@ const Wins = {
       }
     }
 
-    // Delayed Start — no use between 6am and noon (ignores late-night use before 6am)
-    // Awarded as soon as it's 6am, removed if use happens between 6am-noon
+    // --- Time-of-day skip badges ---
     const currentHour = new Date().getHours();
-    const isPast6am = currentHour >= EARLY_HOUR;
-    const noUseBeforeNoon = !profileUsed.some(u => {
+    const noUseInRange = (start, end) => !profileUsed.some(u => {
       const h = new Date(u.ts).getHours();
-      return h >= EARLY_HOUR && h < AFTERNOON_HOUR;
+      return h >= start && h < end;
     });
-    addWin(isPast6am && noUseBeforeNoon, 'morning-skip');
-    
-    // Day Skip — no use between noon and 6pm
-    // Awarded as soon as it's noon, removed if use happens between noon and 6pm
-    const isPastNoon = currentHour >= 12;
-    const noUseAfternoon = !profileUsed.some(u => {
-      const h = new Date(u.ts).getHours();
-      return h >= 12 && h < 18;
-    });
-    addWin(isPastNoon && noUseAfternoon, 'day-skip');
-    
-    // Evening Skip — no use between 6pm and midnight
-    // Awarded as soon as it's 6pm, removed if use happens between 6pm and midnight
-    const isPast6pm = currentHour >= 18;
-    const noUseEvening = !profileUsed.some(u => {
-      const h = new Date(u.ts).getHours();
-      return h >= 18 && h < 24;
-    });
-    addWin(isPast6pm && noUseEvening, 'evening-skip');
-    
-    // Night Skip — no use between midnight and 6am
-    // Always eligible since midnight has always passed for the current day;
-    // removed if use happened between midnight and 6am
-    const noUseOvernight = !profileUsed.some(u => {
-      const h = new Date(u.ts).getHours();
-      return h >= 0 && h < EARLY_HOUR;
-    });
-    addWin(noUseOvernight, 'night-skip');
+
+    const skipBadges = [
+      { start: EARLY_HOUR, end: AFTERNOON_HOUR, id: 'morning-skip' },
+      { start: 12, end: 18, id: 'day-skip' },
+      { start: 18, end: 24, id: 'evening-skip' },
+      { start: 0,  end: EARLY_HOUR, id: 'night-skip' },
+    ];
+    for (const { start, end, id } of skipBadges) {
+      addWin(currentHour >= start && noUseInRange(start, end), id);
+    }
     
     // Night Gap — 12+ hour gap that crosses 6am boundary (overnight break)
     // Check both today's and yesterday's events (after 6am yesterday)
