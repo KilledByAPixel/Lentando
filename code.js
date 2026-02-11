@@ -136,7 +136,7 @@ const HABIT_LABELS = {
 // in individual medal labels (e.g., "Gap Win", "Taper Win") when it sounds natural
 const WIN_DEFINITIONS = {
   'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
-  'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing — showing up is a win' },
+  'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing - showing up is a win' },
   'resist': { label: 'Resisted', icon: '💪', desc: 'Resisted an urge' },
   'urge-surfed': { label: 'Urge Surfed', icon: '🧘', desc: 'Logged an urge and didn\'t use for 15+ minutes' },
   'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider' },
@@ -154,19 +154,19 @@ const WIN_DEFINITIONS = {
   'good-start': { label: 'Good Start', icon: '🚀', desc: 'Started the day with a positive action instead of using' },
   'drank-water': { label: 'Drank Water', icon: '💧', desc: 'Logged water' },
   'hydrated': { label: 'Well Hydrated', icon: '🌊', desc: 'Logged water 5+ times' },
-  'breathwork': { label: 'Breathwork', icon: '🌬️', desc: 'Did breathing exercises' },
-  'cleaned': { label: 'Tidied', icon: '🧹', desc: 'Tidied up something' },
-  'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside' },
+  'breathwork': { label: 'Breathwork', icon: '🌬️', desc: 'Did breathing exercises or meditation' },
+  'cleaned': { label: 'Tidied', icon: '🧹', desc: 'Tidied up or cleaned something' },
+  'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside or got some fresh air' },
   'exercised': { label: 'Exercised', icon: '🏃', desc: 'Logged exercise' },
   'habit-stack': { label: 'Habit Stack', icon: '🧱', desc: 'Logged multiple different habit types' },
   'five-star-day': { label: 'Five Star Day', icon: '🌟', desc: 'Logged all 5 habit types' },
-  'gap-above-avg': { label: 'Longer Gap', icon: '📏', desc: 'Longest gap exceeded your average (excludes gaps crossing 6am)' },
-  'gap-1h': { label: 'Gap 1h', icon: '🕐', desc: 'Maintained a gap of 1+ hours between sessions (excludes gaps crossing 6am)' },
-  'gap-2h': { label: 'Gap 2h', icon: '🕑', desc: 'Maintained a gap of 2+ hours between sessions (excludes gaps crossing 6am)' },
-  'gap-4h': { label: 'Gap 4h', icon: '🕓', desc: 'Maintained a gap of 4+ hours between sessions (excludes gaps crossing 6am)' },
-  'gap-8h': { label: 'Gap 8h', icon: '🕗', desc: 'Maintained a gap of 8+ hours between sessions (excludes gaps crossing 6am)' },
-  'gap-12h': { label: 'Gap 12h', icon: '🕛', desc: 'Maintained a gap of 12+ hours between sessions (excludes gaps crossing 6am)' },
-  'night-gap': { label: 'Night Gap', icon: '🛏️', desc: '12+ hour gap crossing the 6am threshold' },
+  'gap-above-avg': { label: 'Longer Gaps', icon: '📏', desc: 'Average gap today exceeded 7-day average (excludes gaps crossing 6am)' },
+  'gap-1h': { label: 'Gap 1h', icon: '🕐', desc: 'Maintained a 1+ hour gap between sessions (excludes gaps crossing 6am)' },
+  'gap-2h': { label: 'Gap 2h', icon: '🕑', desc: 'Maintained a 2+ hour gap between sessions (excludes gaps crossing 6am)' },
+  'gap-4h': { label: 'Gap 4h', icon: '🕓', desc: 'Maintained a 4+ hour gap between sessions (excludes gaps crossing 6am)' },
+  'gap-8h': { label: 'Gap 8h', icon: '🕗', desc: 'Maintained a 8+ hour gap between sessions (excludes gaps crossing 6am)' },
+  'gap-12h': { label: 'Gap 12h', icon: '🕛', desc: 'Maintained a 12+ hour gap between sessions (excludes gaps crossing 6am)' },
+  'night-gap': { label: 'Night Gap', icon: '🛏️', desc: 'Maintained a 12+ hour gap between sessions crossing the 6am threshold' },
   'night-skip': { label: 'Night Skip', icon: '☄️', desc: 'No use between midnight and 6am' },
   'morning-skip': { label: 'Morning Skip', icon: '🌅', desc: 'No use between 6am and noon' },
   'day-skip': { label: 'Day Skip', icon: '☀️', desc: 'No use between noon and 6pm' },
@@ -803,10 +803,11 @@ const Wins = {
         }
       }
       
-      // Gap longer than 7-day historical average (within-day gaps only)
-      const avgGap = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
-      if (avgGap > 0 && todayGapsMs.length > 0) {
-        addWin(Math.max(...todayGapsMs) > avgGap, 'gap-above-avg');
+      // Today's average gap longer than 7-day average (includes today, same as progress section)
+      const avgGap7Days = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
+      if (avgGap7Days > 0 && todayGapsMs.length > 0) {
+        const todayAvgGap = todayGapsMs.reduce((s, g) => s + g, 0) / todayGapsMs.length;
+        addWin(todayAvgGap > avgGap7Days, 'gap-above-avg');
       }
     }
 
