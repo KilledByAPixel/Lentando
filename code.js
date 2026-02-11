@@ -2824,8 +2824,11 @@ window.App = {
     if (!confirm(`🗑️ Delete all ${events.length} events for ${label}?\n\nThis cannot be undone.`)) return;
     // Batch delete — single filter + save instead of N individual deletions
     const idsToDelete = new Set(events.map(e => e.id));
+    // Add tombstones so cloud sync won't restore these events
+    for (const id of idsToDelete) DB._addTombstone(id);
     DB.loadEvents();
     DB._events = DB._events.filter(e => !idsToDelete.has(e.id));
+    DB._invalidateDateIndex();
     DB.saveEvents();
     calculateAndUpdateWins();
     render();
