@@ -788,6 +788,7 @@ const Wins = {
 
     // --- Time-of-day skip badges ---
     const currentHour = new Date().getHours();
+    const isPastEarlyHour = currentHour >= EARLY_HOUR;
     const noUseInRange = (start, end) => !profileUsed.some(u => {
       const h = new Date(u.ts).getHours();
       return h >= start && h < end;
@@ -846,8 +847,8 @@ const Wins = {
       }
     }
     
-    // Good Start win - first event after 6am is a habit or resist (not use)
-    if (isPast6am) {
+    // Good Start win - first event after early hour is a habit or resist (not use)
+    if (isPastEarlyHour) {
       const daytimeEvents = todayEvents.filter(e => new Date(e.ts).getHours() >= EARLY_HOUR);
       const firstDaytimeEvent = daytimeEvents[0];
       if (firstDaytimeEvent && (firstDaytimeEvent.type === 'habit' || firstDaytimeEvent.type === 'resisted')) {
