@@ -616,20 +616,16 @@ function gapCrosses6am(ts1, ts2) {
 }
 
 function getAllGapHours(sessions) {
-  if (sessions.length === 0) return [];
+  if (sessions.length < 2) return [];
   const sorted = [...sessions].sort((a, b) => a.ts - b.ts);
   const gaps = [];
 
   // Include gaps between consecutive sessions, but skip any gap that
   // crosses the 6am boundary (overnight sleep gap, not a real achievement).
+  // Gaps are only between two actual events — no gap from last event to now.
   for (let i = 1; i < sorted.length; i++) {
     if (gapCrosses6am(sorted[i - 1].ts, sorted[i].ts)) continue;
     gaps.push((sorted[i].ts - sorted[i - 1].ts) / 3600000);
-  }
-
-  // Include gap from last session to now (skip if it crosses 6am boundary)
-  if (!gapCrosses6am(sorted[sorted.length - 1].ts, Date.now())) {
-    gaps.push((Date.now() - sorted[sorted.length - 1].ts) / 3600000);
   }
 
   return gaps;
