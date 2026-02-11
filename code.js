@@ -248,8 +248,9 @@ const $ = id => document.getElementById(id);
 const _timeFormatter = new Intl.DateTimeFormat([], { hour: 'numeric', minute: '2-digit' });
 const _dateFormatter = new Intl.DateTimeFormat([], { weekday: 'short', month: 'short', day: 'numeric' });
 
+let _uidCounter = 0;
 function uid() {
-  return Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 11);
+  return Date.now().toString(36) + '-' + (++_uidCounter).toString(36) + '-' + Math.random().toString(36).substring(2, 9);
 }
 
 function flashEl(el) {
