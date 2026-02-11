@@ -401,7 +401,7 @@ const DB = {
     try {
       const raw = localStorage.getItem(STORAGE_VERSION);
       const storedVersion = parseInt(raw) || 0;
-      if (storedVersion === DATA_VERSION) return;
+      if (storedVersion >= DATA_VERSION) return;
 
       // Brand-new install — no existing data to migrate, just stamp the version
       if (raw === null && !localStorage.getItem(STORAGE_EVENTS) && !localStorage.getItem(STORAGE_WINS)) {
