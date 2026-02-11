@@ -323,6 +323,11 @@ function timeOfDayMin(ts) {
 }
 
 // ========== DATE HELPERS ==========
+const sortByTime = (a, b) => a.ts - b.ts;
+const sortedByTime = (arr) => [...arr].sort(sortByTime);
+const getHour = (ts) => new Date(ts).getHours();
+const filterDaytime = (events) => events.filter(e => getHour(e.ts) >= EARLY_HOUR);
+
 function dateKey(d) {
   const date = d instanceof Date ? d : new Date(d);
   const y = date.getFullYear();
@@ -381,7 +386,7 @@ const DB = {
       this._dateIndex.get(key).push(e);
     }
     for (const [, arr] of this._dateIndex) {
-      arr.sort((a, b) => a.ts - b.ts);
+      arr.sort(sortByTime);
     }
   },
 
@@ -582,7 +587,7 @@ function createHabitEvent(habit, minutes) {
 // ========== WIN CALCULATION HELPERS ==========
 function countUrgeSurfed(resisted, used) {
   const CLUSTER_MS = 5 * 60 * 1000;
-  const sorted = [...resisted].sort((a, b) => a.ts - b.ts);
+  const sorted = sortedByTime(resisted);
   
   return sorted.filter((r, i) => {
     // Skip if this resist is within 5 minutes of the previous resist (cluster de-dupe)
@@ -599,7 +604,7 @@ function countUrgeSurfed(resisted, used) {
 
 function countSwapCompleted(resisted, habits) {
   const FIVE_MINUTES_MS = 5 * 60 * 1000;
-  const sorted = [...resisted].sort((a, b) => a.ts - b.ts);
+  const sorted = sortedByTime(resisted);
   return sorted.filter((r, i) => {
     // Skip if this resist is within 5 minutes of the previous resist (not first in cluster)
     if (i > 0 && r.ts - sorted[i - 1].ts <= FIVE_MINUTES_MS) return false;
@@ -618,7 +623,7 @@ function gapCrosses6am(ts1, ts2) {
 /** Get all within-day gaps (ms) between consecutive sessions, excluding gaps crossing 6am */
 function getGapsMs(sessions) {
   if (sessions.length < 2) return [];
-  const sorted = [...sessions].sort((a, b) => a.ts - b.ts);
+  const sorted = sortedByTime(sessions);
   const gaps = [];
   for (let i = 1; i < sorted.length; i++) {
     if (gapCrosses6am(sorted[i - 1].ts, sorted[i].ts)) continue;
@@ -790,7 +795,7 @@ const Wins = {
     const currentHour = new Date().getHours();
     const isPastEarlyHour = currentHour >= EARLY_HOUR;
     const noUseInRange = (start, end) => !profileUsed.some(u => {
-      const h = new Date(u.ts).getHours();
+      const h = getHour(u.ts);
       return h >= start && h < end;
     });
 
@@ -806,8 +811,8 @@ const Wins = {
     
     // Night Gap — 12+ hour gap that crosses 6am boundary (overnight break)
     // Check both today's and yesterday's events (after 6am yesterday)
-    const yesterdayProfileUsed = yesterdayEvents ? filterProfileUsed(yesterdayEvents).filter(u => new Date(u.ts).getHours() >= EARLY_HOUR) : [];
-    const combinedUsed = [...yesterdayProfileUsed, ...profileUsed].sort((a, b) => a.ts - b.ts);
+    const yesterdayProfileUsed = yesterdayEvents ? filterDaytime(filterProfileUsed(yesterdayEvents)) : [];
+    const combinedUsed = sortedByTime([...yesterdayProfileUsed, ...profileUsed]);
     
     let hasNightGap = false;
     if (combinedUsed.length >= 2) {
@@ -839,8 +844,8 @@ const Wins = {
       addWin(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
       
       // First session later than yesterday — only awarded if you used today (compares first use after 6am)
-      const todayDaytime = profileUsed.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
-      const yesterdayDaytime = yProfile.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
+      const todayDaytime = filterDaytime(profileUsed);
+      const yesterdayDaytime = filterDaytime(yProfile);
       
       if (todayDaytime.length > 0 && yesterdayDaytime.length > 0) {
         addWin(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
@@ -849,7 +854,7 @@ const Wins = {
     
     // Good Start win - first event after early hour is a habit or resist (not use)
     if (isPastEarlyHour) {
-      const daytimeEvents = todayEvents.filter(e => new Date(e.ts).getHours() >= EARLY_HOUR);
+      const daytimeEvents = filterDaytime(todayEvents);
       const firstDaytimeEvent = daytimeEvents[0];
       if (firstDaytimeEvent && (firstDaytimeEvent.type === 'habit' || firstDaytimeEvent.type === 'resisted')) {
         addWin(true, 'good-start');
@@ -1268,7 +1273,7 @@ function renderProgress() {
   let gapCount = 0;
   
   for (const dayKey of last7Days) {
-    const dayEvents = filterProfileUsed(DB.forDate(dayKey)).sort((a, b) => a.ts - b.ts);
+    const dayEvents = filterProfileUsed(DB.forDate(dayKey)).sort(sortByTime);
     if (dayEvents.length < 2) continue; // Need at least 2 events to have a gap
     
     for (let i = 1; i < dayEvents.length; i++) {
@@ -1638,7 +1643,7 @@ function renderGraphs() {
   const todayUsed = filterProfileUsed(todayEvents);
   const hourCounts = {};
   todayUsed.forEach(evt => {
-    const hour = new Date(evt.ts).getHours();
+    const hour = getHour(evt.ts);
     hourCounts[hour] = (hourCounts[hour] || 0) + 1;
   });
   const hasHourData = todayUsed.length > 0;
@@ -1663,7 +1668,7 @@ function renderGraphs() {
     if (dayUsed.length > 0) {
       daysWithUse++;
       dayUsed.forEach(evt => {
-        const hour = new Date(evt.ts).getHours();
+        const hour = getHour(evt.ts);
         hourTotals[hour] = (hourTotals[hour] || 0) + 1;
       });
     }
@@ -1831,7 +1836,7 @@ function importJSON(inputEl) {
       const existingIds = new Set(existing.map(e => e.id));
       const newEvents = validation.events.filter(evt => !existingIds.has(evt.id));
       
-      DB._events = [...existing, ...newEvents].sort((a, b) => a.ts - b.ts);
+      DB._events = sortedByTime([...existing, ...newEvents]);
       DB.saveEvents();
 
       // Import lifetime wins if present
@@ -2937,7 +2942,7 @@ function generateTestData(numEvents = 100) {
   }
   
   // Sort events by timestamp
-  DB._events.sort((a, b) => a.ts - b.ts);
+  DB._events.sort(sortByTime);
   DB.saveEvents();
   
   console.log(`✅ Added ${numEvents} usage events. Reload the page to see updated data.`);
@@ -2971,7 +2976,7 @@ function generateTestHabits(numPerHabit = 20) {
   }
   
   // Sort events by timestamp
-  DB._events.sort((a, b) => a.ts - b.ts);
+  DB._events.sort(sortByTime);
   DB.saveEvents();
   
   console.log(`✅ Added ${numPerHabit * habitTypes.length} habit events. Reload the page to see updated data.`);
@@ -3001,7 +3006,7 @@ function generateTestResists(numEvents = 50) {
   }
   
   // Sort events by timestamp
-  DB._events.sort((a, b) => a.ts - b.ts);
+  DB._events.sort(sortByTime);
   DB.saveEvents();
   
   console.log(`✅ Added ${numEvents} resist events. Reload the page to see updated data.`);
