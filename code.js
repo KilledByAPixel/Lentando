@@ -216,12 +216,12 @@ async function initSounds() {
     SOUNDS = {
       used: new ZZFXSound([,,224,.02,.02,.08,1,1.7,-14,,,,,,6.7]),
       resist: new ZZFXSound([,,422,.08,.26,.19,1,1.1,,-144,18,.07,.1,,,,,.84,.21,.5,520]),
-      habit: new ZZFXSound([2,,330,.01,.04,.04,,.8,,-2,27,.06,,,,,.1,.5,.03,.1,-1600]),
+      habit: new ZZFXSound([2,,330,.02,.05,,,.8,,,27,.06,,,,,.1,.5,.03]),
       exercise: new ZZFXSound([,,990,,,.05,,9,20]),
       undo: new ZZFXSound([,,150,.05,,.05,,1.3,,,,,,3]),
       cooldown: new ZZFXSound([2,0,260,,.2,.2,,,,,,,,,,,.12,.3,.1]),
-      badge: new ZZFXSound([3,.02,988,,,.4,,33,,,331,.1,,,,,,,,,-340]),
-      //click: new ZZFXSound([1.5,,300,,,.008,,,300,,,,,,,,,.5]), // short sound for UI clicks
+      //badge: new ZZFXSound([3,.02,988,,,.4,,33,,,331,.1,,,,,,,,,-340]), // coin sound for badges, disabled for now
+      //click: new ZZFXSound([1.5,,300,,,.008,,,300,,,,,,,,,.5]), // short sound for UI clicks, disabled for now
     };
   } catch (e) {
     console.error('Failed to load sound system:', e);
