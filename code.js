@@ -1208,24 +1208,14 @@ function renderMetrics() {
   }
   const resistSub = maxResistStreak > 1 ? `Longest Streak: ${maxResistStreak}` : '';
 
-  // Calculate ratio for the first tile
-  const settings = DB.loadSettings();
-  const ratioMap = {
-    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC' },
-    alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor' },
-    smoking: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarettes' },
-    other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1' }
-  };
-  const config = ratioMap[settings.addictionProfile];
-  let ratioSub = '';
-  if (config && totalAmt > 0) {
-    const badAmount = calcBadAmount(used, settings.addictionProfile, config.badFilter);
-    const ratio = ((badAmount / totalAmt) * 100).toFixed(0);
-    ratioSub = `${ratio}% ${config.ratioLabel}`;
-  }
+  // Calculate 7-day average for the first tile
+  const last7Days = getLastNDays(7);
+  const week7Total = last7Days.reduce((sum, dk) => sum + sumAmount(filterProfileUsed(DB.forDate(dk))), 0);
+  const avg7Day = (week7Total / 7).toFixed(1);
+  const avgSub = `7-Day Average: ${avg7Day}`;
 
   $('metrics').innerHTML = [
-    tileHTML(totalAmt, capitalize(profile.amountUnit), ratioSub, `Total amount used today and substance ratio`),
+    tileHTML(totalAmt, capitalize(profile.amountUnit), avgSub, `Total amount used today and 7-day average`),
     buildSinceLastUsedTile(used),
     tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Urges you successfully resisted today'),
     tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today')
