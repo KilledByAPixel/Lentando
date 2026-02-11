@@ -1190,7 +1190,7 @@ function renderMetrics() {
   const resistSub = maxResistStreak > 1 ? `Longest Streak: ${maxResistStreak}` : '';
 
   // Show sessions today as subtitle for the first tile
-  const sessionsSub = used.length > 0 ? `${used.length} sessions` : '';
+  const sessionsSub = used.length > 0 ? `${used.length} Sessions` : '';
 
   $('metrics').innerHTML = [
     tileHTML(totalAmt, capitalize(profile.amountUnit), sessionsSub, `Total amount used today and number of sessions`),
@@ -1258,7 +1258,7 @@ function renderProgress() {
   // Calculate average amount per day for this week
   const weekTotalAmount = sumAmount(thisWeek.profileUsed);
   const dailyAmountAvg = (weekTotalAmount / daysOfUse).toFixed(1);
-  const hitsSub = `${dailyAvg} sessions/day`;
+  const hitsSub = `${dailyAvg} Sessions/Day`;
 
   // Longest gap within a single day (excludes gaps crossing 6am)
   let maxGapMs = 0;
@@ -1289,9 +1289,9 @@ function renderProgress() {
   const exerciseSub = weekHabits > 0 ? `${weekHabits} Healthy Actions` : '';
 
   $('progress').innerHTML = [
-    ratioTile,
-    tileHTML(dailyAmountAvg, `${getProfile().amountUnit}/Day`, hitsSub, 'Average amount per day and average sessions per day'),
+    tileHTML(dailyAmountAvg, `${capitalize(getProfile().amountUnit)}/Day`, hitsSub, 'Average amount per day and average sessions per day'),
     tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 6am)'),
+    ratioTile,
     tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day and total healthy actions')
   ].join('');
 }
