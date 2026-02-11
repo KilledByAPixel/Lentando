@@ -35,7 +35,7 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 - **Day boundary:** Calendar days (midnight), BUT gap calculations exclude gaps crossing 6am (`EARLY_HOUR = 6`)
 - **Gap calculations:** All gap metrics (longest gap, average gap, gap wins) exclude gaps crossing 6am to filter out overnight sleep
 - **Morning Skip:** No use 6am–noon, eligible once past 6am
-- **Night Skip:** No use midnight–6am, eligible once past 6am
+- **Night Skip:** No use midnight–6am, eligible when day begins at midnight
 
 ### Undo System
 `lastUndoEventId` persists during cooldown (1 min). Tab switching only hides the CSS class — ID is preserved so undo restores when returning to 'today' tab during cooldown.
