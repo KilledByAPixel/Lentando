@@ -810,40 +810,31 @@ const Wins = {
     addWin(isPast6am && noUseBeforeNoon, 'morning-skip');
     
     // Day Skip — no use between noon and 6pm
-    // Awarded as soon as it's 6pm, removed if use happens between noon and 6pm
-    const isPast6pm = currentHour >= 18;
-    if (isPast6pm) {
-      const noUseAfternoon = !profileUsed.some(u => {
-        const h = new Date(u.ts).getHours();
-        return h >= 12 && h < 18;
-      });
-      addWin(noUseAfternoon, 'day-skip');
-    }
+    // Awarded as soon as it's noon, removed if use happens between noon and 6pm
+    const isPastNoon = currentHour >= 12;
+    const noUseAfternoon = !profileUsed.some(u => {
+      const h = new Date(u.ts).getHours();
+      return h >= 12 && h < 18;
+    });
+    addWin(isPastNoon && noUseAfternoon, 'day-skip');
     
     // Evening Skip — no use between 6pm and midnight
-    // Awarded as soon as it's midnight (or later), removed if use happens between 6pm and midnight
-    const isPastMidnight = currentHour >= 0; // Always true, but check for evening window
-    // Award if current time is past 6pm OR it's after midnight (new day)
-    if (currentHour >= 18 || currentHour < EARLY_HOUR) {
-      const noUseEvening = !profileUsed.some(u => {
-        const h = new Date(u.ts).getHours();
-        return h >= 18 && h < 24;
-      });
-      // Only award if we're past the evening window (after midnight or still in early morning before 6am)
-      if (currentHour < EARLY_HOUR) {
-        addWin(noUseEvening, 'evening-skip');
-      }
-    }
+    // Awarded as soon as it's 6pm, removed if use happens between 6pm and midnight
+    const isPast6pm = currentHour >= 18;
+    const noUseEvening = !profileUsed.some(u => {
+      const h = new Date(u.ts).getHours();
+      return h >= 18 && h < 24;
+    });
+    addWin(isPast6pm && noUseEvening, 'evening-skip');
     
     // Night Skip — no use between midnight and 6am
-    // Awarded as soon as it's 6am, removed if use happens between midnight and 6am
-    if (isPast6am) {
-      const noUseOvernight = !profileUsed.some(u => {
-        const h = new Date(u.ts).getHours();
-        return h >= 0 && h < EARLY_HOUR;
-      });
-      addWin(noUseOvernight, 'night-skip');
-    }
+    // Awarded as soon as it's midnight, removed if use happens between midnight and 6am
+    const isInNightWindow = currentHour < EARLY_HOUR;
+    const noUseOvernight = !profileUsed.some(u => {
+      const h = new Date(u.ts).getHours();
+      return h >= 0 && h < EARLY_HOUR;
+    });
+    addWin(isInNightWindow && noUseOvernight, 'night-skip');
     
     // Later First Use — first session later than 7-day average
     if (profileUsed.length > 0) {
