@@ -635,6 +635,9 @@ function avgWithinDayGapMs(dayKeys, filterFn) {
   for (const dk of dayKeys) {
     const daySessions = filterFn(DB.forDate(dk));
     for (let i = 1; i < daySessions.length; i++) {
+      const prevHour = new Date(daySessions[i - 1].ts).getHours();
+      const currHour = new Date(daySessions[i].ts).getHours();
+      if (prevHour < EARLY_HOUR && currHour >= EARLY_HOUR) continue; // skip sleep gaps crossing 6am
       gaps.push(daySessions[i].ts - daySessions[i - 1].ts);
     }
   }
@@ -841,14 +844,17 @@ const Wins = {
       const last7UseDays = this._getLast7UseDays();
       if (last7UseDays.length > 0) {
         const firstUseTimes = last7UseDays.map(k => {
-          const dayUsed = filterProfileUsed(DB.forDate(k));
+          const dayUsed = filterProfileUsed(DB.forDate(k)).filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
           return dayUsed.length > 0 ? timeOfDayMin(dayUsed[0].ts) : null;
         }).filter(t => t !== null);
         
         if (firstUseTimes.length > 0) {
-          const avgFirstUseTime = firstUseTimes.reduce((sum, t) => sum + t, 0) / firstUseTimes.length;
-          const todayFirstUseTime = timeOfDayMin(profileUsed[0].ts);
-          addWin(todayFirstUseTime > avgFirstUseTime, 'later-first');
+          const profileUsedDaytime = profileUsed.filter(u => new Date(u.ts).getHours() >= EARLY_HOUR);
+          if (profileUsedDaytime.length > 0) {
+            const avgFirstUseTime = firstUseTimes.reduce((sum, t) => sum + t, 0) / firstUseTimes.length;
+            const todayFirstUseTime = timeOfDayMin(profileUsedDaytime[0].ts);
+            addWin(todayFirstUseTime > avgFirstUseTime, 'later-first');
+          }
         }
       }
     }
