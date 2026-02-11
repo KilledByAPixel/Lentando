@@ -2222,7 +2222,6 @@ function showLandingPage() {
 }
 
 function dismissLanding() {
-  playSound('resist');
   const landing = $('landing-page');
   if (landing) landing.classList.add('hidden');
   showLoginScreen();
