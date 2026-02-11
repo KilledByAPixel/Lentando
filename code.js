@@ -221,8 +221,7 @@ async function initSounds() {
       exercise: new ZZFXSound([,,990,,,.05,,9,20]),
       undo: new ZZFXSound([,,150,.05,,.05,,1.3,,,,,,3]),
       cooldown: new ZZFXSound([2,0,260,,.2,.2,,,,,,,,,,,.12,.3,.1]),
-      badge: new ZZFXSound([3,.02,988,,,.4,,33,,,331,.1,,,,,,,,,-340]),
-      tab: new ZZFXSound([1.5,,300,,,.004,,,300,,,,,,,,,.5])
+      badge: new ZZFXSound([3,.02,988,,,.4,,33,,,331,.1,,,,,,,,,-340])
     };
   } catch (e) {
     console.error('Failed to load sound system:', e);
@@ -1557,7 +1556,6 @@ function navigateDay(offset) {
   
   currentHistoryDay = newKey;
   historyShowCount = HISTORY_PAGE_SIZE;
-  playSound('tab');
   renderDayHistory();
 }
 
@@ -1716,7 +1714,6 @@ function switchTab(tabName) {
   hideResistedChips();
   $('exercise-chips').classList.add('hidden');
   clearTimeout(exerciseTimeout);
-  playSound('tab');
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabName));
   
@@ -2471,7 +2468,6 @@ function bindEvents() {
   $('graph-range').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
     if (!chip) return;
-    playSound('tab');
     graphDays = +chip.dataset.days;
     const settings = DB.loadSettings();
     settings.graphDays = graphDays;
