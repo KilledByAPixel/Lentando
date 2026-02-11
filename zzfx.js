@@ -63,6 +63,8 @@ export const ZZFX =
     // create shared audio context
     audioContext: new AudioContext,
 
+    playAfterResume: false, // flag to prevent multiple plays before audio context is resumed
+
     // play a sound from zzfx paramerters
     play: function(...parameters)
     {
@@ -75,8 +77,28 @@ export const ZZFX =
     {
         if (this.audioContext.state !== 'running')
         {
-            // fix stalled audio, this sound won't be able to play yet
-            this.audioContext.resume();
+            if (!this.playAfterResume)
+            {
+                // resume audio context on first play, this is required in some browsers that block audio until user interaction
+                // this prevents from sounds piling up if play is called multiple times before audio context is resumed
+                this.playAfterResume = true;
+
+                // fix stalled audio, this sound won't be able to play yet
+                this.audioContext.resume().then(()=>
+                {
+                    this.playSamples(sampleChannels, volumeScale, rate, pan, loop);
+                    this.playAfterResume = false;
+                }).catch(()=>
+                {
+                    // reset flag to allow retrying resume on next play
+                    this.playAfterResume = false;
+                });
+            }
+            else
+            {
+                // just resume audio context, the sound will play on the next call to playSamples
+                this.audioContext.resume();
+            }
             return;
         }
         
