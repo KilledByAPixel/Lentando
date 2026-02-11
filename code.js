@@ -943,23 +943,6 @@ const Wins = {
     return 0;
   },
   
-  _getLast7UseDays() {
-    // Get up to 7 most recent days with usage (excluding today)
-    const today = todayKey();
-    const keys = DB.getAllDayKeys();
-    const useDays = [];
-    
-    for (const key of keys) {
-      if (key === today) continue;
-      const dayUsed = filterProfileUsed(DB.forDate(key));
-      if (dayUsed.length > 0) {
-        useDays.push(key);
-        if (useDays.length >= 7) break;
-      }
-    }
-    
-    return useDays;
-  },
 };
 
 // ========== SHARED HTML BUILDERS ==========
@@ -1347,7 +1330,7 @@ function renderProgress() {
 function winCardHTML(w, showCount = true) {
   const unearnedClass = w.count === 0 ? ' unearned' : '';
   const badgeHTML = showCount ? `<span class="win-badge">${w.count}</span>` : '';
-  return `<li class="win-item${unearnedClass}" title="${escapeHTML(w.desc || '')}\">${badgeHTML}<div class="win-icon">${w.icon}</div><div class="win-label">${escapeHTML(w.label)}</div></li>`;
+  return `<li class="win-item${unearnedClass}" title="${escapeHTML(w.desc || '')}">${badgeHTML}<div class="win-icon">${w.icon}</div><div class="win-label">${escapeHTML(w.label)}</div></li>`;
 }
 
 function calculateAndUpdateWins() {
@@ -2158,7 +2141,7 @@ function openEditModal(eventId) {
     ${fieldsHTML}
     <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
     <div class="modal-actions">
-      <button class="btn-delete" onclick="App.deleteEvent('${escapeHTML(evt.id)}') && App.closeModal()">Delete</button>
+      <button class="btn-delete" onclick="if(App.deleteEvent('${escapeHTML(evt.id)}')) App.closeModal()">Delete</button>
       <button class="btn-save" onclick="App.saveModal()">Done</button>
     </div>`;
   $('modal-sheet').dataset.eventId = eventId;
