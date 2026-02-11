@@ -1229,7 +1229,7 @@ function renderMetrics() {
   const sessionsSub = used.length > 0 ? `${used.length} Sessions` : '';
 
   $('metrics').innerHTML = [
-    tileHTML(totalAmt, capitalize(profile.amountUnit), sessionsSub, `Total amount used today and number of sessions`),
+    tileHTML(totalAmt, capitalize(profile.amountUnit), sessionsSub, `Total amount used and number of sessions today`),
     buildSinceLastUsedTile(used),
     buildTodayRatioTile(used),
     fourthTile
@@ -1326,7 +1326,7 @@ function renderProgress() {
     // Show exercise per day as main metric, healthy actions as subtitle
     const exercisePerDay = (exerciseMins / daysOfUse).toFixed(1);
     const habitsSub = weekHabits > 0 ? `${weekHabits} Healthy Actions` : '';
-    fourthTile = tileHTML(exercisePerDay + 'm', 'Exercise/Day', habitsSub, 'Average exercise per day and total healthy actions');
+    fourthTile = tileHTML(exercisePerDay + 'm', 'Exercise/Day', habitsSub, 'Total healthy habits and average exercise per day');
   } else {
     // Show healthy actions as main metric, exercise actions (if any) as subtitle
     const exerciseSub = exerciseEvents.length > 0 ? `${exerciseEvents.length} Exercise Actions` : '';
@@ -1334,7 +1334,7 @@ function renderProgress() {
   }
 
   $('progress').innerHTML = [
-    tileHTML(dailyAmountAvg, `${capitalize(getProfile().amountUnit)}/Day`, hitsSub, 'Average amount per day and average sessions per day'),
+    tileHTML(dailyAmountAvg, `${capitalize(getProfile().amountUnit)}/Day`, hitsSub, 'Average amount used and average sessions per day'),
     tileHTML(avgGapStr, 'Average Gap', longestGapSub, 'Average gap between sessions and longest gap (excludes gaps crossing 6am)'),
     ratioTile,
     fourthTile
