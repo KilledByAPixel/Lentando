@@ -142,7 +142,7 @@ const STORAGE_KEYS = {
 };
 
 function setLocalUpdatedAt() {
-  localStorage.setItem(STORAGE_KEYS.updatedAt, Date.now().toString());
+  (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.updatedAt, Date.now().toString());
 }
 
 function getLocalData() {
@@ -201,7 +201,7 @@ async function pullFromCloud(uid) {
     }
   }
   merged.sort((a, b) => a.ts - b.ts);
-  localStorage.setItem(STORAGE_KEYS.events, JSON.stringify(merged));
+  (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.events, JSON.stringify(merged));
 
   // --- Merge wins (keep higher lifetime counts) ---
   if (cloud.wins && cloud.wins.lifetimeWins) {
@@ -219,7 +219,7 @@ async function pullFromCloud(uid) {
     const mergedWinData = preferCloud
       ? { ...localWins, ...cloud.wins, lifetimeWins: mergedLifetime }
       : { ...cloud.wins, ...localWins, lifetimeWins: mergedLifetime };
-    localStorage.setItem(STORAGE_KEYS.wins, JSON.stringify(mergedWinData));
+    (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.wins, JSON.stringify(mergedWinData));
   }
 
   // --- Settings: cloud wins ---
@@ -229,7 +229,7 @@ async function pullFromCloud(uid) {
     const mergedSettings = preferCloud
       ? { ...localSettings, ...cloud.settings }
       : { ...cloud.settings, ...localSettings };
-    localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(mergedSettings));
+    (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.settings, JSON.stringify(mergedSettings));
   }
 
   // --- Todos: merge by text (union, deduplicated) ---
@@ -245,7 +245,7 @@ async function pullFromCloud(uid) {
         mergedTodos.push(t);
       }
     }
-    localStorage.setItem(STORAGE_KEYS.todos, JSON.stringify(mergedTodos));
+    (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.todos, JSON.stringify(mergedTodos));
   }
 
   // --- Version: take the higher version (most migrated) ---
@@ -253,11 +253,11 @@ async function pullFromCloud(uid) {
     const localVersion = parseInt(localStorage.getItem(STORAGE_KEYS.version)) || 0;
     const cloudVersion = parseInt(cloud.version) || 0;
     const maxVersion = Math.max(localVersion, cloudVersion);
-    localStorage.setItem(STORAGE_KEYS.version, maxVersion.toString());
+    (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.version, maxVersion.toString());
   }
 
   // Stamp merge time so future pulls from other devices know this device is up-to-date
-  localStorage.setItem(STORAGE_KEYS.updatedAt, Date.now().toString());
+  (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.updatedAt, Date.now().toString());
 
   // Invalidate DB caches immediately after localStorage is updated
   // This ensures continueToApp() will read fresh data

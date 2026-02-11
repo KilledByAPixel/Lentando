@@ -253,6 +253,21 @@ function uid() {
   return Date.now().toString(36) + '-' + (++_uidCounter).toString(36) + '-' + Math.random().toString(36).substring(2, 9);
 }
 
+function safeSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    if (e.name === 'QuotaExceededError') {
+      alert('⚠️ Storage full — your data may not have saved.\n\nPlease export your data from Settings and clear old events to free up space.');
+      console.error('QuotaExceededError writing key:', key);
+      return false;
+    }
+    throw e;
+  }
+}
+window.safeSetItem = safeSetItem;
+
 function flashEl(el) {
   el.classList.add('flash');
   setTimeout(() => el.classList.remove('flash'), FLASH_ANIMATION_MS);
@@ -407,7 +422,7 @@ const DB = {
 
       // Brand-new install — no existing data to migrate, just stamp the version
       if (raw === null && !localStorage.getItem(STORAGE_EVENTS) && !localStorage.getItem(STORAGE_WINS)) {
-        localStorage.setItem(STORAGE_VERSION, DATA_VERSION.toString());
+        safeSetItem(STORAGE_VERSION, DATA_VERSION.toString());
         return;
       }
 
@@ -416,7 +431,7 @@ const DB = {
       // Future migrations go here
       // if (storedVersion < 2) { /* migrate to v2 */ }
 
-      localStorage.setItem(STORAGE_VERSION, DATA_VERSION.toString());
+      safeSetItem(STORAGE_VERSION, DATA_VERSION.toString());
     } catch (e) {
       console.error('Data migration failed:', e);
     }
@@ -436,16 +451,9 @@ const DB = {
   },
 
   saveEvents() {
-    try {
-      localStorage.setItem(STORAGE_EVENTS, JSON.stringify(this._events));
-      this._invalidateDateIndex();
-      if (window.FirebaseSync) FirebaseSync.onDataChanged();
-    } catch (e) {
-      if (e.name === 'QuotaExceededError') {
-        alert('Storage limit reached. Please export your data and clear old events.');
-      }
-      throw e;
-    }
+    safeSetItem(STORAGE_EVENTS, JSON.stringify(this._events));
+    this._invalidateDateIndex();
+    if (window.FirebaseSync) FirebaseSync.onDataChanged();
   },
 
   loadSettings() {
@@ -460,15 +468,8 @@ const DB = {
   },
 
   saveSettings() {
-    try {
-      localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(this._settings));
-      if (window.FirebaseSync) FirebaseSync.onDataChanged();
-    } catch (e) {
-      if (e.name === 'QuotaExceededError') {
-        alert('Storage limit reached. Please export your data.');
-      }
-      throw e;
-    }
+    safeSetItem(STORAGE_SETTINGS, JSON.stringify(this._settings));
+    if (window.FirebaseSync) FirebaseSync.onDataChanged();
   },
 
   addEvent(evt) {
@@ -636,15 +637,8 @@ function loadWinData() {
 }
 
 function saveWinData(data) {
-  try {
-    localStorage.setItem(STORAGE_WINS, JSON.stringify(data));
-    if (window.FirebaseSync) FirebaseSync.onDataChanged();
-  } catch (e) {
-    if (e.name === 'QuotaExceededError') {
-      alert('Storage limit reached. Please export your data.');
-    }
-    throw e;
-  }
+  safeSetItem(STORAGE_WINS, JSON.stringify(data));
+  if (window.FirebaseSync) FirebaseSync.onDataChanged();
 }
 
 // ========== WINS ENGINE ==========
@@ -2242,7 +2236,7 @@ function skipLogin() {
   if (!confirm('⚠️ Continue without an account?\n\nYour data will only be saved on this device and won\'t sync to other devices.\n\nYou can sign in later from Settings to enable cloud backup.')) {
     return;
   }
-  localStorage.setItem(STORAGE_LOGIN_SKIPPED, 'true');
+  safeSetItem(STORAGE_LOGIN_SKIPPED, 'true');
   hideLoginScreen();
   
   // Hide delete account button when continuing without account
@@ -2606,15 +2600,8 @@ function loadTodos() {
 }
 
 function saveTodos(todos) {
-  try {
-    localStorage.setItem(STORAGE_TODOS, JSON.stringify(todos));
-    if (window.FirebaseSync) FirebaseSync.onDataChanged();
-  } catch (e) {
-    if (e.name === 'QuotaExceededError') {
-      alert('Storage limit reached. Please export your data and clear completed goals.');
-    }
-    throw e;
-  }
+  safeSetItem(STORAGE_TODOS, JSON.stringify(todos));
+  if (window.FirebaseSync) FirebaseSync.onDataChanged();
 }
 
 function renderTodos() {
@@ -2763,7 +2750,7 @@ function getToggleTheme(current) {
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem(STORAGE_THEME, theme);
+  safeSetItem(STORAGE_THEME, theme);
   setThemeIcon(theme);
 }
 
