@@ -607,6 +607,14 @@ function countSwapCompleted(resisted, habits) {
   }).length;
 }
 
+/** Check if a 6am boundary falls between two timestamps */
+function gapCrosses6am(ts1, ts2) {
+  const d = new Date(ts1);
+  d.setHours(EARLY_HOUR, 0, 0, 0);
+  if (d.getTime() <= ts1) d.setDate(d.getDate() + 1);
+  return d.getTime() <= ts2;
+}
+
 function getAllGapHours(sessions) {
   if (sessions.length === 0) return [];
   const sorted = [...sessions].sort((a, b) => a.ts - b.ts);
@@ -615,16 +623,12 @@ function getAllGapHours(sessions) {
   // Include gaps between consecutive sessions, but skip any gap that
   // crosses the 6am boundary (overnight sleep gap, not a real achievement).
   for (let i = 1; i < sorted.length; i++) {
-    const prevHour = new Date(sorted[i - 1].ts).getHours();
-    const currHour = new Date(sorted[i].ts).getHours();
-    if (prevHour < EARLY_HOUR && currHour >= EARLY_HOUR) continue;
+    if (gapCrosses6am(sorted[i - 1].ts, sorted[i].ts)) continue;
     gaps.push((sorted[i].ts - sorted[i - 1].ts) / 3600000);
   }
 
   // Include gap from last session to now (skip if it crosses 6am boundary)
-  const lastHour = new Date(sorted[sorted.length - 1].ts).getHours();
-  const nowHour = new Date().getHours();
-  if (!(lastHour < EARLY_HOUR && nowHour >= EARLY_HOUR)) {
+  if (!gapCrosses6am(sorted[sorted.length - 1].ts, Date.now())) {
     gaps.push((Date.now() - sorted[sorted.length - 1].ts) / 3600000);
   }
 
@@ -799,9 +803,7 @@ const Wins = {
           const sorted = [...profileUsed].sort((a, b) => a.ts - b.ts);
           const todayGaps = [];
           for (let i = 1; i < sorted.length; i++) {
-            const prevHour = new Date(sorted[i - 1].ts).getHours();
-            const currHour = new Date(sorted[i].ts).getHours();
-            if (prevHour < EARLY_HOUR && currHour >= EARLY_HOUR) continue;
+            if (gapCrosses6am(sorted[i - 1].ts, sorted[i].ts)) continue;
             todayGaps.push(sorted[i].ts - sorted[i - 1].ts);
           }
           if (todayGaps.length > 0) {
