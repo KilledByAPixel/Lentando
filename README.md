@@ -22,7 +22,7 @@ Whether you're working toward abstinence, harm reduction, or just understanding 
 ### 📊 **Track Your Way**
 - **Choose what to track** - Pick from smoking, alcohol, cannabis, or other
 - **One-tap logging** - Quickly log sessions, resists, or healthy habits
-- **Visual analytics** - Graphs for sessions, amounts, and other trends
+- **Visual analytics** - Graphs for sessions, amounts, and hourly use
 - **Day-by-day history** - Browse and edit previous days with full details
 
 ### 🏆 **Celebrate Progress**
@@ -52,7 +52,7 @@ Lentando recognizes progress in many forms:
 | **Resist Awareness** | Intensity Logged, Trigger Identified, Full Report, Tough Resist |
 | **Timing Badges** | Delayed Start, First Later, Fewer Sessions, Lower Amount |
 | **Gap Milestones** | 1h, 2h, 4h, 8h, 12h gaps between sessions |
-| **Break Milestones** | 1 Day through 1 Year of consecutive no-use days |
+| **Break Milestones** | 1 Day through 1 Year of consecutive no use days |
 | **Streaks** | Resist Streak, Habit Streak, Taper Win, App Streak, Week/Month/Year Streak |
 | **Mindful Choices** | Second Thought, Harm Reduction, CBD-Only Day, Mindful Session, Low Dose |
 
