@@ -1210,7 +1210,7 @@ function renderMetrics() {
   } else {
     // Show healthy actions as main metric, exercise actions (if any) as subtitle
     const exerciseSub = exerciseEvents.length > 0 ? `${exerciseEvents.length} Exercise Actions` : '';
-    fourthTile = tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today and exercise minutes');
+    fourthTile = tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits and exercise minutes logged today');
   }
 
   // Calculate longest resist streak today (max consecutive resists between uses)
@@ -1330,7 +1330,7 @@ function renderProgress() {
   } else {
     // Show healthy actions as main metric, exercise actions (if any) as subtitle
     const exerciseSub = exerciseEvents.length > 0 ? `${exerciseEvents.length} Exercise Actions` : '';
-    fourthTile = tileHTML(weekHabits, 'Healthy Actions', exerciseSub, 'Total healthy actions and average exercise per day');
+    fourthTile = tileHTML(weekHabits, 'Healthy Actions', exerciseSub, 'Total healthy habits and average exercise per day');
   }
 
   $('progress').innerHTML = [
