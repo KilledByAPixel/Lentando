@@ -32,8 +32,8 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 `calculateAndUpdateWins()` recalculates all badges on every event change. Define new badges in `WIN_DEFINITIONS`, add logic using `addWin(condition, 'win-id')` inside `calculateAndUpdateWins()`.
 
 ### Time Boundaries
-- **Day boundary:** 6am, not midnight (`EARLY_HOUR = 6`)
-- **Gap wins:** Exclude gaps crossing 6am (overnight sleep)
+- **Day boundary:** Calendar days (midnight), BUT gap calculations exclude gaps crossing 6am (`EARLY_HOUR = 6`)
+- **Gap calculations:** All gap metrics (longest gap, average gap, gap wins) exclude gaps crossing 6am to filter out overnight sleep
 - **Morning Skip:** No use 6am–noon, eligible once past 6am
 - **Night Skip:** No use midnight–6am, eligible once past 6am
 

@@ -506,6 +506,7 @@ const DB = {
   addEvent(evt) {
     this.loadEvents();
     this._events.push(evt);
+    this._invalidateDateIndex();
     this.saveEvents();
     return evt;
   },
@@ -523,6 +524,7 @@ const DB = {
   deleteEvent(id) {
     this.loadEvents();
     this._events = this._events.filter(e => e.id !== id);
+    this._invalidateDateIndex();
     this.saveEvents();
   },
 
@@ -1257,17 +1259,15 @@ function renderProgress() {
   const dailyAmountAvg = (weekTotalAmount / daysOfUse).toFixed(1);
   const hitsSub = `${dailyAvg} sessions/day`;
 
-  // Longest gap within a single day (6am to 6am boundaries)
+  // Longest gap within a single day (excludes gaps crossing 6am)
   let maxGapMs = 0;
   let totalGapMs = 0;
   let gapCount = 0;
   
   for (const dayKey of last7Days) {
-    const dayEvents = filterProfileUsed(DB.forDate(dayKey)).sort(sortByTime);
-    if (dayEvents.length < 2) continue; // Need at least 2 events to have a gap
-    
-    for (let i = 1; i < dayEvents.length; i++) {
-      const gap = dayEvents[i].ts - dayEvents[i - 1].ts;
+    const dayEvents = filterProfileUsed(DB.forDate(dayKey));
+    const gaps = getGapsMs(dayEvents); // Uses existing helper that excludes 6am crossings
+    for (const gap of gaps) {
       totalGapMs += gap;
       gapCount++;
       if (gap > maxGapMs) maxGapMs = gap;
