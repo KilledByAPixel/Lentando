@@ -1234,14 +1234,14 @@ function getRatioTile(weekUsed, dayKeys) {
     cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC Ratio', freeLabel: 'No THC Days' },
     alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor Ratio', freeLabel: 'No Liquor Days' },
     smoking: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette Ratio', freeLabel: 'No Cigarette Days' },
-    other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1 Ratio', freeLabel: 'Free Days' }
+    other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1 Ratio', freeLabel: 'No Use Days' }
   };
   
   const config = ratioMap[settings.addictionProfile];
   
   // If no profile is set, return a placeholder tile
   if (!config) {
-    return tileHTML('—', 'Free Days', '', 'Days without primary substance');
+    return tileHTML('—', 'No Use Days', '', 'Days without primary substance');
   }
   
   // Calculate bad ratio by amount — for cannabis, mix counts as 0.5 since it's half THC
