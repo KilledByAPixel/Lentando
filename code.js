@@ -2491,8 +2491,20 @@ function bindEvents() {
     const habit = btn.dataset.habit;
     
     if (habit === 'exercise') {
+      // Check cooldown before showing chips
+      if (!checkCooldown('habit_exercise')) return;
+      
       // Immediately log exercise with 0 minutes
-      logHabit('exercise', 0);
+      const evt = createHabitEvent('exercise', 0);
+      DB.addEvent(evt);
+      stampActivity();
+      calculateAndUpdateWins();
+      render();
+      hideUndo();
+      
+      playSound('habit');
+      hapticFeedback();
+      showToast('🏃 Logged Exercise');
       flashEl(btn);
       
       // Show chips so user can optionally add duration
@@ -2523,8 +2535,8 @@ function bindEvents() {
       .sort((a, b) => b.ts - a.ts)[0];
     
     if (recentExercise) {
-      recentExercise.minutes = parseInt(chip.dataset.min, 10);
-      DB.saveEvents();
+      const minutes = parseInt(chip.dataset.min, 10);
+      DB.updateEvent(recentExercise.id, { minutes });
       calculateAndUpdateWins();
       render();
     }
