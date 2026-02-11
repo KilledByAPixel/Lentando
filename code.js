@@ -1220,9 +1220,9 @@ function renderMetrics() {
   const avgSub = `7-Day Average: ${avg7Day}`;
 
   $('metrics').innerHTML = [
-    tileHTML(totalAmt, capitalize(profile.amountUnit), avgSub, `Total amount used today and 7-day average`),
+    tileHTML(totalAmt, capitalize(profile.amountUnit), avgSub, `Total amount used today`),
     buildSinceLastUsedTile(used),
-    tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Urges you successfully resisted today'),
+    tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Urges you resisted today'),
     tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today')
   ].join('');
 }
@@ -1259,7 +1259,7 @@ function getRatioTile(weekUsed, dayKeys) {
   }).length;
   const ratioSub = totalAmount > 0 ? `${ratio} ${config.ratioLabel}` : '';
 
-  return tileHTML(freeDays, config.freeLabel, ratioSub, `Days without primary substance and ratio this week`);
+  return tileHTML(freeDays, config.freeLabel, ratioSub, `Days without primary substance`);
 }
 
 function getWeekData(days) {
@@ -1319,9 +1319,9 @@ function renderProgress() {
 
   $('progress').innerHTML = [
     ratioTile,
-    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average sessions per day and average amount per day this week'),
+    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average use per day'),
     tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 6am)'),
-    tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day this week')
+    tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day')
   ].join('');
 }
 
@@ -3053,10 +3053,13 @@ function generateUseEvent(daysAgo) {
     return;
   }
   
-  // Calculate timestamp
-  const now = Date.now();
+  // Calculate timestamp - random time within the target day
   const msPerDay = 24 * 60 * 60 * 1000;
-  const targetTimestamp = now - (days * msPerDay);
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() - days);
+  targetDate.setHours(0, 0, 0, 0); // Start of day
+  const randomMs = Math.floor(Math.random() * msPerDay); // Random time within the day
+  const targetTimestamp = targetDate.getTime() + randomMs;
   
   // Create event with current settings
   const substance = settings.lastSubstance || profile.substances[0];
