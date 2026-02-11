@@ -4,6 +4,8 @@
 
 'use strict';
 
+const debugMode = true;
+
 // ========== CONSTANTS ==========
 const STORAGE_EVENTS = 'ht_events';
 const STORAGE_SETTINGS = 'ht_settings';
@@ -261,6 +263,7 @@ function pulseEl(el) {
 }
 
 function hapticFeedback() {
+  if (debugMode) console.log('Haptic feedback triggered');
   if (navigator.vibrate) navigator.vibrate(50);
 }
 
@@ -811,31 +814,21 @@ const Wins = {
       addWin(currentHour >= start && noUseInRange(start, end), id);
     }
     
-    // Night Gap — 12+ hour gap that crosses 6am boundary (overnight break)
-    // Check both today's and yesterday's events (after 6am yesterday)
-    const yesterdayProfileUsed = yesterdayEvents ? filterDaytime(filterProfileUsed(yesterdayEvents)) : [];
-    const combinedUsed = sortedByTime([...yesterdayProfileUsed, ...profileUsed]);
+    // Night Gap — 12+ hour gap crossing today's 6am boundary (overnight break)
+    const today6am = new Date(todayKey() + 'T06:00:00').getTime();
+    
+    // Get all events from yesterday and today
+    const yesterdayProfileUsed = yesterdayEvents ? filterProfileUsed(yesterdayEvents) : [];
+    const allRecent = sortedByTime([...yesterdayProfileUsed, ...profileUsed]);
+    
+    // Find last event before 6am and first event after 6am
+    const lastBefore6am = allRecent.filter(e => e.ts < today6am).pop();
+    const firstAfter6am = allRecent.find(e => e.ts >= today6am);
     
     let hasNightGap = false;
-    if (combinedUsed.length >= 2) {
-      for (let i = 1; i < combinedUsed.length; i++) {
-        const gapHours = (combinedUsed[i].ts - combinedUsed[i - 1].ts) / 3600000;
-        if (gapHours < 12) continue;
-        
-        // Check if a 6am boundary falls between the two timestamps
-        // Find the next 6am after the first event
-        const prevDate = new Date(combinedUsed[i - 1].ts);
-        const next6am = new Date(prevDate);
-        next6am.setHours(EARLY_HOUR, 0, 0, 0);
-        if (next6am.getTime() <= combinedUsed[i - 1].ts) {
-          next6am.setDate(next6am.getDate() + 1);
-        }
-        
-        if (next6am.getTime() <= combinedUsed[i].ts) {
-          hasNightGap = true;
-          break;
-        }
-      }
+    if (lastBefore6am && firstAfter6am) {
+      const gapHours = (firstAfter6am.ts - lastBefore6am.ts) / 3600000;
+      hasNightGap = gapHours >= 12;
     }
     addWin(hasNightGap, 'night-gap');
 
@@ -2605,9 +2598,11 @@ function bindEvents() {
     
     if (recentExercise) {
       const minutes = parseInt(chip.dataset.min, 10);
-      DB.updateEvent(recentExercise.id, { minutes });
-      calculateAndUpdateWins();
-      render();
+      if (!isNaN(minutes)) {
+        DB.updateEvent(recentExercise.id, { minutes });
+        calculateAndUpdateWins();
+        render();
+      }
     }
     
     const exerciseBtn = document.querySelector('[data-habit="exercise"]');
