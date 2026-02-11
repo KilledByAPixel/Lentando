@@ -1157,12 +1157,46 @@ function buildSinceLastUsedTile(used) {
       const todayGaps = getGapsMs(used);
       if (todayGaps.length > 0) {
         const longestGap = Math.max(...todayGaps);
-        sinceLastSub = `Longest gap today: ${formatDuration(longestGap)}`;
+        sinceLastSub = `${formatDuration(longestGap)} Longest Gap`;
       }
     }
   }
   
   return tileHTML(sinceLastVal, 'Since Last Use', sinceLastSub, 'Time since your last session and longest gap today (excludes gaps crossing 6am)');
+}
+
+function buildTodayRatioTile(used) {
+  const settings = DB.loadSettings();
+  const ratioMap = {
+    cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC Ratio Today', substanceName: 'THC' },
+    alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor Ratio Today', substanceName: 'Liquor' },
+    smoking: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette Ratio Today', substanceName: 'Cigarette' },
+    other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1 Ratio Today', substanceName: 'Type1' }
+  };
+  
+  const config = ratioMap[settings.addictionProfile];
+  
+  // If no profile is set, return a placeholder tile
+  if (!config) {
+    return tileHTML('—', 'Ratio Today', '', 'Ratio of primary substance');
+  }
+  
+  // Calculate bad ratio by amount for today
+  const totalAmount = used.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const badAmount = calcBadAmount(used, settings.addictionProfile, config.badFilter);
+  const ratio = totalAmount > 0 ? ((badAmount / totalAmount) * 100).toFixed(0) + '%' : '—';
+
+  // Find time since last use of bad substance
+  let sinceLastBadSub = '';
+  const allUsed = filterUsed(DB.loadEvents());
+  const badUsed = allUsed.filter(config.badFilter).sort(sortByTime);
+  if (badUsed.length > 0) {
+    const lastBadTs = badUsed[badUsed.length - 1].ts;
+    const elapsedMs = Date.now() - lastBadTs;
+    sinceLastBadSub = `${formatDuration(elapsedMs)} Since Last ${config.substanceName}`;
+  }
+
+  return tileHTML(ratio, config.ratioLabel, sinceLastBadSub, `Ratio of primary substance today and time since last use`);
 }
 
 function renderMetrics() {
@@ -1195,7 +1229,7 @@ function renderMetrics() {
   $('metrics').innerHTML = [
     tileHTML(totalAmt, capitalize(profile.amountUnit), sessionsSub, `Total amount used today and number of sessions`),
     buildSinceLastUsedTile(used),
-    tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Urges you resisted and longest resist streak today'),
+    buildTodayRatioTile(used),
     tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today and exercise minutes')
   ].join('');
 }
@@ -1276,7 +1310,7 @@ function renderProgress() {
   }
   
   const gapStr = maxGapMs > 0 ? formatDuration(maxGapMs) : '—';
-  const gapSub = gapCount > 0 ? `Average: ${formatDuration(totalGapMs / gapCount)}` : '';
+  const gapSub = gapCount > 0 ? `${formatDuration(totalGapMs / gapCount)} Average` : '';
 
 
   const ratioTile = getRatioTile(thisWeek.profileUsed, last7Days);
