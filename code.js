@@ -1310,8 +1310,8 @@ function renderProgress() {
     }
   }
   
-  const gapStr = maxGapMs > 0 ? formatDuration(maxGapMs) : '—';
-  const gapSub = gapCount > 0 ? `${formatDuration(totalGapMs / gapCount)} Average` : '';
+  const avgGapStr = gapCount > 0 ? formatDuration(totalGapMs / gapCount) : '—';
+  const longestGapSub = maxGapMs > 0 ? `${formatDuration(maxGapMs)} Longest Gap` : '';
 
 
   const ratioTile = getRatioTile(thisWeek.profileUsed, last7Days);
@@ -1335,7 +1335,7 @@ function renderProgress() {
 
   $('progress').innerHTML = [
     tileHTML(dailyAmountAvg, `${capitalize(getProfile().amountUnit)}/Day`, hitsSub, 'Average amount per day and average sessions per day'),
-    tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 6am)'),
+    tileHTML(avgGapStr, 'Average Gap', longestGapSub, 'Average gap between sessions and longest gap (excludes gaps crossing 6am)'),
     ratioTile,
     fourthTile
   ].join('');
