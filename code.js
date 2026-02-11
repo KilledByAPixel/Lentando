@@ -1186,21 +1186,11 @@ function renderMetrics() {
   }
   const resistSub = maxResistStreak > 1 ? `Longest Streak: ${maxResistStreak}` : '';
 
-  // Calculate 7-day average for the first tile (clamp divisor for new users)
-  const last7Days = getLastNDays(7);
-  const week7Total = last7Days.reduce((sum, dk) => sum + sumAmount(filterProfileUsed(DB.forDate(dk))), 0);
-  const allEventsForAvg = DB.loadEvents();
-  let avgDivisor = 7;
-  if (allEventsForAvg.length > 0) {
-    const earliestTs = Math.min(...allEventsForAvg.map(e => e.ts));
-    const daysSinceFirst = Math.ceil((Date.now() - earliestTs) / (24 * 60 * 60 * 1000));
-    avgDivisor = Math.max(1, Math.min(7, daysSinceFirst));
-  }
-  const avg7Day = (week7Total / avgDivisor).toFixed(1);
-  const avgSub = `7-Day Average: ${avg7Day}`;
+  // Show sessions today as subtitle for the first tile
+  const sessionsSub = used.length > 0 ? `${used.length} sessions` : '';
 
   $('metrics').innerHTML = [
-    tileHTML(totalAmt, capitalize(profile.amountUnit), avgSub, `Total amount used today and average per day`),
+    tileHTML(totalAmt, capitalize(profile.amountUnit), sessionsSub, `Total amount used today and number of sessions`),
     buildSinceLastUsedTile(used),
     tileHTML(resisted.length, 'Urges Resisted', resistSub, 'Urges you resisted and longest resist streak today'),
     tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits logged today and exercise minutes')
@@ -1265,7 +1255,7 @@ function renderProgress() {
   // Calculate average amount per day for this week
   const weekTotalAmount = sumAmount(thisWeek.profileUsed);
   const dailyAmountAvg = (weekTotalAmount / daysOfUse).toFixed(1);
-  const sessionsSub = `${dailyAmountAvg} ${getProfile().amountUnit}/day`;
+  const hitsSub = `${dailyAvg} sessions/day`;
 
   // Longest gap within a single day (6am to 6am boundaries)
   let maxGapMs = 0;
@@ -1299,7 +1289,7 @@ function renderProgress() {
 
   $('progress').innerHTML = [
     ratioTile,
-    tileHTML(dailyAvg, 'Sessions/Day', sessionsSub, 'Average sessions and average amount per day'),
+    tileHTML(dailyAmountAvg, `${getProfile().amountUnit}/Day`, hitsSub, 'Average amount per day and average sessions per day'),
     tileHTML(gapStr, 'Longest Gap', gapSub, 'Longest gap between sessions (excludes gaps crossing 6am)'),
     tileHTML(exerciseLabel, 'Exercise/Day', exerciseSub, 'Average exercise per day and total healthy actions')
   ].join('');
