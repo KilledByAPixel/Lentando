@@ -933,8 +933,8 @@ const Wins = {
     for (let i = 0; i < MAX_STREAK_DAYS; i++) {
       const amt = sumAmount(filterProfileUsed(DB.forDate(dateKey(d))));
       // Walking backwards: prevAmt = newer day, amt = older day
-      // Tapering means older day should have MORE usage than newer day
-      // Break when older day <= newer day (not tapering)
+      // Tapering means older day should have MORE usage than newer day (amt > prevAmt)
+      // Break when older day <= newer day (increasing or flat = not tapering)
       if (prevAmt !== null && amt <= prevAmt) break;
       if (prevAmt !== null) count++;
       prevAmt = amt;
