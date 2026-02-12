@@ -111,7 +111,7 @@ function buildCustomProfile(settings) {
 // User input options
 const REASONS = ['habit', 'stress', 'break', 'social', 'sleep', 'pain'];
 const INTENSITIES = [1, 2, 3, 4, 5];
-const EXERCISE_DURATIONS = [0, 1, 5, 10, 15, 20, 30, 45, 60];
+const EXERCISE_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60];
 const OPTIONAL_FIELDS = new Set(['reason', 'trigger']);
 
 // Timeouts and durations
