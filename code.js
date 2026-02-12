@@ -234,14 +234,14 @@ const BADGE_DEFINITIONS = {
   'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing - showing up is a win' },
   'resist': { label: 'Resisted', icon: '💪', desc: 'Resisted an urge' },
   'urge-surfed': { label: 'Urge Surfed', icon: '🧘', desc: 'Logged an urge and didn\'t use for 15+ minutes' },
-  'second-thought': { label: 'Second Thought', icon: '↩️', desc: 'Used undo to reconsider' },
-  'swap-completed': { label: 'Swap Completed', icon: '🛠️', desc: 'Logged an urge, then did a healthy action within 15 minutes' },
+  'second-thought': { label: 'Reconsidered', icon: '💭', desc: 'Used undo to reconsider' },
+  'swap-completed': { label: 'Healthy Swap', icon: '🧩', desc: 'Logged an urge, then did a healthy action within 15 minutes' },
   'intensity-logged': { label: 'Intensity Logged', icon: '📊', desc: 'Tracked urge intensity' },
   'trigger-noted': { label: 'Trigger Identified', icon: '🔍', desc: 'Identified what triggered the urge' },
   'full-report': { label: 'Full Report', icon: '📋', desc: 'Logged both intensity and trigger' },
   'tough-resist': { label: 'Tough Resist', icon: '🦁', desc: 'Resisted a strong urge (intensity 4+)' },
-  'mindful': { label: 'Mindful Session', icon: '🧠', desc: 'Logged the reason for using' },
-  'dose-half': { label: 'Low Dose', icon: '⚖️', desc: 'Used less than a full dose' },
+  'mindful': { label: 'Mindful Session', icon: '🌸', desc: 'Logged the reason for using' },
+  'dose-half': { label: 'Reduced Dose', icon: '⚖️', desc: 'Used less than a full dose' },
   'harm-reduction-vape': { label: 'Harm Reduction', icon: '🌡️', desc: 'Chose vape over smoke' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products, no THC' },
   'low-day': { label: 'Low Use Day', icon: '🤏', desc: 'Total usage ≤2 units' },
@@ -854,11 +854,8 @@ const Badges = {
       addBadge(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
     }
 
-    const doseCount = used.filter(e => e.amount < 1).length;
-    for (let i = 0; i < doseCount; i++) addBadge(true, 'dose-half');
-
-    const mindfulCount = used.filter(e => e.reason).length;
-    for (let i = 0; i < mindfulCount; i++) addBadge(true, 'mindful');
+    addBadge(used.some(e => e.amount < 1), 'dose-half');
+    addBadge(used.some(e => e.reason), 'mindful');
 
     const profileAmt = sumAmount(profileUsed);
     addBadge(profileUsed.length > 0 && profileAmt <= LOW_DAY_THRESHOLD, 'low-day');
