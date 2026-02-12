@@ -2502,12 +2502,7 @@ function continueToApp() {
   if (!DB.loadSettings().addictionProfile) {
     showOnboarding();
   } else {
-    // Restore user's preferred graph range
-    const settings = DB.loadSettings();
-    graphDays = settings.graphDays || 7;
-    const rangeEl = $('graph-range');
-    if (rangeEl) rangeEl.querySelectorAll('.chip').forEach(c =>
-      c.classList.toggle('active', +c.dataset.days === graphDays));
+
     
     calculateAndUpdateBadges();
     bindEvents();
@@ -2850,10 +2845,6 @@ function bindEvents() {
     const chip = e.target.closest('.chip');
     if (!chip) return;
     graphDays = +chip.dataset.days;
-    const settings = DB.loadSettings();
-    settings.graphDays = graphDays;
-    DB._settings = settings;
-    DB.saveSettings();
     e.currentTarget.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c === chip));
     requestAnimationFrame(renderGraphs);
   });
