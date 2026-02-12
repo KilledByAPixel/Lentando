@@ -335,21 +335,19 @@ async function pullFromCloud(uid) {
     (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.settings, JSON.stringify(mergedSettings));
   }
 
-  // --- Todos: merge by text (union, deduplicated) ---
-  const cloudTodos = asArray(cloud.todos);
-  if (cloudTodos.length > 0) {
-    const localTodos = readLocalArray(STORAGE_KEYS.todos);
-    const seenTexts = new Set();
-    const mergedTodos = [];
-    const orderedTodos = preferCloud ? [...cloudTodos, ...localTodos] : [...localTodos, ...cloudTodos];
-    for (const t of orderedTodos) {
-      const key = t && t.text;
-      if (key && !seenTexts.has(key)) {
-        seenTexts.add(key);
-        mergedTodos.push(t);
-      }
+  // --- Todos: most-recent-writer wins ---
+  // Todos are a simple ordered list without per-item IDs or tombstones, so
+  // union-merge can't handle individual deletions (deleted items resurrect from
+  // the other side). Instead, whichever device wrote more recently wins outright.
+  const hasCloudTodosField = Object.prototype.hasOwnProperty.call(cloud, 'todos');
+  if (hasCloudTodosField) {
+    const cloudTodos = asArray(cloud.todos);
+    if (preferCloud) {
+      // Cloud is newer — adopt its todo list (handles both clears and single deletes)
+      (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.todos, JSON.stringify(cloudTodos));
     }
-    (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.todos, JSON.stringify(mergedTodos));
+    // When local is newer we keep local as-is (already in localStorage); the
+    // merged state gets pushed back to cloud at the end of pullFromCloud().
   }
 
   // --- Version: take the higher version (most migrated) ---
