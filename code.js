@@ -2352,7 +2352,7 @@ function openCreateEventModal() {
     <div class="modal-field"><label>Date</label><input type="date" id="modal-date-input" value="${dateValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
     <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
     <div class="modal-actions">
-      <button class="btn-delete" onclick="App.closeModal()" style="background:var(--muted)">Cancel</button>
+      <button class="btn-delete" onclick="App.closeModal()">Cancel</button>
       <button class="btn-save" onclick="App.saveCreateModal()">Done</button>
     </div>`;
   $('modal-sheet').dataset.eventId = '';
