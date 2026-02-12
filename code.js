@@ -377,7 +377,6 @@ function validatePassword(password) {
   if (!/[a-z]/.test(password)) return 'Password must contain a lowercase letter';
   if (!/[A-Z]/.test(password)) return 'Password must contain an uppercase letter';
   if (!/[0-9]/.test(password)) return 'Password must contain a number';
-  if (!/[^a-zA-Z0-9]/.test(password)) return 'Password must contain a special character';
   return null;
 }
 
