@@ -2445,12 +2445,13 @@ function showLoginScreen() {
   const loginInputs = overlay.querySelector('.login-inputs');
   if (loginInputs && !loginInputs.children.length) {
     loginInputs.innerHTML = `
-      <form id="login-form" onsubmit="return false" style="display:flex;flex-direction:column;gap:8px">
+      <form id="login-form" onsubmit="App.loginWithEmailFromScreen(); return false" style="display:flex;flex-direction:column;gap:8px">
         <input type="email" id="login-email" name="email" autocomplete="username" placeholder="Email" class="login-input">
         <div class="password-wrap">
           <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Password" class="login-input">
           <button type="button" class="password-toggle" onclick="App.togglePasswordVisibility(this)" title="Show password">👁️</button>
         </div>
+        <button type="submit" style="display:none"></button>
       </form>`;
   }
 }
