@@ -154,13 +154,39 @@ function setLocalUpdatedAt() {
   (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.updatedAt, Date.now().toString());
 }
 
+function readLocalJSON(key, fallbackValue) {
+  const raw = localStorage.getItem(key);
+  if (raw == null) return fallbackValue;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed == null ? fallbackValue : parsed;
+  } catch (err) {
+    console.warn(`[Sync] Invalid JSON in ${key}, using default`, err);
+    return fallbackValue;
+  }
+}
+
+function readLocalArray(key) {
+  const parsed = readLocalJSON(key, []);
+  if (Array.isArray(parsed)) return parsed;
+  console.warn(`[Sync] Expected array in ${key}, using default`);
+  return [];
+}
+
+function readLocalObject(key) {
+  const parsed = readLocalJSON(key, {});
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+  console.warn(`[Sync] Expected object in ${key}, using default`);
+  return {};
+}
+
 function getLocalData() {
   return {
-    events: JSON.parse(localStorage.getItem(STORAGE_KEYS.events) || '[]'),
-    settings: JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}'),
-    badges: JSON.parse(localStorage.getItem(STORAGE_KEYS.badges) || '{}'),
-    todos: JSON.parse(localStorage.getItem(STORAGE_KEYS.todos) || '[]'),
-    deletedIds: JSON.parse(localStorage.getItem(STORAGE_KEYS.deletedIds) || '[]'),
+    events: readLocalArray(STORAGE_KEYS.events),
+    settings: readLocalObject(STORAGE_KEYS.settings),
+    badges: readLocalObject(STORAGE_KEYS.badges),
+    todos: readLocalArray(STORAGE_KEYS.todos),
+    deletedIds: readLocalArray(STORAGE_KEYS.deletedIds),
     version: parseInt(localStorage.getItem(STORAGE_KEYS.version)) || 0,
     updatedAt: parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt)) || 0,
     lastSynced: Date.now()
@@ -200,7 +226,7 @@ async function pullFromCloud(uid) {
 
   // --- Merge deletedIds (tombstones): union by id, clean old ones ---
   const cloudDeleted = cloud.deletedIds || [];
-  const localDeleted = JSON.parse(localStorage.getItem(STORAGE_KEYS.deletedIds) || '[]');
+  const localDeleted = readLocalArray(STORAGE_KEYS.deletedIds);
   const seenDeletedIds = new Set();
   const mergedDeleted = [];
   const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
@@ -214,7 +240,7 @@ async function pullFromCloud(uid) {
 
   // --- Events: merge by ID (union of local + cloud, deduplicated), filter deleted ---
   const cloudEvents = cloud.events || [];
-  const localEvents = JSON.parse(localStorage.getItem(STORAGE_KEYS.events) || '[]');
+  const localEvents = readLocalArray(STORAGE_KEYS.events);
   const seenIds = new Set();
   const merged = [];
   const orderedEvents = preferCloud ? [...cloudEvents, ...localEvents] : [...localEvents, ...cloudEvents];
@@ -231,7 +257,7 @@ async function pullFromCloud(uid) {
   // --- Merge badges (keep higher lifetime counts) ---
   const cloudBadges = cloud.badges || cloud.wins; // backward compat: read old 'wins' field
   if (cloudBadges && (cloudBadges.lifetimeBadges || cloudBadges.lifetimeWins)) {
-    const localBadges = JSON.parse(localStorage.getItem(STORAGE_KEYS.badges) || '{}');
+    const localBadges = readLocalObject(STORAGE_KEYS.badges);
     const localLifetime = new Map((localBadges.lifetimeBadges || localBadges.lifetimeWins || []).map(w => [w.id, w.count]));
     const cloudLifetime = new Map((cloudBadges.lifetimeBadges || cloudBadges.lifetimeWins || []).map(w => [w.id, w.count]));
 
@@ -259,7 +285,7 @@ async function pullFromCloud(uid) {
 
   // --- Settings: cloud takes precedence ---
   if (cloud.settings) {
-    const localSettings = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}');
+    const localSettings = readLocalObject(STORAGE_KEYS.settings);
     // Prefer the more recent source
     const mergedSettings = preferCloud
       ? { ...localSettings, ...cloud.settings }
@@ -269,7 +295,7 @@ async function pullFromCloud(uid) {
 
   // --- Todos: merge by text (union, deduplicated) ---
   if (cloud.todos) {
-    const localTodos = JSON.parse(localStorage.getItem(STORAGE_KEYS.todos) || '[]');
+    const localTodos = readLocalArray(STORAGE_KEYS.todos);
     const seenTexts = new Set();
     const mergedTodos = [];
     const orderedTodos = preferCloud ? [...cloud.todos, ...localTodos] : [...localTodos, ...cloud.todos];

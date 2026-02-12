@@ -74,8 +74,21 @@ self.addEventListener('fetch', event => {
         });
         return response;
       })
-      .catch(() => {
-        return caches.match(event.request);
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+
+        // For SPA navigations, fall back to cached app shell when available
+        if (event.request.mode === 'navigate') {
+          const appShell = await caches.match('./index.html');
+          if (appShell) return appShell;
+        }
+
+        return new Response('Offline. Please reconnect and try again.', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+        });
       })
   );
 });
