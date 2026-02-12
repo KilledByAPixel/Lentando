@@ -2305,7 +2305,7 @@ function openEditModal(eventId) {
     habit: () => {
       const fields = [`<label>Habit</label><div style="font-size:16px">${HABIT_LABELS[evt.habit] || evt.habit}</div>`];
       if (HABIT_SHOW_CHIPS[evt.habit]) {
-        fields.push(chipGroupHTML('Minutes', 'minutes', EXERCISE_DURATIONS, evt.minutes ?? 0));
+        fields.push(chipGroupHTML('Minutes', 'minutes', EXERCISE_DURATIONS, evt.minutes ?? 0, v => v === 0 ? '-' : String(v)));
       }
       return fields;
     }
