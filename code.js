@@ -3,7 +3,7 @@
 
 'use strict';
 
-const debugMode = false; // Set to true to enable debug logging and debug time system messages
+const debugMode = true; // Set to true to enable debug logging and debug time system messages
 
 // ========== DEBUG TIME SYSTEM ==========
 // Allows advancing time for testing badges, day boundaries, etc.
@@ -17,43 +17,32 @@ function currentDate() {
   return new Date(now());
 }
 
-// Console commands for time manipulation:
-// debugAdvanceTime(24) - advance 24 hours
-// debugSetDate('2026-02-15') - jump to specific date
-// debugResetTime() - reset to real time
-window.debugAdvanceTime = (hours) => {
-  _debugTimeOffset += hours * 60 * 60 * 1000;
-  console.log(`⏰ Time advanced by ${hours}h. Virtual date: ${currentDate().toLocaleString()}`);
-  render();
-};
-
-window.debugSetDate = (dateString) => {
-  const targetTime = new Date(dateString).getTime();
-  _debugTimeOffset = targetTime - Date.now();
-  console.log(`⏰ Time set to ${currentDate().toLocaleString()}`);
-  render();
-};
-
-window.debugResetTime = () => {
-  _debugTimeOffset = 0;
-  console.log('⏰ Time reset to real time');
-  render();
-};
-
-window.debugGetTime = () => {
-  console.log(`Current virtual time: ${currentDate().toLocaleString()}`);
-  console.log(`Offset: ${_debugTimeOffset / (1000 * 60 * 60)} hours`);
-  return currentDate();
-};
-
-// Log available debug commands on startup
+// Debug functions are only exposed on window when debugMode is true
 if (debugMode) {
-  console.log('%c🛠️ Debug Time System Available', 'color: #4a9eff; font-weight: bold');
-  console.log('%cCommands:', 'font-weight: bold');
-  console.log('  debugAdvanceTime(hours) - Advance time by N hours');
-  console.log('  debugSetDate("2026-02-15") - Jump to specific date');
-  console.log('  debugResetTime() - Reset to real time');
-  console.log('  debugGetTime() - Show current virtual time');
+  window.debugAdvanceTime = (hours) => {
+    _debugTimeOffset += hours * 60 * 60 * 1000;
+    console.log(`⏰ Time advanced by ${hours}h. Virtual date: ${currentDate().toLocaleString()}`);
+    render();
+  };
+
+  window.debugSetDate = (dateString) => {
+    const targetTime = new Date(dateString).getTime();
+    _debugTimeOffset = targetTime - Date.now();
+    console.log(`⏰ Time set to ${currentDate().toLocaleString()}`);
+    render();
+  };
+
+  window.debugResetTime = () => {
+    _debugTimeOffset = 0;
+    console.log('⏰ Time reset to real time');
+    render();
+  };
+
+  window.debugGetTime = () => {
+    console.log(`Current virtual time: ${currentDate().toLocaleString()}`);
+    console.log(`Offset: ${_debugTimeOffset / (1000 * 60 * 60)} hours`);
+    return currentDate();
+  };
 }
 
 // ========== CONSTANTS ==========
@@ -3201,12 +3190,8 @@ window.App = {
 };
 
 // ========== TEST DATA GENERATION ==========
-// Call these from browser console to generate realistic historical data:
-// generateAllTestData() - adds a mix of everything (recommended)
-// generateTestData(100) - adds 100 random usage events over past 30 days
-// generateTestHabits(20) - adds 20 random events per habit type
-// generateTestResists(50) - adds 50 random resist events
-// generateUseEvent(7) - adds a single use event 7 days ago
+// Only defined when debugMode is true
+if (debugMode) {
 
 function generateAllTestData() {
   console.log('🎲 Generating comprehensive test data...');
@@ -3383,7 +3368,6 @@ function generateTestBadges() {
   console.log('Sample lifetime badges:', verify.lifetimeBadges.slice(0, 5));
 }
 
-// DEBUG: Generate a use event X days ago
 function generateUseEvent(daysAgo) {
   const settings = DB.loadSettings();
   const profile = getProfile();
@@ -3424,6 +3408,26 @@ function generateUseEvent(daysAgo) {
   console.log(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago:`, evt);
   showToast(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago`);
 }
+
+  window.generateAllTestData = generateAllTestData;
+  window.generateTestData = generateTestData;
+  window.generateTestHabits = generateTestHabits;
+  window.generateTestResists = generateTestResists;
+  window.generateUseEvent = generateUseEvent;
+
+  console.log('%c🛠️ Debug Mode Active', 'color: #4a9eff; font-weight: bold; font-size: 14px');
+  console.log('%cTime Commands:', 'font-weight: bold');
+  console.log('  debugAdvanceTime(hours)    - Advance time by N hours');
+  console.log('  debugSetDate("2026-02-15") - Jump to specific date');
+  console.log('  debugResetTime()           - Reset to real time');
+  console.log('  debugGetTime()             - Show current virtual time');
+  console.log('%cTest Data Commands:', 'font-weight: bold');
+  console.log('  generateAllTestData()      - Mix of everything (recommended)');
+  console.log('  generateTestData(100)      - 100 random usage events over 30 days');
+  console.log('  generateTestHabits(20)     - 20 events per habit type');
+  console.log('  generateTestResists(50)    - 50 random resist events');
+  console.log('  generateUseEvent(7)        - Single use event N days ago');
+} // end if (debugMode)
 
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
