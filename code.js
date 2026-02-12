@@ -1442,7 +1442,6 @@ function renderProgress() {
   const avgGapStr = gapCount > 0 ? formatDuration(totalGapMs / gapCount) : '—';
   const longestGapSub = maxGapMs > 0 ? `${formatDuration(maxGapMs)} Longest Gap` : '';
 
-
   const ratioTile = getRatioTile(thisWeek.profileUsed, last7Days);
 
   const exerciseEvents = getHabits(thisWeek.events, 'exercise');
@@ -2612,8 +2611,6 @@ function continueToApp() {
   if (!DB.loadSettings().addictionProfile) {
     showOnboarding();
   } else {
-
-    
     calculateAndUpdateBadges();
     bindEvents();
     render();
