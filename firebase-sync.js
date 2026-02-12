@@ -386,7 +386,7 @@ if (isConfigured) {
 const AUTH_FORM_HTML = `
   <div style="display:flex;flex-direction:column;gap:8px">
     <button class="export-btn" style="margin:0" onclick="FirebaseSync.loginWithGoogle()">🔑 Sign in with Google</button>
-    <form id="auth-form" onsubmit="return false" style="display:flex;flex-direction:column;gap:6px">
+    <form id="auth-form" onsubmit="FirebaseSync.loginWithEmailForm(); return false" style="display:flex;flex-direction:column;gap:6px">
       <input type="email" id="auth-email" name="email" autocomplete="username" placeholder="Email" 
         style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
       <div class="password-wrap">
@@ -394,6 +394,7 @@ const AUTH_FORM_HTML = `
           style="width:100%;padding:10px;padding-right:40px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
         <button type="button" class="password-toggle" onclick="App.togglePasswordVisibility(this)" title="Show password">👁️</button>
       </div>
+      <button type="submit" style="display:none"></button>
     </form>
     <div style="display:flex;gap:6px">
       <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.loginWithEmailForm()">🔓 Log In</button>
