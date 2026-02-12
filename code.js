@@ -1369,8 +1369,8 @@ function renderMetrics() {
   const sessionsSub = used.length > 0 ? `${used.length} Sessions` : '';
 
   $('metrics').innerHTML = [
-    tileHTML(totalAmt, capitalize(profile.amountUnit), sessionsSub, `Total amount used and number of sessions today`),
     buildSinceLastUsedTile(used),
+    tileHTML(totalAmt, capitalize(profile.amountUnit), sessionsSub, `Total amount used and number of sessions today`),
     buildTodayRatioTile(used),
     fourthTile
   ].join('');
@@ -1477,8 +1477,8 @@ function renderProgress() {
   }
 
   $('progress').innerHTML = [
-    tileHTML(dailyAmountAvg, `${capitalize(getProfile().amountUnit)}/Day`, hitsSub, 'Average amount used and average sessions per day'),
     tileHTML(avgGapStr, 'Average Gap', longestGapSub, 'Average gap between sessions and longest gap (excludes gaps crossing 6am)'),
+    tileHTML(dailyAmountAvg, `${capitalize(getProfile().amountUnit)}/Day`, hitsSub, 'Average amount used and average sessions per day'),
     ratioTile,
     fourthTile
   ].join('');
