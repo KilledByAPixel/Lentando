@@ -3,7 +3,58 @@
 
 'use strict';
 
-const debugMode = false; // Set to true to enable debug logging
+const debugMode = false; // Set to true to enable debug logging and debug time system messages
+
+// ========== DEBUG TIME SYSTEM ==========
+// Allows advancing time for testing badges, day boundaries, etc.
+let _debugTimeOffset = 0;
+
+function now() {
+  return Date.now() + _debugTimeOffset;
+}
+
+function currentDate() {
+  return new Date(now());
+}
+
+// Console commands for time manipulation:
+// debugAdvanceTime(24) - advance 24 hours
+// debugSetDate('2026-02-15') - jump to specific date
+// debugResetTime() - reset to real time
+window.debugAdvanceTime = (hours) => {
+  _debugTimeOffset += hours * 60 * 60 * 1000;
+  console.log(`⏰ Time advanced by ${hours}h. Virtual date: ${currentDate().toLocaleString()}`);
+  render();
+};
+
+window.debugSetDate = (dateString) => {
+  const targetTime = new Date(dateString).getTime();
+  _debugTimeOffset = targetTime - Date.now();
+  console.log(`⏰ Time set to ${currentDate().toLocaleString()}`);
+  render();
+};
+
+window.debugResetTime = () => {
+  _debugTimeOffset = 0;
+  console.log('⏰ Time reset to real time');
+  render();
+};
+
+window.debugGetTime = () => {
+  console.log(`Current virtual time: ${currentDate().toLocaleString()}`);
+  console.log(`Offset: ${_debugTimeOffset / (1000 * 60 * 60)} hours`);
+  return currentDate();
+};
+
+// Log available debug commands on startup
+if (debugMode) {
+  console.log('%c🛠️ Debug Time System Available', 'color: #4a9eff; font-weight: bold');
+  console.log('%cCommands:', 'font-weight: bold');
+  console.log('  debugAdvanceTime(hours) - Advance time by N hours');
+  console.log('  debugSetDate("2026-02-15") - Jump to specific date');
+  console.log('  debugResetTime() - Reset to real time');
+  console.log('  debugGetTime() - Show current virtual time');
+}
 
 // ========== CONSTANTS ==========
 const STORAGE_EVENTS = 'ht_events';
@@ -302,7 +353,7 @@ const _dateFormatter = new Intl.DateTimeFormat([], { weekday: 'short', month: 's
 
 let _uidCounter = 0;
 function uid() {
-  return Date.now().toString(36) + '-' + (++_uidCounter).toString(36) + '-' + Math.random().toString(36).substring(2, 9);
+  return now().toString(36) + '-' + (++_uidCounter).toString(36) + '-' + Math.random().toString(36).substring(2, 9);
 }
 
 function safeSetItem(key, value) {
@@ -408,10 +459,10 @@ function dateKey(d) {
   return `${y}-${m}-${dd}`;
 }
 
-function todayKey() { return dateKey(new Date()); }
+function todayKey() { return dateKey(currentDate()); }
 
 function daysAgoKey(n) {
-  const d = new Date();
+  const d = currentDate();
   d.setDate(d.getDate() - n);
   return dateKey(d);
 }
@@ -521,7 +572,7 @@ const DB = {
       const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
       // Don't duplicate
       if (tombstones.some(t => t.id === eventId)) return;
-      tombstones.push({ id: eventId, deletedAt: Date.now() });
+      tombstones.push({ id: eventId, deletedAt: now() });
       safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(tombstones));
       if (window.FirebaseSync) FirebaseSync.onDataChanged();
     } catch (e) {
@@ -532,7 +583,7 @@ const DB = {
   _cleanOldTombstones() {
     try {
       const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
-      const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+      const ninetyDaysAgo = now() - (90 * 24 * 60 * 60 * 1000);
       const cleaned = tombstones.filter(t => t.deletedAt > ninetyDaysAgo);
       if (cleaned.length < tombstones.length) {
         safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(cleaned));
@@ -642,7 +693,7 @@ function getHabits(events, habitType) {
 function createUsedEvent(substance, method, amount, reason) {
   const sub = substance || 'thc';
   return {
-    id: uid(), type: 'used', ts: Date.now(),
+    id: uid(), type: 'used', ts: now(),
     substance: sub, method: method || null,
     amount: amount != null ? amount : 1.0,
     reason: reason || null,
@@ -651,13 +702,13 @@ function createUsedEvent(substance, method, amount, reason) {
 
 function createResistedEvent(intensity, trigger) {
   return {
-    id: uid(), type: 'resisted', ts: Date.now(),
+    id: uid(), type: 'resisted', ts: now(),
     intensity: intensity || null, trigger: trigger || null,
   };
 }
 
 function createHabitEvent(habit, minutes) {
-  return { id: uid(), type: 'habit', ts: Date.now(), habit, minutes: minutes || null };
+  return { id: uid(), type: 'habit', ts: now(), habit, minutes: minutes || null };
 }
 
 // ========== BADGE CALCULATION HELPERS ==========
@@ -672,7 +723,7 @@ function countUrgeSurfed(resisted, used) {
     }
     
     // Check if 15+ minutes have passed and no use occurred within 15 minutes after
-    const timeSinceResist = Date.now() - r.ts;
+    const timeSinceResist = now() - r.ts;
     const usedAfter = used.some(u => u.ts > r.ts && u.ts - r.ts <= FIFTEEN_MINUTES_MS);
     return timeSinceResist >= FIFTEEN_MINUTES_MS && !usedAfter;
   }).length;
@@ -862,7 +913,7 @@ const Badges = {
     }
 
     // --- Time-of-day skip badges ---
-    const currentHour = new Date().getHours();
+    const currentHour = currentDate().getHours();
     const isPastEarlyHour = currentHour >= EARLY_HOUR;
     const noUseInRange = (start, end) => !profileUsed.some(u => {
       const h = getHour(u.ts);
@@ -975,7 +1026,7 @@ const Badges = {
   },
 
   _countStreak(eventType) {
-    const d = new Date();
+    const d = currentDate();
     
     for (let streak = 0; streak < MAX_STREAK_DAYS; streak++) {
       if (!DB.forDate(dateKey(d)).some(e => e.type === eventType)) return streak;
@@ -986,7 +1037,7 @@ const Badges = {
 
   _countTaper() {
     let count = 0, prevAmt = null;
-    const d = new Date();
+    const d = currentDate();
     
     for (let i = 0; i < MAX_STREAK_DAYS; i++) {
       const amt = sumAmount(filterProfileUsed(DB.forDate(dateKey(d))));
@@ -1003,7 +1054,7 @@ const Badges = {
   
   _countAppUsageStreak() {
     const MAX_APP_STREAK = 366; // Must exceed 365 for year-streak badge
-    const d = new Date();
+    const d = currentDate();
     for (let streak = 0; streak < MAX_APP_STREAK; streak++) {
       const dayEvents = DB.forDate(dateKey(d));
       if (dayEvents.length === 0) return streak;
@@ -1017,7 +1068,7 @@ const Badges = {
     for (const key of keys) {
       const dayUsed = filterProfileUsed(DB.forDate(key));
       if (dayUsed.length > 0) {
-        return Math.floor((Date.now() - dayUsed[dayUsed.length - 1].ts) / (1000 * 60 * 60 * 24));
+        return Math.floor((now() - dayUsed[dayUsed.length - 1].ts) / (1000 * 60 * 60 * 24));
       }
     }
     return 0;
@@ -1153,7 +1204,7 @@ function render() {
 }
 
 function renderDate() {
-  $('header-date').textContent = _dateFormatter.format(new Date());
+  $('header-date').textContent = _dateFormatter.format(currentDate());
   
   // Update dynamic labels based on profile
   const profile = getProfile();
@@ -1200,7 +1251,7 @@ function buildSinceLastUsedTile(used) {
   let sinceLastSub = '';
   
   if (lastUsedTs) {
-    const elapsedMs = Date.now() - lastUsedTs;
+    const elapsedMs = now() - lastUsedTs;
     const elapsedDays = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
     
     // Always show full duration in main value
@@ -1253,7 +1304,7 @@ function buildTodayRatioTile(used) {
   const badUsed = allUsed.filter(config.badFilter).sort(sortByTime);
   if (badUsed.length > 0) {
     const lastBadTs = badUsed[badUsed.length - 1].ts;
-    const elapsedMs = Date.now() - lastBadTs;
+    const elapsedMs = now() - lastBadTs;
     sinceLastBadSub = `${formatDuration(elapsedMs)} Since Last ${config.substanceName}`;
   }
 
@@ -1355,7 +1406,7 @@ function renderProgress() {
   let daysOfUse = 7;
   if (allEvents.length > 0) {
     const earliestTs = Math.min(...allEvents.map(e => e.ts));
-    const daysSinceFirstUse = Math.ceil((Date.now() - earliestTs) / (24 * 60 * 60 * 1000));
+    const daysSinceFirstUse = Math.ceil((now() - earliestTs) / (24 * 60 * 60 * 1000));
     daysOfUse = Math.max(1, Math.min(7, daysSinceFirstUse));
   }
   
@@ -1587,7 +1638,7 @@ function renderBadges() {
 }
 
 function hasRecentWater() {
-  const cutoff = Date.now() - TWO_HOURS_MS;
+  const cutoff = now() - TWO_HOURS_MS;
   const today = DB.forDate(todayKey());
   const yesterday = DB.forDate(daysAgoKey(1));
   return [...today, ...yesterday].some(e => e.type === 'habit' && e.habit === 'water' && e.ts >= cutoff);
@@ -1820,7 +1871,7 @@ function switchTab(tabName) {
   if (tabName === 'today') {
     const lastUsedTime = _lastActionTime['used'];
     if (lastUsedTime && lastUndoEventId) {
-      const timeSinceUse = Date.now() - lastUsedTime;
+      const timeSinceUse = now() - lastUsedTime;
       if (timeSinceUse < COOLDOWN_MS) {
         showUndo(lastUndoEventId);
       } else {
@@ -1867,7 +1918,7 @@ function exportJSON() {
     settings: DB.loadSettings(), 
     todos: loadTodos(),
     lifetimeBadges: badgeData.lifetimeBadges,
-    exportedAt: new Date().toISOString() 
+    exportedAt: currentDate().toISOString() 
   };
   downloadFile(JSON.stringify(data, null, 2), 'lentando-' + todayKey() + '.json', 'application/json');
 }
@@ -2021,7 +2072,7 @@ function chipDismissBtn(text, onclick) {
 }
 
 function buildTimeChips(eventTs) {
-  const now = new Date();
+  const now = currentDate();
   const slots = [{ label: 'Now', value: 'now' }];
   
   // Generate half-hour slots going back ~3 hours
@@ -2149,7 +2200,7 @@ function handleChipClick(e) {
   
   // Special handling for time field
   if (field === 'ts') {
-    const newTs = chip.dataset.val === 'now' ? Date.now() : parseInt(chip.dataset.val);
+    const newTs = chip.dataset.val === 'now' ? now() : parseInt(chip.dataset.val);
     DB.updateEvent(activeChipEventId, { ts: newTs });
     updateActiveChips();
     calculateAndUpdateBadges();
@@ -2641,15 +2692,15 @@ const COOLDOWN_MS = 60 * 1000; // 1 minute
 const _lastActionTime = {};
 
 function checkCooldown(actionKey) {
-  const now = Date.now();
+  const nowTs = now();
   const last = _lastActionTime[actionKey];
-  if (last && (now - last) < COOLDOWN_MS) {
-    const secsLeft = Math.ceil((COOLDOWN_MS - (now - last)) / 1000);
+  if (last && (nowTs - last) < COOLDOWN_MS) {
+    const secsLeft = Math.ceil((COOLDOWN_MS - (nowTs - last)) / 1000);
     playSound('cooldown');
     showToast(`⏳ Wait ${secsLeft}s before logging the same event again`);
     return false;
   }
-  _lastActionTime[actionKey] = now;
+  _lastActionTime[actionKey] = nowTs;
   return true;
 }
 
@@ -2689,7 +2740,7 @@ function logResisted() {
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
 
   // Only show coaching if resisted was already clicked within the past 30 minutes
-  const thirtyMinAgo = Date.now() - 30 * 60 * 1000;
+  const thirtyMinAgo = now() - 30 * 60 * 1000;
   const todayResisted = filterByType(DB.forDate(todayKey()), 'resisted');
   if (todayResisted.some(r => r.id !== evt.id && r.ts >= thirtyMinAgo)) {
     showCoaching();
@@ -3039,9 +3090,9 @@ window.App = {
     try {
       const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
       const existingIds = new Set(tombstones.map(t => t.id));
-      const now = Date.now();
+      const nowTs = now();
       for (const id of idsToDelete) {
-        if (!existingIds.has(id)) tombstones.push({ id, deletedAt: now });
+        if (!existingIds.has(id)) tombstones.push({ id, deletedAt: nowTs });
       }
       safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(tombstones));
     } catch (e) { console.error('Failed to batch-add tombstones:', e); }
@@ -3168,15 +3219,15 @@ function generateAllTestData() {
 
 function generateTestData(numEvents = 100) {
   const profile = getProfile();
-  const now = Date.now();
-  const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  const nowTs = now();
+  const thirtyDaysAgo = nowTs - (30 * 24 * 60 * 60 * 1000);
   DB.loadEvents();
   
   console.log(`Generating ${numEvents} random usage events...`);
   
   for (let i = 0; i < numEvents; i++) {
     // Random timestamp within past 30 days
-    const timestamp = thirtyDaysAgo + Math.random() * (now - thirtyDaysAgo);
+    const timestamp = thirtyDaysAgo + Math.random() * (nowTs - thirtyDaysAgo);
     
     // Random substance, method, amount
     const substance = profile.substances[Math.floor(Math.random() * profile.substances.length)];
@@ -3206,15 +3257,15 @@ function generateTestData(numEvents = 100) {
 
 function generateTestHabits(numPerHabit = 20) {
   const habitTypes = ['water', 'breaths', 'clean', 'exercise', 'outside'];
-  const now = Date.now();
-  const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  const nowTs = now();
+  const thirtyDaysAgo = nowTs - (30 * 24 * 60 * 60 * 1000);
   DB.loadEvents();
   
   console.log(`Generating ${numPerHabit} events for each habit type...`);
   
   for (const habit of habitTypes) {
     for (let i = 0; i < numPerHabit; i++) {
-      const timestamp = thirtyDaysAgo + Math.random() * (now - thirtyDaysAgo);
+      const timestamp = thirtyDaysAgo + Math.random() * (nowTs - thirtyDaysAgo);
       const minutes = HABIT_SHOW_CHIPS[habit]
         ? EXERCISE_DURATIONS[Math.floor(Math.random() * EXERCISE_DURATIONS.length)]
         : null;
@@ -3239,14 +3290,14 @@ function generateTestHabits(numPerHabit = 20) {
 }
 
 function generateTestResists(numEvents = 50) {
-  const now = Date.now();
-  const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  const nowTs = now();
+  const thirtyDaysAgo = nowTs - (30 * 24 * 60 * 60 * 1000);
   DB.loadEvents();
   
   console.log(`Generating ${numEvents} random resist events...`);
   
   for (let i = 0; i < numEvents; i++) {
-    const timestamp = thirtyDaysAgo + Math.random() * (now - thirtyDaysAgo);
+    const timestamp = thirtyDaysAgo + Math.random() * (nowTs - thirtyDaysAgo);
     const intensity = Math.random() > 0.2 ? INTENSITIES[Math.floor(Math.random() * INTENSITIES.length)] : null;
     const trigger = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
     
@@ -3346,7 +3397,7 @@ function generateUseEvent(daysAgo) {
   
   // Calculate timestamp - random time within the target day
   const msPerDay = 24 * 60 * 60 * 1000;
-  const targetDate = new Date();
+  const targetDate = currentDate();
   targetDate.setDate(targetDate.getDate() - days);
   targetDate.setHours(0, 0, 0, 0); // Start of day
   const randomMs = Math.floor(Math.random() * msPerDay); // Random time within the day
