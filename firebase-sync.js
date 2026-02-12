@@ -128,6 +128,14 @@ function invalidateDBCaches() {
   }
 }
 
+function showSyncWarning(message) {
+  if (typeof window.showToast === 'function') {
+    window.showToast(`⚠️ ${message}`, 4000);
+    return;
+  }
+  alert(`⚠️ ${message}`);
+}
+
 // ========== SYNC FUNCTIONS ==========
 
 // Storage keys (must match code.js constants)
@@ -322,6 +330,14 @@ if (isConfigured) {
         }
       } catch (err) {
         console.error('[Sync] Pull failed:', err);
+        // Fallback: continue with local data so login never blocks app access
+        if (typeof hideLoginScreen === 'function') {
+          hideLoginScreen();
+        }
+        if (typeof continueToApp === 'function') {
+          continueToApp();
+        }
+        showSyncWarning('Cloud sync failed. Loaded local data; sync will retry when online.');
       }
     } else if (!authCheckComplete) {
       // First auth check complete, user is not logged in
