@@ -4,7 +4,7 @@
 Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mobile-first, offline-capable. localStorage is primary storage; Firebase is optional sync/backup. Never block UI on network.
 
 ## Architecture
-- `code.js` — All app logic, rendering, win calculations, event tracking (~3100 lines)
+- `code.js` — All app logic, rendering, badge calculations, event tracking (~3100 lines)
 - `index.html` — Single-page app with inline CSS
 - `firebase-sync.js` — Firebase Auth + Firestore merge logic (ES module)
 - `sw.js` — Service worker (cache: `lentando-v{N}`, increment on deploy)
@@ -12,13 +12,13 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 - `local/` — Dev notes, not deployed
 
 ## Storage & Data
-**localStorage keys:** `ht_events`, `ht_settings`, `ht_todos`, `ht_theme`, `ht_wins`, `ht_login_skipped`
+**localStorage keys:** `ht_events`, `ht_settings`, `ht_todos`, `ht_theme`, `ht_badges`, `ht_login_skipped`
 
 **DB module** wraps localStorage with in-memory caches (`DB._events`, `DB._settings`, `DB._dateIndex`). The `_dateIndex` is a lazy `Map<dateKey, events[]>`.
 
 **Data model:**
 - **Events** — `{id, type, ts, ...}` where type is `used`, `resisted`, or `habit`
-- **Wins** — `{todayDate, todayWins, lifetimeWins, todayUndoCount}`. Merge strategy: max count per win ID.
+- **Badges** — `{todayDate, todayBadges, lifetimeBadges, todayUndoCount}`. Merge strategy: max count per badge ID.
 
 ### Cache Invalidation (Critical)
 `firebase-sync.js` uses `invalidateDBCaches()` after cloud merges — this nulls `DB._events`, `DB._settings`, `DB._dateIndex`. Must happen **inside** the function that writes to localStorage, not after it returns.
@@ -26,10 +26,10 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 ## Key Patterns
 
 ### Event Lifecycle
-`logUsed()` / `logResisted()` / `logHabit()` → `DB.addEvent()` → `calculateAndUpdateWins()` → `render()`. Cloud sync fires automatically: `DB.saveEvents()` calls `FirebaseSync.onDataChanged()` internally (debounced 3s push).
+`logUsed()` / `logResisted()` / `logHabit()` → `DB.addEvent()` → `calculateAndUpdateBadges()` → `render()`. Cloud sync fires automatically: `DB.saveEvents()` calls `FirebaseSync.onDataChanged()` internally (debounced 3s push).
 
-### Win System
-`calculateAndUpdateWins()` recalculates all badges on every event change. Define new badges in `WIN_DEFINITIONS`, add logic using `addWin(condition, 'win-id')` inside `calculateAndUpdateWins()`.
+### Badge System
+`calculateAndUpdateBadges()` recalculates all badges on every event change. Define new badges in `BADGE_DEFINITIONS`, add logic using `addBadge(condition, 'badge-id')` inside `calculateAndUpdateBadges()`.
 
 ### Time Boundaries
 - **Day boundary:** Calendar days (midnight), BUT gap calculations exclude gaps crossing 6am (`EARLY_HOUR = 6`)
@@ -41,7 +41,7 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 `lastUndoEventId` persists during cooldown (1 min). Tab switching only hides the CSS class — ID is preserved so undo restores when returning to 'today' tab during cooldown.
 
 ### Firebase Sync
-- **Pull:** `onAuthStateChanged` → `pullFromCloud()` → merge events (union by ID), merge settings (`{...local, ...cloud}`), max wins → `invalidateDBCaches()` → `continueToApp()`
+- **Pull:** `onAuthStateChanged` → `pullFromCloud()` → merge events (union by ID), merge settings (`{...local, ...cloud}`), max badges → `invalidateDBCaches()` → `continueToApp()`
 - **Push:** Data change → `onDataChanged()` → debounced 3s → `pushToCloud()`
 - **Focus-pull:** App regains focus → flush pending push, then pull fresh data
 

@@ -1,5 +1,5 @@
 // ============================================================
-// ZERO-FRICTION USAGE + WINS TRACKER
+// ZERO-FRICTION USAGE + BADGES TRACKER
 // ============================================================
 
 'use strict';
@@ -11,11 +11,11 @@ const STORAGE_EVENTS = 'ht_events';
 const STORAGE_SETTINGS = 'ht_settings';
 const STORAGE_TODOS = 'ht_todos';
 const STORAGE_THEME = 'ht_theme';
-const STORAGE_WINS = 'ht_wins';
+const STORAGE_BADGES = 'ht_badges';
 const STORAGE_LOGIN_SKIPPED = 'ht_login_skipped';
 const STORAGE_VERSION = 'ht_data_version';
 const STORAGE_DELETED_IDS = 'ht_deleted_ids';
-const DATA_VERSION = 1;
+const DATA_VERSION = 2;
 
 const ADDICTION_PROFILES = {
   cannabis: {
@@ -123,7 +123,7 @@ const METRICS_REFRESH_MS = 30000;
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
-// Win calculation thresholds
+// Badge calculation thresholds
 const GAP_MILESTONES = [1, 2, 4, 8, 12];
 const TBREAK_MILESTONES = [1, 7, 14, 21, 30, 365];
 const APP_STREAK_MILESTONES = [2, 7, 30, 365];
@@ -173,11 +173,10 @@ const HABIT_LABELS = {
   outside: 'Outside'
 };
 
-// Win definitions - maps win IDs to their display properties
+// Badge definitions - maps badge IDs to their display properties
 // Order matters! sortOrder is auto-assigned based on position in this object
-// Note: While we use "badges" as the primary user-facing term, it's fine to use "win"
-// in individual medal labels (e.g., "Gap Win", "Taper Win") when it sounds natural
-const WIN_DEFINITIONS = {
+// Note: "badges" is the primary user-facing term
+const BADGE_DEFINITIONS = {
   'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
   'daily-checkin': { label: 'Daily Check-in', icon: '✅', desc: 'Logged at least one thing - showing up is a win' },
   'resist': { label: 'Resisted', icon: '💪', desc: 'Resisted an urge' },
@@ -231,13 +230,13 @@ const WIN_DEFINITIONS = {
   'tbreak-365d': { label: '1 Year Break', icon: '👑', desc: 'One year with no use!' },
 };
 
-// Auto-assign sortOrder based on position in WIN_DEFINITIONS object
-Object.keys(WIN_DEFINITIONS).forEach((key, index) => {
-  WIN_DEFINITIONS[key].sortOrder = index;
+// Auto-assign sortOrder based on position in BADGE_DEFINITIONS object
+Object.keys(BADGE_DEFINITIONS).forEach((key, index) => {
+  BADGE_DEFINITIONS[key].sortOrder = index;
 });
 
-function getWinDef(id) {
-  return WIN_DEFINITIONS[id] || { label: 'Unknown Medal', icon: '❓', desc: '' };
+function getBadgeDef(id) {
+  return BADGE_DEFINITIONS[id] || { label: 'Unknown Medal', icon: '❓', desc: '' };
 }
 
 const DEFAULT_SETTINGS = {
@@ -363,7 +362,7 @@ function clearAllStorage() {
   localStorage.removeItem(STORAGE_SETTINGS);
   localStorage.removeItem(STORAGE_TODOS);
   localStorage.removeItem(STORAGE_THEME);
-  localStorage.removeItem(STORAGE_WINS);
+  localStorage.removeItem(STORAGE_BADGES);
   localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
   localStorage.removeItem(STORAGE_VERSION);
   localStorage.removeItem(STORAGE_DELETED_IDS);
@@ -467,15 +466,34 @@ const DB = {
       if (storedVersion >= DATA_VERSION) return;
 
       // Brand-new install — no existing data to migrate, just stamp the version
-      if (raw === null && !localStorage.getItem(STORAGE_EVENTS) && !localStorage.getItem(STORAGE_WINS)) {
+      if (raw === null && !localStorage.getItem(STORAGE_EVENTS) && !localStorage.getItem(STORAGE_BADGES) && !localStorage.getItem('ht_wins')) {
         safeSetItem(STORAGE_VERSION, DATA_VERSION.toString());
         return;
       }
 
       console.log(`Migrating data from version ${storedVersion} to ${DATA_VERSION}`);
 
-      // Future migrations go here
-      // if (storedVersion < 2) { /* migrate to v2 */ }
+      // v2: Rename ht_wins → ht_badges, rename internal property names
+      if (storedVersion < 2) {
+        const oldData = localStorage.getItem('ht_wins');
+        if (oldData) {
+          try {
+            const parsed = JSON.parse(oldData);
+            // Rename properties: todayWins→todayBadges, yesterdayWins→yesterdayBadges, lifetimeWins→lifetimeBadges
+            const migrated = {
+              todayDate: parsed.todayDate || null,
+              todayBadges: parsed.todayBadges || parsed.todayWins || [],
+              yesterdayBadges: parsed.yesterdayBadges || parsed.yesterdayWins || [],
+              lifetimeBadges: parsed.lifetimeBadges || parsed.lifetimeWins || [],
+              todayUndoCount: parsed.todayUndoCount || 0
+            };
+            safeSetItem(STORAGE_BADGES, JSON.stringify(migrated));
+          } catch (e) {
+            console.warn('Failed to migrate ht_wins data:', e);
+          }
+          localStorage.removeItem('ht_wins');
+        }
+      }
 
       safeSetItem(STORAGE_VERSION, DATA_VERSION.toString());
     } catch (e) {
@@ -654,7 +672,7 @@ function createHabitEvent(habit, minutes) {
   return { id: uid(), type: 'habit', ts: Date.now(), habit, minutes: minutes || null };
 }
 
-// ========== WIN CALCULATION HELPERS ==========
+// ========== BADGE CALCULATION HELPERS ==========
 function countUrgeSurfed(resisted, used) {
   const CLUSTER_MS = 5 * 60 * 1000;
   const sorted = sortedByTime(resisted);
@@ -702,7 +720,7 @@ function getGapsMs(sessions) {
   return gaps;
 }
 
-function getMilestoneWins(gapHours, milestones) {
+function getMilestoneBadges(gapHours, milestones) {
   // Return only the highest milestone reached, not all of them
   const reached = milestones.filter(h => gapHours >= h);
   return reached.length > 0 ? [reached[reached.length - 1]] : [];
@@ -714,30 +732,30 @@ function avgWithinDayGapMs(dayKeys, filterFn) {
   return gaps.length > 0 ? gaps.reduce((s, g) => s + g, 0) / gaps.length : 0;
 }
 
-// ========== WIN STORAGE ==========
-function loadWinData() {
+// ========== BADGE STORAGE ==========
+function loadBadgeData() {
   try {
-    const data = JSON.parse(localStorage.getItem(STORAGE_WINS));
-    if (!data) return { todayDate: null, todayWins: [], yesterdayWins: [], lifetimeWins: [], todayUndoCount: 0 };
-    // Backfill yesterdayWins for existing data
-    if (!data.yesterdayWins) data.yesterdayWins = [];
+    const data = JSON.parse(localStorage.getItem(STORAGE_BADGES));
+    if (!data) return { todayDate: null, todayBadges: [], yesterdayBadges: [], lifetimeBadges: [], todayUndoCount: 0 };
+    // Backfill yesterdayBadges for existing data
+    if (!data.yesterdayBadges) data.yesterdayBadges = [];
     return data;
   } catch {
-    return { todayDate: null, todayWins: [], yesterdayWins: [], lifetimeWins: [], todayUndoCount: 0 };
+    return { todayDate: null, todayBadges: [], yesterdayBadges: [], lifetimeBadges: [], todayUndoCount: 0 };
   }
 }
 
-function saveWinData(data) {
-  safeSetItem(STORAGE_WINS, JSON.stringify(data));
+function saveBadgeData(data) {
+  safeSetItem(STORAGE_BADGES, JSON.stringify(data));
   if (window.FirebaseSync) FirebaseSync.onDataChanged();
 }
 
-// ========== WINS ENGINE ==========
-const Wins = {
+// ========== BADGES ENGINE ==========
+const Badges = {
   calculate(todayEvents, yesterdayEvents) {
-    const wins = [];
-    const addWin = (condition, id) => {
-      if (condition) wins.push(id);
+    const badges = [];
+    const addBadge = (condition, id) => {
+      if (condition) badges.push(id);
     };
 
     const used     = filterUsed(todayEvents);
@@ -746,10 +764,10 @@ const Wins = {
     const subs = new Set(getProfile().substances);
     const profileUsed = used.filter(e => subs.has(e.substance)); // Profile-aware: only substances in current profile
 
-    // --- Daily Check-in win ---
-    addWin(todayEvents.length > 0, 'daily-checkin');
+    // --- Daily Check-in badge ---
+    addBadge(todayEvents.length > 0, 'daily-checkin');
 
-    // --- Welcome Back win ---
+    // --- Welcome Back badge ---
     // Use event timestamps (stable) so the badge is consistent across renders.
     if (todayEvents.length > 0) {
       const allKeys = DB.getAllDayKeys(); // sorted most recent first
@@ -758,31 +776,31 @@ const Wins = {
         const prevDayEvents = DB.forDate(key);
         if (prevDayEvents.length > 0) {
           const lastPrevTs = prevDayEvents[prevDayEvents.length - 1].ts;
-          addWin((todayEvents[0].ts - lastPrevTs) >= 24 * 3600000, 'welcome-back');
+          addBadge((todayEvents[0].ts - lastPrevTs) >= 24 * 3600000, 'welcome-back');
           break;
         }
       }
     }
     const settings = DB.loadSettings();
 
-    // --- Session-based wins ---
-    for (let i = 0; i < resisted.length; i++) addWin(true, 'resist');
+    // --- Session-based badges ---
+    for (let i = 0; i < resisted.length; i++) addBadge(true, 'resist');
 
     const urgeSurfedCount = countUrgeSurfed(resisted, used);
-    for (let i = 0; i < urgeSurfedCount; i++) addWin(true, 'urge-surfed');
+    for (let i = 0; i < urgeSurfedCount; i++) addBadge(true, 'urge-surfed');
 
     const swapCount = countSwapCompleted(resisted, habits);
-    for (let i = 0; i < swapCount; i++) addWin(true, 'swap-completed');
+    for (let i = 0; i < swapCount; i++) addBadge(true, 'swap-completed');
 
-    // --- Resist awareness wins ---
+    // --- Resist awareness badges ---
     for (const r of resisted) {
-      addWin(r.intensity != null, 'intensity-logged');
-      addWin(r.trigger != null, 'trigger-noted');
-      addWin(r.intensity != null && r.trigger != null, 'full-report');
-      addWin(r.intensity >= 4, 'tough-resist');
+      addBadge(r.intensity != null, 'intensity-logged');
+      addBadge(r.trigger != null, 'trigger-noted');
+      addBadge(r.intensity != null && r.trigger != null, 'full-report');
+      addBadge(r.intensity >= 4, 'tough-resist');
     }
 
-    // Harm reduction vape win
+    // Harm reduction vape badge
     const isCannabis = settings.addictionProfile === 'cannabis';
     const isNicotine = settings.addictionProfile === 'smoking';
     
@@ -792,58 +810,58 @@ const Wins = {
     } else if (isNicotine) {
       vapeCount = profileUsed.filter(e => e.substance === 'vape').length;
     }
-    addWin(vapeCount > 0, 'harm-reduction-vape');
+    addBadge(vapeCount > 0, 'harm-reduction-vape');
 
-    // Cannabis-specific wins
+    // Cannabis-specific badges
     if (isCannabis) {
       const cbdUsed = filterCBD(used);
       const thcUsed = filterTHC(used);
-      addWin(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
+      addBadge(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
     }
 
     const doseCount = used.filter(e => e.amount < 1).length;
-    for (let i = 0; i < doseCount; i++) addWin(true, 'dose-half');
+    for (let i = 0; i < doseCount; i++) addBadge(true, 'dose-half');
 
     const mindfulCount = used.filter(e => e.reason).length;
-    for (let i = 0; i < mindfulCount; i++) addWin(true, 'mindful');
+    for (let i = 0; i < mindfulCount; i++) addBadge(true, 'mindful');
 
     const profileAmt = sumAmount(profileUsed);
-    addWin(profileUsed.length > 0 && profileAmt <= LOW_DAY_THRESHOLD, 'low-day');
-    addWin(profileUsed.length === 0, 'zero-use');
+    addBadge(profileUsed.length > 0 && profileAmt <= LOW_DAY_THRESHOLD, 'low-day');
+    addBadge(profileUsed.length === 0, 'zero-use');
 
-    // --- Habit-based wins ---
+    // --- Habit-based badges ---
     const waterCount = getHabits(todayEvents, 'water').length;
-    addWin(waterCount >= 1, 'drank-water');
-    addWin(waterCount >= 5, 'hydrated');
+    addBadge(waterCount >= 1, 'drank-water');
+    addBadge(waterCount >= 5, 'hydrated');
     
     // Individual habit badges
     const hasExercise = habits.some(e => e.habit === 'exercise');
-    addWin(hasExercise, 'exercised');
+    addBadge(hasExercise, 'exercised');
     
     const hasBreaths = habits.some(e => e.habit === 'breaths');
-    addWin(hasBreaths, 'breathwork');
+    addBadge(hasBreaths, 'breathwork');
     
     const hasClean = habits.some(e => e.habit === 'clean');
-    addWin(hasClean, 'cleaned');
+    addBadge(hasClean, 'cleaned');
     
     const hasOutside = habits.some(e => e.habit === 'outside');
-    addWin(hasOutside, 'went-outside');
+    addBadge(hasOutside, 'went-outside');
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
-    addWin(uniqueHabits.size >= 2, 'habit-stack');
-    addWin(uniqueHabits.size === 5, 'five-star-day');
+    addBadge(uniqueHabits.size >= 2, 'habit-stack');
+    addBadge(uniqueHabits.size === 5, 'five-star-day');
 
-    // --- Timing-based wins ---
-    // Gap wins — include all sessions but skip gaps that cross the 6am boundary (sleep gap)
+    // --- Timing-based badges ---
+    // Gap badges — include all sessions but skip gaps that cross the 6am boundary (sleep gap)
     if (profileUsed.length >= 2) {
       const todayGapsMs = getGapsMs(profileUsed);
       
       // Award only the highest gap milestone achieved today
       if (todayGapsMs.length > 0) {
         const maxGapHours = Math.max(...todayGapsMs) / 3600000;
-        const milestones = getMilestoneWins(maxGapHours, GAP_MILESTONES);
+        const milestones = getMilestoneBadges(maxGapHours, GAP_MILESTONES);
         if (milestones.length > 0) {
-          addWin(true, `gap-${milestones[0]}h`);
+          addBadge(true, `gap-${milestones[0]}h`);
         }
       }
       
@@ -851,7 +869,7 @@ const Wins = {
       const avgGap7Days = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
       if (avgGap7Days > 0 && todayGapsMs.length > 0) {
         const todayAvgGap = todayGapsMs.reduce((s, g) => s + g, 0) / todayGapsMs.length;
-        addWin(todayAvgGap > avgGap7Days, 'gap-above-avg');
+        addBadge(todayAvgGap > avgGap7Days, 'gap-above-avg');
       }
     }
 
@@ -885,7 +903,7 @@ const Wins = {
     ];
     for (const { start, end, id } of skipBadges) {
       const eligible = isEligibleForSkipBadge(end);
-      addWin(eligible && currentHour >= start && noUseInRange(start, end), id);
+      addBadge(eligible && currentHour >= start && noUseInRange(start, end), id);
     }
     
     // Night Gap — 12+ hour gap crossing today's 6am boundary (overnight break)
@@ -904,51 +922,51 @@ const Wins = {
       const gapHours = (firstAfter6am.ts - lastBefore6am.ts) / 3600000;
       hasNightGap = gapHours >= 12;
     }
-    addWin(hasNightGap, 'night-gap');
+    addBadge(hasNightGap, 'night-gap');
 
-    // --- Comparison wins ---
+    // --- Comparison badges ---
     if (yesterdayEvents && yesterdayEvents.length > 0) {
       const yProfile = filterProfileUsed(yesterdayEvents);
 
-      addWin(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
+      addBadge(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
       
       // First session later than yesterday — only awarded if you used today (compares first use after 6am)
       const todayDaytime = filterDaytime(profileUsed);
       const yesterdayDaytime = filterDaytime(yProfile);
       
       if (todayDaytime.length > 0 && yesterdayDaytime.length > 0) {
-        addWin(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
+        addBadge(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
       }
     }
     
-    // Good Start win - first event after early hour is a habit or resist (not use)
+    // Good Start badge - first event after early hour is a habit or resist (not use)
     if (isPastEarlyHour) {
       const daytimeEvents = filterDaytime(todayEvents);
       const firstDaytimeEvent = daytimeEvents[0];
       if (firstDaytimeEvent && (firstDaytimeEvent.type === 'habit' || firstDaytimeEvent.type === 'resisted')) {
-        addWin(true, 'good-start');
+        addBadge(true, 'good-start');
       }
     }
 
-    // --- Streak wins ---
+    // --- Streak badges ---
     const resistStreak = this._countStreak('resisted');
-    addWin(resistStreak >= 2, 'resist-streak');
+    addBadge(resistStreak >= 2, 'resist-streak');
     
     const habitStreak = this._countStreak('habit');
-    addWin(habitStreak >= 3, 'habit-streak');
+    addBadge(habitStreak >= 3, 'habit-streak');
 
     const taperDays = this._countTaper();
-    addWin(taperDays >= 2, 'taper');
+    addBadge(taperDays >= 2, 'taper');
     
     // App usage streaks - award only the highest milestone
     const appStreak = this._countAppUsageStreak();
     if (appStreak >= 2) {
-      const milestones = getMilestoneWins(appStreak, APP_STREAK_MILESTONES);
+      const milestones = getMilestoneBadges(appStreak, APP_STREAK_MILESTONES);
       if (milestones.length > 0) {
         const highestMilestone = milestones[0];
         // Map milestone values to badge IDs
         const badgeMap = { 2: 'app-streak', 7: 'week-streak', 30: 'month-streak', 365: 'year-streak' };
-        addWin(true, badgeMap[highestMilestone]);
+        addBadge(true, badgeMap[highestMilestone]);
       }
     }
     
@@ -957,15 +975,15 @@ const Wins = {
       const daysSinceLastUse = this._countDaysSinceLastUse();
       if (daysSinceLastUse >= 1) {
         // Award only the highest T-break milestone achieved
-        const milestones = getMilestoneWins(daysSinceLastUse, TBREAK_MILESTONES);
+        const milestones = getMilestoneBadges(daysSinceLastUse, TBREAK_MILESTONES);
         if (milestones.length > 0) {
           const highestMilestone = milestones[0];
-          addWin(true, `tbreak-${highestMilestone}d`);
+          addBadge(true, `tbreak-${highestMilestone}d`);
         }
       }
     }
 
-    return wins;
+    return badges;
   },
 
   _countStreak(eventType) {
@@ -1140,7 +1158,7 @@ function render() {
   renderTodos();
   
   const activeTab = document.querySelector('.tab-panel.active')?.id.replace('tab-', '');
-  if (activeTab === 'wins') renderWins();
+  if (activeTab === 'wins') renderBadges();
   else if (activeTab === 'graph') renderGraphs();
   else if (activeTab === 'history') renderDayHistory();
 }
@@ -1412,99 +1430,99 @@ function renderProgress() {
   ].join('');
 }
 
-function winCardHTML(w, showCount = true) {
+function badgeCardHTML(w, showCount = true) {
   const unearnedClass = w.count === 0 ? ' unearned' : '';
-  const badgeHTML = showCount ? `<span class="win-badge">${w.count}</span>` : '';
-  return `<li class="win-item${unearnedClass}" title="${escapeHTML(w.desc || '')}">${badgeHTML}<div class="win-icon">${w.icon}</div><div class="win-label">${escapeHTML(w.label)}</div></li>`;
+  const badgeHTML = showCount ? `<span class="badge-card">${w.count}</span>` : '';
+  return `<li class="badge-item${unearnedClass}" title="${escapeHTML(w.desc || '')}">${badgeHTML}<div class="badge-icon">${w.icon}</div><div class="badge-label">${escapeHTML(w.label)}</div></li>`;
 }
 
-function calculateAndUpdateWins() {
-  const winData = loadWinData();
+function calculateAndUpdateBadges() {
+  const badgeData = loadBadgeData();
   const today = todayKey();
-  const isSameDay = winData.todayDate === today;
+  const isSameDay = badgeData.todayDate === today;
   
-  // Step 1: If it's a new day, add yesterday's wins to lifetime before clearing
+  // Step 1: If it's a new day, add yesterday's badges to lifetime before clearing
   const lifetimeMap = new Map();
-  winData.lifetimeWins.forEach(w => {
+  badgeData.lifetimeBadges.forEach(w => {
     lifetimeMap.set(w.id, w.count);
   });
   
-  // Save yesterday's wins before clearing
-  let yesterdayWins = [];
-  if (!isSameDay && winData.todayWins && winData.todayDate) {
+  // Save yesterday's badges before clearing
+  let yesterdayBadges = [];
+  if (!isSameDay && badgeData.todayBadges && badgeData.todayDate) {
     // New day detected - add to lifetime
-    winData.todayWins.forEach(w => {
+    badgeData.todayBadges.forEach(w => {
       const current = lifetimeMap.get(w.id) || 0;
       lifetimeMap.set(w.id, current + w.count);
     });
     
     // Calculate how many days have passed since last session
-    const lastDate = new Date(winData.todayDate + 'T12:00:00');
+    const lastDate = new Date(badgeData.todayDate + 'T12:00:00');
     const currentDate = new Date(today + 'T12:00:00');
     const daysPassed = Math.floor((currentDate - lastDate) / (24 * 60 * 60 * 1000));
     
     // Only save as "yesterday's" if exactly 1 day has passed
     if (daysPassed === 1) {
-      yesterdayWins = [...winData.todayWins];
+      yesterdayBadges = [...badgeData.todayBadges];
     }
-    // If daysPassed > 1, yesterdayWins stays empty (cleared)
+    // If daysPassed > 1, yesterdayBadges stays empty (cleared)
   } else if (isSameDay) {
-    // Same day - keep existing yesterday's wins
-    yesterdayWins = winData.yesterdayWins || [];
+    // Same day - keep existing yesterday's badges
+    yesterdayBadges = badgeData.yesterdayBadges || [];
   }
-  // If new day but no winData.todayDate (first time), yesterdayWins stays empty
+  // If new day but no badgeData.todayDate (first time), yesterdayBadges stays empty
   
-  // Step 2: Calculate fresh today's wins
+  // Step 2: Calculate fresh today's badges
   const todayEvents = DB.forDate(today);
   const yesterdayEvents = DB.forDate(daysAgoKey(1));
-  const freshTodayIds = Wins.calculate(todayEvents, yesterdayEvents);
+  const freshTodayIds = Badges.calculate(todayEvents, yesterdayEvents);
   
-  // Add undo wins (tracked separately since undos aren't events)
-  const undoCount = isSameDay ? (winData.todayUndoCount || 0) : 0;
+  // Add undo badges (tracked separately since undos aren't events)
+  const undoCount = isSameDay ? (badgeData.todayUndoCount || 0) : 0;
   if (undoCount > 0) freshTodayIds.push('second-thought');
   
-  // Today's wins: max 1 per badge type (deduplicate)
+  // Today's badges: max 1 per badge type (deduplicate)
   const uniqueTodayIds = [...new Set(freshTodayIds)];
-  const freshTodayWins = uniqueTodayIds.map(id => ({ id, count: 1 }));
+  const freshTodayBadges = uniqueTodayIds.map(id => ({ id, count: 1 }));
   
-  // Step 3: Convert lifetime map to array (today's wins NOT included)
-  const updatedLifetimeWins = Array.from(lifetimeMap.entries())
+  // Step 3: Convert lifetime map to array (today's badges NOT included)
+  const updatedLifetimeBadges = Array.from(lifetimeMap.entries())
     .filter(([, count]) => count > 0)
     .map(([id, count]) => ({ id, count }))
     .sort((a, b) => {
-      const defA = getWinDef(a.id);
-      const defB = getWinDef(b.id);
+      const defA = getBadgeDef(a.id);
+      const defB = getBadgeDef(b.id);
       return defA.label.localeCompare(defB.label);
     });
   
-  const updatedWinData = {
+  const updatedBadgeData = {
     todayDate: today,
-    todayWins: freshTodayWins,
-    yesterdayWins: yesterdayWins,
-    lifetimeWins: updatedLifetimeWins,
+    todayBadges: freshTodayBadges,
+    yesterdayBadges: yesterdayBadges,
+    lifetimeBadges: updatedLifetimeBadges,
     todayUndoCount: undoCount
   };
   
-  saveWinData(updatedWinData);
-  return updatedWinData;
+  saveBadgeData(updatedBadgeData);
+  return updatedBadgeData;
 }
 
-function renderWins() {
-  const winData = calculateAndUpdateWins();
+function renderBadges() {
+  const badgeData = calculateAndUpdateBadges();
   
-  const todayEl = $('wins-today');
+  const todayEl = $('badges-today');
   if (todayEl) {
     // Get earned badges
-    const earnedWins = winData.todayWins
-      .map(w => ({ ...w, ...getWinDef(w.id) }))
-      .filter(w => WIN_DEFINITIONS[w.id]) // Filter out unknown badges
-      .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
+    const earnedBadges = badgeData.todayBadges
+      .map(w => ({ ...w, ...getBadgeDef(w.id) }))
+      .filter(w => BADGE_DEFINITIONS[w.id]) // Filter out unknown badges
+      .sort((a, b) => (BADGE_DEFINITIONS[a.id]?.sortOrder ?? 999) - (BADGE_DEFINITIONS[b.id]?.sortOrder ?? 999));
     
     // Get unearned badges (all badges not in earned list)
-    const earnedIds = new Set(earnedWins.map(w => w.id));
-    let unearnedWins = Object.keys(WIN_DEFINITIONS)
+    const earnedIds = new Set(earnedBadges.map(w => w.id));
+    let unearnedBadges = Object.keys(BADGE_DEFINITIONS)
       .filter(id => !earnedIds.has(id))
-      .map(id => ({ id, count: 0, ...getWinDef(id) }));
+      .map(id => ({ id, count: 0, ...getBadgeDef(id) }));
     
     // For sequential badges, only show the next unearned one
     const gapSequence = ['gap-1h', 'gap-2h', 'gap-4h', 'gap-8h', 'gap-12h'];
@@ -1528,7 +1546,7 @@ function renderWins() {
     const settings = DB.loadSettings();
     const currentProfile = settings.addictionProfile;
     
-    unearnedWins = unearnedWins.filter(w => {
+    unearnedBadges = unearnedBadges.filter(w => {
       // Filter out sequential badges that aren't the next in sequence
       if (gapSequence.includes(w.id)) return allowedGaps.has(w.id);
       if (breakSequence.includes(w.id)) return allowedBreaks.has(w.id);
@@ -1542,47 +1560,47 @@ function renderWins() {
       return true;
     });
     
-    unearnedWins.sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
+    unearnedBadges.sort((a, b) => (BADGE_DEFINITIONS[a.id]?.sortOrder ?? 999) - (BADGE_DEFINITIONS[b.id]?.sortOrder ?? 999));
     
     // Today's badges: only show earned badges
-    todayEl.innerHTML = earnedWins.length > 0
-      ? earnedWins.map(w => winCardHTML(w, false)).join('') + 
+    todayEl.innerHTML = earnedBadges.length > 0
+      ? earnedBadges.map(w => badgeCardHTML(w, false)).join('') + 
         '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">Daily badges update based on your activity.</div>'
       : '';
   }
 
   // Render yesterday's badges
-  const yesterdayEl = $('wins-yesterday');
+  const yesterdayEl = $('badges-yesterday');
   if (yesterdayEl) {
-    const yesterdayWins = winData.yesterdayWins
-      .map(w => ({ ...w, ...getWinDef(w.id) }))
-      .filter(w => WIN_DEFINITIONS[w.id])
-      .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
+    const yesterdayBadges = badgeData.yesterdayBadges
+      .map(w => ({ ...w, ...getBadgeDef(w.id) }))
+      .filter(w => BADGE_DEFINITIONS[w.id])
+      .sort((a, b) => (BADGE_DEFINITIONS[a.id]?.sortOrder ?? 999) - (BADGE_DEFINITIONS[b.id]?.sortOrder ?? 999));
     
-    yesterdayEl.innerHTML = yesterdayWins.length > 0
-      ? yesterdayWins.map(w => winCardHTML(w, false)).join('') + 
+    yesterdayEl.innerHTML = yesterdayBadges.length > 0
+      ? yesterdayBadges.map(w => badgeCardHTML(w, false)).join('') + 
         '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">These are badges you earned yesterday and won\'t change.</div>'
       : '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">No badges earned yesterday.</div>';
   }
 
-  const totalEl = $('wins-total');
+  const totalEl = $('badges-total');
   if (!totalEl) return;
   
   // Get earned lifetime badges
-  const earnedLifetime = winData.lifetimeWins
-    .map(w => ({ ...w, ...getWinDef(w.id) }))
-    .filter(w => WIN_DEFINITIONS[w.id])
-    .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
+  const earnedLifetime = badgeData.lifetimeBadges
+    .map(w => ({ ...w, ...getBadgeDef(w.id) }))
+    .filter(w => BADGE_DEFINITIONS[w.id])
+    .sort((a, b) => (BADGE_DEFINITIONS[a.id]?.sortOrder ?? 999) - (BADGE_DEFINITIONS[b.id]?.sortOrder ?? 999));
   
   // Get unearned badges (show ALL for lifetime)
   const earnedLifetimeIds = new Set(earnedLifetime.map(w => w.id));
-  const unearnedLifetime = Object.keys(WIN_DEFINITIONS)
+  const unearnedLifetime = Object.keys(BADGE_DEFINITIONS)
     .filter(id => !earnedLifetimeIds.has(id))
-    .map(id => ({ id, count: 0, ...getWinDef(id) }))
-    .sort((a, b) => (WIN_DEFINITIONS[a.id]?.sortOrder ?? 999) - (WIN_DEFINITIONS[b.id]?.sortOrder ?? 999));
+    .map(id => ({ id, count: 0, ...getBadgeDef(id) }))
+    .sort((a, b) => (BADGE_DEFINITIONS[a.id]?.sortOrder ?? 999) - (BADGE_DEFINITIONS[b.id]?.sortOrder ?? 999));
   
   const allLifetime = [...earnedLifetime, ...unearnedLifetime];
-  totalEl.innerHTML = allLifetime.map(w => winCardHTML(w, true)).join('') + 
+  totalEl.innerHTML = allLifetime.map(w => badgeCardHTML(w, true)).join('') + 
     '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">Every badge you\'ve earned will accumulate here.</div>';
 }
 
@@ -1844,7 +1862,7 @@ function switchTab(tabName) {
     else FirebaseSync.unmountAuthForm();
   }
   
-  if (tabName === 'wins') renderWins();
+  if (tabName === 'badges') renderBadges();
   else if (tabName === 'graph') {
     requestAnimationFrame(() => {
       renderGraphs();
@@ -1861,12 +1879,12 @@ function switchTab(tabName) {
 
 // ========== EXPORT ==========
 function exportJSON() {
-  const winData = loadWinData();
+  const badgeData = loadBadgeData();
   const data = { 
     events: DB.loadEvents(), 
     settings: DB.loadSettings(), 
     todos: loadTodos(),
-    lifetimeWins: winData.lifetimeWins,
+    lifetimeBadges: badgeData.lifetimeBadges,
     exportedAt: new Date().toISOString() 
   };
   downloadFile(JSON.stringify(data, null, 2), 'lentando-' + todayKey() + '.json', 'application/json');
@@ -1946,28 +1964,29 @@ function importJSON(inputEl) {
       DB._events = sortedByTime([...existing, ...newEvents]);
       DB.saveEvents();
 
-      // Import lifetime wins if present
-      if (data.lifetimeWins && Array.isArray(data.lifetimeWins)) {
-        const winData = loadWinData();
+      // Import lifetime badges if present
+      const importedLifetime = data.lifetimeBadges;
+      if (importedLifetime && Array.isArray(importedLifetime)) {
+        const badgeData = loadBadgeData();
         const lifetimeMap = new Map();
-        winData.lifetimeWins.forEach(w => lifetimeMap.set(w.id, w.count));
+        badgeData.lifetimeBadges.forEach(w => lifetimeMap.set(w.id, w.count));
         
-        // Merge imported wins (higher counts win)
-        data.lifetimeWins.forEach(w => {
+        // Merge imported badges (higher counts win)
+        importedLifetime.forEach(w => {
           const current = lifetimeMap.get(w.id) || 0;
           lifetimeMap.set(w.id, Math.max(current, w.count));
         });
         
-        const mergedWinData = {
-          todayDate: winData.todayDate,
-          todayWins: winData.todayWins,
-          yesterdayWins: winData.yesterdayWins,
-          todayUndoCount: winData.todayUndoCount || 0,
-          lifetimeWins: Array.from(lifetimeMap.entries())
+        const mergedBadgeData = {
+          todayDate: badgeData.todayDate,
+          todayBadges: badgeData.todayBadges,
+          yesterdayBadges: badgeData.yesterdayBadges,
+          todayUndoCount: badgeData.todayUndoCount || 0,
+          lifetimeBadges: Array.from(lifetimeMap.entries())
             .filter(([, count]) => count > 0)
             .map(([id, count]) => ({ id, count }))
         };
-        saveWinData(mergedWinData);
+        saveBadgeData(mergedBadgeData);
       }
 
       // Import todos if present and local list is empty
@@ -2144,7 +2163,7 @@ function handleChipClick(e) {
     const newTs = chip.dataset.val === 'now' ? Date.now() : parseInt(chip.dataset.val);
     DB.updateEvent(activeChipEventId, { ts: newTs });
     updateActiveChips();
-    calculateAndUpdateWins();
+    calculateAndUpdateBadges();
     render();
     return;
   }
@@ -2156,7 +2175,7 @@ function handleChipClick(e) {
   DB.updateEvent(activeChipEventId, updateData);
   persistFieldDefault(field, val);
   updateActiveChips();
-  calculateAndUpdateWins();
+  calculateAndUpdateBadges();
   render();
 }
 
@@ -2243,7 +2262,7 @@ function openEditModal(eventId) {
 
 function closeModal() {
   $('modal-overlay').classList.add('hidden');
-  calculateAndUpdateWins();
+  calculateAndUpdateBadges();
   render();
 }
 
@@ -2387,7 +2406,7 @@ function continueToApp() {
     if (rangeEl) rangeEl.querySelectorAll('.chip').forEach(c =>
       c.classList.toggle('active', +c.dataset.days === graphDays));
     
-    calculateAndUpdateWins();
+    calculateAndUpdateBadges();
     bindEvents();
     render();
     // Clear existing interval if continueToApp is called multiple times
@@ -2444,7 +2463,7 @@ function selectProfile(profileKey) {
   $('onboarding-overlay').classList.add('hidden');
   playSound('resist');
   
-  calculateAndUpdateWins();
+  calculateAndUpdateBadges();
   bindEvents();
   render();
   // Clear existing interval if selectProfile is called multiple times
@@ -2558,7 +2577,7 @@ function saveCustomConfig() {
     $('custom-config-overlay').classList.add('hidden');
     playSound('resist');
     
-    calculateAndUpdateWins();
+    calculateAndUpdateBadges();
     bindEvents();
     render();
     if (timerInterval) clearInterval(timerInterval);
@@ -2602,14 +2621,14 @@ function undoLastUsed() {
   
   DB.deleteEvent(lastUndoEventId);
   
-  // Track undo for "Second Thought" win
-  const winData = loadWinData();
+  // Track undo for "Second Thought" badge
+  const badgeData = loadBadgeData();
   const today = todayKey();
-  winData.todayUndoCount = (winData.todayDate === today ? (winData.todayUndoCount || 0) : 0) + 1;
-  winData.todayDate = today;
-  saveWinData(winData);
+  badgeData.todayUndoCount = (badgeData.todayDate === today ? (badgeData.todayUndoCount || 0) : 0) + 1;
+  badgeData.todayDate = today;
+  saveBadgeData(badgeData);
   
-  calculateAndUpdateWins();
+  calculateAndUpdateBadges();
   
   // Clear the undo state immediately so it won't restore on tab switch
   lastUndoEventId = null;
@@ -2652,7 +2671,7 @@ function logUsed() {
   const method = profile.methods ? s.lastMethod : null;
   const evt = createUsedEvent(s.lastSubstance, method, s.lastAmount);
   DB.addEvent(evt);
-  calculateAndUpdateWins();
+  calculateAndUpdateBadges();
   render();
   hideResistedChips();
   $('exercise-chips').classList.add('hidden');
@@ -2674,7 +2693,7 @@ function logResisted() {
   if (!checkCooldown('resisted')) return;
   const evt = createResistedEvent();
   DB.addEvent(evt);
-  calculateAndUpdateWins();
+  calculateAndUpdateBadges();
   render();
   hideUsedChips();
   hideUndo();
@@ -2700,7 +2719,7 @@ function logHabit(habit, minutes) {
   if (!checkCooldown('habit_' + habit)) return;
   const evt = createHabitEvent(habit, minutes);
   DB.addEvent(evt);
-  calculateAndUpdateWins();
+  calculateAndUpdateBadges();
   render();
   hideUndo();
   
@@ -2758,7 +2777,7 @@ function bindEvents() {
       // Immediately log exercise with 0 minutes
       const evt = createHabitEvent('exercise', 0);
       DB.addEvent(evt);
-      calculateAndUpdateWins();
+      calculateAndUpdateBadges();
       render();
       hideUndo();
       
@@ -2798,7 +2817,7 @@ function bindEvents() {
       const minutes = parseInt(chip.dataset.min, 10);
       if (!isNaN(minutes)) {
         DB.updateEvent(recentExercise.id, { minutes });
-        calculateAndUpdateWins();
+        calculateAndUpdateBadges();
         render();
       }
     }
@@ -3012,7 +3031,7 @@ window.App = {
   deleteEvent(id) {
     if (!confirm('Delete this event?')) return false;
     DB.deleteEvent(id);
-    calculateAndUpdateWins();
+    calculateAndUpdateBadges();
     render();
     // Flush to cloud immediately so focus-triggered pull doesn't restore the deleted event
     if (window.FirebaseSync) FirebaseSync.pushNow().catch(() => {});
@@ -3040,7 +3059,7 @@ window.App = {
     DB._invalidateDateIndex();
     DB.saveEvents();
     DB._cleanOldTombstones();
-    calculateAndUpdateWins();
+    calculateAndUpdateBadges();
     render();
     if (window.FirebaseSync) {
       try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
@@ -3152,7 +3171,7 @@ function generateAllTestData() {
   generateTestData(80);
   generateTestHabits(15);
   generateTestResists(40);
-  generateTestWins();
+  generateTestBadges();
   console.log('✅ All test data generated! Reload the page to see results.');
 }
 
@@ -3258,68 +3277,68 @@ function generateTestResists(numEvents = 50) {
   console.log(`✅ Added ${numEvents} resist events. Reload the page to see updated data.`);
 }
 
-function generateTestWins() {
-  const winIds = Object.keys(WIN_DEFINITIONS);
-  // Exclude rare/milestone wins to keep it realistic
+function generateTestBadges() {
+  const badgeIds = Object.keys(BADGE_DEFINITIONS);
+  // Exclude rare/milestone badges to keep it realistic
   const excludeIds = new Set(['year-streak', 'month-streak', 'tbreak-365d', 'tbreak-30d', 'tbreak-21d']);
-  // Common wins get higher counts, rare wins get lower
-  const commonWins = new Set(['resist', 'mindful', 'dose-half', 'harm-reduction-vape', 'hydrated',
+  // Common badges get higher counts, rare badges get lower
+  const commonBadges = new Set(['resist', 'mindful', 'dose-half', 'harm-reduction-vape', 'hydrated',
     'habit-stack', 'good-start', 'app-streak', 'gap-1h', 'gap-2h']);
-  const eligibleIds = winIds.filter(id => !excludeIds.has(id));
+  const eligibleIds = badgeIds.filter(id => !excludeIds.has(id));
   
-  console.log('Generating random lifetime wins...');
+  console.log('Generating random lifetime badges...');
   
-  // Start fresh — only keep existing lifetime wins, clear today tracking
-  // so calculateAndUpdateWins won't subtract stale todayWins from the new lifetime.
-  const winData = loadWinData();
+  // Start fresh — only keep existing lifetime badges, clear today tracking
+  // so calculateAndUpdateBadges won't subtract stale todayBadges from the new lifetime.
+  const badgeData = loadBadgeData();
   const lifetimeMap = new Map();
-  winData.lifetimeWins.forEach(w => lifetimeMap.set(w.id, w.count));
+  badgeData.lifetimeBadges.forEach(w => lifetimeMap.set(w.id, w.count));
   
   for (const id of eligibleIds) {
-    // ~80% chance each win has been earned at least once
+    // ~80% chance each badge has been earned at least once
     if (Math.random() < 0.8) {
-      // Common wins: 10-50 count, rare wins: 1-10
-      const count = commonWins.has(id)
+      // Common badges: 10-50 count, rare badges: 1-10
+      const count = commonBadges.has(id)
         ? Math.floor(Math.random() * 40) + 10
         : Math.floor(Math.random() * 10) + 1;
       lifetimeMap.set(id, (lifetimeMap.get(id) || 0) + count);
     }
   }
   
-  // Generate yesterday's wins (subset of eligible wins)
-  console.log('Generating random yesterday wins...');
-  const fakeYesterdayWins = [];
-  // Pick 5-12 random wins for yesterday
-  const numYesterdayWins = Math.floor(Math.random() * 8) + 5; // 5-12
+  // Generate yesterday's badges (subset of eligible badges)
+  console.log('Generating random yesterday badges...');
+  const fakeYesterdayBadges = [];
+  // Pick 5-12 random badges for yesterday
+  const numYesterdayBadges = Math.floor(Math.random() * 8) + 5; // 5-12
   const shuffledEligible = [...eligibleIds].sort(() => Math.random() - 0.5);
   
-  for (let i = 0; i < Math.min(numYesterdayWins, shuffledEligible.length); i++) {
+  for (let i = 0; i < Math.min(numYesterdayBadges, shuffledEligible.length); i++) {
     const id = shuffledEligible[i];
-    // Most wins earned once, some 2-3 times
+    // Most badges earned once, some 2-3 times
     const count = Math.random() < 0.7 ? 1 : Math.floor(Math.random() * 2) + 2;
-    fakeYesterdayWins.push({ id, count });
+    fakeYesterdayBadges.push({ id, count });
   }
   
-  // Set todayDate to yesterday, and put the wins in todayWins
-  // When the app loads "today", it will auto-move them to yesterdayWins
+  // Set todayDate to yesterday, and put the badges in todayBadges
+  // When the app loads "today", it will auto-move them to yesterdayBadges
   const updatedData = {
     todayDate: daysAgoKey(1),  // Yesterday's date
-    todayWins: fakeYesterdayWins,  // These will become yesterday's wins on reload
-    yesterdayWins: [],
+    todayBadges: fakeYesterdayBadges,  // These will become yesterday's badges on reload
+    yesterdayBadges: [],
     todayUndoCount: 0,
-    lifetimeWins: Array.from(lifetimeMap.entries())
+    lifetimeBadges: Array.from(lifetimeMap.entries())
       .map(([id, count]) => ({ id, count }))
       .filter(w => w.count > 0)
   };
   
-  saveWinData(updatedData);
+  saveBadgeData(updatedData);
   
   // Verify save
-  const verify = loadWinData();
-  console.log(`✅ Added random wins for ${updatedData.lifetimeWins.length} lifetime win types and ${fakeYesterdayWins.length} yesterday wins.`);
-  console.log('Generated as "today" wins for yesterday\'s date - will auto-move to yesterday on reload');
-  console.log('Sample wins:', verify.todayWins.slice(0, 5));
-  console.log('Sample lifetime wins:', verify.lifetimeWins.slice(0, 5));
+  const verify = loadBadgeData();
+  console.log(`✅ Added random badges for ${updatedData.lifetimeBadges.length} lifetime badge types and ${fakeYesterdayBadges.length} yesterday badges.`);
+  console.log('Generated as "today" badges for yesterday\'s date - will auto-move to yesterday on reload');
+  console.log('Sample badges:', verify.todayBadges.slice(0, 5));
+  console.log('Sample lifetime badges:', verify.lifetimeBadges.slice(0, 5));
 }
 
 // DEBUG: Generate a use event X days ago
@@ -3357,7 +3376,7 @@ function generateUseEvent(daysAgo) {
   };
   
   DB.addEvent(evt);
-  calculateAndUpdateWins();
+  calculateAndUpdateBadges();
   render();
   
   console.log(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago:`, evt);
@@ -3440,20 +3459,20 @@ function setupBadgeTooltips() {
   
   // Event delegation for badge items and tiles
   document.addEventListener('click', (e) => {
-    const winItem = e.target.closest('.win-item');
+    const badgeItem = e.target.closest('.badge-item');
     const tile = e.target.closest('.tile[data-tooltip]');
     
-    if (winItem) {
+    if (badgeItem) {
       e.preventDefault();
       e.stopPropagation();
       
-      const tooltipText = winItem.getAttribute('title');
+      const tooltipText = badgeItem.getAttribute('title');
       
       // If clicking the same badge, toggle it off
       if (activeTooltip && activeTooltip.textContent === tooltipText) {
         hideTooltip();
       } else {
-        showTooltip(winItem, tooltipText);
+        showTooltip(badgeItem, tooltipText);
       }
     } else if (tile) {
       e.preventDefault();

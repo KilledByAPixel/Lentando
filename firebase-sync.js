@@ -134,7 +134,7 @@ function invalidateDBCaches() {
 const STORAGE_KEYS = {
   events: 'ht_events',
   settings: 'ht_settings',
-  wins: 'ht_wins',
+  badges: 'ht_badges',
   todos: 'ht_todos',
   deletedIds: 'ht_deleted_ids',
   loginSkipped: 'ht_login_skipped',
@@ -150,7 +150,7 @@ function getLocalData() {
   return {
     events: JSON.parse(localStorage.getItem(STORAGE_KEYS.events) || '[]'),
     settings: JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}'),
-    wins: JSON.parse(localStorage.getItem(STORAGE_KEYS.wins) || '{}'),
+    badges: JSON.parse(localStorage.getItem(STORAGE_KEYS.badges) || '{}'),
     todos: JSON.parse(localStorage.getItem(STORAGE_KEYS.todos) || '[]'),
     deletedIds: JSON.parse(localStorage.getItem(STORAGE_KEYS.deletedIds) || '[]'),
     version: parseInt(localStorage.getItem(STORAGE_KEYS.version)) || 0,
@@ -220,26 +220,27 @@ async function pullFromCloud(uid) {
   merged.sort((a, b) => a.ts - b.ts);
   (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.events, JSON.stringify(merged));
 
-  // --- Merge wins (keep higher lifetime counts) ---
-  if (cloud.wins && cloud.wins.lifetimeWins) {
-    const localWins = JSON.parse(localStorage.getItem(STORAGE_KEYS.wins) || '{}');
-    const localLifetime = new Map((localWins.lifetimeWins || []).map(w => [w.id, w.count]));
-    const cloudLifetime = new Map((cloud.wins.lifetimeWins || []).map(w => [w.id, w.count]));
+  // --- Merge badges (keep higher lifetime counts) ---
+  const cloudBadges = cloud.badges || cloud.wins; // backward compat: read old 'wins' field
+  if (cloudBadges && (cloudBadges.lifetimeBadges || cloudBadges.lifetimeWins)) {
+    const localBadges = JSON.parse(localStorage.getItem(STORAGE_KEYS.badges) || '{}');
+    const localLifetime = new Map((localBadges.lifetimeBadges || localBadges.lifetimeWins || []).map(w => [w.id, w.count]));
+    const cloudLifetime = new Map((cloudBadges.lifetimeBadges || cloudBadges.lifetimeWins || []).map(w => [w.id, w.count]));
 
-    // Union of all win IDs, take the higher count
+    // Union of all badge IDs, take the higher count
     const allIds = new Set([...localLifetime.keys(), ...cloudLifetime.keys()]);
     const mergedLifetime = [];
     for (const id of allIds) {
       mergedLifetime.push({ id, count: Math.max(localLifetime.get(id) || 0, cloudLifetime.get(id) || 0) });
     }
 
-    const mergedWinData = preferCloud
-      ? { ...localWins, ...cloud.wins, lifetimeWins: mergedLifetime }
-      : { ...cloud.wins, ...localWins, lifetimeWins: mergedLifetime };
-    (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.wins, JSON.stringify(mergedWinData));
+    const mergedBadgeData = preferCloud
+      ? { ...localBadges, ...cloudBadges, lifetimeBadges: mergedLifetime }
+      : { ...cloudBadges, ...localBadges, lifetimeBadges: mergedLifetime };
+    (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.badges, JSON.stringify(mergedBadgeData));
   }
 
-  // --- Settings: cloud wins ---
+  // --- Settings: cloud takes precedence ---
   if (cloud.settings) {
     const localSettings = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}');
     // Prefer the more recent source

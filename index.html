@@ -82,8 +82,8 @@
   --muted: #8a8a8a;
   --primary: #5c6bc0;
   --primary-light: #e8eaf6;
-  --win: #4caf50;
-  --win-light: #e8f5e9;
+  --badge: #4caf50;
+  --badge-light: #e8f5e9;
   --resist: #66bb6a;
   --habit-bg: #eceff1;
   --cbd: #00897b;
@@ -108,8 +108,8 @@
     --muted: #a0a0a0;
     --primary: #7986cb;
     --primary-light: #2a2f4a;
-    --win: #66bb6a;
-    --win-light: #1e3a1f;
+    --badge: #66bb6a;
+    --badge-light: #1e3a1f;
     --resist: #81c784;
     --habit-bg: #2e3338;
     --cbd: #26a69a;
@@ -133,8 +133,8 @@
   --muted: #a0a0a0;
   --primary: #7986cb;
   --primary-light: #2a2f4a;
-  --win: #66bb6a;
-  --win-light: #1e3a1f;
+  --badge: #66bb6a;
+  --badge-light: #1e3a1f;
   --resist: #81c784;
   --habit-bg: #2e3338;
   --cbd: #26a69a;
@@ -286,10 +286,10 @@ header .date { font-size: 14px; color: var(--muted); }
 .coaching-tip {
   margin-top: 8px;
   padding: 10px 14px;
-  background: var(--win-light);
+  background: var(--badge-light);
   border-radius: var(--radius-sm);
   font-size: 14px;
-  color: var(--win);
+  color: var(--badge);
   text-align: center;
   font-weight: 500;
 }
@@ -415,14 +415,14 @@ header .date { font-size: 14px; color: var(--muted); }
   white-space: nowrap;
 }
 
-/* ===== WINS ===== */
-.win-list { 
+/* ===== BADGES ===== */
+.badge-list { 
   list-style: none;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 12px;
 }
-.win-item {
+.badge-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -436,17 +436,17 @@ header .date { font-size: 14px; color: var(--muted); }
   position: relative;
   cursor: pointer;
 }
-.win-icon {
+.badge-icon {
   font-size: 32px;
   line-height: 1;
 }
-.win-label {
+.badge-label {
   font-size: 12px;
   font-weight: 500;
   line-height: 1.3;
   color: var(--text);
 }
-.win-badge {
+.badge-card {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -456,15 +456,15 @@ header .date { font-size: 14px; color: var(--muted); }
   min-width: 24px;
   height: 24px;
   border-radius: 12px;
-  background: var(--win-light);
-  color: var(--win);
+  background: var(--badge-light);
+  color: var(--badge);
   font-size: 12px;
   font-weight: 700;
 }
-.win-item.unearned {
+.badge-item.unearned {
   opacity: 0.4;
 }
-.win-item.unearned .win-badge {
+.badge-item.unearned .badge-card {
   background: rgba(255, 59, 48, 0.15);
   color: #ff3b30;
 }
@@ -899,7 +899,7 @@ header .date { font-size: 14px; color: var(--muted); }
   font-weight: 600;
   text-align: center;
 }
-.import-status.success { background: var(--win-light); color: var(--win); }
+.import-status.success { background: var(--badge-light); color: var(--badge); }
 .import-status.error   { background: var(--danger-light); color: var(--danger); }
 .import-status.warn    { background: var(--warn-light); color: var(--warn); }
 
@@ -1228,7 +1228,7 @@ header .date { font-size: 14px; color: var(--muted); }
   <button class="tab-btn active" data-tab="today">Today</button>
   <button class="tab-btn" data-tab="history">History</button>
   <button class="tab-btn" data-tab="graph">Trends</button>
-  <button class="tab-btn" data-tab="wins">Badges</button>
+  <button class="tab-btn" data-tab="badges">Badges</button>
   <button class="tab-btn" data-tab="settings">Settings</button>
 </div>
 
@@ -1310,16 +1310,16 @@ header .date { font-size: 14px; color: var(--muted); }
   <ul class="history-list" id="history-events"></ul>
 </div>
 
-<!-- ===== WINS TAB ===== -->
-<div class="tab-panel" id="tab-wins">
+<!-- ===== BADGES TAB ===== -->
+<div class="tab-panel" id="tab-badges">
   <div class="section-label">Today's Badges</div>
-  <ul class="win-list" id="wins-today"></ul>
+  <ul class="badge-list" id="badges-today"></ul>
   
   <div class="section-label">Yesterday's Badges</div>
-  <ul class="win-list" id="wins-yesterday"></ul>
+  <ul class="badge-list" id="badges-yesterday"></ul>
   
   <div class="section-label">Lifetime Badges</div>
-  <ul class="win-list" id="wins-total"></ul>
+  <ul class="badge-list" id="badges-total"></ul>
 </div>
 
 <!-- ===== SETTINGS TAB ===== -->
