@@ -221,10 +221,10 @@ const HABIT_LABELS = {
 // Habits that show duration chips (time tracking) - set to true to enable
 const HABIT_SHOW_CHIPS = {
   water: false,
-  breaths: true,
-  clean: false,
   exercise: true,
-  outside: false
+  breaths: true,
+  clean: true,
+  outside: true
 };
 
 // Badge definitions - maps badge IDs to their display properties
@@ -1760,11 +1760,13 @@ function navigateDay(offset) {
 
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
-  { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)) },
-  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
-  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
-  { label: '🌬️ Breathing Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0) },
-  { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length },
+  { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false },
+  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length, activity: false },
+  { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true },
+  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
+  { label: '🌬️ Breathing Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
+  { label: '🧹 Tidy Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
+  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
 ];
 
 function formatGraphValue(val) {
@@ -1880,6 +1882,9 @@ function renderGraphs() {
     const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
     const max  = Math.max(...vals, 1);
     const hasData = vals.some(v => v > 0);
+
+    // For activity graphs, skip rendering if no data
+    if (def.activity && !hasData) continue;
 
     dayHtml += `<div class="graph-container"><div class="graph-title">${def.label}</div>`;
     dayHtml += hasData 
