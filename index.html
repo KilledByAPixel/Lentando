@@ -340,13 +340,13 @@ header .date { font-size: 14px; color: var(--muted); }
 .habit-btn .icon { font-size: 18px; display: block; margin-bottom: 2px; }
 .habit-btn:active { background: var(--habit-bg); }
 
-.exercise-chips {
+.habit-chips {
   display: flex;
   gap: 6px;
   margin-top: 6px;
   justify-content: center;
 }
-.exercise-chips.hidden { display: none; }
+.habit-chips.hidden { display: none; }
 
 /* ===== DASHBOARD TILES ===== */
 .section-label {
@@ -1260,16 +1260,17 @@ header .date { font-size: 14px; color: var(--muted); }
   <!-- QUICK HABITS -->
   <div class="habit-row" id="habit-row">
     <button class="habit-btn" data-habit="water" title="Drink some water or fluids"><span class="icon">💧</span>Water</button>
-    <button class="habit-btn" data-habit="breaths" title="Take a few deep breaths"><span class="icon">🌬️</span>Breaths</button>
+    <button class="habit-btn" data-habit="breaths" title="Breathwork/meditation - click to select duration"><span class="icon">🌬️</span>Breaths</button>
     <button class="habit-btn" data-habit="clean" title="Tidy up your room or space"><span class="icon">🧹</span>Tidy</button>
     <button class="habit-btn" data-habit="outside" title="Get some fresh air or nature time"><span class="icon">🌳</span>Outside</button>
     <button class="habit-btn" data-habit="exercise" title="Exercise - click to select duration"><span class="icon">🏃</span>Exercise</button>
   </div>
-  <div class="exercise-chips hidden" id="exercise-chips">
-    <span class="chip" data-min="5" title="5 minutes of exercise">5 min</span>
-    <span class="chip" data-min="10" title="10 minutes of exercise">10 min</span>
-    <span class="chip" data-min="20" title="20 minutes of exercise">20 min</span>
-    <span class="chip" data-min="30" title="30 minutes of exercise">30 min</span>
+  <div class="habit-chips hidden" id="habit-chips">
+    <span class="chip" data-min="1" title="1 minute">1 min</span>
+    <span class="chip" data-min="5" title="5 minutes">5 min</span>
+    <span class="chip" data-min="10" title="10 minutes">10 min</span>
+    <span class="chip" data-min="20" title="20 minutes">20 min</span>
+    <span class="chip" data-min="30" title="30 minutes">30 min</span>
   </div>
 
   <!-- DASHBOARD -->

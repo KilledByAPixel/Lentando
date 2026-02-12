@@ -111,7 +111,7 @@ function buildCustomProfile(settings) {
 // User input options
 const REASONS = ['habit', 'stress', 'break', 'social', 'sleep', 'pain'];
 const INTENSITIES = [1, 2, 3, 4, 5];
-const EXERCISE_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60];
+const EXERCISE_DURATIONS = [0, 1, 5, 10, 15, 20, 30, 45, 60];
 const OPTIONAL_FIELDS = new Set(['reason', 'trigger']);
 
 // Timeouts and durations
@@ -170,6 +170,15 @@ const HABIT_LABELS = {
   clean: 'Tidy',
   exercise: 'Exercise',
   outside: 'Outside'
+};
+
+// Habits that show duration chips (time tracking) - set to true to enable
+const HABIT_SHOW_CHIPS = {
+  water: false,
+  breaths: true,
+  clean: false,
+  exercise: true,
+  outside: false
 };
 
 // Badge definitions - maps badge IDs to their display properties
@@ -609,7 +618,7 @@ window.validatePassword = validatePassword;
 window.stopTimers = function() {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   clearTimeout(chipTimeout);
-  clearTimeout(exerciseTimeout);
+  clearTimeout(habitChipTimeout);
   clearTimeout(undoHideTimeout);
 };
 
@@ -1121,7 +1130,8 @@ function resolveChipVal(field, rawVal, currentEvent) {
 // ========== STATE ==========
 let activeChipEventId = null;
 let chipTimeout = null;
-let exerciseTimeout = null;
+let habitChipTimeout = null;
+let currentChipHabit = null;
 let timerInterval = null;
 let graphDays = 7;
 let currentHistoryDay = todayKey();
@@ -1675,6 +1685,7 @@ const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)) },
   { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
   { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
+  { label: '🌬️ Meditation Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0) },
   { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length },
 ];
 
@@ -1823,8 +1834,7 @@ function switchTab(tabName) {
   }
   hideUsedChips();
   hideResistedChips();
-  $('exercise-chips').classList.add('hidden');
-  clearTimeout(exerciseTimeout);
+  hideHabitChips();
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabName));
   
@@ -2093,6 +2103,13 @@ function hideChips(chipId, coachingToo = false) {
 const hideUsedChips = () => hideChips('used-chips');
 const hideResistedChips = () => hideChips('resisted-chips', true);
 
+function hideHabitChips() {
+  const picker = $('habit-chips');
+  if (picker) picker.classList.add('hidden');
+  clearTimeout(habitChipTimeout);
+  currentChipHabit = null;
+}
+
 // ========== CHIP CLICK HANDLER (shared) ==========
 function persistFieldDefault(field, val) {
   const settings = DB.loadSettings();
@@ -2204,7 +2221,7 @@ function openEditModal(eventId) {
     ],
     habit: () => {
       const fields = [`<label>Habit</label><div style="font-size:16px">${HABIT_LABELS[evt.habit] || evt.habit}</div>`];
-      if (evt.habit === 'exercise') {
+      if (HABIT_SHOW_CHIPS[evt.habit]) {
         fields.push(chipGroupHTML('Minutes', 'minutes', EXERCISE_DURATIONS, evt.minutes ?? 0));
       }
       return fields;
@@ -2646,8 +2663,7 @@ function logUsed() {
   calculateAndUpdateBadges();
   render();
   hideResistedChips();
-  $('exercise-chips').classList.add('hidden');
-  clearTimeout(exerciseTimeout);
+  hideHabitChips();
   hideUndo();
   showChips('used-chips', buildUsedChips, evt, hideUsedChips);
   
@@ -2669,8 +2685,7 @@ function logResisted() {
   render();
   hideUsedChips();
   hideUndo();
-  $('exercise-chips').classList.add('hidden');
-  clearTimeout(exerciseTimeout);
+  hideHabitChips();
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
 
   // Only show coaching if resisted was already clicked within the past 30 minutes
@@ -2699,7 +2714,7 @@ function logHabit(habit, minutes) {
   hapticFeedback();
   const label = HABIT_LABELS[habit] || habit;
   const icon = HABIT_ICONS[habit] || '';
-  const message = (habit === 'exercise' && minutes && minutes > 0) ? `${icon} Logged ${label} +${minutes} min` : `${icon} Logged ${label}`;
+  const message = (HABIT_SHOW_CHIPS[habit] && minutes && minutes > 0) ? `${icon} Logged ${label} +${minutes} min` : `${icon} Logged ${label}`;
   showToast(message);
 }
 
@@ -2742,12 +2757,13 @@ function bindEvents() {
     if (!btn) return;
     const habit = btn.dataset.habit;
     
-    if (habit === 'exercise') {
+    // Check if this habit shows duration chips
+    if (HABIT_SHOW_CHIPS[habit]) {
       // Check cooldown before showing chips
-      if (!checkCooldown('habit_exercise')) return;
+      if (!checkCooldown('habit_' + habit)) return;
       
-      // Immediately log exercise with 0 minutes
-      const evt = createHabitEvent('exercise', 0);
+      // Immediately log habit with 0 minutes
+      const evt = createHabitEvent(habit, 0);
       DB.addEvent(evt);
       calculateAndUpdateBadges();
       render();
@@ -2755,19 +2771,21 @@ function bindEvents() {
       
       playSound('habit');
       hapticFeedback();
-      showToast('🏃 Logged Exercise');
+      const label = HABIT_LABELS[habit] || habit;
+      const icon = HABIT_ICONS[habit] || '';
+      showToast(`${icon} Logged ${label}`);
       flashEl(btn);
       
       // Show chips so user can optionally add duration
-      const picker = $('exercise-chips');
+      currentChipHabit = habit;
+      const picker = $('habit-chips');
       picker.classList.remove('hidden');
-      clearTimeout(exerciseTimeout);
-      exerciseTimeout = setTimeout(() => picker.classList.add('hidden'), CHIP_TIMEOUT_MS);
+      clearTimeout(habitChipTimeout);
+      habitChipTimeout = setTimeout(() => hideHabitChips(), CHIP_TIMEOUT_MS);
       return;
     }
     
-    $('exercise-chips').classList.add('hidden');
-    clearTimeout(exerciseTimeout);
+    hideHabitChips();
     hideUsedChips();
     hideResistedChips();
     hideUndo();
@@ -2775,29 +2793,29 @@ function bindEvents() {
     flashEl(btn);
   });
 
-  $('exercise-chips').addEventListener('click', e => {
+  $('habit-chips').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
-    if (!chip) return;
+    if (!chip || !currentChipHabit) return;
     
-    // Find the most recent exercise event and update its minutes
+    // Find the most recent event for this habit and update its minutes
     const events = DB.loadEvents();
-    const recentExercise = events
-      .filter(evt => evt.type === 'habit' && evt.habit === 'exercise')
+    const recentHabit = events
+      .filter(evt => evt.type === 'habit' && evt.habit === currentChipHabit)
       .sort((a, b) => b.ts - a.ts)[0];
     
-    if (recentExercise) {
+    if (recentHabit) {
       const minutes = parseInt(chip.dataset.min, 10);
       if (!isNaN(minutes)) {
-        DB.updateEvent(recentExercise.id, { minutes });
+        DB.updateEvent(recentHabit.id, { minutes });
         calculateAndUpdateBadges();
         render();
       }
     }
     
-    const exerciseBtn = document.querySelector('[data-habit="exercise"]');
-    if (exerciseBtn) pulseEl(exerciseBtn);
-    playSound('exercise');
-    $('exercise-chips').classList.add('hidden');
+    const habitBtn = document.querySelector(`[data-habit="${currentChipHabit}"]`);
+    if (habitBtn) pulseEl(habitBtn);
+    playSound('habit');
+    hideHabitChips();
   });
 
   $('todo-add-btn').addEventListener('click', () => {
@@ -2996,6 +3014,7 @@ function applyTheme(theme) {
 window.App = {
   hideUsedChips,
   hideResistedChips,
+  hideHabitChips,
   editEvent: openEditModal,
   closeModal,
   saveModal,
@@ -3196,7 +3215,7 @@ function generateTestHabits(numPerHabit = 20) {
   for (const habit of habitTypes) {
     for (let i = 0; i < numPerHabit; i++) {
       const timestamp = thirtyDaysAgo + Math.random() * (now - thirtyDaysAgo);
-      const minutes = habit === 'exercise' 
+      const minutes = HABIT_SHOW_CHIPS[habit]
         ? EXERCISE_DURATIONS[Math.floor(Math.random() * EXERCISE_DURATIONS.length)]
         : null;
       
