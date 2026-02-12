@@ -48,7 +48,7 @@ if (isConfigured) {
 let isSigningIn = false;
 
 async function loginWithGoogle() {
-  if (!isConfigured) return alert('Firebase not configured yet. See firebase-sync.js.');
+  if (!isConfigured) return alert('⚠️ Firebase not configured yet. See firebase-sync.js.');
   if (isSigningIn) return;
   
   isSigningIn = true;
@@ -75,13 +75,13 @@ async function loginWithGoogle() {
 }
 
 async function loginWithEmail(email, password) {
-  if (!isConfigured) return alert('Firebase not configured yet. See firebase-sync.js.');
+  if (!isConfigured) return alert('⚠️ Firebase not configured yet. See firebase-sync.js.');
   const result = await signInWithEmailAndPassword(auth, email, password);
   return result.user;
 }
 
 async function signupWithEmail(email, password) {
-  if (!isConfigured) return alert('Firebase not configured yet. See firebase-sync.js.');
+  if (!isConfigured) return alert('⚠️ Firebase not configured yet. See firebase-sync.js.');
   const result = await createUserWithEmailAndPassword(auth, email, password);
   // Send verification email
   try {
@@ -99,7 +99,7 @@ async function logout() {
 }
 
 async function resetPassword(email) {
-  if (!isConfigured) return alert('Firebase not configured yet.');
+  if (!isConfigured) return alert('⚠️ Firebase not configured yet. See firebase-sync.js.');
   await sendPasswordResetEmail(auth, email);
 }
 
@@ -612,40 +612,40 @@ window.FirebaseSync = {
 
   async forgotPasswordForm() {
     const email = document.getElementById('auth-email')?.value;
-    if (!email) return alert('Enter your email address first');
+    if (!email) return alert('⚠️ Enter your email address first');
     try {
       await resetPassword(email);
       alert('✅ Password reset email sent! Check your inbox.');
     } catch (err) {
-      alert('Failed to send reset email: ' + err.message);
+      alert('❌ Failed to send reset email: ' + err.message);
     }
   },
 
   async loginWithEmailForm() {
     const email = document.getElementById('auth-email')?.value;
     const password = document.getElementById('auth-password')?.value;
-    if (!email || !password) return alert('Enter email and password');
+    if (!email || !password) return alert('⚠️ Enter email and password');
     try {
       await loginWithEmail(email, password);
     } catch (err) {
-      alert('Login failed: ' + err.message);
+      alert('❌ Login failed: ' + err.message);
     }
   },
 
   async signupWithEmailForm() {
     const email = document.getElementById('auth-email')?.value;
     const password = document.getElementById('auth-password')?.value;
-    if (!email || !password) return alert('Enter email and password');
+    if (!email || !password) return alert('⚠️ Enter email and password');
     const pwError = window.validatePassword?.(password);
-    if (pwError) return alert(pwError);
+    if (pwError) return alert('⚠️ ' + pwError);
     try {
       await signupWithEmail(email, password);
       showWelcomeMessage(email);
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
-        alert('Account already exists — use Log In instead.');
+        alert('⚠️ Account already exists — use Log In instead.');
       } else {
-        alert('Sign up failed: ' + err.message);
+        alert('⚠️ Sign up failed: ' + err.message);
       }
     }
   },
@@ -673,13 +673,13 @@ window.FirebaseSync = {
   },
 
   async sync() {
-    if (!currentUser) return alert('Sign in first');
+    if (!currentUser) return alert('⚠️ Sign in first');
     if (!window.navigator.onLine) {
-      alert('You are offline. Changes are saved locally and will sync when you reconnect.');
+      alert('⚠️ You are offline. Changes are saved locally and will sync when you reconnect.');
       return;
     }
     if (_manualSyncInFlight) {
-      alert('Sync is already in progress. Please wait a moment.');
+      alert('⚠️ Sync is already in progress. Please wait a moment.');
       return;
     }
     _manualSyncInFlight = true;
@@ -700,9 +700,9 @@ window.FirebaseSync = {
         || msg.includes('offline')
         || msg.includes('network');
       if (looksOffline) {
-        alert('Sync could not run while offline. Your local changes are safe and will sync when online.');
+        alert('⚠️ Sync could not run while offline. Your local changes are safe and will sync when online.');
       } else {
-        alert('Sync failed: ' + (msg || 'Unknown error'));
+        alert('❌ Sync failed: ' + (msg || 'Unknown error'));
       }
     } finally {
       _manualSyncInFlight = false;
