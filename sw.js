@@ -1,6 +1,6 @@
 // Service Worker for Lentando PWA
 const SW_DEBUG = false; // Set to true to enable console logging
-const CACHE_NAME = 'lentando-v152'; // Update this to force cache refresh
+const CACHE_NAME = 'lentando-v154'; // Update this to force cache refresh
 const urlsToCache = [
   './index.html',
   './code.js',
@@ -14,13 +14,22 @@ const urlsToCache = [
   './terms.html'
 ];
 
-// Install service worker and cache core files
+// Install service worker and cache core files (bypass HTTP cache)
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         if (SW_DEBUG) console.log('[SW] Caching app shell');
-        return cache.addAll(urlsToCache);
+        // Fetch with cache: 'reload' to bypass HTTP cache
+        return Promise.all(
+          urlsToCache.map(url => 
+            fetch(url, { cache: 'reload' })
+              .then(response => {
+                if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`);
+                return cache.put(url, response);
+              })
+          )
+        );
       })
       .then(() => self.skipWaiting())
   );
@@ -28,6 +37,7 @@ self.addEventListener('install', event => {
 
 // Activate service worker and clean up old caches
 self.addEventListener('activate', event => {
+  console.log('[SW]', CACHE_NAME);
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
