@@ -299,7 +299,6 @@ const DEFAULT_SETTINGS = {
   lastMethod: 'bong',
   lastAmount: 1.0,
   showCoaching: true,
-  graphDays: 7,
   soundEnabled: true,
   customProfile: { name: '', types: ['', '', ''], icons: ['⚡', '⚡', '⚡'] }
 };
