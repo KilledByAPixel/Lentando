@@ -2316,6 +2316,98 @@ function getProfileForSubstance(substance) {
   return { key: currentKey, profile: current || ADDICTION_PROFILES.cannabis }; // fallback
 }
 
+function openCreateEventModal() {
+  hideUsedChips();
+  hideResistedChips();
+  hideUndo();
+
+  const s = DB.loadSettings();
+  const profile = getProfile();
+  const profileKey = s.addictionProfile || 'cannabis';
+  const displayName = profileKey === 'custom' && profile.sessionLabel !== 'Use'
+    ? profile.sessionLabel
+    : profileKey[0].toUpperCase() + profileKey.slice(1);
+
+  const fields = [
+    `<label>Tracking</label><div style="font-size:16px">${escapeHTML(displayName)}</div>`,
+    chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, s.lastSubstance, v => profile.substanceDisplay[v])
+  ];
+  if (profile.methods) {
+    const methodFn = profile.methodDisplay ? (v => profile.methodDisplay[v] || capitalize(v)) : undefined;
+    fields.push(chipGroupHTML(profile.methodLabel, 'method', profile.methods, s.lastMethod, methodFn));
+  }
+  fields.push(
+    chipGroupHTML('Amount', 'amount', profile.amounts, s.lastAmount),
+    chipGroupHTML('Reason', 'reason', REASONS, null)
+  );
+
+  const fieldsHTML = fields.map(modalFieldWrap).join('');
+
+  // Default to now
+  const nowDate = new Date();
+  const dateValue = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}-${String(nowDate.getDate()).padStart(2, '0')}`;
+  const timeValue = `${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`;
+
+  $('modal-sheet').innerHTML = `
+    <div class="modal-header"><h2>Log Past Use</h2><button class="modal-close" onclick="App.closeModal()">✕</button></div>
+    ${fieldsHTML}
+    <div class="modal-field"><label>Date</label><input type="date" id="modal-date-input" value="${dateValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
+    <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
+    <div class="modal-actions">
+      <button class="btn-delete" onclick="App.closeModal()" style="background:var(--muted)">Cancel</button>
+      <button class="btn-save" onclick="App.saveCreateModal()">Done</button>
+    </div>`;
+  $('modal-sheet').dataset.eventId = '';
+  $('modal-sheet').dataset.createMode = 'true';
+  $('modal-overlay').classList.remove('hidden');
+}
+
+function saveCreateModal() {
+  const dateInput = $('modal-date-input');
+  const timeInput = $('modal-time-input');
+  if (!dateInput || !timeInput || !dateInput.value || !timeInput.value) {
+    alert('Please set both date and time.');
+    return;
+  }
+
+  const [year, month, day] = dateInput.value.split('-').map(Number);
+  const [hours, minutes] = timeInput.value.split(':').map(Number);
+  if (isNaN(year) || isNaN(hours)) {
+    alert('Invalid date or time.');
+    return;
+  }
+
+  const ts = new Date(year, month - 1, day, hours, minutes, 0, 0).getTime();
+  if (ts > now()) {
+    alert('Cannot create events in the future.');
+    return;
+  }
+
+  // Read chip selections from the modal DOM
+  const readChip = (field) => {
+    const group = $('modal-sheet').querySelector(`.chip-group[data-field="${field}"]`);
+    if (!group) return null;
+    const active = group.querySelector('.chip.active');
+    return active ? parseChipVal(field, active.dataset.val) : null;
+  };
+
+  const substance = readChip('substance') || DB.loadSettings().lastSubstance || 'thc';
+  const method = readChip('method') || null;
+  const amount = readChip('amount') ?? 1.0;
+  const reason = readChip('reason') || null;
+
+  const evt = {
+    id: uid(), type: 'used', ts,
+    substance, method, amount, reason
+  };
+
+  DB.addEvent(evt);
+  calculateAndUpdateBadges();
+  render();
+  showToast('✅ Past use logged');
+  closeModal();
+}
+
 function openEditModal(eventId) {
   hideUsedChips();
   hideResistedChips();
@@ -2380,6 +2472,7 @@ function openEditModal(eventId) {
 
 function closeModal() {
   $('modal-overlay').classList.add('hidden');
+  delete $('modal-sheet').dataset.createMode;
   calculateAndUpdateBadges();
   render();
 }
@@ -2421,6 +2514,22 @@ function handleModalChipClick(e) {
   if (!chip) return;
   
   const eventId = $('modal-sheet').dataset.eventId;
+  const isCreateMode = $('modal-sheet').dataset.createMode === 'true';
+
+  if (isCreateMode) {
+    // In create mode, just toggle chip selection visually (no DB writes)
+    const group = chip.closest('.chip-group');
+    const field = group.dataset.field;
+    const clickedVal = chip.dataset.val;
+    const wasActive = chip.classList.contains('active');
+    // For optional fields, allow deselect; for required, always select
+    group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    if (!wasActive || !OPTIONAL_FIELDS.has(field)) {
+      chip.classList.add('active');
+    }
+    return;
+  }
+
   if (!eventId) return;
 
   const field = chip.closest('.chip-group').dataset.field;
@@ -3182,6 +3291,8 @@ window.App = {
   clearDatabase,
   clearTodos,
   changeAddiction,
+  openCreateEventModal,
+  saveCreateModal,
   showCustomConfig,
   saveCustomConfig,
   switchTab,
