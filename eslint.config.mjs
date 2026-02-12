@@ -1,0 +1,122 @@
+import js from '@eslint/js';
+
+export default [
+  js.configs.recommended,
+  {
+    files: ['code.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: {
+        // Browser globals
+        window: 'readonly',
+        document: 'readonly',
+        localStorage: 'readonly',
+        navigator: 'readonly',
+        location: 'readonly',
+        fetch: 'readonly',
+        console: 'readonly',
+        alert: 'readonly',
+        confirm: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        requestAnimationFrame: 'readonly',
+        URL: 'readonly',
+        Blob: 'readonly',
+        FileReader: 'readonly',
+        HTMLElement: 'readonly',
+        Map: 'readonly',
+        Set: 'readonly',
+        Promise: 'readonly',
+        Intl: 'readonly',
+        performance: 'readonly',
+        // External libs loaded via <script>
+        FirebaseSync: 'readonly',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['warn', { args: 'none', varsIgnorePattern: '^_|^(showLandingPage|showLoginScreen|hideLoginScreen|continueToApp|render|escapeHTML)$', caughtErrors: 'none' }],
+      'no-undef': 'error',
+      'no-redeclare': 'error',
+      'no-sparse-arrays': 'off', // ZZFXSound params use sparse arrays by design
+      'no-constant-condition': 'warn',
+      'no-debugger': 'error',
+      'no-dupe-keys': 'error',
+      'no-duplicate-case': 'error',
+      'no-empty': ['warn', { allowEmptyCatch: true }],
+      'no-extra-boolean-cast': 'warn',
+      'no-unreachable': 'error',
+      'eqeqeq': ['warn', 'smart'],
+      'no-var': 'warn',
+      'prefer-const': ['warn', { destructuring: 'all' }],
+    },
+  },
+  {
+    files: ['firebase-sync.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        localStorage: 'readonly',
+        console: 'readonly',
+        alert: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        Set: 'readonly',
+        Map: 'readonly',
+        // Functions from code.js available on window at runtime
+        continueToApp: 'readonly',
+        showLoginScreen: 'readonly',
+        hideLoginScreen: 'readonly',
+        showLandingPage: 'readonly',
+        render: 'readonly',
+        escapeHTML: 'readonly',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['warn', { args: 'none', varsIgnorePattern: '^_' }],
+      'no-undef': 'error',
+      'no-redeclare': 'error',
+      'eqeqeq': ['warn', 'smart'],
+      'no-var': 'warn',
+      'prefer-const': ['warn', { destructuring: 'all' }],
+    },
+  },
+  {
+    files: ['sw.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: {
+        self: 'readonly',
+        caches: 'readonly',
+        fetch: 'readonly',
+        console: 'readonly',
+        Response: 'readonly',
+        URL: 'readonly',
+        Promise: 'readonly',
+      },
+    },
+  },
+  {
+    files: ['build.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: {
+        require: 'readonly',
+        __dirname: 'readonly',
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+      },
+    },
+  },
+  {
+    ignores: ['dist/**', 'local/**', 'zzfx.js', 'node_modules/**'],
+  },
+];

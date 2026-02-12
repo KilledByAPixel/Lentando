@@ -1237,8 +1237,6 @@ function render() {
 function renderDate() {
   $('header-date').textContent = _dateFormatter.format(currentDate());
   
-  // Update dynamic labels based on profile
-  const profile = getProfile();
   const usedLabel = $('used-label');
   if (usedLabel) usedLabel.textContent = 'Use';
   
@@ -2010,7 +2008,7 @@ async function clearDatabase() {
   if (window.FirebaseSync) {
     try {
       await FirebaseSync.pushNow();
-    } catch (e) {
+    } catch (_e) {
       alert('⚠️ Local data was cleared, but we could not clear your cloud data. Next time you sign in, your old data may reappear. Please try syncing again when you have a connection.');
     }
   }
@@ -2520,7 +2518,6 @@ function handleModalChipClick(e) {
     // In create mode, just toggle chip selection visually (no DB writes)
     const group = chip.closest('.chip-group');
     const field = group.dataset.field;
-    const clickedVal = chip.dataset.val;
     const wasActive = chip.classList.contains('active');
     // For optional fields, allow deselect; for required, always select
     group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -3131,7 +3128,7 @@ async function deleteTodo(idx) {
   renderTodos();
   // Push immediately so focus-triggered pull doesn't restore the deleted item
   if (window.FirebaseSync) {
-    try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
+    try { await FirebaseSync.pushNow(); } catch (_e) { /* ignore */ }
   }
 }
 
@@ -3140,7 +3137,7 @@ async function clearTodos() {
   saveTodos([]);
   renderTodos();
   if (window.FirebaseSync) {
-    try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
+    try { await FirebaseSync.pushNow(); } catch (_e) { /* ignore */ }
   }
 }
 
@@ -3283,7 +3280,7 @@ window.App = {
     calculateAndUpdateBadges();
     render();
     if (window.FirebaseSync) {
-      try { await FirebaseSync.pushNow(); } catch (e) { /* ignore */ }
+      try { await FirebaseSync.pushNow(); } catch (_e) { /* ignore */ }
     }
   },
   exportJSON,

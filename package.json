@@ -6,13 +6,20 @@
   "scripts": {
     "build": "node build.js",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true}); console.log('✅ Cleaned dist/')\"",
+    "lint": "eslint code.js firebase-sync.js sw.js build.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KilledByAPixel/lentando.git"
   },
-  "keywords": ["pwa", "habit-tracker", "addiction", "recovery", "harm-reduction"],
+  "keywords": [
+    "pwa",
+    "habit-tracker",
+    "addiction",
+    "recovery",
+    "harm-reduction"
+  ],
   "author": "",
   "license": "SEE LICENSE IN LICENSE",
   "type": "commonjs",
@@ -21,6 +28,8 @@
   },
   "homepage": "https://github.com/KilledByAPixel/lentando#readme",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.0",
     "terser": "^5.46.0"
   }
 }

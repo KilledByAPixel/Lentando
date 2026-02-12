@@ -51,8 +51,8 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 ```bash
 npm run build      # Minifies to dist/
 npm run clean      # Removes dist/
+npm run lint       # ESLint across code.js, firebase-sync.js, sw.js, build.js
 ```
-**Do not run node build.js during development** — only when ready to deploy.
 
 ### Test Data Generators
 Defined at bottom of `code.js` (not currently exposed on `window`). To use, temporarily add `window.generateAllTestData = generateAllTestData;` etc:
