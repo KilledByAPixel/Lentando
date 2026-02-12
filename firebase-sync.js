@@ -145,6 +145,7 @@ const STORAGE_KEYS = {
   badges: 'ht_badges',
   todos: 'ht_todos',
   deletedIds: 'ht_deleted_ids',
+  clearedAt: 'ht_cleared_at',
   loginSkipped: 'ht_login_skipped',
   version: 'ht_data_version',
   updatedAt: 'ht_last_updated',
@@ -195,10 +196,19 @@ function getLocalData() {
     badges: readLocalObject(STORAGE_KEYS.badges),
     todos: readLocalArray(STORAGE_KEYS.todos),
     deletedIds: readLocalArray(STORAGE_KEYS.deletedIds),
+    clearedAt: parseInt(localStorage.getItem(STORAGE_KEYS.clearedAt), 10) || 0,
     version: parseInt(localStorage.getItem(STORAGE_KEYS.version), 10) || 0,
     updatedAt: parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt), 10) || 0,
     lastSynced: Date.now()
   };
+}
+
+/** Extract creation timestamp from a uid()-generated ID (base36 prefix) */
+function getUidTimestamp(id) {
+  if (!id || typeof id !== 'string') return 0;
+  const firstPart = id.split('-')[0];
+  const ts = parseInt(firstPart, 36);
+  return Number.isFinite(ts) ? ts : 0;
 }
 
 /** Push all localStorage data to Firestore */
@@ -252,6 +262,14 @@ async function pullFromCloud(uid) {
   const seenDeletedIds = new Set(tombstoneById.keys());
   (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.deletedIds, JSON.stringify(mergedDeleted));
 
+  // --- Merge clearedAt: take the maximum (most recent clear wins) ---
+  const localClearedAt = parseInt(localStorage.getItem(STORAGE_KEYS.clearedAt), 10) || 0;
+  const cloudClearedAt = parseInt(cloud.clearedAt, 10) || 0;
+  const mergedClearedAt = Math.max(localClearedAt, cloudClearedAt);
+  if (mergedClearedAt > 0) {
+    (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.clearedAt, mergedClearedAt.toString());
+  }
+
   // --- Events: merge by ID (union of local + cloud, deduplicated), filter deleted ---
   const cloudEvents = asArray(cloud.events);
   const localEvents = readLocalArray(STORAGE_KEYS.events);
@@ -260,6 +278,8 @@ async function pullFromCloud(uid) {
   const orderedEvents = preferCloud ? [...cloudEvents, ...localEvents] : [...localEvents, ...cloudEvents];
   for (const e of orderedEvents) {
     if (!e || !e.id || seenIds.has(e.id) || seenDeletedIds.has(e.id)) continue;
+    // Filter out events created before the last database clear
+    if (mergedClearedAt > 0 && getUidTimestamp(e.id) <= mergedClearedAt) continue;
     const parsedTs = typeof e.ts === 'number' ? e.ts : parseInt(e.ts, 10);
     if (!Number.isFinite(parsedTs)) continue;
     seenIds.add(e.id);

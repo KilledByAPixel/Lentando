@@ -60,6 +60,7 @@ const STORAGE_BADGES = 'ht_badges';
 const STORAGE_LOGIN_SKIPPED = 'ht_login_skipped';
 const STORAGE_VERSION = 'ht_data_version';
 const STORAGE_DELETED_IDS = 'ht_deleted_ids';
+const STORAGE_CLEARED_AT = 'ht_cleared_at';
 const DATA_VERSION = 2;
 
 const ADDICTION_PROFILES = {
@@ -346,6 +347,14 @@ function uid() {
   return now().toString(36) + '-' + (++_uidCounter).toString(36) + '-' + Math.random().toString(36).substring(2, 9);
 }
 
+/** Extract creation timestamp from a uid()-generated ID (base36 prefix) */
+function getUidTimestamp(id) {
+  if (!id || typeof id !== 'string') return 0;
+  const firstPart = id.split('-')[0];
+  const ts = parseInt(firstPart, 36);
+  return Number.isFinite(ts) ? ts : 0;
+}
+
 function safeSetItem(key, value) {
   try {
     localStorage.setItem(key, value);
@@ -415,6 +424,7 @@ function clearAllStorage() {
   localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
   localStorage.removeItem(STORAGE_VERSION);
   localStorage.removeItem(STORAGE_DELETED_IDS);
+  localStorage.removeItem(STORAGE_CLEARED_AT);
   localStorage.removeItem('ht_last_updated');
   DB._events = null;
   DB._settings = null;
@@ -540,6 +550,11 @@ const DB = {
       const deletedIds = this._getDeletedIds();
       if (deletedIds.size > 0) {
         this._events = this._events.filter(e => !deletedIds.has(e.id));
+      }
+      // Filter out events created before the last database clear
+      const clearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
+      if (clearedAt > 0) {
+        this._events = this._events.filter(e => getUidTimestamp(e.id) > clearedAt);
       }
     } catch {
       this._events = [];
@@ -2014,11 +2029,13 @@ function switchTab(tabName) {
 // ========== EXPORT ==========
 function exportJSON() {
   const badgeData = loadBadgeData();
+  const clearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
   const data = { 
     events: DB.loadEvents(), 
     settings: DB.loadSettings(), 
     todos: loadTodos(),
     lifetimeBadges: badgeData.lifetimeBadges,
+    clearedAt: clearedAt || undefined,
     exportedAt: currentDate().toISOString() 
   };
   downloadFile(JSON.stringify(data, null, 2), 'lentando-' + todayKey() + '.json', 'application/json');
@@ -2030,8 +2047,18 @@ async function clearDatabase() {
     ? '⚠️ This will permanently delete ALL local AND cloud data and reset settings. This cannot be undone.\n\nAre you sure?'
     : '⚠️ This will permanently delete ALL events and reset settings. This cannot be undone.\n\nAre you sure?';
   if (!confirm(msg)) return;
+
+  // Record the clear timestamp BEFORE wiping — this single timestamp replaces
+  // per-event tombstones. During merge, any event whose uid was created at or
+  // before this timestamp gets discarded. O(1) storage vs O(n) tombstones.
+  const clearedAt = now();
+
   clearAllStorage();
-  // Push cleared state to cloud so data doesn't restore on reload
+
+  // Restore clearedAt so it gets pushed to cloud and propagates to other devices
+  safeSetItem(STORAGE_CLEARED_AT, String(clearedAt));
+
+  // Push cleared state + clearedAt to cloud so other devices pick it up
   if (window.FirebaseSync) {
     try {
       await FirebaseSync.pushNow();
@@ -2091,9 +2118,24 @@ function importJSON(inputEl) {
         return showStatus(validation.error, 'error');
       }
 
+      // Apply imported clearedAt (take max so a clear is never weakened)
+      const importedClearedAt = parseInt(data.clearedAt, 10) || 0;
+      if (importedClearedAt > 0) {
+        const currentClearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
+        const effectiveClearedAt = Math.max(currentClearedAt, importedClearedAt);
+        safeSetItem(STORAGE_CLEARED_AT, String(effectiveClearedAt));
+        // Invalidate cache so loadEvents() re-reads with new clearedAt
+        DB._events = null;
+        DB._dateIndex = null;
+      }
+
       const existing = DB.loadEvents();
       const existingIds = new Set(existing.map(e => e.id));
-      const newEvents = validation.events.filter(evt => !existingIds.has(evt.id));
+      // Filter imported events through clearedAt so pre-clear events don't sneak in
+      const activeClearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
+      const newEvents = validation.events.filter(evt =>
+        !existingIds.has(evt.id) && (activeClearedAt <= 0 || getUidTimestamp(evt.id) > activeClearedAt)
+      );
       
       DB._events = sortedByTime([...existing, ...newEvents]);
       DB.saveEvents();
