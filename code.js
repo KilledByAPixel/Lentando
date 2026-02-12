@@ -510,7 +510,7 @@ const DB = {
   _migrateDataIfNeeded() {
     try {
       const raw = localStorage.getItem(STORAGE_VERSION);
-      const storedVersion = parseInt(raw) || 0;
+      const storedVersion = parseInt(raw, 10) || 0;
       if (storedVersion >= DATA_VERSION) return;
 
       // Brand-new install — no existing data to migrate, just stamp the version
@@ -654,6 +654,11 @@ window.DB = DB;
 // Expose shared helpers for firebase-sync.js (ES module can't access code.js scope directly)
 window.clearAllStorage = clearAllStorage;
 window.validatePassword = validatePassword;
+window.render = render;
+window.showLandingPage = showLandingPage;
+window.showLoginScreen = showLoginScreen;
+window.hideLoginScreen = hideLoginScreen;
+window.continueToApp = continueToApp;
 
 /** Stop all background timers (called on logout) */
 window.stopTimers = function() {
@@ -1690,6 +1695,7 @@ function hasRecentWater() {
 
 function renderWaterReminder() {
   const reminderEl = $('water-reminder');
+  if (!reminderEl) return;
   reminderEl.classList.toggle('hidden', hasRecentWater());
 }
 
@@ -2160,7 +2166,7 @@ function buildTimeChips(eventTs) {
     let minDiff = Infinity;
     for (const s of slots) {
       if (s.value === 'now') continue;
-      const diff = Math.abs(parseInt(s.value) - eventTs);
+      const diff = Math.abs(parseInt(s.value, 10) - eventTs);
       if (diff < minDiff) { minDiff = diff; activeSlot = s.value; }
     }
   }
@@ -2263,7 +2269,8 @@ function handleChipClick(e) {
   
   // Special handling for time field
   if (field === 'ts') {
-    const newTs = chip.dataset.val === 'now' ? now() : parseInt(chip.dataset.val);
+    const newTs = chip.dataset.val === 'now' ? now() : parseInt(chip.dataset.val, 10);
+    if (!Number.isFinite(newTs)) return;
     DB.updateEvent(activeChipEventId, { ts: newTs });
     updateActiveChips();
     calculateAndUpdateBadges();
@@ -2565,6 +2572,7 @@ function showLoginScreen() {
   switchTab('today');
   
   const overlay = $('login-overlay');
+  if (!overlay) return;
   overlay.classList.remove('hidden');
   // Inject auth inputs only when login screen is visible
   const loginInputs = overlay.querySelector('.login-inputs');
@@ -2583,6 +2591,7 @@ function showLoginScreen() {
 
 function hideLoginScreen() {
   const overlay = $('login-overlay');
+  if (!overlay) return;
   overlay.classList.add('hidden');
   // Remove auth inputs from DOM to prevent browser autofill on other inputs
   const loginInputs = overlay.querySelector('.login-inputs');
@@ -3237,7 +3246,11 @@ window.App = {
     calculateAndUpdateBadges();
     render();
     // Flush to cloud immediately so focus-triggered pull doesn't restore the deleted event
-    if (window.FirebaseSync) FirebaseSync.pushNow().catch(() => {});
+    if (window.FirebaseSync) {
+      FirebaseSync.pushNow().catch((err) => {
+        console.warn('[Sync] Immediate push after delete failed:', err);
+      });
+    }
     return true;
   },
   async clearDay() {
@@ -3547,7 +3560,7 @@ if (debugMode) {
     const profile = getProfile();
     
     // Parse input
-    const days = parseInt(daysAgo);
+    const days = parseInt(daysAgo, 10);
     if (isNaN(days) || days < 0) {
       showToast('❌ Please enter a valid number of days');
       return;

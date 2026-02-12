@@ -187,8 +187,8 @@ function getLocalData() {
     badges: readLocalObject(STORAGE_KEYS.badges),
     todos: readLocalArray(STORAGE_KEYS.todos),
     deletedIds: readLocalArray(STORAGE_KEYS.deletedIds),
-    version: parseInt(localStorage.getItem(STORAGE_KEYS.version)) || 0,
-    updatedAt: parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt)) || 0,
+    version: parseInt(localStorage.getItem(STORAGE_KEYS.version), 10) || 0,
+    updatedAt: parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt), 10) || 0,
     lastSynced: Date.now()
   };
 }
@@ -201,7 +201,7 @@ async function pushToCloud(uid) {
   // Ensure updatedAt is set before pushing so the cloud can win/lose based on recency
   if (!data.updatedAt) {
     setLocalUpdatedAt();
-    data.updatedAt = parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt)) || Date.now();
+    data.updatedAt = parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt), 10) || Date.now();
   }
   await setDoc(userDoc, data, { merge: true });
   console.log('[Sync] Pushed to cloud');
@@ -220,8 +220,8 @@ async function pullFromCloud(uid) {
   }
 
   const cloud = snap.data();
-  const localUpdatedAt = parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt)) || 0;
-  const cloudUpdatedAt = parseInt(cloud.updatedAt) || 0;
+  const localUpdatedAt = parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt), 10) || 0;
+  const cloudUpdatedAt = parseInt(cloud.updatedAt, 10) || 0;
   const preferCloud = cloudUpdatedAt >= localUpdatedAt;
 
   // --- Merge deletedIds (tombstones): union by id, clean old ones ---
@@ -311,8 +311,8 @@ async function pullFromCloud(uid) {
 
   // --- Version: take the higher version (most migrated) ---
   if (cloud.version !== undefined) {
-    const localVersion = parseInt(localStorage.getItem(STORAGE_KEYS.version)) || 0;
-    const cloudVersion = parseInt(cloud.version) || 0;
+    const localVersion = parseInt(localStorage.getItem(STORAGE_KEYS.version), 10) || 0;
+    const cloudVersion = parseInt(cloud.version, 10) || 0;
     const maxVersion = Math.max(localVersion, cloudVersion);
     (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.version, maxVersion.toString());
   }
@@ -346,22 +346,22 @@ if (isConfigured) {
         await pullFromCloud(user.uid);
         
         // Hide login screen and clear auth inputs from DOM
-        if (typeof hideLoginScreen === 'function') {
-          hideLoginScreen();
+        if (typeof window.hideLoginScreen === 'function') {
+          window.hideLoginScreen();
         }
         
         // Continue to app after successful login (caches already invalidated by pullFromCloud)
-        if (typeof continueToApp === 'function') {
-          continueToApp();
+        if (typeof window.continueToApp === 'function') {
+          window.continueToApp();
         }
       } catch (err) {
         console.error('[Sync] Pull failed:', err);
         // Fallback: continue with local data so login never blocks app access
-        if (typeof hideLoginScreen === 'function') {
-          hideLoginScreen();
+        if (typeof window.hideLoginScreen === 'function') {
+          window.hideLoginScreen();
         }
-        if (typeof continueToApp === 'function') {
-          continueToApp();
+        if (typeof window.continueToApp === 'function') {
+          window.continueToApp();
         }
         showSyncWarning('Cloud sync failed. Loaded local data; sync will retry when online.');
       }
@@ -385,17 +385,17 @@ function checkAuthAndContinue() {
   
   if (!currentUser && !hasSkippedLogin) {
     // Not logged in and hasn't skipped
-    if (!hasEvents && typeof showLandingPage === 'function') {
+    if (!hasEvents && typeof window.showLandingPage === 'function') {
       // Brand new user — show landing page first
-      showLandingPage();
-    } else if (typeof showLoginScreen === 'function') {
+      window.showLandingPage();
+    } else if (typeof window.showLoginScreen === 'function') {
       // Returning user (has data but not logged in) — go straight to login
-      showLoginScreen();
+      window.showLoginScreen();
     }
   } else {
     // User is logged in or has skipped - continue to app
-    if (typeof continueToApp === 'function') {
-      continueToApp();
+    if (typeof window.continueToApp === 'function') {
+      window.continueToApp();
     }
   }
 }
@@ -415,8 +415,8 @@ if (isConfigured) {
           await pushToCloud(currentUser.uid);
         }
         await pullFromCloud(currentUser.uid);
-        if (typeof render === 'function') {
-          render();
+        if (typeof window.render === 'function') {
+          window.render();
         }
         console.log('[Sync] Refreshed data on focus');
       } catch (err) {
@@ -643,8 +643,8 @@ window.FirebaseSync = {
     
     updateAuthUI(null);
     // Show login screen
-    if (typeof showLoginScreen === 'function') {
-      showLoginScreen();
+    if (typeof window.showLoginScreen === 'function') {
+      window.showLoginScreen();
     }
   },
 
@@ -654,8 +654,8 @@ window.FirebaseSync = {
       await pullFromCloud(currentUser.uid);
       
       // pullFromCloud already merges and pushes; just re-render
-      if (typeof render === 'function') {
-        render();
+      if (typeof window.render === 'function') {
+        window.render();
       }
       
       alert('✅ Synced to cloud!');
