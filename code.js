@@ -24,26 +24,26 @@ if (debugMode) {
     _debugTimeOffset += hours * 60 * 60 * 1000;
     console.log(`⏰ Time advanced by ${hours}h. Virtual date: ${currentDate().toLocaleString()}`);
     render();
-  };
+  }
 
   function debugSetDate(dateString) {
     const targetTime = new Date(dateString).getTime();
     _debugTimeOffset = targetTime - Date.now();
     console.log(`⏰ Time set to ${currentDate().toLocaleString()}`);
     render();
-  };
+  }
 
   function debugResetTime() {
     _debugTimeOffset = 0;
     console.log('⏰ Time reset to real time');
     render();
-  };
+  }
 
   function debugGetTime() {
     console.log(`Current virtual time: ${currentDate().toLocaleString()}`);
     console.log(`Offset: ${_debugTimeOffset / (1000 * 60 * 60)} hours`);
     return currentDate();
-  };
+  }
   
   window.debugAdvanceTime = debugAdvanceTime;
   window.debugSetDate = debugSetDate;
