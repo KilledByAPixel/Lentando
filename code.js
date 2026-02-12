@@ -242,7 +242,7 @@ const BADGE_DEFINITIONS = {
   'harm-reduction-vape': { label: 'Safer Choice', icon: '✨', desc: 'Chose vape over smoke' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products, no THC' },
   'low-day': { label: 'Light Day', icon: '🎈', desc: 'Total usage ≤2 units' },
-  'zero-use': { label: 'Clear Day', icon: '🥇', desc: 'No use today' },
+  'zero-use': { label: 'Clear Day', icon: '🏅', desc: 'No use today' },
   'good-start': { label: 'Strong Start', icon: '🚀', desc: 'Started the day with a positive action instead of using' },
   'drank-water': { label: 'Drank Water', icon: '💧', desc: 'Logged water' },
   'hydrated': { label: 'Hydrated', icon: '🌊', desc: 'Logged water 5+ times' },
