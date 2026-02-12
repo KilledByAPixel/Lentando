@@ -81,7 +81,6 @@ function buildCustomProfile(settings) {
   const base = ADDICTION_PROFILES.custom;
   const cp = settings.customProfile || {};
   const typeNames = cp.types || ['', '', ''];
-  const methodNames = cp.methods || ['', '', ''];
   const addictionName = cp.name || '';
   const customIcons = cp.icons || ['⚡', '⚡', '⚡'];
 
@@ -99,25 +98,14 @@ function buildCustomProfile(settings) {
     type3: customIcons[2] || '⚡'
   };
 
-  // Build methods list — only include methods with names; null if all blank (hides method UI)
-  const allMethods = [
-    { key: 'method1', name: methodNames[0] },
-    { key: 'method2', name: methodNames[1] },
-    { key: 'method3', name: methodNames[2] }
-  ];
-  const activeMethods = allMethods.filter(m => m.name);
-  const methods = activeMethods.length > 0 ? activeMethods.map(m => m.key) : null;
-  const methodDisplay = {};
-  allMethods.forEach(m => { methodDisplay[m.key] = m.name || capitalize(m.key.replace(/([0-9])/,' $1')); });
-
   return {
     ...base,
     sessionLabel: addictionName || base.sessionLabel,
     substanceDisplay,
     icons,
-    methods,
-    methodLabel: base.methodLabel,
-    methodDisplay
+    methods: null,
+    methodLabel: null,
+    methodDisplay: {}
   };
 }
 
@@ -260,7 +248,7 @@ const DEFAULT_SETTINGS = {
   showCoaching: true,
   graphDays: 7,
   soundEnabled: true,
-  customProfile: { name: '', types: ['', '', ''], methods: ['', '', ''], icons: ['⚡', '⚡', '⚡'] }
+  customProfile: { name: '', types: ['', '', ''], icons: ['⚡', '⚡', '⚡'] }
 };
 
 // ========== SOUND SYSTEM ==========
@@ -2505,15 +2493,12 @@ function showCustomConfig(fromSettings) {
   
   // Pre-fill from saved custom profile
   const settings = DB.loadSettings();
-  const cp = settings.customProfile || { name: '', types: ['', '', ''], methods: ['', '', ''], icons: ['⚡', '⚡', '⚡'] };
+  const cp = settings.customProfile || { name: '', types: ['', '', ''], icons: ['⚡', '⚡', '⚡'] };
   
   $('custom-name').value = cp.name || '';
   $('custom-type1').value = (cp.types && cp.types[0]) || '';
   $('custom-type2').value = (cp.types && cp.types[1]) || '';
   $('custom-type3').value = (cp.types && cp.types[2]) || '';
-  $('custom-method1').value = (cp.methods && cp.methods[0]) || '';
-  $('custom-method2').value = (cp.methods && cp.methods[1]) || '';
-  $('custom-method3').value = (cp.methods && cp.methods[2]) || '';
 
   // Set icon selections
   const icons = cp.icons || ['⚡', '⚡', '⚡'];
@@ -2536,18 +2521,13 @@ function saveCustomConfig() {
     $('custom-type2').value.trim().slice(0, 20),
     $('custom-type3').value.trim().slice(0, 20)
   ];
-  const methods = [
-    $('custom-method1').value.trim().slice(0, 20),
-    $('custom-method2').value.trim().slice(0, 20),
-    $('custom-method3').value.trim().slice(0, 20)
-  ];
   const icons = [
     getActiveIcon('custom-icon1'),
     getActiveIcon('custom-icon2'),
     getActiveIcon('custom-icon3')
   ];
   
-  settings.customProfile = { name, types, methods, icons };
+  settings.customProfile = { name, types, icons };
   
   if (customConfigFromSettings) {
     // From settings — just save and refresh
@@ -2563,9 +2543,6 @@ function saveCustomConfig() {
     settings.addictionProfile = 'custom';
     settings.lastSubstance = profile.substances[0];
     settings.lastAmount = defaultAmount;
-    if (profile.methods && profile.methods.length > 0) {
-      settings.lastMethod = profile.methods[0];
-    }
     
     DB._settings = settings;
     DB.saveSettings();
