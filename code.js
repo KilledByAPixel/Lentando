@@ -950,21 +950,35 @@ const Badges = {
       addBadge(eligible && currentHour >= start && noUseInRange(start, end), id);
     }
     
-    // Good Night — 12+ hour gap crossing today's 6am boundary (overnight break)
+    // Good Night — overnight break crossing 6am boundary
+    // Look for last use between 6pm yesterday and 6am today.
+    // If found, check earliest use after 6am: if none (or completed day), award it.
+    // If there is a use after 6am, the gap must be 12h+.
     const today6am = new Date(evaluationDate + 'T06:00:00').getTime();
+    const yesterday6pm = today6am - 12 * 3600000; // 6pm previous day
     
-    // Get all events from yesterday and today
+    // Get all profile use events from yesterday and today
     const yesterdayProfileUsed = yesterdayEvents ? filterProfileUsed(yesterdayEvents) : [];
     const allRecent = sortedByTime([...yesterdayProfileUsed, ...profileUsed]);
     
-    // Find last event before 6am and first event after 6am
-    const lastBefore6am = allRecent.filter(e => e.ts < today6am).pop();
+    // Find last use between 6pm yesterday and 6am today
+    const lastOvernightUse = allRecent.filter(e => e.ts >= yesterday6pm && e.ts < today6am).pop();
+    // Find earliest use after 6am today
     const firstAfter6am = allRecent.find(e => e.ts >= today6am);
     
     let hasNightGap = false;
-    if (lastBefore6am && firstAfter6am) {
-      const gapHours = (firstAfter6am.ts - lastBefore6am.ts) / 3600000;
-      hasNightGap = gapHours >= 12;
+    if (completedDay || currentHour >= EARLY_HOUR) {
+      if (!lastOvernightUse) {
+        // No use between 6pm–6am = automatic 12h+ gap overnight
+        // But not on the first day (no overnight history yet)
+        hasNightGap = !isFirstDay;
+      } else if (firstAfter6am) {
+        // Use after 6am — gap from overnight use must be 12h+
+        hasNightGap = (firstAfter6am.ts - lastOvernightUse.ts) / 3600000 >= 12;
+      } else {
+        // Overnight use but no use after 6am — award it (gap is growing)
+        hasNightGap = true;
+      }
     }
     addBadge(hasNightGap, 'night-gap');
 
