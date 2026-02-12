@@ -1763,14 +1763,26 @@ function loadMoreHistory() {
 }
 
 function navigateDay(offset) {
-  const d = new Date(currentHistoryDay + 'T12:00:00');
-  d.setDate(d.getDate() + offset);
-  const newKey = dateKey(d);
+  const allKeys = DB.getAllDayKeys(); // sorted reverse (newest first)
   
-  // Don't go beyond today
-  if (newKey > todayKey()) return;
+  if (offset < 0) {
+    // Going back — find the nearest earlier day with events
+    const earlier = allKeys.find(k => k < currentHistoryDay);
+    if (!earlier) return; // no earlier days with data
+    currentHistoryDay = earlier;
+  } else {
+    // Going forward — find the nearest later day with events, capped at today
+    const today = todayKey();
+    const later = [...allKeys].reverse().find(k => k > currentHistoryDay && k <= today);
+    if (!later) {
+      // No later day with events — jump to today if we're not already there
+      if (currentHistoryDay >= today) return;
+      currentHistoryDay = today;
+    } else {
+      currentHistoryDay = later;
+    }
+  }
   
-  currentHistoryDay = newKey;
   historyShowCount = HISTORY_PAGE_SIZE;
   renderDayHistory();
 }
