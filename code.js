@@ -2465,7 +2465,7 @@ function selectProfile(profileKey) {
 }
 
 /** Emoji picker helpers */
-const CUSTOM_ICON_OPTIONS = ['⚡','☕','🥤','🍬','🍔','🍩','🎮','🃏','🎰','💊','💉','📱','📺','🛒','💸'];
+const CUSTOM_ICON_OPTIONS = ['⚡','☕','🥤','🍬','🍔','🍩','🎮','🃏','🎰','💊','📱','📺','🖥️','🛒','💸'];
 
 function setActiveIcon(containerId, emoji) {
   const container = $(containerId);
