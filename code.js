@@ -1,6 +1,5 @@
-// ============================================================
-// ZERO-FRICTION USAGE + BADGES TRACKER
-// ============================================================
+// LENTANDO - Progress At Your Pace
+// Copyright (c) 2026 Frank Force
 
 'use strict';
 
@@ -1139,7 +1138,7 @@ function render() {
   renderTodos();
   
   const activeTab = document.querySelector('.tab-panel.active')?.id.replace('tab-', '');
-  if (activeTab === 'wins') renderBadges();
+  if (activeTab === 'badges') renderBadges();
   else if (activeTab === 'graph') renderGraphs();
   else if (activeTab === 'history') renderDayHistory();
 }
