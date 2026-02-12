@@ -1286,7 +1286,7 @@ function buildSinceLastUsedTile(used) {
       // Show date of last use if over a day
       const lastUsedDate = new Date(lastUsedTs);
       const options = { month: 'short', day: 'numeric' };
-      const dateStr = lastUsedDate.toLocaleDateString('en-US', options);
+      const dateStr = lastUsedDate.toLocaleDateString([], options);
       sinceLastSub = `Last Used On ${dateStr}`;
     } else {
       // Show average gap today (excludes gaps crossing 6am)
