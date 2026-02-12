@@ -2084,15 +2084,26 @@ function validateImportData(data) {
   if (!data.events || !Array.isArray(data.events)) {
     return { valid: false, error: '❌ Invalid file — no events array found.' };
   }
-  const validEvents = data.events.filter(e => e.id && e.type && e.ts);
-  if (validEvents.length === 0) {
-    return { valid: false, error: '❌ No valid events found in file.' };
-  }
-  // Sanitize IDs — regenerate any with characters outside safe set to prevent injection
   const SAFE_ID = /^[a-z0-9-]+$/;
-  validEvents.forEach(e => {
-    if (typeof e.id !== 'string' || !SAFE_ID.test(e.id)) e.id = uid();
-  });
+  const MIN_TS = new Date('2000-01-01T00:00:00Z').getTime();
+  const MAX_TS = Date.now() + (365 * 24 * 60 * 60 * 1000); // one year in the future
+
+  const validEvents = [];
+  for (const raw of data.events) {
+    if (!raw || !raw.id || !raw.type) continue;
+    const ts = Number(raw.ts);
+    if (!Number.isFinite(ts) || ts < MIN_TS || ts > MAX_TS) continue;
+
+    const evt = { ...raw, ts };
+    // Sanitize IDs — regenerate any with characters outside safe set to prevent injection
+    if (typeof evt.id !== 'string' || !SAFE_ID.test(evt.id)) evt.id = uid();
+    validEvents.push(evt);
+  }
+
+  if (validEvents.length === 0) {
+    return { valid: false, error: '❌ No valid events with usable timestamps found in file.' };
+  }
+
   return { valid: true, events: validEvents };
 }
 

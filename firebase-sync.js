@@ -105,6 +105,14 @@ async function resetPassword(email) {
 
 async function deleteAccountAndData() {
   if (!isConfigured || !currentUser) return;
+  // Best effort: flush any pending local changes before wiping
+  try {
+    if (_syncTimer) { clearTimeout(_syncTimer); _syncTimer = null; }
+    setLocalUpdatedAt();
+    await pushToCloud(currentUser.uid);
+  } catch (err) {
+    console.warn('[Auth] Could not flush before delete:', err);
+  }
   // Delete Firestore user doc first
   try {
     const userDoc = doc(db, 'users', currentUser.uid);
@@ -113,8 +121,27 @@ async function deleteAccountAndData() {
     console.warn('[Auth] Could not delete Firestore data:', err);
   }
   // Delete the Firebase auth account
-  await deleteUser(currentUser);
+  try {
+    await deleteUser(currentUser);
+  } catch (err) {
+    if (err.code === 'auth/requires-recent-login') {
+      alert('⚠️ For security, please sign out, sign back in, and try deleting again.');
+      return;
+    }
+    throw err;
+  }
   currentUser = null;
+
+  // Wipe all local data and reset app state
+  if (window.clearAllStorage) {
+    window.clearAllStorage();
+  }
+  if (window.stopTimers) window.stopTimers();
+  document.documentElement.setAttribute('data-theme', 'dark');
+  updateAuthUI(null);
+  if (typeof window.showLoginScreen === 'function') {
+    window.showLoginScreen();
+  }
 }
 
 // ========== HELPER FUNCTIONS ==========
@@ -669,6 +696,16 @@ window.FirebaseSync = {
   },
 
   async logout() {
+    if (currentUser) {
+      try {
+        if (_syncTimer) { clearTimeout(_syncTimer); _syncTimer = null; }
+        setLocalUpdatedAt();
+        await pushToCloud(currentUser.uid);
+      } catch (err) {
+        console.warn('[Sync] Could not flush before logout:', err);
+      }
+    }
+
     await logout();
     currentUser = null;
     
