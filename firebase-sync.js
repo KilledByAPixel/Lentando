@@ -673,6 +673,10 @@ window.FirebaseSync = {
 
   async sync() {
     if (!currentUser) return alert('Sign in first');
+    if (!window.navigator.onLine) {
+      alert('You are offline. Changes are saved locally and will sync when you reconnect.');
+      return;
+    }
     try {
       await pullFromCloud(currentUser.uid);
       
@@ -683,7 +687,17 @@ window.FirebaseSync = {
       
       alert('✅ Synced to cloud!');
     } catch (err) {
-      alert('Sync failed: ' + err.message);
+      const code = err && typeof err.code === 'string' ? err.code : '';
+      const msg = err && typeof err.message === 'string' ? err.message : '';
+      const looksOffline = !window.navigator.onLine
+        || code.includes('unavailable')
+        || msg.includes('offline')
+        || msg.includes('network');
+      if (looksOffline) {
+        alert('Sync could not run while offline. Your local changes are safe and will sync when online.');
+      } else {
+        alert('Sync failed: ' + (msg || 'Unknown error'));
+      }
     }
   },
 
