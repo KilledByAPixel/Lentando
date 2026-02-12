@@ -1,6 +1,6 @@
 // Service Worker for Lentando PWA
 const SW_DEBUG = false; // Set to true to enable console logging
-const CACHE_NAME = 'lentando-v154'; // Update this to force cache refresh
+const CACHE_NAME = 'lentando-v155'; // Update this to force cache refresh
 const urlsToCache = [
   './index.html',
   './code.js',
@@ -52,12 +52,15 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch strategy: Network first, falling back to cache
+// Fetch strategy: Network first, falling back to cache (same-origin only)
 self.addEventListener('fetch', event => {
   // Only cache GET requests — non-GET requests pass through to network
-  if (event.request.method !== 'GET') {
-    return;
-  }
+  if (event.request.method !== 'GET') return;
+
+  // Don't intercept cross-origin requests (Firebase SDK, Firestore API, CDNs, etc.)
+  // Let them go directly to network without SW interference
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
     fetch(event.request)
