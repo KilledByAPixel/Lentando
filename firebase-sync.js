@@ -180,6 +180,14 @@ function readLocalObject(key) {
   return {};
 }
 
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function asObject(value) {
+  return (value && typeof value === 'object' && !Array.isArray(value)) ? value : {};
+}
+
 function getLocalData() {
   return {
     events: readLocalArray(STORAGE_KEYS.events),
@@ -219,37 +227,43 @@ async function pullFromCloud(uid) {
     return;
   }
 
-  const cloud = snap.data();
+  const cloud = asObject(snap.data());
   const localUpdatedAt = parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt), 10) || 0;
   const cloudUpdatedAt = parseInt(cloud.updatedAt, 10) || 0;
   const preferCloud = cloudUpdatedAt >= localUpdatedAt;
 
   // --- Merge deletedIds (tombstones): union by id, clean old ones ---
-  const cloudDeleted = cloud.deletedIds || [];
+  const cloudDeleted = asArray(cloud.deletedIds);
   const localDeleted = readLocalArray(STORAGE_KEYS.deletedIds);
-  const seenDeletedIds = new Set();
-  const mergedDeleted = [];
+  const tombstoneById = new Map();
   const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
   for (const t of [...cloudDeleted, ...localDeleted]) {
-    if (t.id && !seenDeletedIds.has(t.id) && t.deletedAt > ninetyDaysAgo) {
-      seenDeletedIds.add(t.id);
-      mergedDeleted.push(t);
+    if (!t || !t.id) continue;
+    const parsedDeletedAt = typeof t.deletedAt === 'number' ? t.deletedAt : parseInt(t.deletedAt, 10);
+    const deletedAt = Number.isFinite(parsedDeletedAt) ? parsedDeletedAt : Date.now();
+    if (deletedAt > ninetyDaysAgo) {
+      const existing = tombstoneById.get(t.id);
+      if (!existing || deletedAt > existing.deletedAt) {
+        tombstoneById.set(t.id, { id: t.id, deletedAt });
+      }
     }
   }
+  const mergedDeleted = Array.from(tombstoneById.values());
+  const seenDeletedIds = new Set(tombstoneById.keys());
   (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.deletedIds, JSON.stringify(mergedDeleted));
 
   // --- Events: merge by ID (union of local + cloud, deduplicated), filter deleted ---
-  const cloudEvents = cloud.events || [];
+  const cloudEvents = asArray(cloud.events);
   const localEvents = readLocalArray(STORAGE_KEYS.events);
   const seenIds = new Set();
   const merged = [];
   const orderedEvents = preferCloud ? [...cloudEvents, ...localEvents] : [...localEvents, ...cloudEvents];
   for (const e of orderedEvents) {
-    // Skip events that have been deleted (tombstoned)
-    if (e.id && !seenIds.has(e.id) && !seenDeletedIds.has(e.id)) {
-      seenIds.add(e.id);
-      merged.push(e);
-    }
+    if (!e || !e.id || seenIds.has(e.id) || seenDeletedIds.has(e.id)) continue;
+    const parsedTs = typeof e.ts === 'number' ? e.ts : parseInt(e.ts, 10);
+    if (!Number.isFinite(parsedTs)) continue;
+    seenIds.add(e.id);
+    merged.push(parsedTs === e.ts ? e : { ...e, ts: parsedTs });
   }
   merged.sort((a, b) => a.ts - b.ts);
   (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.events, JSON.stringify(merged));
@@ -284,21 +298,30 @@ async function pullFromCloud(uid) {
   }
 
   // --- Settings: cloud takes precedence ---
-  if (cloud.settings) {
+  const cloudSettings = asObject(cloud.settings);
+  if (Object.keys(cloudSettings).length > 0) {
     const localSettings = readLocalObject(STORAGE_KEYS.settings);
     // Prefer the more recent source
-    const mergedSettings = preferCloud
-      ? { ...localSettings, ...cloud.settings }
-      : { ...cloud.settings, ...localSettings };
+    const primarySettings = preferCloud ? cloudSettings : localSettings;
+    const secondarySettings = preferCloud ? localSettings : cloudSettings;
+    const mergedSettings = { ...secondarySettings, ...primarySettings };
+
+    if (localSettings.customProfile || cloudSettings.customProfile) {
+      const primaryCustom = asObject(primarySettings.customProfile);
+      const secondaryCustom = asObject(secondarySettings.customProfile);
+      mergedSettings.customProfile = { ...secondaryCustom, ...primaryCustom };
+    }
+
     (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.settings, JSON.stringify(mergedSettings));
   }
 
   // --- Todos: merge by text (union, deduplicated) ---
-  if (cloud.todos) {
+  const cloudTodos = asArray(cloud.todos);
+  if (cloudTodos.length > 0) {
     const localTodos = readLocalArray(STORAGE_KEYS.todos);
     const seenTexts = new Set();
     const mergedTodos = [];
-    const orderedTodos = preferCloud ? [...cloud.todos, ...localTodos] : [...localTodos, ...cloud.todos];
+    const orderedTodos = preferCloud ? [...cloudTodos, ...localTodos] : [...localTodos, ...cloudTodos];
     for (const t of orderedTodos) {
       const key = t && t.text;
       if (key && !seenTexts.has(key)) {
