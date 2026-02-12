@@ -561,6 +561,42 @@ header .date { font-size: 14px; color: var(--muted); }
   color: var(--text);
 }
 
+/* Custom config form */
+#custom-config-overlay:not(.hidden) { display: block; background: var(--bg); }
+.custom-config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 40px;
+}
+.custom-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.custom-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.custom-field input[type="text"] {
+  padding: 10px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.custom-field input[type="text"]:focus {
+  border-color: var(--primary);
+}
+.custom-field input[type="text"]::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
 /* Login screen inputs */
 #login-form {
   display: flex;
@@ -613,7 +649,8 @@ header .date { font-size: 14px; color: var(--muted); }
 
 /* Login and onboarding overlays should have opaque background */
 #login-overlay,
-#onboarding-overlay {
+#onboarding-overlay,
+#custom-config-overlay {
   background: var(--bg);
   align-items: flex-start;
   overflow-y: auto;
@@ -1278,6 +1315,9 @@ header .date { font-size: 14px; color: var(--muted); }
   <div class="export-bar">
     <button class="export-btn" id="btn-change-addiction" onclick="App.changeAddiction()">🔄 Change Addiction</button>
   </div>
+  <div class="export-bar hidden" id="custom-config-bar">
+    <button class="export-btn" onclick="App.showCustomConfig(true)">⚙️ Customize Tracker</button>
+  </div>
 
   <div class="section-label" style="margin-top: 24px;">Data Management</div>
   <div style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;font-size:12px;color:var(--muted);line-height:1.5">
@@ -1367,9 +1407,9 @@ header .date { font-size: 14px; color: var(--muted); }
           <div class="profile-icon">🚬</div>
           <div class="profile-name">Smoking</div>
         </button>
-        <button class="profile-card" data-profile="other">
+        <button class="profile-card" data-profile="custom">
           <div class="profile-icon">⚡</div>
-          <div class="profile-name">Other</div>
+          <div class="profile-name">Custom</div>
         </button>
       </div>
       <p style="margin-top:20px;font-size:12px;color:var(--muted);text-align:center;line-height:1.5">⚠️ Reducing or stopping heavy daily use can be dangerous. If you are a heavy user, please talk to a clinician before making changes.</p>
@@ -1380,6 +1420,47 @@ header .date { font-size: 14px; color: var(--muted); }
 <!-- ===== EDIT MODAL ===== -->
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal-sheet" id="modal-sheet"></div>
+</div>
+
+<!-- ===== CUSTOM CONFIG MODAL ===== -->
+<div class="modal-overlay hidden" id="custom-config-overlay">
+  <div class="onboarding-sheet">
+    <div class="onboarding-header">
+      <h1><span class="brand">Customize</span></h1>
+      <p class="tagline">set up your custom tracker</p>
+    </div>
+    <div class="onboarding-content">
+      <div class="custom-config-form">
+        <div class="custom-field">
+          <label for="custom-name">Addiction / Habit Name</label>
+          <input type="text" id="custom-name" maxlength="24" placeholder="e.g. Caffeine, Opioids, Porn, etc.">
+        </div>
+        <div class="section-label" style="margin-top:16px;margin-bottom:8px">Substance Types</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Name up to 3 types. Leave blank for defaults.</p>
+        <div class="custom-field">
+          <input type="text" id="custom-type1" maxlength="20" placeholder="Type 1">
+        </div>
+        <div class="custom-field">
+          <input type="text" id="custom-type2" maxlength="20" placeholder="Type 2">
+        </div>
+        <div class="custom-field">
+          <input type="text" id="custom-type3" maxlength="20" placeholder="Type 3">
+        </div>
+        <div class="section-label" style="margin-top:16px;margin-bottom:8px">Methods</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Name up to 3 methods. Leave blank to hide.</p>
+        <div class="custom-field">
+          <input type="text" id="custom-method1" maxlength="20" placeholder="Method 1">
+        </div>
+        <div class="custom-field">
+          <input type="text" id="custom-method2" maxlength="20" placeholder="Method 2">
+        </div>
+        <div class="custom-field">
+          <input type="text" id="custom-method3" maxlength="20" placeholder="Method 3">
+        </div>
+        <button class="export-btn" id="btn-save-custom" onclick="App.saveCustomConfig()" style="width:100%;padding:14px;font-size:16px;font-weight:600;margin-top:20px">✅ Save &amp; Continue</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script type="module" src="zzfx.js"></script>

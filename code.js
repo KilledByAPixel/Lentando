@@ -47,22 +47,69 @@ const ADDICTION_PROFILES = {
     amountUnit: 'count',
     icons: { cigarette: '🚬', vape: '💨', other: '⚡' }
   },
-  other: {
+  custom: {
     sessionLabel: 'Use',
     substanceLabel: 'Type',
     methodLabel: 'Method',
     substances: ['type1', 'type2', 'type3'],
     substanceDisplay: { type1: 'Type 1', type2: 'Type 2', type3: 'Type 3' },
-    methods: ['method1', 'method2', 'method3', 'other'],
-    amounts: [0.5, 1.0, 1.5, 2.0],
+    methods: ['method1', 'method2', 'method3'],
+    amounts: [0.5, 1.0, 1.5, 2.0, 5, 10],
     amountUnit: 'units',
     icons: { type1: '⚡', type2: '✨', type3: '🔥' }
   }
 };
 
 function getProfile() {
-  const key = DB.loadSettings().addictionProfile || 'cannabis';
-  return ADDICTION_PROFILES[key];
+  const settings = DB.loadSettings();
+  let key = settings.addictionProfile || 'cannabis';
+  // Migrate legacy 'other' profile key to 'custom'
+  if (key === 'other') {
+    key = 'custom';
+    settings.addictionProfile = 'custom';
+    DB._settings = settings;
+    DB.saveSettings();
+  }
+  const base = ADDICTION_PROFILES[key];
+  if (!base) return ADDICTION_PROFILES.cannabis;
+  if (key !== 'custom') return base;
+  // Build custom profile with user overrides
+  return buildCustomProfile(settings);
+}
+
+function buildCustomProfile(settings) {
+  const base = ADDICTION_PROFILES.custom;
+  const cp = settings.customProfile || {};
+  const typeNames = cp.types || ['', '', ''];
+  const methodNames = cp.methods || ['', '', ''];
+  const addictionName = cp.name || '';
+
+  // Build substances list — keep all 3 slots, use defaults for blanks
+  const substanceDisplay = {
+    type1: typeNames[0] || 'Type 1',
+    type2: typeNames[1] || 'Type 2',
+    type3: typeNames[2] || 'Type 3'
+  };
+
+  // Build methods list — only include methods with names; null if all blank (hides method UI)
+  const allMethods = [
+    { key: 'method1', name: methodNames[0] },
+    { key: 'method2', name: methodNames[1] },
+    { key: 'method3', name: methodNames[2] }
+  ];
+  const activeMethods = allMethods.filter(m => m.name);
+  const methods = activeMethods.length > 0 ? activeMethods.map(m => m.key) : null;
+  const methodDisplay = {};
+  allMethods.forEach(m => { methodDisplay[m.key] = m.name || capitalize(m.key.replace(/([0-9])/,' $1')); });
+
+  return {
+    ...base,
+    sessionLabel: addictionName || base.sessionLabel,
+    substanceDisplay,
+    methods,
+    methodLabel: base.methodLabel,
+    methodDisplay
+  };
 }
 
 // User input options
@@ -203,7 +250,8 @@ const DEFAULT_SETTINGS = {
   lastAmount: 1.0,
   showCoaching: true,
   graphDays: 7,
-  soundEnabled: true
+  soundEnabled: true,
+  customProfile: { name: '', types: ['', '', ''], methods: ['', '', ''] }
 };
 
 // ========== SOUND SYSTEM ==========
@@ -1010,7 +1058,10 @@ function getUsedEventDetail(evt) {
     icon,
     title,
     detail: [
-      evt.method,
+      // Only show method if it's still in the profile's active methods list
+      matchedProfile.methods && evt.method && matchedProfile.methods.includes(evt.method)
+        ? (matchedProfile.methodDisplay ? (matchedProfile.methodDisplay[evt.method] || evt.method) : evt.method)
+        : null,
       evt.amount != null && `${evt.amount} ${unit}`,
       evt.reason
     ].filter(Boolean).join(' · ')
@@ -1107,6 +1158,13 @@ function renderDate() {
   
   // Update sound button to reflect current setting
   setSoundButton(DB.loadSettings().soundEnabled);
+
+  // Show/hide "Customize Tracker" button in settings
+  const customBar = $('custom-config-bar');
+  if (customBar) {
+    const isCustom = DB.loadSettings().addictionProfile === 'custom';
+    customBar.classList.toggle('hidden', !isCustom);
+  }
 }
 
 function sumHabitCounts(events, habitTypes) {
@@ -1172,11 +1230,12 @@ function buildSinceLastUsedTile(used) {
 
 function buildTodayRatioTile(used) {
   const settings = DB.loadSettings();
+  const profile = getProfile();
   const ratioMap = {
     cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC Ratio Today', substanceName: 'THC' },
     alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor Ratio Today', substanceName: 'Liquor' },
     smoking: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette Ratio Today', substanceName: 'Cigarette' },
-    other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1 Ratio Today', substanceName: 'Type1' }
+    custom: { badFilter: e => e.substance === 'type1', ratioLabel: (profile.substanceDisplay?.type1 || 'Type 1') + ' Ratio Today', substanceName: profile.substanceDisplay?.type1 || 'Type 1' }
   };
   
   const config = ratioMap[settings.addictionProfile];
@@ -1253,12 +1312,12 @@ function renderMetrics() {
 
 function getRatioTile(weekUsed, dayKeys) {
   const settings = DB.loadSettings();
-  
+  const profile = getProfile();
   const ratioMap = {
     cannabis: { badFilter: e => e.substance === 'thc' || e.substance === 'mix', ratioLabel: 'THC Ratio', freeLabel: 'No THC Days' },
     alcohol: { badFilter: e => e.substance === 'liquor', ratioLabel: 'Liquor Ratio', freeLabel: 'No Liquor Days' },
     smoking: { badFilter: e => e.substance === 'cigarette', ratioLabel: 'Cigarette Ratio', freeLabel: 'No Cigarette Days' },
-    other: { badFilter: e => e.substance === 'type1', ratioLabel: 'Type1 Ratio', freeLabel: 'No Use Days' }
+    custom: { badFilter: e => e.substance === 'type1', ratioLabel: (profile.substanceDisplay?.type1 || 'Type 1') + ' Ratio', freeLabel: 'No ' + (profile.substanceDisplay?.type1 || 'Type 1') + ' Days' }
   };
   
   const config = ratioMap[settings.addictionProfile];
@@ -2007,7 +2066,8 @@ function buildUsedChips(evt) {
     chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v])
   ];
   if (profile.methods) {
-    chips.push(chipGroupHTML(profile.methodLabel, 'method', profile.methods, evt.method));
+    const methodFn = profile.methodDisplay ? (v => profile.methodDisplay[v] || capitalize(v)) : undefined;
+    chips.push(chipGroupHTML(profile.methodLabel, 'method', profile.methods, evt.method, methodFn));
   }
   chips.push(
     chipGroupHTML('Amount', 'amount', profile.amounts, evt.amount),
@@ -2111,12 +2171,13 @@ function modalFieldWrap(html) {
 /** Find the addiction profile that owns a given substance key */
 function getProfileForSubstance(substance) {
   const currentKey = DB.loadSettings().addictionProfile || 'cannabis';
-  const current = ADDICTION_PROFILES[currentKey];
-  if (current.substanceDisplay[substance]) return { key: currentKey, profile: current };
+  // For custom profile, use the dynamically-built profile with custom display names
+  const current = currentKey === 'custom' ? getProfile() : ADDICTION_PROFILES[currentKey];
+  if (current && current.substanceDisplay[substance]) return { key: currentKey, profile: current };
   for (const [k, p] of Object.entries(ADDICTION_PROFILES)) {
     if (p.substanceDisplay[substance]) return { key: k, profile: p };
   }
-  return { key: currentKey, profile: current }; // fallback
+  return { key: currentKey, profile: current || ADDICTION_PROFILES.cannabis }; // fallback
 }
 
 function openEditModal(eventId) {
@@ -2130,12 +2191,16 @@ function openEditModal(eventId) {
     used: () => {
       // Use the profile that owns this event's substance (not necessarily the current profile)
       const { key, profile } = getProfileForSubstance(evt.substance);
+      const displayName = key === 'custom' && profile.sessionLabel !== 'Use'
+        ? profile.sessionLabel
+        : key[0].toUpperCase() + key.slice(1);
       const fields = [
-        `<label>Tracking</label><div style="font-size:16px">${key[0].toUpperCase() + key.slice(1)}</div>`,
+        `<label>Tracking</label><div style="font-size:16px">${escapeHTML(displayName)}</div>`,
         chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v])
       ];
       if (profile.methods) {
-        fields.push(chipGroupHTML(profile.methodLabel, 'method', profile.methods, evt.method));
+        const methodFn = profile.methodDisplay ? (v => profile.methodDisplay[v] || capitalize(v)) : undefined;
+        fields.push(chipGroupHTML(profile.methodLabel, 'method', profile.methods, evt.method, methodFn));
       }
       fields.push(
         chipGroupHTML('Amount', 'amount', profile.amounts, evt.amount),
@@ -2349,6 +2414,14 @@ function showOnboarding() {
 function selectProfile(profileKey) {
   const profile = ADDICTION_PROFILES[profileKey];
   if (!profile) return;
+
+  // For custom, show config screen first (onboarding flow)
+  if (profileKey === 'custom') {
+    $('onboarding-overlay').classList.add('hidden');
+    showCustomConfig(false);
+    return;
+  }
+
   const settings = DB.loadSettings();
   
   // Default to 1.0 or closest amount to 1.0 in the profile's amounts array
@@ -2378,6 +2451,81 @@ function selectProfile(profileKey) {
   // Clear existing interval if selectProfile is called multiple times
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => renderMetrics(), METRICS_REFRESH_MS);
+}
+
+/** Whether the custom config was opened from settings (true) or onboarding (false) */
+let customConfigFromSettings = false;
+
+function showCustomConfig(fromSettings) {
+  customConfigFromSettings = fromSettings;
+  const overlay = $('custom-config-overlay');
+  overlay.classList.remove('hidden');
+  
+  // Pre-fill from saved custom profile
+  const settings = DB.loadSettings();
+  const cp = settings.customProfile || { name: '', types: ['', '', ''], methods: ['', '', ''] };
+  
+  $('custom-name').value = cp.name || '';
+  $('custom-type1').value = (cp.types && cp.types[0]) || '';
+  $('custom-type2').value = (cp.types && cp.types[1]) || '';
+  $('custom-type3').value = (cp.types && cp.types[2]) || '';
+  $('custom-method1').value = (cp.methods && cp.methods[0]) || '';
+  $('custom-method2').value = (cp.methods && cp.methods[1]) || '';
+  $('custom-method3').value = (cp.methods && cp.methods[2]) || '';
+
+  // Update button text based on context
+  const btn = $('btn-save-custom');
+  if (btn) btn.textContent = fromSettings ? '✅ Save Changes' : '✅ Save & Continue';
+}
+
+function saveCustomConfig() {
+  const settings = DB.loadSettings();
+  
+  // Read and sanitize inputs
+  const name = $('custom-name').value.trim().slice(0, 24);
+  const types = [
+    $('custom-type1').value.trim().slice(0, 20),
+    $('custom-type2').value.trim().slice(0, 20),
+    $('custom-type3').value.trim().slice(0, 20)
+  ];
+  const methods = [
+    $('custom-method1').value.trim().slice(0, 20),
+    $('custom-method2').value.trim().slice(0, 20),
+    $('custom-method3').value.trim().slice(0, 20)
+  ];
+  
+  settings.customProfile = { name, types, methods };
+  
+  if (customConfigFromSettings) {
+    // From settings — just save and refresh
+    DB._settings = settings;
+    DB.saveSettings();
+    $('custom-config-overlay').classList.add('hidden');
+    render();
+  } else {
+    // From onboarding — complete profile selection
+    const profile = buildCustomProfile(settings);
+    const defaultAmount = profile.amounts.find(a => a >= 1) || profile.amounts[0];
+    
+    settings.addictionProfile = 'custom';
+    settings.lastSubstance = profile.substances[0];
+    settings.lastAmount = defaultAmount;
+    if (profile.methods && profile.methods.length > 0) {
+      settings.lastMethod = profile.methods[0];
+    }
+    
+    DB._settings = settings;
+    DB.saveSettings();
+    
+    $('custom-config-overlay').classList.add('hidden');
+    playSound('resist');
+    
+    calculateAndUpdateWins();
+    bindEvents();
+    render();
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => renderMetrics(), METRICS_REFRESH_MS);
+  }
 }
 
 // ========== MAIN ACTIONS ==========
@@ -2865,6 +3013,8 @@ window.App = {
   clearDatabase,
   clearTodos,
   changeAddiction,
+  showCustomConfig,
+  saveCustomConfig,
   switchTab,
   logWaterFromReminder,
   loadMoreHistory,
