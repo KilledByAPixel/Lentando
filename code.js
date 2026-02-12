@@ -1521,6 +1521,8 @@ function calculateAndUpdateBadges() {
       forDate: badgeData.todayDate,
       appStartDate: badgeData.appStartDate || null
     });
+    // Carry over undo-driven badge for the prior day
+    if ((badgeData.todayUndoCount || 0) > 0) recalcIds.push('second-thought');
     const recalcBadges = [...new Set(recalcIds)].map(id => ({ id, count: 1 }));
 
     // Merge recalculated (complete-day) badges into lifetime
