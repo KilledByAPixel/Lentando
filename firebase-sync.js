@@ -282,10 +282,15 @@ let currentUser = null;
 let authCheckComplete = false;
 
 if (isConfigured) {
-  // Handle Google redirect result (user returning from Google OAuth)
-  getRedirectResult(auth).then((result) => {
+  // Wait for redirect result before deciding if user is logged in
+  // This prevents showing the login screen while Google redirect is completing
+  let redirectChecked = false;
+  let redirectUser = null;
+
+  const redirectPromise = getRedirectResult(auth).then((result) => {
     if (result?.user) {
       console.log('[Auth] Google redirect sign-in successful:', result.user.email);
+      redirectUser = result.user;
       // Check if this is a brand new user
       if (result?._tokenResponse?.isNewUser) {
         showWelcomeMessage(result.user.displayName || result.user.email);
@@ -293,6 +298,8 @@ if (isConfigured) {
     }
   }).catch((err) => {
     console.error('[Auth] Google redirect error:', err);
+  }).finally(() => {
+    redirectChecked = true;
   });
 
   onAuthStateChanged(auth, async (user) => {
@@ -317,9 +324,13 @@ if (isConfigured) {
         console.error('[Sync] Pull failed:', err);
       }
     } else if (!authCheckComplete) {
-      // First auth check complete, user is not logged in
-      authCheckComplete = true;
-      checkAuthAndContinue();
+      // Wait for redirect check to finish before showing login screen
+      // Otherwise we flash the login screen while Google redirect is resolving
+      await redirectPromise;
+      if (!currentUser) {
+        authCheckComplete = true;
+        checkAuthAndContinue();
+      }
     }
   });
 } else {
