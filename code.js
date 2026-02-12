@@ -786,7 +786,10 @@ function saveBadgeData(data) {
 
 // ========== BADGES ENGINE ==========
 const Badges = {
-  calculate(todayEvents, yesterdayEvents) {
+  calculate(todayEvents, yesterdayEvents, options = {}) {
+    const { completedDay = false, forDate = null, appStartDate = null } = options;
+    // forDate: the date key being evaluated (defaults to todayKey())
+    const evaluationDate = forDate || todayKey();
     const badges = [];
     const addBadge = (condition, id) => {
       if (condition) badges.push(id);
@@ -806,7 +809,7 @@ const Badges = {
     if (todayEvents.length > 0) {
       const allKeys = DB.getAllDayKeys(); // sorted most recent first
       for (const key of allKeys) {
-        if (key >= todayKey()) continue; // skip today
+        if (key >= evaluationDate) continue; // skip the day being evaluated
         const prevDayEvents = DB.forDate(key);
         if (prevDayEvents.length > 0) {
           const lastPrevTs = prevDayEvents[prevDayEvents.length - 1].ts;
@@ -908,17 +911,24 @@ const Badges = {
     }
 
     // --- Time-of-day skip badges ---
-    const currentHour = currentDate().getHours();
-    const isPastEarlyHour = currentHour >= EARLY_HOUR;
+    // completedDay=true means the day is over; treat all hours as past
+    const currentHour = completedDay ? 24 : currentDate().getHours();
+    const isPastEarlyHour = completedDay || currentHour >= EARLY_HOUR;
     const noUseInRange = (start, end) => !profileUsed.some(u => {
       const h = getHour(u.ts);
       return h >= start && h < end;
     });
 
     // Check if this is the user's first day using the app
-    const allKeys = DB.getAllDayKeys();
-    const hasEventsBeforeToday = allKeys.some(key => key < todayKey() && DB.forDate(key).length > 0);
-    const isFirstDay = !hasEventsBeforeToday;
+    // Use appStartDate if available (reliable across zero-event days), else fall back to event check
+    let isFirstDay;
+    if (appStartDate) {
+      isFirstDay = evaluationDate === appStartDate;
+    } else {
+      const allKeys = DB.getAllDayKeys();
+      const hasEventsBeforeToday = allKeys.some(key => key < evaluationDate && DB.forDate(key).length > 0);
+      isFirstDay = !hasEventsBeforeToday;
+    }
     
     // On first day only: user must have started before the badge period to be eligible
     const isEligibleForSkipBadge = (end) => {
@@ -941,7 +951,7 @@ const Badges = {
     }
     
     // Good Night — 12+ hour gap crossing today's 6am boundary (overnight break)
-    const today6am = new Date(todayKey() + 'T06:00:00').getTime();
+    const today6am = new Date(evaluationDate + 'T06:00:00').getTime();
     
     // Get all events from yesterday and today
     const yesterdayProfileUsed = yesterdayEvents ? filterProfileUsed(yesterdayEvents) : [];
@@ -1065,6 +1075,12 @@ const Badges = {
       if (dayUsed.length > 0) {
         return Math.floor((now() - dayUsed[dayUsed.length - 1].ts) / (1000 * 60 * 60 * 24));
       }
+    }
+    // No use events ever — measure from appStartDate if available
+    const badgeData = loadBadgeData();
+    if (badgeData.appStartDate) {
+      const startTs = new Date(badgeData.appStartDate + 'T12:00:00').getTime();
+      return Math.floor((now() - startTs) / (1000 * 60 * 60 * 24));
     }
     return 0;
   },
@@ -1478,8 +1494,21 @@ function calculateAndUpdateBadges() {
   // Save yesterday's badges before clearing
   let yesterdayBadges = [];
   if (!isSameDay && badgeData.todayBadges && badgeData.todayDate) {
-    // New day detected - add to lifetime
-    badgeData.todayBadges.forEach(w => {
+    // New day detected — recalculate previous day's badges as a completed day
+    // so time-of-day skip badges (day-skip, evening-skip, etc.) are properly awarded
+    const prevDayEvents = DB.forDate(badgeData.todayDate);
+    const dayBeforePrevDate = new Date(badgeData.todayDate + 'T12:00:00');
+    dayBeforePrevDate.setDate(dayBeforePrevDate.getDate() - 1);
+    const dayBeforePrevEvents = DB.forDate(dateKey(dayBeforePrevDate));
+    const recalcIds = Badges.calculate(prevDayEvents, dayBeforePrevEvents, {
+      completedDay: true,
+      forDate: badgeData.todayDate,
+      appStartDate: badgeData.appStartDate || null
+    });
+    const recalcBadges = [...new Set(recalcIds)].map(id => ({ id, count: 1 }));
+
+    // Merge recalculated (complete-day) badges into lifetime
+    recalcBadges.forEach(w => {
       const current = lifetimeMap.get(w.id) || 0;
       lifetimeMap.set(w.id, current + w.count);
     });
@@ -1491,7 +1520,7 @@ function calculateAndUpdateBadges() {
     
     // Only save as "yesterday's" if exactly 1 day has passed
     if (daysPassed === 1) {
-      yesterdayBadges = [...badgeData.todayBadges];
+      yesterdayBadges = [...recalcBadges];
     }
     // If daysPassed > 1, yesterdayBadges stays empty (cleared)
   } else if (isSameDay) {
@@ -1503,7 +1532,9 @@ function calculateAndUpdateBadges() {
   // Step 2: Calculate fresh today's badges
   const todayEvents = DB.forDate(today);
   const yesterdayEvents = DB.forDate(daysAgoKey(1));
-  const freshTodayIds = Badges.calculate(todayEvents, yesterdayEvents);
+  const freshTodayIds = Badges.calculate(todayEvents, yesterdayEvents, {
+    appStartDate: badgeData.appStartDate || today
+  });
   
   // Add undo badges (tracked separately since undos aren't events)
   const undoCount = isSameDay ? (badgeData.todayUndoCount || 0) : 0;
@@ -1528,7 +1559,8 @@ function calculateAndUpdateBadges() {
     todayBadges: freshTodayBadges,
     yesterdayBadges: yesterdayBadges,
     lifetimeBadges: updatedLifetimeBadges,
-    todayUndoCount: undoCount
+    todayUndoCount: undoCount,
+    appStartDate: badgeData.appStartDate || today  // set once, never changes
   };
   
   saveBadgeData(updatedBadgeData);
