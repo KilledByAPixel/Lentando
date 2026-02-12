@@ -1163,7 +1163,7 @@ function renderDate() {
   // Update dynamic labels based on profile
   const profile = getProfile();
   const usedLabel = $('used-label');
-  if (usedLabel) usedLabel.textContent = profile.sessionLabel;
+  if (usedLabel) usedLabel.textContent = 'Use';
   
   // Update sound button to reflect current setting
   setSoundButton(DB.loadSettings().soundEnabled);
@@ -2184,7 +2184,9 @@ function getProfileForSubstance(substance) {
   const current = currentKey === 'custom' ? getProfile() : ADDICTION_PROFILES[currentKey];
   if (current && current.substanceDisplay[substance]) return { key: currentKey, profile: current };
   for (const [k, p] of Object.entries(ADDICTION_PROFILES)) {
-    if (p.substanceDisplay[substance]) return { key: k, profile: p };
+    // For custom profile, use the dynamically-built version so we get the saved custom name/icons
+    const resolved = k === 'custom' ? buildCustomProfile(DB.loadSettings()) : p;
+    if (resolved.substanceDisplay[substance]) return { key: k, profile: resolved };
   }
   return { key: currentKey, profile: current || ADDICTION_PROFILES.cannabis }; // fallback
 }
