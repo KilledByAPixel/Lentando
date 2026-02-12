@@ -242,6 +242,10 @@ async function pullFromCloud(uid) {
       mergedBadgeData.appStartDate = localBadges.appStartDate < cloudBadges.appStartDate
         ? localBadges.appStartDate : cloudBadges.appStartDate;
     }
+    // Keep the earliest appStartTs from either source
+    if (localBadges.appStartTs && cloudBadges.appStartTs) {
+      mergedBadgeData.appStartTs = Math.min(localBadges.appStartTs, cloudBadges.appStartTs);
+    }
     (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.badges, JSON.stringify(mergedBadgeData));
   }
 

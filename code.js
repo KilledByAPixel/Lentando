@@ -785,7 +785,7 @@ function saveBadgeData(data) {
 // ========== BADGES ENGINE ==========
 const Badges = {
   calculate(todayEvents, yesterdayEvents, options = {}) {
-    const { completedDay = false, forDate = null, appStartDate = null } = options;
+    const { completedDay = false, forDate = null, appStartDate = null, appStartTs = null } = options;
     // forDate: the date key being evaluated (defaults to todayKey())
     const evaluationDate = forDate || todayKey();
     const badges = [];
@@ -931,10 +931,18 @@ const Badges = {
     // On first day only: user must have started before the badge period to be eligible
     const isEligibleForSkipBadge = (end) => {
       if (!isFirstDay) return true; // After first day, always eligible
-      if (todayEvents.length === 0) return false; // No events yet on first day, not eligible
-      const earliestEventTs = Math.min(...todayEvents.map(e => e.ts));
-      const firstEventHour = getHour(earliestEventTs);
-      return firstEventHour <= end; // Must have started before the period end
+      // Use earliest of: app start time (same day) or first event on that day (whichever is earlier)
+      const sameDayStartTs = (appStartDate === evaluationDate) ? appStartTs : null;
+      let earliestTs = null;
+      if (todayEvents.length > 0) {
+        earliestTs = Math.min(...todayEvents.map(e => e.ts));
+      }
+      if (sameDayStartTs != null && (earliestTs == null || sameDayStartTs < earliestTs)) {
+        earliestTs = sameDayStartTs;
+      }
+      if (earliestTs == null) return false; // Shouldn't happen, but stay safe
+      const firstHour = getHour(earliestTs);
+      return firstHour < end; // Must have started before the period end
     };
 
     const skipBadges = [
@@ -1487,12 +1495,22 @@ function calculateAndUpdateBadges() {
   const today = todayKey();
   const isSameDay = badgeData.todayDate === today;
 
-  // Derive app start date if missing: pick earliest event day (falls back to today for brand new users)
-  let appStartDate = badgeData.appStartDate || null;
-  if (!appStartDate) {
-    const allKeys = DB.getAllDayKeys();
-    appStartDate = allKeys.length > 0 ? allKeys[allKeys.length - 1] : today;
+  // Derive app start timestamp/date if missing.
+  // appStartTs captures the first time the app was opened; fallback to earliest event ts; else now.
+  let appStartTs = badgeData.appStartTs || null;
+  if (!appStartTs) {
+    const events = DB.loadEvents();
+    if (events.length > 0) {
+      appStartTs = Math.min(...events.map(e => e.ts));
+    } else {
+      appStartTs = now();
+    }
   }
+
+  // Keep the earliest date between stored appStartDate and derived ts.
+  let appStartDate = badgeData.appStartDate || dateKey(appStartTs);
+  const tsDateKey = dateKey(appStartTs);
+  if (tsDateKey < appStartDate) appStartDate = tsDateKey;
   
   // Step 1: If it's a new day, add yesterday's badges to lifetime before clearing
   const lifetimeMap = new Map();
@@ -1512,7 +1530,8 @@ function calculateAndUpdateBadges() {
     const recalcIds = Badges.calculate(prevDayEvents, dayBeforePrevEvents, {
       completedDay: true,
       forDate: badgeData.todayDate,
-      appStartDate
+      appStartDate,
+      appStartTs
     });
     // Carry over undo-driven badge for the prior day
     if ((badgeData.todayUndoCount || 0) > 0) recalcIds.push('second-thought');
@@ -1544,7 +1563,8 @@ function calculateAndUpdateBadges() {
   const todayEvents = DB.forDate(today);
   const yesterdayEvents = DB.forDate(daysAgoKey(1));
   const freshTodayIds = Badges.calculate(todayEvents, yesterdayEvents, {
-    appStartDate
+    appStartDate,
+    appStartTs
   });
   
   // Add undo badges (tracked separately since undos aren't events)
@@ -1571,7 +1591,8 @@ function calculateAndUpdateBadges() {
     yesterdayBadges: yesterdayBadges,
     lifetimeBadges: updatedLifetimeBadges,
     todayUndoCount: undoCount,
-    appStartDate
+    appStartDate,
+    appStartTs
   };
   
   saveBadgeData(updatedBadgeData);
@@ -2071,6 +2092,7 @@ function importJSON(inputEl) {
           yesterdayBadges: badgeData.yesterdayBadges,
           todayUndoCount: badgeData.todayUndoCount || 0,
           appStartDate: badgeData.appStartDate,
+          appStartTs: badgeData.appStartTs,
           lifetimeBadges: Array.from(lifetimeMap.entries())
             .filter(([, count]) => count > 0)
             .map(([id, count]) => ({ id, count }))
