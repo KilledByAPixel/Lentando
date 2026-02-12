@@ -819,33 +819,27 @@ const Badges = {
     const settings = DB.loadSettings();
 
     // --- Session-based badges ---
-    for (let i = 0; i < resisted.length; i++) addBadge(true, 'resist');
-
-    const urgeSurfedCount = countUrgeSurfed(resisted, used);
-    for (let i = 0; i < urgeSurfedCount; i++) addBadge(true, 'urge-surfed');
-
-    const swapCount = countSwapCompleted(resisted, habits);
-    for (let i = 0; i < swapCount; i++) addBadge(true, 'swap-completed');
+    addBadge(resisted.length > 0, 'resist');
+    addBadge(countUrgeSurfed(resisted, used) > 0, 'urge-surfed');
+    addBadge(countSwapCompleted(resisted, habits) > 0, 'swap-completed');
 
     // --- Resist awareness badges ---
-    for (const r of resisted) {
-      addBadge(r.intensity != null, 'intensity-logged');
-      addBadge(r.trigger != null, 'trigger-noted');
-      addBadge(r.intensity != null && r.trigger != null, 'full-report');
-      addBadge(r.intensity >= 4, 'tough-resist');
-    }
+    addBadge(resisted.some(r => r.intensity != null), 'intensity-logged');
+    addBadge(resisted.some(r => r.trigger != null), 'trigger-noted');
+    addBadge(resisted.some(r => r.intensity != null && r.trigger != null), 'full-report');
+    addBadge(resisted.some(r => r.intensity >= 4), 'tough-resist');
 
     // Harm reduction vape badge
     const isCannabis = settings.addictionProfile === 'cannabis';
     const isNicotine = settings.addictionProfile === 'smoking';
     
-    let vapeCount = 0;
+    let hasVape = false;
     if (isCannabis) {
-      vapeCount = profileUsed.filter(e => e.method === 'vape').length;
+      hasVape = profileUsed.some(e => e.method === 'vape');
     } else if (isNicotine) {
-      vapeCount = profileUsed.filter(e => e.substance === 'vape').length;
+      hasVape = profileUsed.some(e => e.substance === 'vape');
     }
-    addBadge(vapeCount > 0, 'harm-reduction-vape');
+    addBadge(hasVape, 'harm-reduction-vape');
 
     // Cannabis-specific badges
     if (isCannabis) {
