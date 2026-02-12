@@ -173,7 +173,6 @@ const GAP_MILESTONES = [1, 2, 4, 8, 12];
 const TBREAK_MILESTONES = [1, 7, 14, 21, 30, 365];
 const APP_STREAK_MILESTONES = [2, 7, 30, 365];
 const EARLY_HOUR = 6;
-const AFTERNOON_HOUR = 12;
 const MAX_STREAK_DAYS = 60;
 const LOW_DAY_THRESHOLD = 2;
 
@@ -1339,7 +1338,6 @@ function renderMetrics() {
   const events   = DB.forDate(todayKey());
   const profile  = getProfile();
   const used     = filterProfileUsed(events);
-  const resisted = filterByType(events, 'resisted');
   const totalAmt = sumAmount(used);
 
   const exerciseEvents = getHabits(events, 'exercise');
@@ -1358,18 +1356,6 @@ function renderMetrics() {
     const exerciseSub = exerciseEvents.length > 0 ? `${exerciseEvents.length} Exercise Actions` : '';
     fourthTile = tileHTML(allHabits, 'Healthy Actions', exerciseSub, 'Healthy habits and exercise minutes logged today');
   }
-
-  // Calculate longest resist streak today (max consecutive resists between uses)
-  let maxResistStreak = 0, currentResistStreak = 0;
-  for (const e of events) {
-    if (e.type === 'resisted') {
-      currentResistStreak++;
-      if (currentResistStreak > maxResistStreak) maxResistStreak = currentResistStreak;
-    } else if (e.type === 'used') {
-      currentResistStreak = 0;
-    }
-  }
-  const resistSub = maxResistStreak > 1 ? `Longest Streak: ${maxResistStreak}` : '';
 
   // Show sessions today as subtitle for the first tile
   const sessionsSub = used.length > 0 ? `${used.length} Sessions` : '';
