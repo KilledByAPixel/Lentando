@@ -2453,14 +2453,22 @@ function selectProfile(profileKey) {
 }
 
 /** Emoji picker helpers */
-const CUSTOM_ICON_OPTIONS = ['⚡','☕','🥤','🍬','🍔','🍩','🎮','🃏','🎰','💊','📱','📺','🖥️','🛒','💸'];
+const CUSTOM_ICON_OPTIONS = ['⚡','☕','🥤','🍬','🍩','🍔','🎮','🎲','🃏','🎰','💊','📱','📺','🖥️','🛒','💸'];
 
 function setActiveIcon(containerId, emoji) {
   const container = $(containerId);
   if (!container) return;
+  let found = false;
   container.querySelectorAll('.icon-option').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent === emoji);
+    const match = btn.textContent === emoji;
+    btn.classList.toggle('active', match);
+    if (match) found = true;
   });
+  // If saved icon was removed from options, default to first icon
+  if (!found) {
+    const first = container.querySelector('.icon-option');
+    if (first) first.classList.add('active');
+  }
 }
 
 function getActiveIcon(containerId) {
