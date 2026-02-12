@@ -2025,8 +2025,8 @@ function importJSON(inputEl) {
         if (validTodos.length > 0) saveTodos(validTodos);
       }
 
-      // Restore settings if no profile configured (e.g., after clear + reimport)
-      if (data.settings && data.settings.addictionProfile && !DB.loadSettings().addictionProfile) {
+      // Restore settings including addiction profile from export
+      if (data.settings && data.settings.addictionProfile) {
         const settings = DB.loadSettings();
         Object.assign(settings, data.settings);
         DB._settings = settings;
