@@ -111,7 +111,7 @@ function buildCustomProfile(settings) {
 // User input options
 const REASONS = ['habit', 'stress', 'break', 'social', 'sleep', 'pain'];
 const INTENSITIES = [1, 2, 3, 4, 5];
-const EXERCISE_DURATIONS = [0, 1, 5, 10, 15, 20, 30, 45, 60];
+const EXERCISE_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60];
 const OPTIONAL_FIELDS = new Set(['reason', 'trigger']);
 
 // Timeouts and durations
@@ -1685,7 +1685,7 @@ const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)) },
   { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length },
   { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0) },
-  { label: '🌬️ Meditation Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0) },
+  { label: '🌬️ Breathing Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0) },
   { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length },
 ];
 
@@ -2714,7 +2714,7 @@ function logHabit(habit, minutes) {
   hapticFeedback();
   const label = HABIT_LABELS[habit] || habit;
   const icon = HABIT_ICONS[habit] || '';
-  const message = (HABIT_SHOW_CHIPS[habit] && minutes && minutes > 0) ? `${icon} Logged ${label} +${minutes} min` : `${icon} Logged ${label}`;
+  const message = (habit === 'exercise' && minutes && minutes > 0) ? `${icon} Logged ${label} +${minutes} min` : `${icon} Logged ${label}`;
   showToast(message);
 }
 
