@@ -596,6 +596,34 @@ header .date { font-size: 14px; color: var(--muted); }
   color: var(--muted);
   opacity: 0.6;
 }
+.icon-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+.icon-option {
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  border: 2px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.icon-option:hover { transform: scale(1.1); }
+.icon-option.active {
+  border-color: var(--primary);
+  background: var(--primary-light, rgba(99,102,241,0.15));
+  transform: scale(1.1);
+}
 
 /* Login screen inputs */
 #login-form {
@@ -1427,7 +1455,7 @@ header .date { font-size: 14px; color: var(--muted); }
   <div class="onboarding-sheet">
     <div class="onboarding-header">
       <h1><span class="brand">Customize</span></h1>
-      <p class="tagline">set up your custom tracker</p>
+      <p class="tagline">build your custom tracker</p>
     </div>
     <div class="onboarding-content">
       <div class="custom-config-form">
@@ -1435,19 +1463,22 @@ header .date { font-size: 14px; color: var(--muted); }
           <label for="custom-name">Addiction / Habit Name</label>
           <input type="text" id="custom-name" maxlength="24" placeholder="e.g. Caffeine, Opioids, Porn, etc.">
         </div>
-        <div class="section-label" style="margin-top:16px;margin-bottom:8px">Substance Types</div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Name up to 3 types. Leave blank for defaults.</p>
+        <div class="section-label" style="margin-top:16px;margin-bottom:4px">Substance Types</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:6px">Name up to 3 types. Leave blank for defaults.</p>
         <div class="custom-field">
           <input type="text" id="custom-type1" maxlength="20" placeholder="Type 1">
+          <div class="icon-picker" id="custom-icon1"></div>
         </div>
         <div class="custom-field">
           <input type="text" id="custom-type2" maxlength="20" placeholder="Type 2">
+          <div class="icon-picker" id="custom-icon2"></div>
         </div>
         <div class="custom-field">
           <input type="text" id="custom-type3" maxlength="20" placeholder="Type 3">
+          <div class="icon-picker" id="custom-icon3"></div>
         </div>
-        <div class="section-label" style="margin-top:16px;margin-bottom:8px">Methods</div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Name up to 3 methods. Leave blank to hide.</p>
+        <div class="section-label" style="margin-top:16px;margin-bottom:4px">Methods</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:6px">Name up to 3 methods. Leave blank to hide.</p>
         <div class="custom-field">
           <input type="text" id="custom-method1" maxlength="20" placeholder="Method 1">
         </div>

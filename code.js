@@ -83,12 +83,20 @@ function buildCustomProfile(settings) {
   const typeNames = cp.types || ['', '', ''];
   const methodNames = cp.methods || ['', '', ''];
   const addictionName = cp.name || '';
+  const customIcons = cp.icons || ['⚡', '⚡', '⚡'];
 
   // Build substances list — keep all 3 slots, use defaults for blanks
   const substanceDisplay = {
     type1: typeNames[0] || 'Type 1',
     type2: typeNames[1] || 'Type 2',
     type3: typeNames[2] || 'Type 3'
+  };
+
+  // Build custom icons
+  const icons = {
+    type1: customIcons[0] || '⚡',
+    type2: customIcons[1] || '⚡',
+    type3: customIcons[2] || '⚡'
   };
 
   // Build methods list — only include methods with names; null if all blank (hides method UI)
@@ -106,6 +114,7 @@ function buildCustomProfile(settings) {
     ...base,
     sessionLabel: addictionName || base.sessionLabel,
     substanceDisplay,
+    icons,
     methods,
     methodLabel: base.methodLabel,
     methodDisplay
@@ -251,7 +260,7 @@ const DEFAULT_SETTINGS = {
   showCoaching: true,
   graphDays: 7,
   soundEnabled: true,
-  customProfile: { name: '', types: ['', '', ''], methods: ['', '', ''] }
+  customProfile: { name: '', types: ['', '', ''], methods: ['', '', ''], icons: ['⚡', '⚡', '⚡'] }
 };
 
 // ========== SOUND SYSTEM ==========
@@ -2453,6 +2462,32 @@ function selectProfile(profileKey) {
   timerInterval = setInterval(() => renderMetrics(), METRICS_REFRESH_MS);
 }
 
+/** Emoji picker helpers */
+const CUSTOM_ICON_OPTIONS = ['⚡','☕','🥤','🍬','🍔','🍩','🎮','🃏','🎰','💊','💉','📱','📺','🛒','💸'];
+
+function setActiveIcon(containerId, emoji) {
+  const container = $(containerId);
+  if (!container) return;
+  container.querySelectorAll('.icon-option').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === emoji);
+  });
+}
+
+function getActiveIcon(containerId) {
+  const container = $(containerId);
+  if (!container) return '⚡';
+  const active = container.querySelector('.icon-option.active');
+  return active ? active.textContent : '⚡';
+}
+
+function buildIconPicker(containerId) {
+  const container = $(containerId);
+  if (!container) return;
+  container.innerHTML = CUSTOM_ICON_OPTIONS.map(e =>
+    `<button type="button" class="icon-option" onclick="this.parentNode.querySelectorAll('.icon-option').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${e}</button>`
+  ).join('');
+}
+
 /** Whether the custom config was opened from settings (true) or onboarding (false) */
 let customConfigFromSettings = false;
 
@@ -2461,9 +2496,14 @@ function showCustomConfig(fromSettings) {
   const overlay = $('custom-config-overlay');
   overlay.classList.remove('hidden');
   
+  // Build icon pickers
+  buildIconPicker('custom-icon1');
+  buildIconPicker('custom-icon2');
+  buildIconPicker('custom-icon3');
+  
   // Pre-fill from saved custom profile
   const settings = DB.loadSettings();
-  const cp = settings.customProfile || { name: '', types: ['', '', ''], methods: ['', '', ''] };
+  const cp = settings.customProfile || { name: '', types: ['', '', ''], methods: ['', '', ''], icons: ['⚡', '⚡', '⚡'] };
   
   $('custom-name').value = cp.name || '';
   $('custom-type1').value = (cp.types && cp.types[0]) || '';
@@ -2472,6 +2512,12 @@ function showCustomConfig(fromSettings) {
   $('custom-method1').value = (cp.methods && cp.methods[0]) || '';
   $('custom-method2').value = (cp.methods && cp.methods[1]) || '';
   $('custom-method3').value = (cp.methods && cp.methods[2]) || '';
+
+  // Set icon selections
+  const icons = cp.icons || ['⚡', '⚡', '⚡'];
+  setActiveIcon('custom-icon1', icons[0]);
+  setActiveIcon('custom-icon2', icons[1]);
+  setActiveIcon('custom-icon3', icons[2]);
 
   // Update button text based on context
   const btn = $('btn-save-custom');
@@ -2493,8 +2539,13 @@ function saveCustomConfig() {
     $('custom-method2').value.trim().slice(0, 20),
     $('custom-method3').value.trim().slice(0, 20)
   ];
+  const icons = [
+    getActiveIcon('custom-icon1'),
+    getActiveIcon('custom-icon2'),
+    getActiveIcon('custom-icon3')
+  ];
   
-  settings.customProfile = { name, types, methods };
+  settings.customProfile = { name, types, methods, icons };
   
   if (customConfigFromSettings) {
     // From settings — just save and refresh
