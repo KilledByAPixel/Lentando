@@ -551,6 +551,7 @@ function escapeHTMLSync(str) {
 // ========== DEBOUNCED SYNC ==========
 
 let _syncTimer = null;
+let _manualSyncInFlight = false;
 
 function debouncedSync() {
   if (!currentUser) return;
@@ -677,6 +678,11 @@ window.FirebaseSync = {
       alert('You are offline. Changes are saved locally and will sync when you reconnect.');
       return;
     }
+    if (_manualSyncInFlight) {
+      alert('Sync is already in progress. Please wait a moment.');
+      return;
+    }
+    _manualSyncInFlight = true;
     try {
       await pullFromCloud(currentUser.uid);
       
@@ -698,6 +704,8 @@ window.FirebaseSync = {
       } else {
         alert('Sync failed: ' + (msg || 'Unknown error'));
       }
+    } finally {
+      _manualSyncInFlight = false;
     }
   },
 
