@@ -466,34 +466,15 @@ const DB = {
       if (storedVersion >= DATA_VERSION) return;
 
       // Brand-new install — no existing data to migrate, just stamp the version
-      if (raw === null && !localStorage.getItem(STORAGE_EVENTS) && !localStorage.getItem(STORAGE_BADGES) && !localStorage.getItem('ht_wins')) {
+      if (raw === null && !localStorage.getItem(STORAGE_EVENTS) && !localStorage.getItem(STORAGE_BADGES)) {
         safeSetItem(STORAGE_VERSION, DATA_VERSION.toString());
         return;
       }
 
       console.log(`Migrating data from version ${storedVersion} to ${DATA_VERSION}`);
 
-      // v2: Rename ht_wins → ht_badges, rename internal property names
-      if (storedVersion < 2) {
-        const oldData = localStorage.getItem('ht_wins');
-        if (oldData) {
-          try {
-            const parsed = JSON.parse(oldData);
-            // Rename properties: todayWins→todayBadges, yesterdayWins→yesterdayBadges, lifetimeWins→lifetimeBadges
-            const migrated = {
-              todayDate: parsed.todayDate || null,
-              todayBadges: parsed.todayBadges || parsed.todayWins || [],
-              yesterdayBadges: parsed.yesterdayBadges || parsed.yesterdayWins || [],
-              lifetimeBadges: parsed.lifetimeBadges || parsed.lifetimeWins || [],
-              todayUndoCount: parsed.todayUndoCount || 0
-            };
-            safeSetItem(STORAGE_BADGES, JSON.stringify(migrated));
-          } catch (e) {
-            console.warn('Failed to migrate ht_wins data:', e);
-          }
-          localStorage.removeItem('ht_wins');
-        }
-      }
+      // Clean up any leftover old key
+      localStorage.removeItem('ht_wins');
 
       safeSetItem(STORAGE_VERSION, DATA_VERSION.toString());
     } catch (e) {
