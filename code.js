@@ -1500,6 +1500,13 @@ function calculateAndUpdateBadges() {
   const badgeData = loadBadgeData();
   const today = todayKey();
   const isSameDay = badgeData.todayDate === today;
+
+  // Derive app start date if missing: pick earliest event day (falls back to today for brand new users)
+  let appStartDate = badgeData.appStartDate || null;
+  if (!appStartDate) {
+    const allKeys = DB.getAllDayKeys();
+    appStartDate = allKeys.length > 0 ? allKeys[allKeys.length - 1] : today;
+  }
   
   // Step 1: If it's a new day, add yesterday's badges to lifetime before clearing
   const lifetimeMap = new Map();
@@ -1519,7 +1526,7 @@ function calculateAndUpdateBadges() {
     const recalcIds = Badges.calculate(prevDayEvents, dayBeforePrevEvents, {
       completedDay: true,
       forDate: badgeData.todayDate,
-      appStartDate: badgeData.appStartDate || null
+      appStartDate
     });
     // Carry over undo-driven badge for the prior day
     if ((badgeData.todayUndoCount || 0) > 0) recalcIds.push('second-thought');
@@ -1551,7 +1558,7 @@ function calculateAndUpdateBadges() {
   const todayEvents = DB.forDate(today);
   const yesterdayEvents = DB.forDate(daysAgoKey(1));
   const freshTodayIds = Badges.calculate(todayEvents, yesterdayEvents, {
-    appStartDate: badgeData.appStartDate || today
+    appStartDate
   });
   
   // Add undo badges (tracked separately since undos aren't events)
@@ -1578,7 +1585,7 @@ function calculateAndUpdateBadges() {
     yesterdayBadges: yesterdayBadges,
     lifetimeBadges: updatedLifetimeBadges,
     todayUndoCount: undoCount,
-    appStartDate: badgeData.appStartDate || today  // set once, never changes
+    appStartDate
   };
   
   saveBadgeData(updatedBadgeData);
