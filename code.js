@@ -19,30 +19,36 @@ function currentDate() {
 
 // Debug functions are only exposed on window when debugMode is true
 if (debugMode) {
-  window.debugAdvanceTime = (hours) => {
+
+  function debugAdvanceTime(hours) {
     _debugTimeOffset += hours * 60 * 60 * 1000;
     console.log(`⏰ Time advanced by ${hours}h. Virtual date: ${currentDate().toLocaleString()}`);
     render();
   };
 
-  window.debugSetDate = (dateString) => {
+  function debugSetDate(dateString) {
     const targetTime = new Date(dateString).getTime();
     _debugTimeOffset = targetTime - Date.now();
     console.log(`⏰ Time set to ${currentDate().toLocaleString()}`);
     render();
   };
 
-  window.debugResetTime = () => {
+  function debugResetTime() {
     _debugTimeOffset = 0;
     console.log('⏰ Time reset to real time');
     render();
   };
 
-  window.debugGetTime = () => {
+  function debugGetTime() {
     console.log(`Current virtual time: ${currentDate().toLocaleString()}`);
     console.log(`Offset: ${_debugTimeOffset / (1000 * 60 * 60)} hours`);
     return currentDate();
   };
+  
+  window.debugAdvanceTime = debugAdvanceTime;
+  window.debugSetDate = debugSetDate;
+  window.debugResetTime = debugResetTime;
+  window.debugGetTime = debugGetTime;
 }
 
 // ========== CONSTANTS ==========
@@ -3193,221 +3199,221 @@ window.App = {
 // Only defined when debugMode is true
 if (debugMode) {
 
-function generateAllTestData() {
-  console.log('🎲 Generating comprehensive test data...');
-  generateTestData(80);
-  generateTestHabits(15);
-  generateTestResists(40);
-  generateTestBadges();
-  console.log('✅ All test data generated! Reload the page to see results.');
-}
-
-function generateTestData(numEvents = 100) {
-  const profile = getProfile();
-  const nowTs = now();
-  const thirtyDaysAgo = nowTs - (30 * 24 * 60 * 60 * 1000);
-  DB.loadEvents();
-  
-  console.log(`Generating ${numEvents} random usage events...`);
-  
-  for (let i = 0; i < numEvents; i++) {
-    // Random timestamp within past 30 days
-    const timestamp = thirtyDaysAgo + Math.random() * (nowTs - thirtyDaysAgo);
-    
-    // Random substance, method, amount
-    const substance = profile.substances[Math.floor(Math.random() * profile.substances.length)];
-    const method = profile.methods ? profile.methods[Math.floor(Math.random() * profile.methods.length)] : null;
-    const amount = profile.amounts[Math.floor(Math.random() * profile.amounts.length)];
-    const reason = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
-    
-    const evt = {
-      id: uid(),
-      type: 'used',
-      ts: timestamp,
-      substance,
-      method,
-      amount,
-      reason,
-    };
-    
-    DB._events.push(evt);
+  function generateAllTestData() {
+    console.log('🎲 Generating comprehensive test data...');
+    generateTestData(80);
+    generateTestHabits(15);
+    generateTestResists(40);
+    generateTestBadges();
+    console.log('✅ All test data generated! Reload the page to see results.');
   }
-  
-  // Sort events by timestamp
-  DB._events.sort(sortByTime);
-  DB.saveEvents();
-  
-  console.log(`✅ Added ${numEvents} usage events. Reload the page to see updated data.`);
-}
 
-function generateTestHabits(numPerHabit = 20) {
-  const habitTypes = ['water', 'breaths', 'clean', 'exercise', 'outside'];
-  const nowTs = now();
-  const thirtyDaysAgo = nowTs - (30 * 24 * 60 * 60 * 1000);
-  DB.loadEvents();
-  
-  console.log(`Generating ${numPerHabit} events for each habit type...`);
-  
-  for (const habit of habitTypes) {
-    for (let i = 0; i < numPerHabit; i++) {
+  function generateTestData(numEvents = 100) {
+    const profile = getProfile();
+    const nowTs = now();
+    const thirtyDaysAgo = nowTs - (30 * 24 * 60 * 60 * 1000);
+    DB.loadEvents();
+    
+    console.log(`Generating ${numEvents} random usage events...`);
+    
+    for (let i = 0; i < numEvents; i++) {
+      // Random timestamp within past 30 days
       const timestamp = thirtyDaysAgo + Math.random() * (nowTs - thirtyDaysAgo);
-      const minutes = HABIT_SHOW_CHIPS[habit]
-        ? EXERCISE_DURATIONS[Math.floor(Math.random() * EXERCISE_DURATIONS.length)]
-        : null;
+      
+      // Random substance, method, amount
+      const substance = profile.substances[Math.floor(Math.random() * profile.substances.length)];
+      const method = profile.methods ? profile.methods[Math.floor(Math.random() * profile.methods.length)] : null;
+      const amount = profile.amounts[Math.floor(Math.random() * profile.amounts.length)];
+      const reason = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
       
       const evt = {
         id: uid(),
-        type: 'habit',
+        type: 'used',
         ts: timestamp,
-        habit,
-        minutes
+        substance,
+        method,
+        amount,
+        reason,
       };
       
       DB._events.push(evt);
     }
+    
+    // Sort events by timestamp
+    DB._events.sort(sortByTime);
+    DB.saveEvents();
+    
+    console.log(`✅ Added ${numEvents} usage events. Reload the page to see updated data.`);
   }
-  
-  // Sort events by timestamp
-  DB._events.sort(sortByTime);
-  DB.saveEvents();
-  
-  console.log(`✅ Added ${numPerHabit * habitTypes.length} habit events. Reload the page to see updated data.`);
-}
 
-function generateTestResists(numEvents = 50) {
-  const nowTs = now();
-  const thirtyDaysAgo = nowTs - (30 * 24 * 60 * 60 * 1000);
-  DB.loadEvents();
-  
-  console.log(`Generating ${numEvents} random resist events...`);
-  
-  for (let i = 0; i < numEvents; i++) {
-    const timestamp = thirtyDaysAgo + Math.random() * (nowTs - thirtyDaysAgo);
-    const intensity = Math.random() > 0.2 ? INTENSITIES[Math.floor(Math.random() * INTENSITIES.length)] : null;
-    const trigger = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
+  function generateTestHabits(numPerHabit = 20) {
+    const habitTypes = ['water', 'breaths', 'clean', 'exercise', 'outside'];
+    const nowTs = now();
+    const thirtyDaysAgo = nowTs - (30 * 24 * 60 * 60 * 1000);
+    DB.loadEvents();
+    
+    console.log(`Generating ${numPerHabit} events for each habit type...`);
+    
+    for (const habit of habitTypes) {
+      for (let i = 0; i < numPerHabit; i++) {
+        const timestamp = thirtyDaysAgo + Math.random() * (nowTs - thirtyDaysAgo);
+        const minutes = HABIT_SHOW_CHIPS[habit]
+          ? EXERCISE_DURATIONS[Math.floor(Math.random() * EXERCISE_DURATIONS.length)]
+          : null;
+        
+        const evt = {
+          id: uid(),
+          type: 'habit',
+          ts: timestamp,
+          habit,
+          minutes
+        };
+        
+        DB._events.push(evt);
+      }
+    }
+    
+    // Sort events by timestamp
+    DB._events.sort(sortByTime);
+    DB.saveEvents();
+    
+    console.log(`✅ Added ${numPerHabit * habitTypes.length} habit events. Reload the page to see updated data.`);
+  }
+
+  function generateTestResists(numEvents = 50) {
+    const nowTs = now();
+    const thirtyDaysAgo = nowTs - (30 * 24 * 60 * 60 * 1000);
+    DB.loadEvents();
+    
+    console.log(`Generating ${numEvents} random resist events...`);
+    
+    for (let i = 0; i < numEvents; i++) {
+      const timestamp = thirtyDaysAgo + Math.random() * (nowTs - thirtyDaysAgo);
+      const intensity = Math.random() > 0.2 ? INTENSITIES[Math.floor(Math.random() * INTENSITIES.length)] : null;
+      const trigger = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
+      
+      const evt = {
+        id: uid(),
+        type: 'resisted',
+        ts: timestamp,
+        intensity,
+        trigger
+      };
+      
+      DB._events.push(evt);
+    }
+    
+    // Sort events by timestamp
+    DB._events.sort(sortByTime);
+    DB.saveEvents();
+    
+    console.log(`✅ Added ${numEvents} resist events. Reload the page to see updated data.`);
+  }
+
+  function generateTestBadges() {
+    const badgeIds = Object.keys(BADGE_DEFINITIONS);
+    // Exclude rare/milestone badges to keep it realistic
+    const excludeIds = new Set(['year-streak', 'month-streak', 'tbreak-365d', 'tbreak-30d', 'tbreak-21d']);
+    // Common badges get higher counts, rare badges get lower
+    const commonBadges = new Set(['resist', 'mindful', 'dose-half', 'harm-reduction-vape', 'hydrated',
+      'habit-stack', 'good-start', 'app-streak', 'gap-1h', 'gap-2h']);
+    const eligibleIds = badgeIds.filter(id => !excludeIds.has(id));
+    
+    console.log('Generating random lifetime badges...');
+    
+    // Start fresh — only keep existing lifetime badges, clear today tracking
+    // so calculateAndUpdateBadges won't subtract stale todayBadges from the new lifetime.
+    const badgeData = loadBadgeData();
+    const lifetimeMap = new Map();
+    badgeData.lifetimeBadges.forEach(w => lifetimeMap.set(w.id, w.count));
+    
+    for (const id of eligibleIds) {
+      // ~80% chance each badge has been earned at least once
+      if (Math.random() < 0.8) {
+        // Common badges: 10-50 count, rare badges: 1-10
+        const count = commonBadges.has(id)
+          ? Math.floor(Math.random() * 40) + 10
+          : Math.floor(Math.random() * 10) + 1;
+        lifetimeMap.set(id, (lifetimeMap.get(id) || 0) + count);
+      }
+    }
+    
+    // Generate yesterday's badges (subset of eligible badges)
+    console.log('Generating random yesterday badges...');
+    const fakeYesterdayBadges = [];
+    // Pick 5-12 random badges for yesterday
+    const numYesterdayBadges = Math.floor(Math.random() * 8) + 5; // 5-12
+    const shuffledEligible = [...eligibleIds].sort(() => Math.random() - 0.5);
+    
+    for (let i = 0; i < Math.min(numYesterdayBadges, shuffledEligible.length); i++) {
+      const id = shuffledEligible[i];
+      // Most badges earned once, some 2-3 times
+      const count = Math.random() < 0.7 ? 1 : Math.floor(Math.random() * 2) + 2;
+      fakeYesterdayBadges.push({ id, count });
+    }
+    
+    // Set todayDate to yesterday, and put the badges in todayBadges
+    // When the app loads "today", it will auto-move them to yesterdayBadges
+    const updatedData = {
+      todayDate: daysAgoKey(1),  // Yesterday's date
+      todayBadges: fakeYesterdayBadges,  // These will become yesterday's badges on reload
+      yesterdayBadges: [],
+      todayUndoCount: 0,
+      lifetimeBadges: Array.from(lifetimeMap.entries())
+        .map(([id, count]) => ({ id, count }))
+        .filter(w => w.count > 0)
+    };
+    
+    saveBadgeData(updatedData);
+    
+    // Verify save
+    const verify = loadBadgeData();
+    console.log(`✅ Added random badges for ${updatedData.lifetimeBadges.length} lifetime badge types and ${fakeYesterdayBadges.length} yesterday badges.`);
+    console.log('Generated as "today" badges for yesterday\'s date - will auto-move to yesterday on reload');
+    console.log('Sample badges:', verify.todayBadges.slice(0, 5));
+    console.log('Sample lifetime badges:', verify.lifetimeBadges.slice(0, 5));
+  }
+
+  function generateUseEvent(daysAgo) {
+    const settings = DB.loadSettings();
+    const profile = getProfile();
+    
+    // Parse input
+    const days = parseInt(daysAgo);
+    if (isNaN(days) || days < 0) {
+      showToast('❌ Please enter a valid number of days');
+      return;
+    }
+    
+    // Calculate timestamp - random time within the target day
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const targetDate = currentDate();
+    targetDate.setDate(targetDate.getDate() - days);
+    targetDate.setHours(0, 0, 0, 0); // Start of day
+    const randomMs = Math.floor(Math.random() * msPerDay); // Random time within the day
+    const targetTimestamp = targetDate.getTime() + randomMs;
+    
+    // Create event with current settings
+    const substance = settings.lastSubstance || profile.substances[0];
+    const method = profile.methods ? (settings.lastMethod || profile.methods[0]) : null;
+    const amount = settings.lastAmount || profile.amounts[0];
     
     const evt = {
       id: uid(),
-      type: 'resisted',
-      ts: timestamp,
-      intensity,
-      trigger
+      type: 'used',
+      ts: targetTimestamp,
+      substance,
+      method,
+      amount
     };
     
-    DB._events.push(evt);
+    DB.addEvent(evt);
+    calculateAndUpdateBadges();
+    render();
+    
+    console.log(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago:`, evt);
+    showToast(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago`);
   }
-  
-  // Sort events by timestamp
-  DB._events.sort(sortByTime);
-  DB.saveEvents();
-  
-  console.log(`✅ Added ${numEvents} resist events. Reload the page to see updated data.`);
-}
-
-function generateTestBadges() {
-  const badgeIds = Object.keys(BADGE_DEFINITIONS);
-  // Exclude rare/milestone badges to keep it realistic
-  const excludeIds = new Set(['year-streak', 'month-streak', 'tbreak-365d', 'tbreak-30d', 'tbreak-21d']);
-  // Common badges get higher counts, rare badges get lower
-  const commonBadges = new Set(['resist', 'mindful', 'dose-half', 'harm-reduction-vape', 'hydrated',
-    'habit-stack', 'good-start', 'app-streak', 'gap-1h', 'gap-2h']);
-  const eligibleIds = badgeIds.filter(id => !excludeIds.has(id));
-  
-  console.log('Generating random lifetime badges...');
-  
-  // Start fresh — only keep existing lifetime badges, clear today tracking
-  // so calculateAndUpdateBadges won't subtract stale todayBadges from the new lifetime.
-  const badgeData = loadBadgeData();
-  const lifetimeMap = new Map();
-  badgeData.lifetimeBadges.forEach(w => lifetimeMap.set(w.id, w.count));
-  
-  for (const id of eligibleIds) {
-    // ~80% chance each badge has been earned at least once
-    if (Math.random() < 0.8) {
-      // Common badges: 10-50 count, rare badges: 1-10
-      const count = commonBadges.has(id)
-        ? Math.floor(Math.random() * 40) + 10
-        : Math.floor(Math.random() * 10) + 1;
-      lifetimeMap.set(id, (lifetimeMap.get(id) || 0) + count);
-    }
-  }
-  
-  // Generate yesterday's badges (subset of eligible badges)
-  console.log('Generating random yesterday badges...');
-  const fakeYesterdayBadges = [];
-  // Pick 5-12 random badges for yesterday
-  const numYesterdayBadges = Math.floor(Math.random() * 8) + 5; // 5-12
-  const shuffledEligible = [...eligibleIds].sort(() => Math.random() - 0.5);
-  
-  for (let i = 0; i < Math.min(numYesterdayBadges, shuffledEligible.length); i++) {
-    const id = shuffledEligible[i];
-    // Most badges earned once, some 2-3 times
-    const count = Math.random() < 0.7 ? 1 : Math.floor(Math.random() * 2) + 2;
-    fakeYesterdayBadges.push({ id, count });
-  }
-  
-  // Set todayDate to yesterday, and put the badges in todayBadges
-  // When the app loads "today", it will auto-move them to yesterdayBadges
-  const updatedData = {
-    todayDate: daysAgoKey(1),  // Yesterday's date
-    todayBadges: fakeYesterdayBadges,  // These will become yesterday's badges on reload
-    yesterdayBadges: [],
-    todayUndoCount: 0,
-    lifetimeBadges: Array.from(lifetimeMap.entries())
-      .map(([id, count]) => ({ id, count }))
-      .filter(w => w.count > 0)
-  };
-  
-  saveBadgeData(updatedData);
-  
-  // Verify save
-  const verify = loadBadgeData();
-  console.log(`✅ Added random badges for ${updatedData.lifetimeBadges.length} lifetime badge types and ${fakeYesterdayBadges.length} yesterday badges.`);
-  console.log('Generated as "today" badges for yesterday\'s date - will auto-move to yesterday on reload');
-  console.log('Sample badges:', verify.todayBadges.slice(0, 5));
-  console.log('Sample lifetime badges:', verify.lifetimeBadges.slice(0, 5));
-}
-
-function generateUseEvent(daysAgo) {
-  const settings = DB.loadSettings();
-  const profile = getProfile();
-  
-  // Parse input
-  const days = parseInt(daysAgo);
-  if (isNaN(days) || days < 0) {
-    showToast('❌ Please enter a valid number of days');
-    return;
-  }
-  
-  // Calculate timestamp - random time within the target day
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const targetDate = currentDate();
-  targetDate.setDate(targetDate.getDate() - days);
-  targetDate.setHours(0, 0, 0, 0); // Start of day
-  const randomMs = Math.floor(Math.random() * msPerDay); // Random time within the day
-  const targetTimestamp = targetDate.getTime() + randomMs;
-  
-  // Create event with current settings
-  const substance = settings.lastSubstance || profile.substances[0];
-  const method = profile.methods ? (settings.lastMethod || profile.methods[0]) : null;
-  const amount = settings.lastAmount || profile.amounts[0];
-  
-  const evt = {
-    id: uid(),
-    type: 'used',
-    ts: targetTimestamp,
-    substance,
-    method,
-    amount
-  };
-  
-  DB.addEvent(evt);
-  calculateAndUpdateBadges();
-  render();
-  
-  console.log(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago:`, evt);
-  showToast(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago`);
-}
 
   window.generateAllTestData = generateAllTestData;
   window.generateTestData = generateTestData;
