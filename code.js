@@ -1501,7 +1501,7 @@ function renderProgress() {
   }
 
   $('progress').innerHTML = [
-    tileHTML(avgGapStr, 'Average Gap Time', longestGapSub, 'Average time between sessions and longest gap (excludes gaps crossing 6am)'),
+    tileHTML(avgGapStr, 'Average Gap', longestGapSub, 'Average time between sessions and longest gap (excludes gaps crossing 6am)'),
     tileHTML(dailyAmountAvg, `${capitalize(getProfile().amountUnit)}/Day`, hitsSub, 'Average amount used and average sessions per day'),
     ratioTile,
     fourthTile
