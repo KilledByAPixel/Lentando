@@ -790,6 +790,18 @@ const Badges = {
     const { completedDay = false, forDate = null, appStartDate = null, appStartTs = null } = options;
     // forDate: the date key being evaluated (defaults to todayKey())
     const evaluationDate = forDate || todayKey();
+
+    // Determine reference timestamp for calculations
+    let refTs, refDateObj;
+    if (evaluationDate < todayKey()) {
+      const d = new Date(evaluationDate + 'T23:59:59.999');
+      refTs = d.getTime();
+      refDateObj = d;
+    } else {
+      refTs = now();
+      refDateObj = currentDate();
+    }
+
     const badges = [];
     const addBadge = (condition, id) => {
       if (condition) badges.push(id);
@@ -881,8 +893,18 @@ const Badges = {
 
     // --- Timing-based badges ---
     // Gap badges — include all sessions but skip gaps that cross the 6am boundary (sleep gap)
-    if (profileUsed.length >= 2) {
-      const todayGapsMs = getGapsMs(profileUsed);
+    if (profileUsed.length >= 1 || (yesterdayEvents && yesterdayEvents.length > 0)) {
+      // Include last event from yesterday to capture gap crossing midnight
+      let gapEvents = [...profileUsed];
+      if (yesterdayEvents && yesterdayEvents.length > 0) {
+        const yUsed = filterProfileUsed(yesterdayEvents);
+        if (yUsed.length > 0) {
+          // Add the last event from yesterday to the beginning of the list
+          gapEvents.unshift(yUsed[yUsed.length - 1]);
+        }
+      }
+      
+      const todayGapsMs = getGapsMs(gapEvents);
       
       // Award only the highest gap milestone achieved today
       if (todayGapsMs.length > 0) {
@@ -1006,17 +1028,17 @@ const Badges = {
     }
 
     // --- Streak badges ---
-    const resistStreak = this._countStreak('resisted');
+    const resistStreak = this._countStreak('resisted', refDateObj);
     addBadge(resistStreak >= 2, 'resist-streak');
     
-    const habitStreak = this._countStreak('habit');
+    const habitStreak = this._countStreak('habit', refDateObj);
     addBadge(habitStreak >= 3, 'habit-streak');
 
-    const taperDays = this._countTaper();
+    const taperDays = this._countTaper(refDateObj);
     addBadge(taperDays >= 2, 'taper');
     
     // App usage streaks - award only the highest milestone
-    const appStreak = this._countAppUsageStreak();
+    const appStreak = this._countAppUsageStreak(refDateObj);
     if (appStreak >= 2) {
       const milestones = getMilestoneBadges(appStreak, APP_STREAK_MILESTONES);
       if (milestones.length > 0) {
@@ -1029,7 +1051,7 @@ const Badges = {
     
     // Break milestones (time since last use)
     if (profileUsed.length === 0) {
-      const daysSinceLastUse = this._countDaysSinceLastUse();
+      const daysSinceLastUse = this._countDaysSinceLastUse(evaluationDate, refTs, appStartDate);
       if (daysSinceLastUse >= 1) {
         // Award only the highest T-break milestone achieved
         const milestones = getMilestoneBadges(daysSinceLastUse, TBREAK_MILESTONES);
@@ -1043,8 +1065,8 @@ const Badges = {
     return badges;
   },
 
-  _countStreak(eventType) {
-    const d = currentDate();
+  _countStreak(eventType, refDateObj) {
+    const d = new Date(refDateObj || currentDate());
     
     for (let streak = 0; streak < MAX_STREAK_DAYS; streak++) {
       if (!DB.forDate(dateKey(d)).some(e => e.type === eventType)) return streak;
@@ -1053,9 +1075,9 @@ const Badges = {
     return MAX_STREAK_DAYS;
   },
 
-  _countTaper() {
+  _countTaper(refDateObj) {
     let count = 0, prevAmt = null;
-    const d = currentDate();
+    const d = new Date(refDateObj || currentDate());
     
     for (let i = 0; i < MAX_STREAK_DAYS; i++) {
       const amt = sumAmount(filterProfileUsed(DB.forDate(dateKey(d))));
@@ -1070,9 +1092,9 @@ const Badges = {
     return count;
   },
   
-  _countAppUsageStreak() {
+  _countAppUsageStreak(refDateObj) {
     const MAX_APP_STREAK = 366; // Must exceed 365 for year-streak badge
-    const d = currentDate();
+    const d = new Date(refDateObj || currentDate());
     for (let streak = 0; streak < MAX_APP_STREAK; streak++) {
       const dayEvents = DB.forDate(dateKey(d));
       if (dayEvents.length === 0) return streak;
@@ -1081,19 +1103,31 @@ const Badges = {
     return MAX_APP_STREAK;
   },
   
-  _countDaysSinceLastUse() {
+  _countDaysSinceLastUse(refDateKey, refTs, fallbackAppStartDate) {
     const keys = DB.getAllDayKeys(); // sorted reverse (most recent first)
+    const effectiveNow = refTs || now();
+
     for (const key of keys) {
+      if (refDateKey && key > refDateKey) continue; // Skip days after reference date
+
       const dayUsed = filterProfileUsed(DB.forDate(key));
       if (dayUsed.length > 0) {
-        return Math.floor((now() - dayUsed[dayUsed.length - 1].ts) / (1000 * 60 * 60 * 24));
+        return Math.floor((effectiveNow - dayUsed[dayUsed.length - 1].ts) / (1000 * 60 * 60 * 24));
       }
     }
     // No use events ever — measure from appStartDate if available
-    const badgeData = loadBadgeData();
-    if (badgeData.appStartDate) {
-      const startTs = new Date(badgeData.appStartDate + 'T12:00:00').getTime();
-      return Math.floor((now() - startTs) / (1000 * 60 * 60 * 24));
+    let startTs;
+    if (fallbackAppStartDate) {
+      startTs = new Date(fallbackAppStartDate + 'T12:00:00').getTime();
+    } else {
+      const badgeData = loadBadgeData();
+      if (badgeData.appStartDate) {
+        startTs = new Date(badgeData.appStartDate + 'T12:00:00').getTime();
+      }
+    }
+
+    if (startTs) {
+      return Math.floor((effectiveNow - startTs) / (1000 * 60 * 60 * 24));
     }
     return 0;
   },
