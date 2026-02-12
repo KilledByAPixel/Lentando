@@ -269,7 +269,7 @@ const BADGE_DEFINITIONS = {
   'evening-skip': { label: 'Evening Skip', icon: '🌙', desc: 'No use between 6pm and midnight' },
   'lower-amount': { label: 'Less Than Yesterday', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'first-later': { label: 'Later Than Yesterday', icon: '⏰', desc: 'First session later than yesterday (after 6am)' },
-  'gap-above-avg': { label: 'Longer Gaps', icon: '📏', desc: 'Average gap today exceeded 7-day average (excludes gaps crossing 6am)' },
+  'gap-above-avg': { label: 'Longer Gaps', icon: '📏', desc: 'Average gap today exceeded trailing 7-day average (excludes gaps crossing 6am)' },
   'taper': { label: 'Tapering Off', icon: '📐', desc: 'Gradually reduced usage over 3 or more consecutive days' },
   'app-streak': { label: 'App Streak', icon: '📱', desc: 'Used the app multiple days in a row' },
   'week-streak': { label: 'App Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
@@ -900,8 +900,8 @@ const Badges = {
         }
       }
       
-      // Today's average gap longer than 7-day average (includes today, same as progress section)
-      const avgGap7Days = avgWithinDayGapMs(getLastNDays(7), filterProfileUsed);
+      // Today's average gap longer than trailing 7-day average (excludes today to prevent self-dampening)
+      const avgGap7Days = avgWithinDayGapMs(getLastNDays(7, 1), filterProfileUsed);
       if (avgGap7Days > 0 && todayGapsMs.length > 0) {
         const todayAvgGap = todayGapsMs.reduce((s, g) => s + g, 0) / todayGapsMs.length;
         addBadge(todayAvgGap > avgGap7Days, 'gap-above-avg');
