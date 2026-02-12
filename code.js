@@ -2560,6 +2560,11 @@ function saveModal() {
         const newDate = new Date(currentEvent.ts);
         newDate.setHours(hours, minutes, 0, 0);
         const newTs = newDate.getTime();
+
+        if (newTs > now()) {
+          alert('Cannot create events in the future.');
+          return;
+        }
         
         // Only update if time actually changed
         if (newTs !== currentEvent.ts) {
