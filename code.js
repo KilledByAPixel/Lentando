@@ -1779,7 +1779,7 @@ const GRAPH_DEFS = [
   { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true },
   { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
   { label: '🌬️ Breathing Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
-  { label: '🧹 Tidy Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
+  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
   { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
 ];
 
