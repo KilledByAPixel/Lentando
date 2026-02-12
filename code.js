@@ -1115,19 +1115,19 @@ function emptyStateHTML(message, style) {
 }
 
 function tileHTML(val, label, sub = '', tooltip = '') {
-  const subHTML = sub ? `<div class="sub">${sub}</div>` : '';
+  const subHTML = sub ? `<div class="sub">${escapeHTML(String(sub))}</div>` : '';
   const titleAttr = tooltip ? ` title="${escapeHTML(tooltip)}"` : '';
   const dataTooltip = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
-  return `<div class="tile"${titleAttr}${dataTooltip}><div class="val">${val}</div><div class="label">${label}</div>${subHTML}</div>`;
+  return `<div class="tile"${titleAttr}${dataTooltip}><div class="val">${escapeHTML(String(val))}</div><div class="label">${escapeHTML(String(label))}</div>${subHTML}</div>`;
 }
 
 /** Generates a labelled chip group. displayFn defaults to String(v). */
 function chipGroupHTML(label, field, values, activeVal, displayFn) {
   const fmt = displayFn || (v => String(v));
   return `
-    <div class="chip-row-label">${label}</div>
+    <div class="chip-row-label">${escapeHTML(label)}</div>
     <div class="chip-group" data-field="${field}">
-      ${values.map(v => `<span class="chip${activeVal === v ? ' active' : ''}" data-val="${v}">${fmt(v)}</span>`).join('')}
+      ${values.map(v => `<span class="chip${activeVal === v ? ' active' : ''}" data-val="${escapeHTML(String(v))}">${escapeHTML(String(fmt(v)))}</span>`).join('')}
     </div>`;
 }
 
@@ -1136,7 +1136,7 @@ function getUsedEventDetail(evt) {
   const { profile: matchedProfile } = getProfileForSubstance(evt.substance);
   
   const icon = matchedProfile.icons[evt.substance] || '⚡';
-  const title = matchedProfile.substanceDisplay[evt.substance] || evt.substance.toUpperCase();
+  const title = matchedProfile.substanceDisplay[evt.substance] || (evt.substance ? evt.substance.toUpperCase() : 'Unknown');
   const unit = matchedProfile.amountUnit;
   
   return {
@@ -1186,7 +1186,7 @@ function eventRowHTML(e) {
 
   return `<li class="timeline-item" data-id="${safeId}">
     <span class="tl-time">${time}</span>
-    <span class="tl-icon">${icon}</span>
+    <span class="tl-icon">${escapeHTML(icon)}</span>
     <div class="tl-body"><div class="tl-title">${escapeHTML(title)}</div><div class="tl-detail">${escapeHTML(detail)}</div></div>
     <div class="tl-actions">
           <button class="tl-act-btn" onclick="App.editEvent('${safeId}')" title="Edit">✏️</button>
@@ -1545,8 +1545,8 @@ function calculateAndUpdateBadges() {
     
     // Calculate how many days have passed since last session
     const lastDate = new Date(badgeData.todayDate + 'T12:00:00');
-    const currentDate = new Date(today + 'T12:00:00');
-    const daysPassed = Math.floor((currentDate - lastDate) / (24 * 60 * 60 * 1000));
+    const currentDateObj = new Date(today + 'T12:00:00');
+    const daysPassed = Math.floor((currentDateObj - lastDate) / (24 * 60 * 60 * 1000));
     
     // Only save as "yesterday's" if exactly 1 day has passed
     if (daysPassed === 1) {
