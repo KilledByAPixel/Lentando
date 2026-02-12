@@ -1152,13 +1152,6 @@ function renderDate() {
   
   // Update sound button to reflect current setting
   setSoundButton(DB.loadSettings().soundEnabled);
-
-  // Show/hide "Customize Tracker" button in settings
-  const customBar = $('custom-config-bar');
-  if (customBar) {
-    const isCustom = DB.loadSettings().addictionProfile === 'custom';
-    customBar.classList.toggle('hidden', !isCustom);
-  }
 }
 
 function sumHabitCounts(events, habitTypes) {
