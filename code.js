@@ -1430,7 +1430,10 @@ function renderProgress() {
   const allEvents = DB.loadEvents();
   let daysOfUse = 7;
   if (allEvents.length > 0) {
-    const earliestTs = Math.min(...allEvents.map(e => e.ts));
+    let earliestTs = allEvents[0].ts;
+    for (let i = 1; i < allEvents.length; i++) {
+      if (allEvents[i].ts < earliestTs) earliestTs = allEvents[i].ts;
+    }
     const daysSinceFirstUse = Math.ceil((now() - earliestTs) / (24 * 60 * 60 * 1000));
     daysOfUse = Math.max(1, Math.min(7, daysSinceFirstUse));
   }
