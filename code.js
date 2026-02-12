@@ -2639,7 +2639,10 @@ function showCoaching() {
 // ========== ONBOARDING ==========
 // ========== LOGIN SCREEN ==========
 
+let _appStarted = false;
+
 function showLandingPage() {
+  _appStarted = true;
   const splash = $('splash-screen');
   if (splash) splash.classList.add('hidden');
   
@@ -2654,6 +2657,7 @@ function dismissLanding() {
 }
 
 function showLoginScreen() {
+  _appStarted = true;
   const splash = $('splash-screen');
   if (splash) splash.classList.add('hidden');
   
@@ -2706,6 +2710,7 @@ function skipLogin() {
 }
 
 function continueToApp() {
+  _appStarted = true;
   const splash = $('splash-screen');
   if (splash) splash.classList.add('hidden');
   
@@ -3727,6 +3732,15 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Firebase will handle initial auth check and call continueToApp() or show login screen
   // If Firebase is not configured, checkAuthAndContinue will be called after a short delay
+  
+  // Safety net: if firebase-sync.js fails to load (offline, blocked, slow CDN),
+  // start the app after 2s so users aren't stuck on the splash screen forever
+  setTimeout(() => {
+    if (!_appStarted) {
+      console.warn('[App] Firebase module did not respond — starting with local data');
+      continueToApp();
+    }
+  }, 2000);
   
   // Mobile badge tooltip handling
   setupBadgeTooltips();
