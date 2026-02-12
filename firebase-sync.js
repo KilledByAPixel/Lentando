@@ -3,7 +3,7 @@
 // ============================================================
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
-import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification, sendPasswordResetEmail, deleteUser } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification, sendPasswordResetEmail, deleteUser } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
 // ==========================================================
@@ -53,21 +53,11 @@ async function loginWithGoogle() {
   
   isSigningIn = true;
   try {
-    const result = await signInWithPopup(auth, provider);
-    // Check if this is a brand new user
-    if (result?._tokenResponse?.isNewUser) {
-      showWelcomeMessage(result.user.displayName || result.user.email);
-    }
-    return result.user;
+    // Use redirect instead of popup to avoid COOP (Cross-Origin-Opener-Policy) issues
+    await signInWithRedirect(auth, provider);
+    // User navigates away — onAuthStateChanged + getRedirectResult handles the rest
   } catch (err) {
-    // Only log error if it's not a cancelled popup (user closed it or clicked again)
-    if (err.code !== 'auth/cancelled-popup-request' && err.code !== 'auth/popup-closed-by-user') {
-      console.error('[Auth] Google sign-in failed:', err);
-    }
-    // Don't re-throw on cancelled popup - just return quietly
-    if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
-      return null;
-    }
+    console.error('[Auth] Google sign-in failed:', err);
     throw err;
   } finally {
     isSigningIn = false;
@@ -292,6 +282,19 @@ let currentUser = null;
 let authCheckComplete = false;
 
 if (isConfigured) {
+  // Handle Google redirect result (user returning from Google OAuth)
+  getRedirectResult(auth).then((result) => {
+    if (result?.user) {
+      console.log('[Auth] Google redirect sign-in successful:', result.user.email);
+      // Check if this is a brand new user
+      if (result?._tokenResponse?.isNewUser) {
+        showWelcomeMessage(result.user.displayName || result.user.email);
+      }
+    }
+  }).catch((err) => {
+    console.error('[Auth] Google redirect error:', err);
+  });
+
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     updateAuthUI(user);
