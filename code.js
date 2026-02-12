@@ -2064,6 +2064,7 @@ function importJSON(inputEl) {
           todayBadges: badgeData.todayBadges,
           yesterdayBadges: badgeData.yesterdayBadges,
           todayUndoCount: badgeData.todayUndoCount || 0,
+          appStartDate: badgeData.appStartDate,
           lifetimeBadges: Array.from(lifetimeMap.entries())
             .filter(([, count]) => count > 0)
             .map(([id, count]) => ({ id, count }))
