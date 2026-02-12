@@ -47,14 +47,15 @@ Lentando recognizes progress in many forms:
 
 | Category | Examples |
 |----------|----------|
-| **Daily Progress** | No Use Day, Low Day, Daily Check-in, Good Start, Hydrated |
-| **Session Badges** | Resist, Urge Surfed, Swap Completed, Low Dose, Mindful Session |
-| **Resist Awareness** | Intensity Logged, Trigger Identified, Full Report, Tough Resist |
-| **Timing Badges** | Delayed Start, First Later, Fewer Sessions, Lower Amount |
+| **Daily Progress** | Daily Check-in, Good Start, Hydrated |
+| **Resist Badges** | Resisted, Urge Surfed, Second Thought, Swap Completed, Tough Resist |
+| **Mindful Choices** | Harm Reduction, Low Dose, Low Use Day, CBD-Only Day |
+| **Healty Habits** | Water, Breathwork, Tidy, Outside, Exercise |
+| **Awareness** | Intensity Logged, Trigger Identified, Full Report, Mindful Session |
+| **Timing Badges** | Night, Morning, Day, and Evening Skips |
 | **Gap Milestones** | 1h, 2h, 4h, 8h, 12h gaps between sessions |
 | **Break Milestones** | 1 Day through 1 Year of consecutive no use days |
-| **Streaks** | Resist Streak, Habit Streak, Taper Win, App Streak, Week/Month/Year Streak |
-| **Mindful Choices** | Second Thought, Harm Reduction, CBD-Only Day, Mindful Session, Low Dose |
+| **Streaks** | Resist Streak, Habit Streak, Tapering Off, App Streaks |
 
 ## 🚀 Getting Started
 

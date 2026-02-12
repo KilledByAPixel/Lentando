@@ -194,7 +194,7 @@ const BADGE_DEFINITIONS = {
   'zero-use': { label: 'No Use Day', icon: '🏆', desc: 'No use today' },
   'good-start': { label: 'Good Start', icon: '🚀', desc: 'Started the day with a positive action instead of using' },
   'drank-water': { label: 'Drank Water', icon: '💧', desc: 'Logged water' },
-  'hydrated': { label: 'Well Hydrated', icon: '🌊', desc: 'Logged water 5+ times' },
+  'hydrated': { label: 'Hydrated', icon: '🌊', desc: 'Logged water 5+ times' },
   'breathwork': { label: 'Breathwork', icon: '🌬️', desc: 'Did breathing exercises or meditation' },
   'cleaned': { label: 'Tidied', icon: '🧹', desc: 'Tidied up or cleaned something' },
   'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside or got some fresh air' },
@@ -208,7 +208,7 @@ const BADGE_DEFINITIONS = {
   'gap-4h': { label: 'Gap 4h', icon: '🕓', desc: 'Maintained a 4+ hour gap between sessions (excludes gaps crossing 6am)' },
   'gap-8h': { label: 'Gap 8h', icon: '🕗', desc: 'Maintained an 8+ hour gap between sessions (excludes gaps crossing 6am)' },
   'gap-12h': { label: 'Gap 12h', icon: '🕛', desc: 'Maintained a 12+ hour gap between sessions (excludes gaps crossing 6am)' },
-  'night-gap': { label: 'Night Gap', icon: '🛏️', desc: 'Maintained a 12+ hour gap that crosses 6am' },
+  'night-gap': { label: 'Good Night', icon: '🛏️', desc: 'Maintained a 12+ hour gap that crosses 6am' },
   'night-skip': { label: 'Night Skip', icon: '☄️', desc: 'No use between midnight and 6am' },
   'morning-skip': { label: 'Morning Skip', icon: '🌅', desc: 'No use between 6am and noon' },
   'day-skip': { label: 'Day Skip', icon: '☀️', desc: 'No use between noon and 6pm' },
@@ -886,7 +886,7 @@ const Badges = {
       addBadge(eligible && currentHour >= start && noUseInRange(start, end), id);
     }
     
-    // Night Gap — 12+ hour gap crossing today's 6am boundary (overnight break)
+    // Good Night — 12+ hour gap crossing today's 6am boundary (overnight break)
     const today6am = new Date(todayKey() + 'T06:00:00').getTime();
     
     // Get all events from yesterday and today
