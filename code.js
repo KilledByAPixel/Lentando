@@ -1574,7 +1574,7 @@ function renderWins() {
     yesterdayEl.innerHTML = yesterdayWins.length > 0
       ? yesterdayWins.map(w => winCardHTML(w, false)).join('') + 
         '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">These are badges you earned yesterday and won\'t change.</div>'
-      : '<div class="empty-state" style="grid-column:1/-1">No badges earned yesterday</div>';
+      : '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">No badges earned yesterday.</div>';
   }
 
   const totalEl = $('wins-total');
