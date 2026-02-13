@@ -1887,8 +1887,8 @@ function navigateDay(offset) {
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: '#f39c12',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
-  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length, activity: false, tooltip: 'How many urges you resisted each day.' },
-  { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true, tooltip: 'Number of water logs each day. Staying hydrated supports recovery.' },
+  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').reduce((sum, e) => sum + (e.urge_intensity || 1), 0), activity: false, tooltip: 'Total urge intensity resisted each day. Higher bars mean stronger urges resisted.' },
+  { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true, tooltip: 'Number of water uses logged each day. Staying hydrated supports recovery.' },
   { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'exercise', tooltip: 'Exercise minutes each day. Physical activity helps manage cravings.',
     countFn: evs => getHabits(evs, 'exercise').length, countLabel: '🏃 Exercise / Day', countTooltip: 'Number of exercise sessions each day.' },
   { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'breaths', tooltip: 'Mindfulness/breathing minutes each day. Helps with stress and urges.',
@@ -1992,7 +1992,9 @@ function buildWeekSummaryHTML() {
 
     // Resists
     if (resisted.length > 0) {
-      html += `<div class="week-item"><span class="week-icon">💪</span><span class="week-val">${resisted.length}</span></div>`;
+      const totalIntensity = resisted.reduce((sum, e) => sum + (e.urge_intensity || 1), 0);
+      const displayIntensity = Number.isInteger(totalIntensity) ? totalIntensity : totalIntensity.toFixed(1);
+      html += `<div class="week-item"><span class="week-icon">💪</span><span class="week-val">${displayIntensity}</span></div>`;
     }
 
     // Activities
@@ -2058,19 +2060,7 @@ function renderGraphs() {
   // Day-based graphs (affected by 7/14/30 day selector)
   let dayHtml = '';
 
-  // Render Amount Used / Day first (before average by hour)
-  const amountDef = GRAPH_DEFS[0];
-  const amountVals = days.map(dk => amountDef.valueFn(DB.forDate(dk)));
-  const amountMax = Math.max(...amountVals, 1);
-  const hasAmountData = amountVals.some(v => v > 0);
-  const amountTip = amountDef.tooltip ? ` data-tooltip="${escapeHTML(amountDef.tooltip)}"` : '';
-  dayHtml += `<div class="graph-container"${amountTip}><div class="graph-title">${amountDef.label}</div>`;
-  dayHtml += hasAmountData
-    ? buildGraphBars(amountVals, days, amountMax, amountDef)
-    : emptyStateHTML('No data yet', 'padding:12px 0');
-  dayHtml += `</div>`;
-  
-  // Add average usage by hour (filtered by selected time window)
+  // Render average usage by hour first (filtered by selected time window)
   const hourTotals = {};
   let daysWithUse = 0;
   
@@ -2101,8 +2091,8 @@ function renderGraphs() {
     : emptyStateHTML('No data yet', 'padding:12px 0');
   dayHtml += `</div>`;
   
+  // Render all GRAPH_DEFS graphs
   for (let gi = 0; gi < GRAPH_DEFS.length; gi++) {
-    if (gi === 0) continue; // Already rendered above
     const def = GRAPH_DEFS[gi];
     let vals = days.map(dk => def.valueFn(DB.forDate(dk)));
     let max  = Math.max(...vals, 1);
