@@ -1886,7 +1886,7 @@ function navigateDay(offset) {
 
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
-  { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
+  { label: '⚡ Amount Used / Day',    color: '#f39c12',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
   { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length, activity: false, tooltip: 'How many urges you resisted each day.' },
   { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true, tooltip: 'Number of water logs each day. Staying hydrated supports recovery.' },
   { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'exercise', tooltip: 'Exercise minutes each day. Physical activity helps manage cravings.',
@@ -2046,7 +2046,7 @@ function renderGraphs() {
   const graphStartHour = (currentHour + 1) % 24;
   hourHtml += `<div class="graph-container" data-tooltip="Shows your use over the past 24 hours, broken down by hour. Helps identify your peak usage times."><div class="graph-title">🕒 Usage Over Past 24 Hours</div>`;
   hourHtml += hasHourData
-    ? buildHourGraphBars(hourCounts, maxCount, '#f39c12', graphStartHour)
+    ? buildHourGraphBars(hourCounts, maxCount, 'var(--primary)', graphStartHour)
     : emptyStateHTML('No data yet', 'padding:12px 0');
   hourHtml += `</div>`;
 
