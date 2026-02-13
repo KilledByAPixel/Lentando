@@ -1845,13 +1845,13 @@ function navigateDay(offset) {
 
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
-  { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false },
-  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length, activity: false },
-  { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true },
-  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
-  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
-  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
-  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true },
+  { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
+  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length, activity: false, tooltip: 'Number of times you resisted an urge each day. Higher is better!' },
+  { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true, tooltip: 'Number of water logs each day. Staying hydrated supports recovery.' },
+  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total exercise minutes each day. Physical activity helps manage cravings.' },
+  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total mindfulness/breathing minutes each day. Helps with stress and urges.' },
+  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total cleaning/tidying minutes each day. Keeping busy is a great distraction.' },
+  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total time spent outside each day. Fresh air and nature help reset your mood.' },
 ];
 
 function formatGraphValue(val) {
@@ -1908,7 +1908,7 @@ function buildWeekSummaryHTML() {
   const profile = getProfile();
   const _weekdayFmt = new Intl.DateTimeFormat([], { weekday: 'short' });
 
-  let html = '<div class="graph-container"><div class="graph-title">📅 Past 7 Days</div>';
+  let html = '<div class="graph-container" data-tooltip="Daily snapshot of the past week. Shows usage by type, resists, and healthy activities for each day. A ⭐ means no usage that day."><div class="graph-title">📅 Past 7 Days</div>';
   html += '<div class="week-grid">';
 
   for (const dayKey of days) {
@@ -1933,7 +1933,9 @@ function buildWeekSummaryHTML() {
         if (!bySubstance[sub]) bySubstance[sub] = 0;
         bySubstance[sub] += (e.amount ?? 1);
       });
-      for (const [sub, amt] of Object.entries(bySubstance)) {
+      for (const sub of profile.substances) {
+        const amt = bySubstance[sub];
+        if (!amt) continue;
         const icon = profile.icons[sub] || '⚡';
         const displayAmt = Number.isInteger(amt) ? amt : amt.toFixed(1);
         html += `<div class="week-item"><span class="week-icon">${icon}</span><span class="week-val">${displayAmt}</span></div>`;
@@ -1944,7 +1946,7 @@ function buildWeekSummaryHTML() {
 
     // Resists
     if (resisted.length > 0) {
-      html += `<div class="week-item week-resist"><span class="week-icon">💪</span><span class="week-val">${resisted.length}</span></div>`;
+      html += `<div class="week-item"><span class="week-icon">💪</span><span class="week-val">${resisted.length}</span></div>`;
     }
 
     // Activities
@@ -1986,7 +1988,7 @@ function renderGraphs() {
   });
   const hasHourData = todayUsed.length > 0;
   const maxCount = hasHourData ? Math.max(...Object.values(hourCounts), 1) : 1;
-  hourHtml += `<div class="graph-container"><div class="graph-title">🕒 Today's Usage by Hour</div>`;
+  hourHtml += `<div class="graph-container" data-tooltip="Shows when you used today, broken down by hour. Helps identify your peak usage times."><div class="graph-title">🕒 Today's Usage by Hour</div>`;
   hourHtml += hasHourData
     ? buildHourGraphBars(hourCounts, maxCount, '#f39c12')
     : emptyStateHTML('No data yet', 'padding:12px 0');
@@ -1999,6 +2001,18 @@ function renderGraphs() {
   
   // Day-based graphs (affected by 7/14/30 day selector)
   let dayHtml = '';
+
+  // Render Amount Used / Day first (before average by hour)
+  const amountDef = GRAPH_DEFS[0];
+  const amountVals = days.map(dk => amountDef.valueFn(DB.forDate(dk)));
+  const amountMax = Math.max(...amountVals, 1);
+  const hasAmountData = amountVals.some(v => v > 0);
+  const amountTip = amountDef.tooltip ? ` data-tooltip="${escapeHTML(amountDef.tooltip)}"` : '';
+  dayHtml += `<div class="graph-container"${amountTip}><div class="graph-title">${amountDef.label}</div>`;
+  dayHtml += hasAmountData
+    ? buildGraphBars(amountVals, days, amountMax, amountDef)
+    : emptyStateHTML('No data yet', 'padding:12px 0');
+  dayHtml += `</div>`;
   
   // Add average usage by hour (filtered by selected time window)
   const hourTotals = {};
@@ -2025,13 +2039,15 @@ function renderGraphs() {
   
   const hasHeatmapData = Object.keys(hourAverages).length > 0;
   const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
-  dayHtml += `<div class="graph-container"><div class="graph-title">⚡ Average Usage by Hour</div>`;
+  dayHtml += `<div class="graph-container" data-tooltip="Average usage per hour across days you used. Only counts days with at least one use. Reveals your habitual usage patterns."><div class="graph-title">⚡ Average Usage by Hour</div>`;
   dayHtml += hasHeatmapData
     ? buildHourGraphBars(hourAverages, maxAvg, '#e53935')
     : emptyStateHTML('No data yet', 'padding:12px 0');
   dayHtml += `</div>`;
   
-  for (const def of GRAPH_DEFS) {
+  for (let gi = 0; gi < GRAPH_DEFS.length; gi++) {
+    if (gi === 0) continue; // Already rendered above
+    const def = GRAPH_DEFS[gi];
     const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
     const max  = Math.max(...vals, 1);
     const hasData = vals.some(v => v > 0);
@@ -2039,7 +2055,8 @@ function renderGraphs() {
     // For activity graphs, skip rendering if no data
     if (def.activity && !hasData) continue;
 
-    dayHtml += `<div class="graph-container"><div class="graph-title">${def.label}</div>`;
+    const tipAttr = def.tooltip ? ` data-tooltip="${escapeHTML(def.tooltip)}"` : '';
+    dayHtml += `<div class="graph-container"${tipAttr}><div class="graph-title">${def.label}</div>`;
     dayHtml += hasData 
       ? buildGraphBars(vals, days, max, def)
       : emptyStateHTML('No data yet', 'padding:12px 0');
@@ -3869,6 +3886,7 @@ function setupBadgeTooltips() {
   document.addEventListener('click', (e) => {
     const badgeItem = e.target.closest('.badge-item');
     const tile = e.target.closest('.tile[data-tooltip]');
+    const graphContainer = e.target.closest('.graph-container[data-tooltip]');
     
     if (badgeItem) {
       e.preventDefault();
@@ -3893,6 +3911,17 @@ function setupBadgeTooltips() {
         hideTooltip();
       } else {
         showTooltip(tile, tooltipText);
+      }
+    } else if (graphContainer) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const tooltipText = graphContainer.getAttribute('data-tooltip');
+      
+      if (activeTooltip && activeTooltip.textContent === tooltipText) {
+        hideTooltip();
+      } else {
+        showTooltip(graphContainer, tooltipText);
       }
     } else {
       // Clicked outside, hide tooltip
