@@ -175,7 +175,6 @@ const TBREAK_MILESTONES = [1, 7, 14, 21, 30, 365];
 const APP_STREAK_MILESTONES = [2, 7, 30, 365];
 const EARLY_HOUR = 6;
 const MAX_STREAK_DAYS = 60;
-const LOW_DAY_THRESHOLD = 2;
 
 const COACHING_MESSAGES = [
   '🌬️ Take 10 slow breaths',
@@ -242,8 +241,6 @@ const BADGE_DEFINITIONS = {
   'dose-half': { label: 'Reduced Dose', icon: '⚖️', desc: 'Used less than a full dose' },
   'harm-reduction-vape': { label: 'Safer Choice', icon: '✨', desc: 'Chose vape over smoke' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products, no THC' },
-  'low-day': { label: 'Light Day', icon: '🎈', desc: 'Total usage ≤2 units' },
-  'zero-use': { label: 'Clear Day', icon: '🏅', desc: 'No use today' },
   'good-start': { label: 'Strong Start', icon: '🚀', desc: 'Started the day with a positive action instead of using' },
   'drank-water': { label: 'Drank Water', icon: '💧', desc: 'Logged water' },
   'hydrated': { label: 'Hydrated', icon: '🌊', desc: 'Logged water 5+ times' },
@@ -261,14 +258,16 @@ const BADGE_DEFINITIONS = {
   'gap-8h': { label: 'Gap 8h', icon: '🕗', desc: 'Maintained an 8+ hour gap between sessions (excludes gaps crossing 6am)' },
   'gap-12h': { label: 'Gap 12h', icon: '🕛', desc: 'Maintained a 12+ hour gap between sessions (excludes gaps crossing 6am)' },
   'night-gap': { label: 'Good Night', icon: '🛏️', desc: 'Maintained a 12+ hour gap that crosses 6am' },
+  'first-later': { label: 'Held Off', icon: '⏰', desc: 'First session later than yesterday (after 6am)' },
+  'lower-amount': { label: 'Scaling Back', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
+  'taper': { label: 'Tapering', icon: '📐', desc: 'Gradually reduced usage over 3 or more consecutive days' },
+  'gap-above-avg': { label: 'Beat Your Average', icon: '⏳', desc: 'Average gap today exceeded trailing 7-day average (excludes gaps crossing 6am)' },
+  'low-day': { label: 'Light Day', icon: '🎈', desc: 'Used less than half your trailing 7-day average' },
   'night-skip': { label: 'No Night Use', icon: '☄️', desc: 'No use between midnight and 6am' },
   'morning-skip': { label: 'No Morning Use', icon: '🌅', desc: 'No use between 6am and noon' },
   'day-skip': { label: 'No Day Use', icon: '☀️', desc: 'No use between noon and 6pm' },
   'evening-skip': { label: 'No Evening Use', icon: '🌙', desc: 'No use between 6pm and midnight' },
-  'lower-amount': { label: 'Scaling Back', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
-  'first-later': { label: 'Held Off', icon: '⏰', desc: 'First session later than yesterday (after 6am)' },
-  'gap-above-avg': { label: 'Beat Your Average', icon: '⏳', desc: 'Average gap today exceeded trailing 7-day average (excludes gaps crossing 6am)' },
-  'taper': { label: 'Tapering Off', icon: '📐', desc: 'Gradually reduced usage over 3 or more consecutive days' },
+  'zero-use': { label: 'Clear Day', icon: '🏅', desc: 'No use today' },
   'app-streak': { label: 'App Streak', icon: '📱', desc: 'Used the app multiple days in a row' },
   'week-streak': { label: 'App Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
   'month-streak': { label: 'App Month Streak', icon: '🗓️', desc: 'Used the app every day for a month' },
@@ -805,6 +804,12 @@ function avgWithinDayGapMs(dayKeys, filterFn) {
   return gaps.length > 0 ? gaps.reduce((s, g) => s + g, 0) / gaps.length : 0;
 }
 
+function avgDailyAmount(dayKeys, filterFn) {
+  const amounts = dayKeys.map(dk => sumAmount(filterFn(DB.forDate(dk))));
+  const daysWithUse = amounts.filter(a => a > 0);
+  return daysWithUse.length > 0 ? daysWithUse.reduce((s, a) => s + a, 0) / daysWithUse.length : 0;
+}
+
 // ========== BADGE STORAGE ==========
 function loadBadgeData() {
   try {
@@ -905,7 +910,9 @@ const Badges = {
     addBadge(used.some(e => e.reason), 'mindful');
 
     const profileAmt = sumAmount(profileUsed);
-    addBadge(profileUsed.length > 0 && profileAmt <= LOW_DAY_THRESHOLD, 'low-day');
+    // Light Day: used today, but less than half of trailing 7-day average
+    const avg7DayAmount = avgDailyAmount(getLastNDays(7, 1), filterProfileUsed);
+    addBadge(profileUsed.length > 0 && avg7DayAmount > 0 && profileAmt < (avg7DayAmount / 2), 'low-day');
     addBadge(profileUsed.length === 0, 'zero-use');
 
     // --- Habit-based badges ---
