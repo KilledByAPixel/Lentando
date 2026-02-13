@@ -2483,7 +2483,6 @@ function handleChipClick(e) {
     const newTs = chip.dataset.val === 'now' ? now() : parseInt(chip.dataset.val, 10);
     if (!Number.isFinite(newTs)) return;
     DB.updateEvent(activeChipEventId, { ts: newTs });
-    playSound('habitChip');
     updateActiveChips();
     calculateAndUpdateBadges();
     render();
