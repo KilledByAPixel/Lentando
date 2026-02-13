@@ -1936,7 +1936,7 @@ function buildWeekSummaryHTML() {
   const profile = getProfile();
   const _weekdayFmt = new Intl.DateTimeFormat([], { weekday: 'short' });
 
-  let html = '<div class="graph-container" data-tooltip="Daily snapshot of the past week. Shows usage by type, resists, and healthy activities for each day. A 🏅 means no usage that day."><div class="graph-title">📅 Past 7 Day Summary</div>';
+  let html = '<div class="graph-container" data-tooltip="Daily snapshot of the past week. Shows usage by type, resists, and healthy activities for each day. A 🏅 means no usage that day. Untimed activities rounded up to 5 minutes each."><div class="graph-title">📅 Past 7 Day Summary</div>';
   html += '<div class="week-grid">';
 
   for (const dayKey of days) {
@@ -2094,10 +2094,15 @@ function renderGraphs() {
 
     // For activity graphs: if some events have minutes and some don't,
     // round up events without minutes to 5min for a more accurate view
+    let didRoundUp = false;
     if (def.activity && def.habitType && def.countFn) {
       let anyHaveMinutes = false;
+      let anyMissingMinutes = false;
       for (const dk of days) {
-        if (getHabits(DB.forDate(dk), def.habitType).some(e => e.minutes > 0)) { anyHaveMinutes = true; break; }
+        const habits = getHabits(DB.forDate(dk), def.habitType);
+        if (habits.some(e => e.minutes > 0)) anyHaveMinutes = true;
+        if (habits.some(e => !e.minutes)) anyMissingMinutes = true;
+        if (anyHaveMinutes && anyMissingMinutes) break;
       }
       if (anyHaveMinutes) {
         vals = days.map(dk => {
@@ -2105,7 +2110,8 @@ function renderGraphs() {
           return habits.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0);
         });
         max = Math.max(...vals, 1);
-        hasData = true;
+        hasData = vals.some(v => v > 0);
+        didRoundUp = anyMissingMinutes;
       }
     }
 
@@ -2121,6 +2127,7 @@ function renderGraphs() {
     // For activity graphs, skip rendering if no data at all
     if (def.activity && !hasData) continue;
 
+    if (didRoundUp) tooltip = (tooltip ? tooltip + ' ' : '') + 'Untimed activities rounded up to 5 minutes each.';
     const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
     dayHtml += `<div class="graph-container"${tipAttr}><div class="graph-title">${label}</div>`;
     dayHtml += hasData 
