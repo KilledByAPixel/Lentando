@@ -3768,10 +3768,10 @@ function setSoundButton(soundEnabled) {
   const text = $('sound-text-settings');
   // Show what you'll toggle TO
   if (soundEnabled) {
-    if (icon) icon.textContent = '🔇';
-    if (text) text.textContent = 'Disable Sounds';
-  } else {
     if (icon) icon.textContent = '🔊';
+    if (text) text.textContent = 'Sounds enabled';
+  } else {
+    if (icon) icon.textContent = '🔇';
     if (text) text.textContent = 'Enable Sounds';
   }
 }
