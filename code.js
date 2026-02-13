@@ -3791,6 +3791,23 @@ function applyTheme(theme) {
   });
 }
 
+// ========== PWA INSTALL PROMPT ==========
+let _deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  const bar = $('install-app-bar');
+  if (bar) bar.classList.remove('hidden');
+});
+
+window.addEventListener('appinstalled', () => {
+  _deferredInstallPrompt = null;
+  const bar = $('install-app-bar');
+  if (bar) bar.classList.add('hidden');
+  showToast('App installed! 🎉');
+});
+
 window.App = {
   hideUsedChips,
   hideResistedChips,
@@ -3846,6 +3863,21 @@ window.App = {
   clearDatabase,
   clearTodos,
   changeAddiction,
+  installApp() {
+    if (!_deferredInstallPrompt) {
+      showToast('Use your browser menu to install');
+      return;
+    }
+    _deferredInstallPrompt.prompt();
+    _deferredInstallPrompt.userChoice.then((result) => {
+      if (result.outcome === 'accepted') {
+        showToast('Installing app… 📲');
+      }
+      _deferredInstallPrompt = null;
+      const bar = $('install-app-bar');
+      if (bar) bar.classList.add('hidden');
+    });
+  },
   openCreateEventModal,
   saveCreateModal,
   showCustomConfig,
