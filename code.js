@@ -156,7 +156,7 @@ function buildCustomProfile(settings) {
 }
 
 // User input options
-const REASONS = ['habit', 'stress', 'break', 'social', 'sleep', 'pain'];
+const REASONS = ['habit', 'stress', 'social', 'reward','bored', 'pain', 'hungry', 'angry', 'lonely', 'tired'];
 const INTENSITIES = [1, 2, 3, 4, 5];
 const EXERCISE_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60];
 const OPTIONAL_FIELDS = new Set(['reason', 'trigger']);
