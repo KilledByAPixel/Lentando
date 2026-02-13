@@ -2355,19 +2355,19 @@ function buildTimeChips(eventTs) {
   const now = currentDate();
   const slots = [{ label: 'Now', value: 'now' }];
   
-  // Generate half-hour slots going back ~3 hours
+  // Generate half-hour slots going back ~3 hours, starting from most recent half-hour
   const d = new Date(now);
   // Round down to last half hour
   d.setMinutes(d.getMinutes() < 30 ? 0 : 30, 0, 0);
   
   for (let i = 0; i < 6; i++) {
-    d.setMinutes(d.getMinutes() - 30);
     const h = d.getHours();
     const m = d.getMinutes();
     const ampm = h >= 12 ? 'pm' : 'am';
     const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
     const label = `${h12}:${String(m).padStart(2, '0')}${ampm}`;
     slots.push({ label, value: d.getTime().toString() });
+    d.setMinutes(d.getMinutes() - 30);
   }
   
   // Determine which slot is active
