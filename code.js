@@ -240,7 +240,10 @@ const BADGE_DEFINITIONS = {
   'mindful': { label: 'Mindful Session', icon: '🌸', desc: 'Logged the reason for using' },
   'dose-half': { label: 'Reduced Dose', icon: '⚖️', desc: 'Used less than a full dose' },
   'harm-reduction-vape': { label: 'Safer Choice', icon: '✨', desc: 'Chose vape over smoke' },
+  'vape-only': { label: 'Vape Only Day', icon: '💨', desc: 'Only vaped tracked substance today' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products, no THC' },
+  'half-cbd-day': { label: 'Half CBD Day', icon: '🍂', desc: 'At least 50% of usage was CBD' },
+  'edibles-only': { label: 'Edibles Only', icon: '🍪', desc: 'Only used edibles today' },
   'good-start': { label: 'Strong Start', icon: '🚀', desc: 'Started the day with a positive action instead of using' },
   'drank-water': { label: 'Drank Water', icon: '💧', desc: 'Logged water' },
   'hydrated': { label: 'Hydrated', icon: '🌊', desc: 'Logged water 5+ times' },
@@ -904,6 +907,19 @@ const Badges = {
       const cbdUsed = filterCBD(used);
       const thcUsed = filterTHC(used);
       addBadge(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
+      const cbdAmt = sumAmount(cbdUsed);
+      const totalUsedAmt = sumAmount(profileUsed);
+      addBadge(profileUsed.length > 0 && totalUsedAmt > 0 && cbdAmt >= totalUsedAmt * 0.5, 'half-cbd-day');
+      addBadge(profileUsed.length > 0 && profileUsed.every(e => e.method === 'edible'), 'edibles-only');
+    }
+
+    // Vape-only badge (cannabis: method=vape, smoking: substance=vape)
+    if (isCannabis) {
+      // Edibles don't produce smoke, so they don't count against vape-only
+      const nonEdible = profileUsed.filter(e => e.method !== 'edible');
+      addBadge(nonEdible.length > 0 && nonEdible.every(e => e.method === 'vape'), 'vape-only');
+    } else if (isNicotine) {
+      addBadge(profileUsed.length > 0 && profileUsed.every(e => e.substance === 'vape'), 'vape-only');
     }
 
     addBadge(used.some(e => e.amount < 1), 'dose-half');
@@ -1718,6 +1734,9 @@ function renderBadges() {
       if (w.id === 'welcome-back') return false; // Can't earn it today
       if (w.id === 'harm-reduction-vape' && currentProfile !== 'cannabis' && currentProfile !== 'smoking') return false;
       if (w.id === 'cbd-only' && currentProfile !== 'cannabis') return false;
+      if (w.id === 'half-cbd-day' && currentProfile !== 'cannabis') return false;
+      if (w.id === 'edibles-only' && currentProfile !== 'cannabis') return false;
+      if (w.id === 'vape-only' && currentProfile !== 'cannabis' && currentProfile !== 'smoking') return false;
       
       return true;
     });
