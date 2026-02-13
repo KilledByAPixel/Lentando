@@ -1848,10 +1848,14 @@ const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
   { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length, activity: false, tooltip: 'Number of times you resisted an urge each day. Higher is better!' },
   { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true, tooltip: 'Number of water logs each day. Staying hydrated supports recovery.' },
-  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total exercise minutes each day. Physical activity helps manage cravings.' },
-  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total mindfulness/breathing minutes each day. Helps with stress and urges.' },
-  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total cleaning/tidying minutes each day. Keeping busy is a great distraction.' },
-  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total time spent outside each day. Fresh air and nature help reset your mood.' },
+  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total exercise minutes each day. Physical activity helps manage cravings.',
+    countFn: evs => getHabits(evs, 'exercise').length, countLabel: '🏃 Exercise / Day', countTooltip: 'Number of exercise sessions each day.' },
+  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total mindfulness/breathing minutes each day. Helps with stress and urges.',
+    countFn: evs => getHabits(evs, 'breaths').length, countLabel: '🌬️ Mindfulness / Day', countTooltip: 'Number of mindfulness sessions each day.' },
+  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total cleaning/tidying minutes each day. Keeping busy is a great distraction.',
+    countFn: evs => getHabits(evs, 'clean').length, countLabel: '🧹 Cleaning / Day', countTooltip: 'Number of cleaning sessions each day.' },
+  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total time spent outside each day. Fresh air and nature help reset your mood.',
+    countFn: evs => getHabits(evs, 'outside').length, countLabel: '🌳 Outside / Day', countTooltip: 'Number of times you went outside each day.' },
 ];
 
 function formatGraphValue(val) {
@@ -2048,15 +2052,26 @@ function renderGraphs() {
   for (let gi = 0; gi < GRAPH_DEFS.length; gi++) {
     if (gi === 0) continue; // Already rendered above
     const def = GRAPH_DEFS[gi];
-    const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
-    const max  = Math.max(...vals, 1);
-    const hasData = vals.some(v => v > 0);
+    let vals = days.map(dk => def.valueFn(DB.forDate(dk)));
+    let max  = Math.max(...vals, 1);
+    let hasData = vals.some(v => v > 0);
+    let label = def.label;
+    let tooltip = def.tooltip;
 
-    // For activity graphs, skip rendering if no data
+    // For activity graphs with no minutes data, fall back to event count
+    if (def.activity && !hasData && def.countFn) {
+      vals = days.map(dk => def.countFn(DB.forDate(dk)));
+      max = Math.max(...vals, 1);
+      hasData = vals.some(v => v > 0);
+      label = def.countLabel || def.label;
+      tooltip = def.countTooltip || def.tooltip;
+    }
+
+    // For activity graphs, skip rendering if no data at all
     if (def.activity && !hasData) continue;
 
-    const tipAttr = def.tooltip ? ` data-tooltip="${escapeHTML(def.tooltip)}"` : '';
-    dayHtml += `<div class="graph-container"${tipAttr}><div class="graph-title">${def.label}</div>`;
+    const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
+    dayHtml += `<div class="graph-container"${tipAttr}><div class="graph-title">${label}</div>`;
     dayHtml += hasData 
       ? buildGraphBars(vals, days, max, def)
       : emptyStateHTML('No data yet', 'padding:12px 0');
