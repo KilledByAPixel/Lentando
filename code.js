@@ -3379,6 +3379,7 @@ function bindEvents() {
   eventsAreBound = true;
 
   $('tab-bar').addEventListener('click', e => { const b = e.target.closest('.tab-btn'); if (b) switchTab(b.dataset.tab); });
+  document.querySelector('header h1 .brand').addEventListener('click', () => switchTab('today'));
 
   $('graph-range').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
