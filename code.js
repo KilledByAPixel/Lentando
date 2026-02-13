@@ -2387,7 +2387,7 @@ function buildTimeChips(eventTs) {
 function buildUsedChips(evt) {
   const profile = getProfile();
   const chips = [
-    chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v])
+    chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => (profile.icons[v] || '') + ' ' + profile.substanceDisplay[v])
   ];
   if (profile.methods) {
     const methodFn = profile.methodDisplay ? (v => profile.methodDisplay[v] || capitalize(v)) : undefined;
@@ -2528,7 +2528,7 @@ function openCreateEventModal() {
 
   const fields = [
     `<label>Tracking</label><div style="font-size:16px">${escapeHTML(displayName)}</div>`,
-    chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, s.lastSubstance, v => profile.substanceDisplay[v])
+    chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, s.lastSubstance, v => (profile.icons[v] || '') + ' ' + profile.substanceDisplay[v])
   ];
   if (profile.methods) {
     const methodFn = profile.methodDisplay ? (v => profile.methodDisplay[v] || capitalize(v)) : undefined;
@@ -2622,7 +2622,7 @@ function openEditModal(eventId) {
         : key[0].toUpperCase() + key.slice(1);
       const fields = [
         `<label>Tracking</label><div style="font-size:16px">${escapeHTML(displayName)}</div>`,
-        chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => profile.substanceDisplay[v])
+        chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => (profile.icons[v] || '') + ' ' + profile.substanceDisplay[v])
       ];
       if (profile.methods) {
         const methodFn = profile.methodDisplay ? (v => profile.methodDisplay[v] || capitalize(v)) : undefined;
