@@ -97,94 +97,131 @@
 <body>
   <div class="container">
     <h1>Privacy Policy</h1>
-    <p class="updated"><strong>Last updated:</strong> February 8, 2026</p>
+    <p class="updated"><strong>Last updated:</strong> February 13, 2026</p>
+
+    <p>This Privacy Policy explains how <strong>Lentando</strong> ("we," "us," or "our") handles information when you use the App. Lentando is designed to work <strong>without an account</strong> (local-only) or <strong>with an account</strong> (cloud sync). By using the App, you agree to the practices described here.</p>
 
     <h2>1. Who we are</h2>
     <ul>
       <li><strong>App name:</strong> Lentando</li>
       <li><strong>Website:</strong> <a href="https://lentando.3d2k.com" target="_blank">lentando.3d2k.com</a></li>
-      <li><strong>Contact:</strong> frankforce@gmail.com</li>
+      <li><strong>Contact:</strong> <a href="mailto:frankforce@gmail.com">frankforce@gmail.com</a></li>
+      <li><strong>Operator:</strong> Frank Force Games</li>
     </ul>
-    <p>This Privacy Policy explains how <strong>Lentando</strong> collects, uses, and shares information when you use the app.</p>
 
     <h2>2. What data we collect</h2>
-    <p>Depending on how you sign in and use the app, we may collect:</p>
+    <p>What data exists depends on how you use Lentando:</p>
 
-    <h3>A) Account and authentication data (via Firebase Authentication)</h3>
+    <h3>A) No-account mode (local-only)</h3>
     <ul>
-      <li>If you sign in with Google, we may receive basic profile info such as your Google account <strong>email address</strong>, <strong>display name</strong>, and <strong>profile photo URL</strong> (if available).</li>
-      <li>We also store a Firebase <strong>UID</strong> (unique user identifier) to keep your account working.</li>
+      <li>You can use Lentando without creating an account.</li>
+      <li>In this mode, your data is stored on your device in browser local storage (for example: events, settings, to-dos, theme, badges, and login-skip state).</li>
+      <li>In no-account mode, we do not store your habit/event content in our cloud database.</li>
     </ul>
 
-    <h3>B) App data you provide</h3>
+    <h3>B) Account and authentication data (if you sign in)</h3>
     <ul>
-      <li>We store the information you enter into the app, such as usage entries (including timestamps), to-do items, and settings.</li>
-      <li>This data is stored in <strong>Cloud Firestore</strong> and associated with your Firebase user ID (UID).</li>
+      <li>If you sign in with Google, Firebase Authentication may provide your <strong>email address</strong>, <strong>display name</strong>, and <strong>profile photo URL</strong> (if available).</li>
+      <li>If you sign in with email/password, Firebase Authentication stores your authentication credentials and account email.</li>
+      <li>We use a Firebase <strong>UID</strong> (unique user identifier) so your cloud data is associated with your account.</li>
     </ul>
 
-    <h3>C) Technical data</h3>
-    <p>Basic device and usage information that may be collected by Firebase (for example <strong>IP address</strong>, <strong>user agent</strong>, <strong>timestamps</strong>) to operate and secure the service.</p>
-
-    <h3>D) Analytics</h3>
-    <p>We use Google Analytics (Google Analytics for Firebase) to understand how the app is used and to improve performance.</p>
-    <p>Analytics may automatically collect information such as:</p>
+    <h3>C) App data (if cloud sync is enabled)</h3>
     <ul>
-      <li>Usage and session statistics</li>
-      <li>Approximate location (derived from network information)</li>
-      <li>Browser/device information</li>
-      <li>Pages visited and basic interaction events (for example page views)</li>
+      <li>If you sign in, Lentando syncs your app data to <strong>Cloud Firestore</strong> for backup and multi-device use.</li>
+      <li>This can include entries/events (with timestamps), settings, to-do items, badges/progress metadata, and sync metadata needed to merge changes.</li>
+      <li>This cloud data is associated with your Firebase UID.</li>
     </ul>
-    <p>We do not intentionally send Google Analytics information that directly identifies you.</p>
+
+    <h3>D) Technical/operational data</h3>
+    <p>When you use Firebase-backed features, Google/Firebase may process technical data such as <strong>IP address</strong>, <strong>device/browser information</strong>, and <strong>timestamps</strong> to provide and secure those services.</p>
+
+    <h3>E) Browser storage and session technologies</h3>
+    <ul>
+      <li>Lentando uses browser local storage to run core app features (including offline usage).</li>
+      <li>Authentication/session technologies used by Firebase are required for sign-in features.</li>
+      <li>Blocking required storage/session features may prevent login or sync from working correctly.</li>
+    </ul>
+
+    <h3>F) Analytics</h3>
+    <p>As of the Last Updated date above, we do <strong>not</strong> run dedicated advertising trackers in Lentando. If we add analytics tooling in the future, we will update this policy before or when that change goes live.</p>
 
     <h2>3. How we use data</h2>
     <p>We use your information to:</p>
     <ul>
-      <li>Provide sign-in and account features</li>
-      <li>Store and sync your app data across devices</li>
-      <li>Maintain security, prevent abuse, and debug issues</li>
-      <li>Improve app reliability and performance</li>
+      <li>Provide local-only app functionality when you choose not to sign in.</li>
+      <li>Provide optional sign-in, backup, and cloud sync features when you do sign in.</li>
+      <li>Maintain security, prevent abuse, and debug issues.</li>
+      <li>Maintain and improve app reliability and performance.</li>
+      <li>Comply with legal obligations.</li>
     </ul>
 
-    <h2>4. How we share data</h2>
+    <h2>4. Legal basis for processing (EU/UK users)</h2>
+    <p>If you are located in the European Union or United Kingdom, we process your personal data under the following legal bases:</p>
+    <ul>
+      <li><strong>Contractual necessity:</strong> To provide the App and requested features (including optional account sync, if enabled by you).</li>
+      <li><strong>Legitimate interests:</strong> To maintain security, stability, abuse prevention, and service operation where these interests are not overridden by your rights.</li>
+      <li><strong>Consent:</strong> Where required by law for specific processing activities.</li>
+    </ul>
+    <p>If you have questions about our legal bases, contact us at <a href="mailto:frankforce@gmail.com">frankforce@gmail.com</a>.</p>
+
+    <h2>5. How we share data</h2>
     <p>We do <strong>not</strong> sell your personal information.</p>
     <p>We share data only:</p>
     <ul>
-      <li>With service providers used to run the app, primarily <strong>Google Firebase</strong> (Authentication, database, hosting, etc.)</li>
-      <li>If required by law or to protect rights and safety</li>
-      <li>With your consent (for example, if you choose to export or share content)</li>
+      <li>With service providers used to run the App, primarily <strong>Google Firebase</strong> (Authentication and Firestore cloud database).</li>
+      <li>If required by law, regulation, or legal process, or to protect the rights, property, or safety of Frank Force Games, our users, or others.</li>
+      <li>With your consent (for example, if you choose to export or share content).</li>
     </ul>
 
-    <h2>5. Google OAuth and limited use disclosure</h2>
-    <p>If you sign in with Google, our use of information received from Google APIs will comply with the <strong>Google API Services User Data Policy</strong>, including the <strong>Limited Use</strong> requirements.</p>
+    <h2>6. Google sign-in disclosure</h2>
+    <p>If you choose Google sign-in, your authentication data is processed through Firebase Authentication and Google services. We use that data only for account access and app operation, not for selling personal data or unrelated advertising purposes.</p>
 
-    <h2>6. Data storage and retention</h2>
+    <h2>7. Data storage and retention</h2>
     <ul>
-      <li>Your data is stored in Firebase in the project operated by <strong>Frank Force Games</strong>.</li>
-      <li>We keep your data for as long as your account is active or as needed to provide the service.</li>
-      <li>You can request deletion (see "Your choices" below).</li>
+      <li><strong>Local-only mode:</strong> Data remains on your device until you delete it in-app, clear browser storage, or uninstall browser/app data.</li>
+      <li><strong>Signed-in mode:</strong> Synced data is stored in Firebase under your account (UID).</li>
+      <li>You can delete cloud account data using the in-app delete account flow. You can also clear local app data in-app.</li>
+      <li>We may retain limited records where required for legal, security, or compliance obligations.</li>
     </ul>
 
-    <h2>7. Your choices and controls</h2>
+    <h2>8. Your choices and controls</h2>
     <ul>
-      <li><strong>Access / update:</strong> You can view and update some information within the app.</li>
-      <li><strong>Delete your data:</strong> You can request deletion by contacting us at <strong>frankforce@gmail.com</strong> with the email you used to sign in. We will delete your user data within a reasonable period, unless we must keep it for legal or security reasons.</li>
-      <li><strong>Disconnect Google access:</strong> You can remove the app's access from your Google Account settings.</li>
+      <li><strong>Use without account:</strong> You can continue without account sign-in and use local-only mode.</li>
+      <li><strong>Access / Update:</strong> You can view and update app data directly within the App.</li>
+      <li><strong>Clear all app data:</strong> The App includes an in-app control to clear local data. If you are signed in, this flow also attempts to clear your synced cloud data.</li>
+      <li><strong>Delete account and cloud data:</strong> If signed in, you can delete your account and associated cloud data from within the App settings.</li>
+      <li><strong>Disconnect Google access:</strong> You can remove the App's access to your Google account at any time via your <a href="https://myaccount.google.com/permissions" target="_blank">Google Account settings</a> (Security &gt; Third-party apps with account access).</li>
+      <li><strong>Support requests:</strong> You can also contact us at <a href="mailto:frankforce@gmail.com">frankforce@gmail.com</a> for privacy requests.</li>
     </ul>
+    <p>EU/UK users additionally have the right to: access a copy of your personal data, correct inaccurate data, object to or restrict certain processing, and lodge a complaint with your local data protection authority.</p>
 
-    <h2>8. Children's privacy</h2>
-    <p>The app is not intended for children under 13, and we do not knowingly collect data from children.</p>
+    <h2>9. California users (CCPA)</h2>
+    <p>If you are a California resident, you have the right to:</p>
+    <ul>
+      <li>Know what personal information we collect, use, disclose, or sell.</li>
+      <li>Request deletion of your personal information (subject to certain exceptions).</li>
+      <li>Not be discriminated against for exercising your privacy rights.</li>
+    </ul>
+    <p>We do not sell personal information. To exercise your rights, contact us at <a href="mailto:frankforce@gmail.com">frankforce@gmail.com</a>. We will respond within 45 days as required by law.</p>
 
-    <h2>9. Security</h2>
-    <p>We use reasonable safeguards (including Firebase security rules) to protect information. No method of transmission or storage is 100% secure.</p>
+    <h2>10. Children's privacy</h2>
+    <p>The App is not directed to children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe we have inadvertently collected such information, please contact us at <a href="mailto:frankforce@gmail.com">frankforce@gmail.com</a> and we will promptly delete it.</p>
 
-    <h2>10. International users</h2>
-    <p>Your information may be processed in countries where Google or our service providers operate, which may include the United States.</p>
+    <h2>11. Health and medical disclaimer</h2>
+    <p>Lentando is a self-tracking tool and is not a medical device or a substitute for professional medical, mental health, or addiction treatment advice. If you are in crisis or need medical support, contact a qualified professional or emergency services.</p>
 
-    <h2>11. Changes to this policy</h2>
-    <p>We may update this policy from time to time. We will update the "Last updated" date and, if changes are significant, provide a notice in the app or on the website.</p>
+    <h2>12. Security</h2>
+    <p>We use reasonable safeguards — including Firebase security rules and access controls — to protect your information from unauthorized access, alteration, or disclosure. However, no method of transmission over the internet or electronic storage is 100% secure, and we cannot guarantee absolute security.</p>
 
-    <h2>12. Contact</h2>
-    <p>Questions or requests: <strong>frankforce@gmail.com</strong></p>
+    <h2>13. International users</h2>
+    <p>Your information may be transferred to and processed in countries outside your country of residence, including the United States, where Google or our other service providers operate. These countries may have different data protection laws than your own. By using the App, you consent to this transfer. If you are in the EU/UK, transfers are conducted in accordance with applicable data protection law (e.g., via Google's standard contractual clauses).</p>
+
+    <h2>14. Changes to this policy</h2>
+    <p>We may update this Privacy Policy from time to time. We will update the "Last updated" date at the top of this document. If changes are significant, we will provide a notice in the App or on the website. Your continued use of the App after changes take effect constitutes your acceptance of the revised policy.</p>
+
+    <h2>15. Contact</h2>
+    <p>Questions, requests, or complaints: <a href="mailto:frankforce@gmail.com">frankforce@gmail.com</a></p>
 
     <a href="./" class="back-link">← Back to Lentando</a>
   </div>
