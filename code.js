@@ -2041,7 +2041,7 @@ function renderGraphs() {
   const hourCounts = {};
   past24Used.forEach(evt => {
     const hour = getHour(evt.ts);
-    hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+    hourCounts[hour] = (hourCounts[hour] || 0) + (evt.amount ?? 1);
   });
   const hasHourData = past24Used.length > 0;
   const maxCount = hasHourData ? Math.max(...Object.values(hourCounts), 1) : 1;
@@ -2070,7 +2070,7 @@ function renderGraphs() {
       daysWithUse++;
       dayUsed.forEach(evt => {
         const hour = getHour(evt.ts);
-        hourTotals[hour] = (hourTotals[hour] || 0) + 1;
+        hourTotals[hour] = (hourTotals[hour] || 0) + (evt.amount ?? 1);
       });
     }
   });
