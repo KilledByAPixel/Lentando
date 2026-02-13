@@ -1876,7 +1876,7 @@ const GRAPH_DEFS = [
   { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'breaths', tooltip: 'Mindfulness/breathing minutes each day. Helps with stress and urges.',
     countFn: evs => getHabits(evs, 'breaths').length, countLabel: '🌬️ Mindfulness / Day', countTooltip: 'Number of mindfulness sessions each day.' },
   { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'clean', tooltip: 'Cleaning or tidying minutes each day. Keeping busy is a great distraction.',
-    countFn: evs => getHabits(evs, 'clean').length, countLabel: '🧹 Cleaning / Day', countTooltip: 'Number of cleaning sessions each day.' },
+    countFn: evs => getHabits(evs, 'clean').length, countLabel: '🧹 Cleaning / Day', countTooltip: 'Number of cleaning or tidying sessions each day.' },
   { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'outside', tooltip: 'Time spent outside each day. Fresh air and nature can help reset your mood.',
     countFn: evs => getHabits(evs, 'outside').length, countLabel: '🌳 Outside / Day', countTooltip: 'Number of times you went outside each day.' },
 ];
