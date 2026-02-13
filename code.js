@@ -1903,6 +1903,71 @@ function buildHourGraphBars(hourCounts, max, color) {
   return html + '</div>';
 }
 
+function buildWeekSummaryHTML() {
+  const days = getLastNDays(7);
+  const profile = getProfile();
+  const _weekdayFmt = new Intl.DateTimeFormat([], { weekday: 'short' });
+
+  let html = '<div class="graph-container"><div class="graph-title">📅 Past 7 Days</div>';
+  html += '<div class="week-grid">';
+
+  for (const dayKey of days) {
+    const d = new Date(dayKey + 'T12:00:00');
+    const dayLabel = dayKey === todayKey() ? 'Today' : _weekdayFmt.format(d);
+    const dayNum = d.getDate();
+    const events = DB.forDate(dayKey);
+    const used = filterProfileUsed(events);
+    const resisted = filterByType(events, 'resisted');
+    const habits = getHabits(events);
+
+    html += '<div class="week-col">';
+    html += `<div class="week-col-head">${escapeHTML(dayLabel)}</div>`;
+    html += `<div class="week-col-date">${dayNum}</div>`;
+    html += '<div class="week-col-body">';
+
+    // Usage icons grouped by substance with total amount
+    if (used.length > 0) {
+      const bySubstance = {};
+      used.forEach(e => {
+        const sub = e.substance || 'unknown';
+        if (!bySubstance[sub]) bySubstance[sub] = 0;
+        bySubstance[sub] += (e.amount ?? 1);
+      });
+      for (const [sub, amt] of Object.entries(bySubstance)) {
+        const icon = profile.icons[sub] || '⚡';
+        const displayAmt = Number.isInteger(amt) ? amt : amt.toFixed(1);
+        html += `<div class="week-item"><span class="week-icon">${icon}</span><span class="week-val">${displayAmt}</span></div>`;
+      }
+    } else {
+      html += '<div class="week-star">⭐</div>';
+    }
+
+    // Resists
+    if (resisted.length > 0) {
+      html += `<div class="week-item week-resist"><span class="week-icon">💪</span><span class="week-val">${resisted.length}</span></div>`;
+    }
+
+    // Activities
+    const activityTypes = ['water', 'exercise', 'breaths', 'clean', 'outside'];
+    for (const act of activityTypes) {
+      const actEvents = habits.filter(e => e.habit === act);
+      if (actEvents.length === 0) continue;
+      const icon = HABIT_ICONS[act] || '✅';
+      const totalMin = actEvents.reduce((s, e) => s + (e.minutes || 0), 0);
+      if (totalMin > 0) {
+        html += `<div class="week-item"><span class="week-icon">${icon}</span><span class="week-val">${totalMin}m</span></div>`;
+      } else {
+        html += `<div class="week-item"><span class="week-icon">${icon}</span><span class="week-val">${actEvents.length}</span></div>`;
+      }
+    }
+
+    html += '</div></div>'; // close week-col-body, week-col
+  }
+
+  html += '</div></div>'; // close week-grid, graph-container
+  return html;
+}
+
 function renderGraphs() {
   const days = getLastNDays(graphDays);
   const hourContainer = $('hour-graphs');
@@ -1910,7 +1975,7 @@ function renderGraphs() {
 
   // Hour graphs (not affected by day selector)
   let hourHtml = '';
-  
+
   // Add today's usage by hour graph
   const todayEvents = DB.forDate(todayKey());
   const todayUsed = filterProfileUsed(todayEvents);
@@ -1926,6 +1991,9 @@ function renderGraphs() {
     ? buildHourGraphBars(hourCounts, maxCount, '#f39c12')
     : emptyStateHTML('No data yet', 'padding:12px 0');
   hourHtml += `</div>`;
+
+  // Add 7-day summary grid
+  hourHtml += buildWeekSummaryHTML();
   
   hourContainer.innerHTML = hourHtml;
   

@@ -866,6 +866,69 @@ header .date { font-size: 14px; color: var(--muted); }
   margin-bottom: 12px;
 }
 
+/* ===== WEEK SUMMARY GRID ===== */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.week-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+.week-col-head {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.week-col-date {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.week-col-body {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 3px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+.week-item {
+  display: contents;
+  font-size: 11px;
+  color: var(--text);
+}
+.week-item > .week-icon {
+  text-align: center;
+  justify-self: end;
+  font-size: 12px;
+  line-height: 18px;
+  height: 18px;
+  overflow: hidden;
+}
+.week-item > .week-val {
+  text-align: left;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 18px;
+  height: 18px;
+}
+.week-star {
+  font-size: 16px;
+  grid-column: 1 / -1;
+  text-align: center;
+}
+.week-resist > .week-icon,
+.week-resist > .week-val {
+  color: var(--resist);
+}
+
 /* ===== EXPORT ===== */
 .export-bar {
   display: flex;
