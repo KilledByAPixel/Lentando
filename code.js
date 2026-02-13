@@ -237,10 +237,11 @@ const BADGE_DEFINITIONS = {
   'trigger-noted': { label: 'Trigger Identified', icon: '🔍', desc: 'Identified what triggered the urge' },
   'full-report': { label: 'Full Report', icon: '📋', desc: 'Logged both intensity and trigger' },
   'tough-resist': { label: 'Tough Resist', icon: '🦁', desc: 'Resisted a strong urge (intensity 4+)' },
+  'resist-majority': { label: 'Resist Majority', icon: '⚔️', desc: 'More resists than uses today' },
   'mindful': { label: 'Mindful Session', icon: '🌸', desc: 'Logged the reason for using' },
   'dose-half': { label: 'Reduced Dose', icon: '⚖️', desc: 'Used less than a full dose' },
   'harm-reduction-vape': { label: 'Safer Choice', icon: '✨', desc: 'Chose vape over smoke' },
-  'vape-only': { label: 'Vape Only Day', icon: '💨', desc: 'Only vaped tracked substance today' },
+  'vape-only': { label: 'Vape Only Day', icon: '💨', desc: 'Only used vape or edibles today' },
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products, no THC' },
   'half-cbd-day': { label: 'Half CBD Day', icon: '🍂', desc: 'At least 50% of usage was CBD' },
   'edibles-only': { label: 'Edibles Only', icon: '🍪', desc: 'Only used edibles today' },
@@ -251,7 +252,6 @@ const BADGE_DEFINITIONS = {
   'cleaned': { label: 'Tidied Up', icon: '🧹', desc: 'Tidied up or cleaned something' },
   'went-outside': { label: 'Went Outside', icon: '🌤️', desc: 'Spent time outside or got some fresh air' },
   'exercised': { label: 'Exercised', icon: '🏃', desc: 'Exercised or did a physical activity' },
-  'habit-stack': { label: 'Habit Stack', icon: '📚', desc: 'Logged multiple different habit types' },
   'five-star-day': { label: 'Five Star Day', icon: '🌟', desc: 'Logged all 5 habit types' },
   'habit-streak': { label: 'Habit Streak', icon: '🐢', desc: 'Logged healthy habits for consecutive days' },
   'resist-streak': { label: 'Resist Streak', icon: '🛡️', desc: 'Resisted urges for multiple days in a row' },
@@ -265,6 +265,9 @@ const BADGE_DEFINITIONS = {
   'lower-amount': { label: 'Scaling Back', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'taper': { label: 'Tapering', icon: '📐', desc: 'Gradually reduced usage over 3 or more consecutive days' },
   'gap-above-avg': { label: 'Beat Your Average', icon: '⏳', desc: 'Average gap today exceeded trailing 7-day average (excludes gaps crossing 6am)' },
+  'microdose-day': { label: 'Microdose Day', icon: '✌️', desc: 'Total amount of 2 or less today' },
+  'one-session': { label: 'One Session', icon: '☝️', desc: 'Limited use to a single session today' },
+  'no-liquor': { label: 'No Liquor Day', icon: '🥃', desc: 'Did not drink liquor today' },
   'low-day': { label: 'Light Day', icon: '🎈', desc: 'Used less than half your trailing 7-day average' },
   'night-skip': { label: 'No Night Use', icon: '☄️', desc: 'No use between midnight and 6am' },
   'morning-skip': { label: 'No Morning Use', icon: '🌅', desc: 'No use between 6am and noon' },
@@ -289,7 +292,7 @@ Object.keys(BADGE_DEFINITIONS).forEach((key, index) => {
 });
 
 function getBadgeDef(id) {
-  return BADGE_DEFINITIONS[id] || { label: 'Unknown Medal', icon: '❓', desc: '' };
+  return BADGE_DEFINITIONS[id] || { label: 'Unknown Badge', icon: '❓', desc: '' };
 }
 
 const DEFAULT_SETTINGS = {
@@ -881,6 +884,7 @@ const Badges = {
     addBadge(resisted.some(r => r.trigger != null), 'trigger-noted');
     addBadge(resisted.some(r => r.intensity != null && r.trigger != null), 'full-report');
     addBadge(resisted.some(r => r.intensity >= 4), 'tough-resist');
+    addBadge(resisted.length > 0 && resisted.length > profileUsed.length, 'resist-majority');
 
     // Harm reduction vape badge
     const isCannabis = settings.addictionProfile === 'cannabis';
@@ -923,6 +927,18 @@ const Badges = {
     addBadge(profileUsed.length > 0 && avg7DayAmount > 0 && profileAmt < (avg7DayAmount / 2), 'low-day');
     addBadge(profileUsed.length === 0, 'zero-use');
 
+    // Microdose Day: total amount of 2 or less (must have used something)
+    addBadge(profileUsed.length > 0 && profileAmt > 0 && profileAmt <= 2, 'microdose-day');
+
+    // One Session: exactly one use event today
+    addBadge(profileUsed.length === 1, 'one-session');
+
+    // No Liquor Day: alcohol profile, used today, but no liquor
+    const isAlcohol = settings.addictionProfile === 'alcohol';
+    if (isAlcohol) {
+      addBadge(profileUsed.length > 0 && !profileUsed.some(e => e.substance === 'liquor'), 'no-liquor');
+    }
+
     // --- Habit-based badges ---
     const waterCount = getHabits(todayEvents, 'water').length;
     addBadge(waterCount >= 1, 'drank-water');
@@ -942,7 +958,6 @@ const Badges = {
     addBadge(hasOutside, 'went-outside');
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
-    addBadge(uniqueHabits.size >= 2, 'habit-stack');
     addBadge(uniqueHabits.size === 5, 'five-star-day');
 
     // --- Timing-based badges ---
@@ -4071,7 +4086,7 @@ if (debugMode) {
     const excludeIds = new Set(['year-streak', 'month-streak', 'tbreak-365d', 'tbreak-30d', 'tbreak-21d']);
     // Common badges get higher counts, rare badges get lower
     const commonBadges = new Set(['resist', 'mindful', 'dose-half', 'harm-reduction-vape', 'hydrated',
-      'habit-stack', 'good-start', 'app-streak', 'gap-1h', 'gap-2h']);
+      'good-start', 'app-streak', 'gap-1h', 'gap-2h']);
     const eligibleIds = badgeIds.filter(id => !excludeIds.has(id));
     
     console.log('Generating random lifetime badges...');
