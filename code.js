@@ -1912,7 +1912,7 @@ function buildWeekSummaryHTML() {
   const profile = getProfile();
   const _weekdayFmt = new Intl.DateTimeFormat([], { weekday: 'short' });
 
-  let html = '<div class="graph-container" data-tooltip="Daily snapshot of the past week. Shows usage by type, resists, and healthy activities for each day. A 🏅 means no usage that day."><div class="graph-title">📅 Past 7 Days</div>';
+  let html = '<div class="graph-container" data-tooltip="Daily snapshot of the past week. Shows usage by type, resists, and healthy activities for each day. A 🏅 means no usage that day."><div class="graph-title">📅 Past 7 Day Summary</div>';
   html += '<div class="week-grid">';
 
   for (const dayKey of days) {
