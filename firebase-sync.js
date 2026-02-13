@@ -303,6 +303,10 @@ async function pullFromCloud(uid) {
   const cloudUpdatedAt = parseInt(cloud.updatedAt, 10) || 0;
   const preferCloud = cloudUpdatedAt >= localUpdatedAt;
 
+  // Track whether the merge produces changes that cloud doesn't already have.
+  // Only push back if something actually changed — saves a write operation per pull.
+  let needsPushBack = false;
+
   // --- Merge deletedIds (tombstones): union by id, clean old ones ---
   // Normalize both cloud and local tombstones to {id: deletedAt} map format
   // (cloud may be old [{id,deletedAt}] array or new {id:deletedAt} map)
@@ -320,10 +324,20 @@ async function pullFromCloud(uid) {
   const seenDeletedIds = new Set(Object.keys(mergedTombstones));
   (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.deletedIds, JSON.stringify(mergedTombstones));
 
+  // Check if local had tombstones cloud didn't (compare keys, not just count)
+  for (const id of Object.keys(mergedTombstones)) {
+    if (!(id in cloudTombstones)) { needsPushBack = true; break; }
+  }
+
   // --- Merge clearedAt: take the maximum (most recent clear wins) ---
   const localClearedAt = parseInt(localStorage.getItem(STORAGE_KEYS.clearedAt), 10) || 0;
   const cloudClearedAt = parseInt(cloud.clearedAt, 10) || 0;
   const mergedClearedAt = Math.max(localClearedAt, cloudClearedAt);
+
+  // Check if local had a more recent clear
+  if (localClearedAt > cloudClearedAt) {
+    needsPushBack = true;
+  }
   if (mergedClearedAt > 0) {
     (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.clearedAt, mergedClearedAt.toString());
   }
@@ -345,6 +359,17 @@ async function pullFromCloud(uid) {
   }
   merged.sort((a, b) => a.ts - b.ts);
   (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.events, JSON.stringify(merged));
+
+  // Check if local contributed events cloud didn't have, or if cloud events
+  // were filtered out (by tombstones/clearedAt). Compare actual IDs, not just count.
+  const cloudEventIds = new Set(cloudEvents.map(e => e?.id).filter(Boolean));
+  for (const e of merged) {
+    if (!cloudEventIds.has(e.id)) { needsPushBack = true; break; }
+  }
+  // Also check if merged is smaller (cloud events got filtered out by tombstones/clear)
+  if (merged.length !== cloudEvents.length) {
+    needsPushBack = true;
+  }
 
   // --- Merge badges (keep higher lifetime counts) ---
   const cloudBadges = cloud.badges || cloud.wins; // backward compat: read old 'wins' field
@@ -403,9 +428,10 @@ async function pullFromCloud(uid) {
     if (preferCloud) {
       // Cloud is newer — adopt its todo list (handles both clears and single deletes)
       (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.todos, JSON.stringify(cloudTodos));
+    } else {
+      // When local is newer we keep local as-is (already in localStorage)
+      needsPushBack = true; // Local todos need to go to cloud
     }
-    // When local is newer we keep local as-is (already in localStorage); the
-    // merged state gets pushed back to cloud at the end of pullFromCloud().
   }
 
   // --- Version: take the higher version (most migrated) ---
@@ -419,14 +445,22 @@ async function pullFromCloud(uid) {
   // Stamp merge time so future pulls from other devices know this device is up-to-date
   (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.updatedAt, Date.now().toString());
 
+  // If local is newer overall, settings/badges/todos may need pushing
+  if (!preferCloud) {
+    needsPushBack = true;
+  }
+
   // Invalidate DB caches immediately after localStorage is updated
   // This ensures continueToApp() will read fresh data
   invalidateDBCaches();
 
-  // Push merged state back so cloud reflects the union
-  await pushToCloud(uid);
-
-  console.log('[Sync] Pulled & merged,', merged.length, 'events');
+  // Only push merged state back if the merge produced changes cloud doesn't have
+  if (needsPushBack) {
+    await pushToCloud(uid);
+    console.log('[Sync] Pulled & merged,', merged.length, 'events (pushed changes back)');
+  } else {
+    console.log('[Sync] Pulled & merged,', merged.length, 'events (cloud was up-to-date)');
+  }
 }
 
 // ========== AUTH STATE LISTENER ==========
