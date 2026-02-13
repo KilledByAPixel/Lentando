@@ -32,6 +32,7 @@ export default [
         Promise: 'readonly',
         Intl: 'readonly',
         performance: 'readonly',
+        history: 'readonly',
         // External libs loaded via <script>
         FirebaseSync: 'readonly',
       },

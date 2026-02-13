@@ -2104,6 +2104,88 @@ function renderGraphs() {
   dayContainer.innerHTML = dayHtml;
 }
 
+// ========== BACK BUTTON NAVIGATION ==========
+// Single guard entry in history. Back = cancel/close the topmost layer.
+// After every back press, re-push the guard via setTimeout+pushState.
+// pushState clears forward entries, so the forward button stays grayed out.
+
+let _navGuardActive = false;
+
+/** Push a single guard entry so the back button can be intercepted */
+function navGuard() {
+  if (!_navGuardActive) {
+    _navGuardActive = true;
+    history.pushState({ lentando: true }, '');
+  }
+}
+
+/** Close the topmost overlay/modal/tab. Returns true if something was closed. */
+function navHandleBack() {
+  // Custom config overlay
+  if (!$('custom-config-overlay').classList.contains('hidden')) {
+    $('custom-config-overlay').classList.add('hidden');
+    // Fall through to close onboarding too (if open) and go to Today
+  }
+  // Onboarding overlay
+  if (!$('onboarding-overlay').classList.contains('hidden')) {
+    if (_previousProfile) {
+      // Changing tracking — restore previous profile
+      const settings = DB.loadSettings();
+      settings.addictionProfile = _previousProfile;
+      DB._settings = settings;
+      DB.saveSettings();
+      _previousProfile = null;
+      $('onboarding-overlay').classList.add('hidden');
+      switchTab('today');
+      return true;
+    }
+    // First-time onboarding — default to custom profile and enter app
+    const settings = DB.loadSettings();
+    if (!settings.addictionProfile) {
+      settings.addictionProfile = 'custom';
+      settings.lastSubstance = 'type1';
+      settings.lastAmount = 1.0;
+      DB._settings = settings;
+      DB.saveSettings();
+      $('onboarding-overlay').classList.add('hidden');
+      calculateAndUpdateBadges();
+      bindEvents();
+      render();
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => renderMetrics(), METRICS_REFRESH_MS);
+      return true;
+    }
+    return true; // consume the event to prevent leaving
+  }
+  // Login overlay — go back to landing page
+  if (!$('login-overlay').classList.contains('hidden')) {
+    hideLoginScreen();
+    showLandingPage();
+    return true;
+  }
+  // In-app: close everything and go to Today
+  if (!$('modal-overlay').classList.contains('hidden')) {
+    closeModal();
+  }
+  const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+  if (activeTab && activeTab !== 'today') {
+    switchTab('today');
+    return true;
+  }
+  return false;
+}
+
+window.addEventListener('popstate', () => {
+  if (!_appStarted) return;
+
+  _navGuardActive = false; // guard was consumed by this back press
+  navHandleBack();
+
+  // Re-push the guard. pushState clears forward entries, keeping the
+  // forward button grayed out. Deferred so it runs outside the popstate handler.
+  setTimeout(() => navGuard(), 0);
+});
+
 // ========== TAB SWITCHING ==========
 function switchTab(tabName) {
   // When switching away, just visually hide the undo button (don't clear the event ID)
@@ -2188,9 +2270,12 @@ async function clearDatabase() {
   location.reload();
 }
 
+let _previousProfile = null; // saved when changeAddiction opens onboarding
+
 function changeAddiction() {
   if (!confirm('🔄 Change what you\'re tracking?\n\nYour data will be kept, but substance/method types will change. Continue?')) return;
   const settings = DB.loadSettings();
+  _previousProfile = settings.addictionProfile; // save for back button restore
   settings.addictionProfile = null;
   DB._settings = settings;
   DB.saveSettings();
@@ -2761,6 +2846,7 @@ let _appStarted = false;
 
 function showLandingPage() {
   _appStarted = true;
+  navGuard(); // Push initial guard entry for back button interception
   const splash = $('splash-screen');
   if (splash) splash.classList.add('hidden');
   
@@ -2776,6 +2862,7 @@ function dismissLanding() {
 
 function showLoginScreen() {
   _appStarted = true;
+  navGuard();
   const splash = $('splash-screen');
   if (splash) splash.classList.add('hidden');
   
@@ -2829,6 +2916,7 @@ function skipLogin() {
 
 function continueToApp() {
   _appStarted = true;
+  navGuard();
   const splash = $('splash-screen');
   if (splash) splash.classList.add('hidden');
   
