@@ -158,7 +158,7 @@ function buildCustomProfile(settings) {
 // User input options
 const REASONS = ['habit', 'stress', 'social', 'reward','bored', 'pain', 'hungry', 'angry', 'lonely', 'tired'];
 const INTENSITIES = [1, 2, 3, 4, 5];
-const HABIT_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60];
+const HABIT_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60, 120];
 const OPTIONAL_FIELDS = new Set(['reason', 'trigger']);
 
 // Timeouts and durations
