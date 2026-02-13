@@ -911,7 +911,7 @@ const Badges = {
     // Gap badges — include all sessions but skip gaps that cross the 6am boundary (sleep gap)
     if (profileUsed.length >= 1 || (yesterdayEvents && yesterdayEvents.length > 0)) {
       // Include last event from yesterday to capture gap crossing midnight
-      let gapEvents = [...profileUsed];
+      const gapEvents = [...profileUsed];
       if (yesterdayEvents && yesterdayEvents.length > 0) {
         const yUsed = filterProfileUsed(yesterdayEvents);
         if (yUsed.length > 0) {
