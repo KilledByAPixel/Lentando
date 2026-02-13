@@ -1846,15 +1846,15 @@ function navigateDay(offset) {
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
-  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length, activity: false, tooltip: 'Number of times you resisted an urge each day. Higher is better!' },
+  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length, activity: false, tooltip: 'How many urges you resisted each day.' },
   { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true, tooltip: 'Number of water logs each day. Staying hydrated supports recovery.' },
-  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total exercise minutes each day. Physical activity helps manage cravings.',
+  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Exercise minutes each day. Physical activity helps manage cravings.',
     countFn: evs => getHabits(evs, 'exercise').length, countLabel: '🏃 Exercise / Day', countTooltip: 'Number of exercise sessions each day.' },
-  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total mindfulness/breathing minutes each day. Helps with stress and urges.',
+  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Mindfulness/breathing minutes each day. Helps with stress and urges.',
     countFn: evs => getHabits(evs, 'breaths').length, countLabel: '🌬️ Mindfulness / Day', countTooltip: 'Number of mindfulness sessions each day.' },
-  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total cleaning/tidying minutes each day. Keeping busy is a great distraction.',
+  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Cleaning or tidying minutes each day. Keeping busy is a great distraction.',
     countFn: evs => getHabits(evs, 'clean').length, countLabel: '🧹 Cleaning / Day', countTooltip: 'Number of cleaning sessions each day.' },
-  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Total time spent outside each day. Fresh air and nature help reset your mood.',
+  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Time spent outside each day. Fresh air and nature can help reset your mood.',
     countFn: evs => getHabits(evs, 'outside').length, countLabel: '🌳 Outside / Day', countTooltip: 'Number of times you went outside each day.' },
 ];
 
@@ -1912,7 +1912,7 @@ function buildWeekSummaryHTML() {
   const profile = getProfile();
   const _weekdayFmt = new Intl.DateTimeFormat([], { weekday: 'short' });
 
-  let html = '<div class="graph-container" data-tooltip="Daily snapshot of the past week. Shows usage by type, resists, and healthy activities for each day. A ⭐ means no usage that day."><div class="graph-title">📅 Past 7 Days</div>';
+  let html = '<div class="graph-container" data-tooltip="Daily snapshot of the past week. Shows usage by type, resists, and healthy activities for each day. A 🏅 means no usage that day."><div class="graph-title">📅 Past 7 Days</div>';
   html += '<div class="week-grid">';
 
   for (const dayKey of days) {
@@ -1945,7 +1945,7 @@ function buildWeekSummaryHTML() {
         html += `<div class="week-item"><span class="week-icon">${icon}</span><span class="week-val">${displayAmt}</span></div>`;
       }
     } else {
-      html += '<div class="week-star">⭐</div>';
+      html += '<div class="week-star">🏅</div>';
     }
 
     // Resists
@@ -1992,7 +1992,7 @@ function renderGraphs() {
   });
   const hasHourData = todayUsed.length > 0;
   const maxCount = hasHourData ? Math.max(...Object.values(hourCounts), 1) : 1;
-  hourHtml += `<div class="graph-container" data-tooltip="Shows when you used today, broken down by hour. Helps identify your peak usage times."><div class="graph-title">🕒 Today's Usage by Hour</div>`;
+  hourHtml += `<div class="graph-container" data-tooltip="Shows your use today, broken down by hour. Helps identify your peak usage times."><div class="graph-title">🕒 Today's Usage by Hour</div>`;
   hourHtml += hasHourData
     ? buildHourGraphBars(hourCounts, maxCount, '#f39c12')
     : emptyStateHTML('No data yet', 'padding:12px 0');
@@ -2043,7 +2043,7 @@ function renderGraphs() {
   
   const hasHeatmapData = Object.keys(hourAverages).length > 0;
   const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
-  dayHtml += `<div class="graph-container" data-tooltip="Average usage per hour across days you used. Only counts days with at least one use. Reveals your habitual usage patterns."><div class="graph-title">⚡ Average Usage by Hour</div>`;
+  dayHtml += `<div class="graph-container" data-tooltip="Your average hourly usage across days you used. Reveals your habitual usage patterns."><div class="graph-title">⚡ Average Usage by Hour</div>`;
   dayHtml += hasHeatmapData
     ? buildHourGraphBars(hourAverages, maxAvg, '#e53935')
     : emptyStateHTML('No data yet', 'padding:12px 0');
