@@ -216,38 +216,17 @@ function asObject(value) {
   return (value && typeof value === 'object' && !Array.isArray(value)) ? value : {};
 }
 
-/** Read tombstones from localStorage, migrating old [{id,deletedAt}] array format to {id:deletedAt} map */
 function readTombstoneMap(key) {
   try {
     const raw = readLocalJSON(key, {});
-    if (Array.isArray(raw)) {
-      const map = {};
-      for (const t of raw) {
-        if (typeof t === 'string') map[t] = Date.now();
-        else if (t && t.id) map[t.id] = typeof t.deletedAt === 'number' ? t.deletedAt : Date.now();
-      }
-      return map;
-    }
-    return (typeof raw === 'object' && raw !== null) ? raw : {};
+    return (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) ? raw : {};
   } catch {
     return {};
   }
 }
 
-/** Normalize tombstones from any format (old array or new map) to {id: deletedAt} entries */
 function normalizeTombstones(value) {
-  if (Array.isArray(value)) {
-    const map = {};
-    for (const t of value) {
-      if (typeof t === 'string') map[t] = Date.now();
-      else if (t && t.id) {
-        const parsed = typeof t.deletedAt === 'number' ? t.deletedAt : parseInt(t.deletedAt, 10);
-        map[t.id] = Number.isFinite(parsed) ? parsed : Date.now();
-      }
-    }
-    return map;
-  }
-  if (value && typeof value === 'object') return value;
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value;
   return {};
 }
 
@@ -308,8 +287,6 @@ async function pullFromCloud(uid) {
   let needsPushBack = false;
 
   // --- Merge deletedIds (tombstones): union by id, clean old ones ---
-  // Normalize both cloud and local tombstones to {id: deletedAt} map format
-  // (cloud may be old [{id,deletedAt}] array or new {id:deletedAt} map)
   const cloudTombstones = normalizeTombstones(cloud.deletedIds);
   const localTombstones = readTombstoneMap(STORAGE_KEYS.deletedIds);
   const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);

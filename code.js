@@ -572,8 +572,6 @@ const DB = {
   _getDeletedIds() {
     try {
       const raw = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '{}');
-      // Backward compat: old format was [{id, deletedAt}, ...]
-      if (Array.isArray(raw)) return new Set(raw.map(t => typeof t === 'string' ? t : t.id));
       return new Set(Object.keys(raw));
     } catch {
       return new Set();
@@ -592,18 +590,9 @@ const DB = {
     }
   },
 
-  /** Read tombstones from localStorage, migrating old [{id,deletedAt}] array format to {id:deletedAt} map */
   _readTombstoneMap() {
     try {
       const raw = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '{}');
-      if (Array.isArray(raw)) {
-        const map = {};
-        for (const t of raw) {
-          if (typeof t === 'string') map[t] = now();
-          else if (t && t.id) map[t.id] = t.deletedAt || now();
-        }
-        return map;
-      }
       return (typeof raw === 'object' && raw !== null) ? raw : {};
     } catch {
       return {};
@@ -3839,11 +3828,10 @@ window.App = {
     const idsToDelete = new Set(events.map(e => e.id));
     // Batch-add tombstones in one write (avoids N parse/stringify cycles)
     try {
-      const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
-      const existingIds = new Set(tombstones.map(t => t.id));
+      const tombstones = DB._readTombstoneMap();
       const nowTs = now();
       for (const id of idsToDelete) {
-        if (!existingIds.has(id)) tombstones.push({ id, deletedAt: nowTs });
+        if (!tombstones[id]) tombstones[id] = nowTs;
       }
       safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(tombstones));
     } catch (e) { console.error('Failed to batch-add tombstones:', e); }
