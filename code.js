@@ -1871,13 +1871,13 @@ const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: 'var(--primary)',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
   { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').length, activity: false, tooltip: 'How many urges you resisted each day.' },
   { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true, tooltip: 'Number of water logs each day. Staying hydrated supports recovery.' },
-  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Exercise minutes each day. Physical activity helps manage cravings.',
+  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'exercise', tooltip: 'Exercise minutes each day. Physical activity helps manage cravings.',
     countFn: evs => getHabits(evs, 'exercise').length, countLabel: '🏃 Exercise / Day', countTooltip: 'Number of exercise sessions each day.' },
-  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Mindfulness/breathing minutes each day. Helps with stress and urges.',
+  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'breaths', tooltip: 'Mindfulness/breathing minutes each day. Helps with stress and urges.',
     countFn: evs => getHabits(evs, 'breaths').length, countLabel: '🌬️ Mindfulness / Day', countTooltip: 'Number of mindfulness sessions each day.' },
-  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Cleaning or tidying minutes each day. Keeping busy is a great distraction.',
+  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'clean', tooltip: 'Cleaning or tidying minutes each day. Keeping busy is a great distraction.',
     countFn: evs => getHabits(evs, 'clean').length, countLabel: '🧹 Cleaning / Day', countTooltip: 'Number of cleaning sessions each day.' },
-  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, tooltip: 'Time spent outside each day. Fresh air and nature can help reset your mood.',
+  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'outside', tooltip: 'Time spent outside each day. Fresh air and nature can help reset your mood.',
     countFn: evs => getHabits(evs, 'outside').length, countLabel: '🌳 Outside / Day', countTooltip: 'Number of times you went outside each day.' },
 ];
 
@@ -1983,7 +1983,10 @@ function buildWeekSummaryHTML() {
       const actEvents = habits.filter(e => e.habit === act);
       if (actEvents.length === 0) continue;
       const icon = HABIT_ICONS[act] || '✅';
-      const totalMin = actEvents.reduce((s, e) => s + (e.minutes || 0), 0);
+      const anyHaveMin = actEvents.some(e => e.minutes > 0);
+      const totalMin = anyHaveMin
+        ? actEvents.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0)
+        : 0;
       if (totalMin > 0) {
         html += `<div class="week-item"><span class="week-icon">${icon}</span><span class="week-val">${totalMin}m</span></div>`;
       } else {
@@ -2088,6 +2091,23 @@ function renderGraphs() {
     let hasData = vals.some(v => v > 0);
     let label = def.label;
     let tooltip = def.tooltip;
+
+    // For activity graphs: if some events have minutes and some don't,
+    // round up events without minutes to 5min for a more accurate view
+    if (def.activity && def.habitType && def.countFn) {
+      let anyHaveMinutes = false;
+      for (const dk of days) {
+        if (getHabits(DB.forDate(dk), def.habitType).some(e => e.minutes > 0)) { anyHaveMinutes = true; break; }
+      }
+      if (anyHaveMinutes) {
+        vals = days.map(dk => {
+          const habits = getHabits(DB.forDate(dk), def.habitType);
+          return habits.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0);
+        });
+        max = Math.max(...vals, 1);
+        hasData = true;
+      }
+    }
 
     // For activity graphs with no minutes data, fall back to event count
     if (def.activity && !hasData && def.countFn) {
