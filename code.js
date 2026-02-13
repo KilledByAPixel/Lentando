@@ -702,9 +702,9 @@ window.continueToApp = continueToApp;
 /** Stop all background timers (called on logout) */
 window.stopTimers = function() {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  clearTimeout(chipTimeout);
-  clearTimeout(habitChipTimeout);
-  clearTimeout(undoHideTimeout);
+  if (chipTimeout) { clearTimeout(chipTimeout); chipTimeout = null; }
+  if (habitChipTimeout) { clearTimeout(habitChipTimeout); habitChipTimeout = null; }
+  if (undoHideTimeout) { clearTimeout(undoHideTimeout); undoHideTimeout = null; }
 };
 
 // ========== EVENT QUERY HELPERS ==========

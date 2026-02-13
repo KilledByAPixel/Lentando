@@ -18,7 +18,53 @@ const STATIC_FILES = [
   'icon-512.png',
 ];
 
+// Pre-build checks
+function preBuildChecks() {
+  console.log('🔍 Running pre-build checks...\n');
+  
+  let hasErrors = false;
+  
+  // Check 1: Verify debugMode is false
+  const codeContent = fs.readFileSync('code.js', 'utf8');
+  if (codeContent.match(/const debugMode = true/)) {
+    console.error('  ❌ ERROR: debugMode is enabled in code.js!');
+    hasErrors = true;
+  } else {
+    console.log('  ✓ debugMode is disabled in code.js');
+  }
+  
+  // Check 2: Verify SW_DEBUG is false
+  const swContent = fs.readFileSync('sw.js', 'utf8');
+  if (swContent.match(/const SW_DEBUG = true/)) {
+    console.error('  ❌ ERROR: SW_DEBUG is enabled in sw.js!');
+    hasErrors = true;
+  } else {
+    console.log('  ✓ SW_DEBUG is disabled in sw.js');
+  }
+  
+  // Check 3: Verify all required files exist
+  const allFiles = [...JS_FILES, ...STATIC_FILES];
+  const missingFiles = allFiles.filter(file => !fs.existsSync(file));
+  if (missingFiles.length > 0) {
+    console.error('  ❌ ERROR: Missing files:', missingFiles.join(', '));
+    hasErrors = true;
+  } else {
+    console.log('  ✓ All required files present');
+  }
+  
+  console.log('');
+  
+  if (hasErrors) {
+    console.error('❌ Pre-build checks failed! Fix errors above before building.\n');
+    process.exit(1);
+  }
+  
+  console.log('✅ Pre-build checks passed!\n');
+}
+
 (async () => {
+  // Run pre-build checks first
+  preBuildChecks();
   // Clean and create build directory
   if (fs.existsSync(BUILD_DIR)) {
     fs.rmSync(BUILD_DIR, { recursive: true });
