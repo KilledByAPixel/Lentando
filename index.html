@@ -1431,10 +1431,10 @@ header .date { font-size: 14px; color: var(--muted); }
     <a href="./terms.html" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">Terms of Service</a>
   </div>
   <div class="export-bar">
-    <button class="export-btn" id="btn-export-json" onclick="App.exportJSON()">📥 Export JSON</button>
+    <button class="export-btn" id="btn-export-json" onclick="App.exportJSON()">📥 Export Database</button>
   </div>
   <div class="export-bar">
-    <button class="export-btn" id="btn-import-json" onclick="document.getElementById('import-file').click()">📤 Import JSON</button>
+    <button class="export-btn" id="btn-import-json" onclick="document.getElementById('import-file').click()">📤 Import Database</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="App.importJSON(this)">
   </div>
   <div class="import-status hidden" id="import-status"></div>
