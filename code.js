@@ -158,7 +158,7 @@ function buildCustomProfile(settings) {
 // User input options
 const REASONS = ['habit', 'stress', 'social', 'reward','bored', 'pain', 'hungry', 'angry', 'lonely', 'tired'];
 const INTENSITIES = [1, 2, 3, 4, 5];
-const EXERCISE_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60];
+const HABIT_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60];
 const OPTIONAL_FIELDS = new Set(['reason', 'trigger']);
 
 // Timeouts and durations
@@ -2847,7 +2847,7 @@ function openEditModal(eventId) {
     habit: () => {
       const fields = [`<label>Habit</label><div style="font-size:16px">${HABIT_LABELS[evt.habit] || evt.habit}</div>`];
       if (HABIT_SHOW_CHIPS[evt.habit]) {
-        fields.push(chipGroupHTML('Minutes', 'minutes', EXERCISE_DURATIONS, evt.minutes ?? 0, v => v === 0 ? '-' : String(v)));
+        fields.push(chipGroupHTML('Minutes', 'minutes', HABIT_DURATIONS, evt.minutes ?? 0, v => v === 0 ? '-' : String(v)));
       }
       return fields;
     }
@@ -3866,7 +3866,7 @@ if (debugMode) {
       for (let i = 0; i < numPerHabit; i++) {
         const timestamp = thirtyDaysAgo + Math.random() * (nowTs - thirtyDaysAgo);
         const minutes = HABIT_SHOW_CHIPS[habit]
-          ? EXERCISE_DURATIONS[Math.floor(Math.random() * EXERCISE_DURATIONS.length)]
+          ? HABIT_DURATIONS[Math.floor(Math.random() * HABIT_DURATIONS.length)]
           : null;
         
         const evt = {
