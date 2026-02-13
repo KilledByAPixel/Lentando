@@ -3590,6 +3590,11 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   safeSetItem(STORAGE_THEME, theme);
   setThemeIcon(theme);
+  // Update browser chrome to match manual theme toggle
+  const themeColor = theme === 'dark' ? '#1a1a1a' : '#5c6bc0';
+  document.querySelectorAll('meta[name="theme-color"]').forEach((metaTheme) => {
+    metaTheme.setAttribute('content', themeColor);
+  });
 }
 
 window.App = {
@@ -3981,7 +3986,9 @@ if (debugMode) {
 document.addEventListener('DOMContentLoaded', () => {
   // Don't preload events or settings - let them load lazily to avoid caching stale data before Firebase sync
   
-  applyTheme(localStorage.getItem(STORAGE_THEME) || 'dark');
+  // Use saved theme or specific system preference to avoid flash of wrong color
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(localStorage.getItem(STORAGE_THEME) || (systemDark ? 'dark' : 'light'));
   
   // Initialize sound system
   initSounds();

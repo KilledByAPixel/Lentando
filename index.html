@@ -32,12 +32,14 @@
 <meta name="twitter:image:alt" content="Lentando - Progress at your pace">
 
 <!-- PWA / Mobile -->
-<meta name="theme-color" content="#5c6bc0">
+<meta name="theme-color" content="#5c6bc0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
 <meta name="application-name" content="Lentando">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Lentando">
 
@@ -160,6 +162,7 @@
   padding: 0; 
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
