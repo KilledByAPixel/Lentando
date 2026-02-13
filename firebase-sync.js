@@ -216,17 +216,51 @@ function asObject(value) {
   return (value && typeof value === 'object' && !Array.isArray(value)) ? value : {};
 }
 
+/** Read tombstones from localStorage, migrating old [{id,deletedAt}] array format to {id:deletedAt} map */
+function readTombstoneMap(key) {
+  try {
+    const raw = readLocalJSON(key, {});
+    if (Array.isArray(raw)) {
+      const map = {};
+      for (const t of raw) {
+        if (typeof t === 'string') map[t] = Date.now();
+        else if (t && t.id) map[t.id] = typeof t.deletedAt === 'number' ? t.deletedAt : Date.now();
+      }
+      return map;
+    }
+    return (typeof raw === 'object' && raw !== null) ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Normalize tombstones from any format (old array or new map) to {id: deletedAt} entries */
+function normalizeTombstones(value) {
+  if (Array.isArray(value)) {
+    const map = {};
+    for (const t of value) {
+      if (typeof t === 'string') map[t] = Date.now();
+      else if (t && t.id) {
+        const parsed = typeof t.deletedAt === 'number' ? t.deletedAt : parseInt(t.deletedAt, 10);
+        map[t.id] = Number.isFinite(parsed) ? parsed : Date.now();
+      }
+    }
+    return map;
+  }
+  if (value && typeof value === 'object') return value;
+  return {};
+}
+
 function getLocalData() {
   return {
     events: readLocalArray(STORAGE_KEYS.events),
     settings: readLocalObject(STORAGE_KEYS.settings),
     badges: readLocalObject(STORAGE_KEYS.badges),
     todos: readLocalArray(STORAGE_KEYS.todos),
-    deletedIds: readLocalArray(STORAGE_KEYS.deletedIds),
+    deletedIds: readTombstoneMap(STORAGE_KEYS.deletedIds),
     clearedAt: parseInt(localStorage.getItem(STORAGE_KEYS.clearedAt), 10) || 0,
     version: parseInt(localStorage.getItem(STORAGE_KEYS.version), 10) || 0,
-    updatedAt: parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt), 10) || 0,
-    lastSynced: Date.now()
+    updatedAt: parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt), 10) || 0
   };
 }
 
@@ -270,24 +304,21 @@ async function pullFromCloud(uid) {
   const preferCloud = cloudUpdatedAt >= localUpdatedAt;
 
   // --- Merge deletedIds (tombstones): union by id, clean old ones ---
-  const cloudDeleted = asArray(cloud.deletedIds);
-  const localDeleted = readLocalArray(STORAGE_KEYS.deletedIds);
-  const tombstoneById = new Map();
+  // Normalize both cloud and local tombstones to {id: deletedAt} map format
+  // (cloud may be old [{id,deletedAt}] array or new {id:deletedAt} map)
+  const cloudTombstones = normalizeTombstones(cloud.deletedIds);
+  const localTombstones = readTombstoneMap(STORAGE_KEYS.deletedIds);
   const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-  for (const t of [...cloudDeleted, ...localDeleted]) {
-    if (!t || !t.id) continue;
-    const parsedDeletedAt = typeof t.deletedAt === 'number' ? t.deletedAt : parseInt(t.deletedAt, 10);
-    const deletedAt = Number.isFinite(parsedDeletedAt) ? parsedDeletedAt : Date.now();
-    if (deletedAt > ninetyDaysAgo) {
-      const existing = tombstoneById.get(t.id);
-      if (!existing || deletedAt > existing.deletedAt) {
-        tombstoneById.set(t.id, { id: t.id, deletedAt });
-      }
+  const mergedTombstones = {};
+  for (const [id, deletedAt] of [...Object.entries(cloudTombstones), ...Object.entries(localTombstones)]) {
+    const ts = typeof deletedAt === 'number' ? deletedAt : Date.now();
+    if (ts > ninetyDaysAgo) {
+      const existing = mergedTombstones[id];
+      if (!existing || ts > existing) mergedTombstones[id] = ts;
     }
   }
-  const mergedDeleted = Array.from(tombstoneById.values());
-  const seenDeletedIds = new Set(tombstoneById.keys());
-  (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.deletedIds, JSON.stringify(mergedDeleted));
+  const seenDeletedIds = new Set(Object.keys(mergedTombstones));
+  (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.deletedIds, JSON.stringify(mergedTombstones));
 
   // --- Merge clearedAt: take the maximum (most recent clear wins) ---
   const localClearedAt = parseInt(localStorage.getItem(STORAGE_KEYS.clearedAt), 10) || 0;

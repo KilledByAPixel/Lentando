@@ -566,8 +566,10 @@ const DB = {
 
   _getDeletedIds() {
     try {
-      const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
-      return new Set(tombstones.map(t => t.id));
+      const raw = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '{}');
+      // Backward compat: old format was [{id, deletedAt}, ...]
+      if (Array.isArray(raw)) return new Set(raw.map(t => typeof t === 'string' ? t : t.id));
+      return new Set(Object.keys(raw));
     } catch {
       return new Set();
     }
@@ -575,25 +577,46 @@ const DB = {
 
   _addTombstone(eventId) {
     try {
-      const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
-      // Don't duplicate
-      if (tombstones.some(t => t.id === eventId)) return;
-      tombstones.push({ id: eventId, deletedAt: now() });
-      safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(tombstones));
+      const raw = this._readTombstoneMap();
+      if (raw[eventId]) return; // Don't duplicate
+      raw[eventId] = now();
+      safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(raw));
       if (window.FirebaseSync) FirebaseSync.onDataChanged();
     } catch (e) {
       console.error('Failed to add tombstone:', e);
     }
   },
 
+  /** Read tombstones from localStorage, migrating old [{id,deletedAt}] array format to {id:deletedAt} map */
+  _readTombstoneMap() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '{}');
+      if (Array.isArray(raw)) {
+        const map = {};
+        for (const t of raw) {
+          if (typeof t === 'string') map[t] = now();
+          else if (t && t.id) map[t.id] = t.deletedAt || now();
+        }
+        return map;
+      }
+      return (typeof raw === 'object' && raw !== null) ? raw : {};
+    } catch {
+      return {};
+    }
+  },
+
   _cleanOldTombstones() {
     try {
-      const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '[]');
+      const raw = this._readTombstoneMap();
+      const entries = Object.entries(raw);
       const ninetyDaysAgo = now() - (90 * 24 * 60 * 60 * 1000);
-      const cleaned = tombstones.filter(t => t.deletedAt > ninetyDaysAgo);
-      if (cleaned.length < tombstones.length) {
+      const cleaned = {};
+      for (const [id, deletedAt] of entries) {
+        if (deletedAt > ninetyDaysAgo) cleaned[id] = deletedAt;
+      }
+      if (Object.keys(cleaned).length < entries.length) {
         safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(cleaned));
-        console.log(`[Tombstone] Cleaned ${tombstones.length - cleaned.length} old tombstones`);
+        console.log(`[Tombstone] Cleaned ${entries.length - Object.keys(cleaned).length} old tombstones`);
       }
     } catch (e) {
       console.error('Failed to clean tombstones:', e);
@@ -703,23 +726,23 @@ function getHabits(events, habitType) {
 // ========== EVENT FACTORIES ==========
 function createUsedEvent(substance, method, amount, reason) {
   const sub = substance || 'thc';
-  return {
-    id: uid(), type: 'used', ts: now(),
-    substance: sub, method: method || null,
-    amount: amount != null ? amount : 1.0,
-    reason: reason || null,
-  };
+  const evt = { id: uid(), type: 'used', ts: now(), substance: sub, amount: amount != null ? amount : 1.0 };
+  if (method) evt.method = method;
+  if (reason) evt.reason = reason;
+  return evt;
 }
 
 function createResistedEvent(intensity, trigger) {
-  return {
-    id: uid(), type: 'resisted', ts: now(),
-    intensity: intensity || null, trigger: trigger || null,
-  };
+  const evt = { id: uid(), type: 'resisted', ts: now() };
+  if (intensity) evt.intensity = intensity;
+  if (trigger) evt.trigger = trigger;
+  return evt;
 }
 
 function createHabitEvent(habit, minutes) {
-  return { id: uid(), type: 'habit', ts: now(), habit, minutes: minutes || null };
+  const evt = { id: uid(), type: 'habit', ts: now(), habit };
+  if (minutes) evt.minutes = minutes;
+  return evt;
 }
 
 // ========== BADGE CALCULATION HELPERS ==========
