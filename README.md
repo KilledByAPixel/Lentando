@@ -7,7 +7,7 @@
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/Vanilla_JS-F7DF1E?style=flat&logo=javascript&logoColor=black)
 ![PWA](https://img.shields.io/badge/PWA-Installable-5c6bc0)
-![License](https://img.shields.io/badge/License-CC_BY--NC_4.0-green)
+![License](https://img.shields.io/badge/License-PolyForm--Noncommercial-green)
 
 ## Why Lentando? 🐢
 
@@ -50,7 +50,7 @@ Lentando recognizes progress in many forms:
 | **Daily Progress** | Daily Check-in, Good Start, Hydrated |
 | **Resist Badges** | Resisted, Urge Surfed, Second Thought, Swap Completed, Tough Resist |
 | **Mindful Choices** | Harm Reduction, Low Dose, Low Use Day, CBD-Only Day |
-| **Healty Habits** | Water, Breathwork, Tidy, Outside, Exercise |
+| **Healthy Habits** | Water, Breathwork, Tidy, Outside, Exercise |
 | **Awareness** | Intensity Logged, Trigger Identified, Full Report, Mindful Session |
 | **Timing Badges** | Night, Morning, Day, and Evening Skips |
 | **Gap Milestones** | 1h, 2h, 4h, 8h, 12h gaps between sessions |
