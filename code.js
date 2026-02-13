@@ -2109,14 +2109,9 @@ function switchTab(tabName) {
   // When switching away, just visually hide the undo button (don't clear the event ID)
   // When switching back to today during cooldown, restore it
   if (tabName === 'today') {
-    const lastUsedTime = _lastActionTime['used'];
-    if (lastUsedTime && lastUndoEventId) {
-      const timeSinceUse = now() - lastUsedTime;
-      if (timeSinceUse < COOLDOWN_MS) {
-        showUndo(lastUndoEventId);
-      } else {
-        hideUndo();
-      }
+    // Restore undo button visibility when switching back to today tab
+    if (lastUndoEventId) {
+      showUndo(lastUndoEventId);
     }
   } else {
     // Only remove the CSS class, preserve lastUndoEventId so we can restore on return
@@ -3130,7 +3125,6 @@ function logResisted() {
   calculateAndUpdateBadges();
   render();
   hideUsedChips();
-  hideUndo();
   hideHabitChips();
   showChips('resisted-chips', buildResistedChips, evt, hideResistedChips);
 
@@ -3154,7 +3148,6 @@ function logHabit(habit, minutes) {
   DB.addEvent(evt);
   calculateAndUpdateBadges();
   render();
-  hideUndo();
   
   playSound('habit');
   hapticFeedback();
@@ -3209,7 +3202,6 @@ function bindEvents() {
       DB.addEvent(evt);
       calculateAndUpdateBadges();
       render();
-      hideUndo();
       
       playSound('habit');
       hapticFeedback();
@@ -3230,7 +3222,6 @@ function bindEvents() {
     hideHabitChips();
     hideUsedChips();
     hideResistedChips();
-    hideUndo();
     logHabit(habit);
     flashEl(btn);
   });
