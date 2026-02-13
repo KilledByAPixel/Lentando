@@ -1919,13 +1919,14 @@ function buildGraphBars(vals, days, max, def) {
   return html + '</div>';
 }
 
-function buildHourGraphBars(hourCounts, max, color) {
+function buildHourGraphBars(hourCounts, max, color, startHour = 0) {
   let html = '<div class="graph-bars">';
-  for (let hour = 0; hour < 24; hour++) {
+  for (let i = 0; i < 24; i++) {
+    const hour = (startHour + i) % 24;
     const count = hourCounts[hour] || 0;
     const h = max > 0 ? Math.round((count / max) * 96) : 0;
     const hourLabel = hour === 0 ? '12a' : hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`;
-    html += graphBarCol(count, h, { color, text: hourLabel }, hour % 3 === 0);
+    html += graphBarCol(count, h, { color, text: hourLabel }, i % 3 === 0);
   }
   return html + '</div>';
 }
@@ -2005,19 +2006,26 @@ function renderGraphs() {
   // Hour graphs (not affected by day selector)
   let hourHtml = '';
 
-  // Add today's usage by hour graph
-  const todayEvents = DB.forDate(todayKey());
-  const todayUsed = filterProfileUsed(todayEvents);
+  // Add past 24 hours usage by hour graph
+  // Align window to clock-hour boundaries so each clock hour maps to exactly one bar
+  const nowMs = now();
+  const currentHour = new Date(nowMs).getHours();
+  const startOfCurrentHour = new Date(nowMs);
+  startOfCurrentHour.setMinutes(0, 0, 0);
+  const past24Hours = startOfCurrentHour.getTime() - (23 * 60 * 60 * 1000);
+  const allEvents = DB.loadEvents();
+  const past24Used = filterProfileUsed(allEvents.filter(evt => evt.ts >= past24Hours && evt.ts <= nowMs));
   const hourCounts = {};
-  todayUsed.forEach(evt => {
+  past24Used.forEach(evt => {
     const hour = getHour(evt.ts);
     hourCounts[hour] = (hourCounts[hour] || 0) + 1;
   });
-  const hasHourData = todayUsed.length > 0;
+  const hasHourData = past24Used.length > 0;
   const maxCount = hasHourData ? Math.max(...Object.values(hourCounts), 1) : 1;
-  hourHtml += `<div class="graph-container" data-tooltip="Shows your use today, broken down by hour. Helps identify your peak usage times."><div class="graph-title">🕒 Today's Usage by Hour</div>`;
+  const graphStartHour = (currentHour + 1) % 24;
+  hourHtml += `<div class="graph-container" data-tooltip="Shows your use over the past 24 hours, broken down by hour. Helps identify your peak usage times."><div class="graph-title">🕒 Usage Over Past 24 Hours</div>`;
   hourHtml += hasHourData
-    ? buildHourGraphBars(hourCounts, maxCount, '#f39c12')
+    ? buildHourGraphBars(hourCounts, maxCount, '#f39c12', graphStartHour)
     : emptyStateHTML('No data yet', 'padding:12px 0');
   hourHtml += `</div>`;
 
