@@ -299,7 +299,10 @@ const DEFAULT_SETTINGS = {
   lastAmount: 1.0,
   showCoaching: true,
   soundEnabled: true,
-  customProfile: { name: '', types: ['', '', ''], icons: ['⚡', '⚡', '⚡'] }
+  customProfile: { name: '', types: ['', '', ''], icons: ['⚡', '⚡', '⚡'] },
+  reminderEnabled: false,
+  reminderHour: 18, // 24h format, default 6 PM
+  reminderMinute: 0
 };
 
 // ========== SOUND SYSTEM ==========
@@ -3051,6 +3054,9 @@ function continueToApp() {
     // Clear existing interval if continueToApp is called multiple times
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => renderMetrics(), METRICS_REFRESH_MS);
+    // Schedule daily reminder notification if enabled
+    setReminderButton();
+    scheduleReminder();
   }
 }
 
@@ -3396,6 +3402,7 @@ function bindEvents() {
   $('resisted-chips').addEventListener('click', handleChipClick);
   $('modal-sheet').addEventListener('click', e => handleModalChipClick(e));
   $('modal-overlay').addEventListener('click', e => { if (e.target === $('modal-overlay')) closeModal(); });
+  $('reminder-overlay').addEventListener('click', e => { if (e.target === $('reminder-overlay')) closeReminderModal(); });
 
   $('habit-row').addEventListener('click', e => {
     const btn = e.target.closest('.habit-btn');
@@ -3631,6 +3638,131 @@ function setThemeIcon(theme) {
   }
 }
 
+// ========== DAILY REMINDER NOTIFICATIONS ==========
+let _reminderTimer = null;
+
+function scheduleReminder() {
+  if (_reminderTimer) { clearTimeout(_reminderTimer); _reminderTimer = null; }
+  const settings = DB.loadSettings();
+  if (!settings.reminderEnabled) return;
+
+  const now_ = new Date();
+  const target = new Date(now_);
+  target.setHours(settings.reminderHour, settings.reminderMinute ?? 0, 0, 0);
+  // If target is in the past, schedule for tomorrow
+  if (target <= now_) target.setDate(target.getDate() + 1);
+  const ms = target - now_;
+  _reminderTimer = setTimeout(() => fireReminder(), ms);
+}
+
+function fireReminder() {
+  _reminderTimer = null;
+  const settings = DB.loadSettings();
+  if (!settings.reminderEnabled) return;
+
+  showReminderNotification();
+  // Re-schedule for tomorrow
+  scheduleReminder();
+}
+
+function showReminderNotification() {
+  if (Notification.permission !== 'granted') return;
+  const msg = {
+    type: 'SHOW_REMINDER',
+    title: 'How\'s your day going?',
+    body: 'Tap to check in with Lentando.',
+    icon: './icon-192.png'
+  };
+  // Use service worker to show notification (works even when tab is focused)
+  if (navigator.serviceWorker?.controller) {
+    navigator.serviceWorker.controller.postMessage(msg);
+  } else if (navigator.serviceWorker) {
+    navigator.serviceWorker.ready.then(reg => {
+      if (reg.active) reg.active.postMessage(msg);
+    });
+  } else {
+    new Notification(msg.title, { body: msg.body, icon: msg.icon });
+  }
+}
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    alert('Notifications are not supported in this browser.');
+    return false;
+  }
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') {
+    alert('Notifications are blocked. Please enable them in your browser settings.');
+    return false;
+  }
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+function setReminderButton() {
+  const settings = DB.loadSettings();
+  const icon = $('reminder-icon-settings');
+  const text = $('reminder-text-settings');
+  if (settings.reminderEnabled) {
+    const h = settings.reminderHour;
+    const m = settings.reminderMinute ?? 0;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    const mStr = String(m).padStart(2, '0');
+    if (icon) icon.textContent = '🔔';
+    if (text) text.textContent = `Reminder at ${h12}:${mStr} ${ampm}`;
+  } else {
+    if (icon) icon.textContent = '🔕';
+    if (text) text.textContent = 'Enable Daily Reminder';
+  }
+}
+
+function openReminderModal() {
+  const settings = DB.loadSettings();
+  const timeInput = $('reminder-time-input');
+  if (timeInput) {
+    const h = String(settings.reminderHour).padStart(2, '0');
+    const m = String(settings.reminderMinute ?? 0).padStart(2, '0');
+    timeInput.value = `${h}:${m}`;
+  }
+  // Show disable button only if currently enabled
+  const disableBtn = $('btn-disable-reminder');
+  if (disableBtn) disableBtn.style.display = settings.reminderEnabled ? '' : 'none';
+  // Update save button text
+  const overlay = $('reminder-overlay');
+  const saveBtn = overlay?.querySelector('.btn-save');
+  if (saveBtn) saveBtn.textContent = settings.reminderEnabled ? '🔔 Update Reminder' : '🔔 Enable Reminder';
+  overlay.classList.remove('hidden');
+}
+
+function closeReminderModal() {
+  $('reminder-overlay').classList.add('hidden');
+}
+
+async function saveReminder() {
+  const granted = await requestNotificationPermission();
+  if (!granted) return;
+  const timeInput = $('reminder-time-input');
+  const [hours, minutes] = (timeInput?.value || '18:00').split(':').map(Number);
+  const settings = DB.loadSettings();
+  settings.reminderEnabled = true;
+  settings.reminderHour = isNaN(hours) ? 18 : hours;
+  settings.reminderMinute = isNaN(minutes) ? 0 : minutes;
+  DB.saveSettings();
+  setReminderButton();
+  scheduleReminder();
+  closeReminderModal();
+}
+
+function disableReminder() {
+  const settings = DB.loadSettings();
+  settings.reminderEnabled = false;
+  DB.saveSettings();
+  setReminderButton();
+  scheduleReminder();
+  closeReminderModal();
+}
+
 function setSoundButton(soundEnabled) {
   const icon = $('sound-icon-settings');
   const text = $('sound-text-settings');
@@ -3735,6 +3867,10 @@ window.App = {
     DB.saveSettings();
     setSoundButton(settings.soundEnabled);
   },
+  openReminderModal,
+  closeReminderModal,
+  saveReminder,
+  disableReminder,
   toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     applyTheme(getToggleTheme(currentTheme));

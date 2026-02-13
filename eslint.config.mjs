@@ -33,6 +33,9 @@ export default [
         Intl: 'readonly',
         performance: 'readonly',
         history: 'readonly',
+        Notification: 'readonly',
+        prompt: 'readonly',
+        App: 'readonly',
         // External libs loaded via <script>
         FirebaseSync: 'readonly',
       },
@@ -100,6 +103,7 @@ export default [
         Response: 'readonly',
         URL: 'readonly',
         Promise: 'readonly',
+        clients: 'readonly',
       },
     },
   },

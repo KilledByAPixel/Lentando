@@ -1438,6 +1438,11 @@ header .date { font-size: 14px; color: var(--muted); }
     <button class="export-btn" id="btn-add-prior-event" onclick="App.openCreateEventModal()">📝 Log Past Use</button>
   </div>
   <div class="export-bar">
+    <button class="export-btn" id="btn-reminder-toggle" onclick="App.openReminderModal()">
+      <span id="reminder-icon-settings">🔕</span> <span id="reminder-text-settings">Enable Daily Reminder</span>
+    </button>
+  </div>
+  <div class="export-bar">
     <button class="export-btn" id="btn-change-addiction" onclick="App.changeAddiction()">🔄 Change Tracked Substance</button>
   </div>
 
@@ -1541,6 +1546,23 @@ header .date { font-size: 14px; color: var(--muted); }
 <!-- ===== EDIT MODAL ===== -->
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal-sheet" id="modal-sheet"></div>
+</div>
+
+<!-- ===== REMINDER MODAL ===== -->
+<div class="modal-overlay hidden" id="reminder-overlay">
+  <div class="modal-sheet" style="text-align:center;padding:24px 20px 32px">
+    <div class="modal-header"><h2>Daily Reminder</h2><button class="modal-close" onclick="App.closeReminderModal()">✕</button></div>
+    <p style="font-size:14px;color:var(--muted);margin:8px 0 20px;line-height:1.5">We'll send you a gentle reminder each day to check in with Lentando.</p>
+    <div style="margin-bottom:20px">
+      <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:6px">Reminder time</label>
+      <input type="time" id="reminder-time-input" value="18:00" style="padding:10px 14px;font-size:16px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);width:100%;text-align:center">
+    </div>
+    <div class="modal-actions" style="flex-direction:column;gap:8px">
+      <button class="btn-save" onclick="App.saveReminder()" style="width:100%;padding:14px;font-size:15px">🔔 Enable Reminder</button>
+      <button class="btn-delete" id="btn-disable-reminder" onclick="App.disableReminder()" style="width:100%;padding:12px;font-size:14px;display:none">🔕 Disable Reminder</button>
+      <button style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:8px 0" onclick="App.closeReminderModal()">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== CUSTOM CONFIG MODAL ===== -->

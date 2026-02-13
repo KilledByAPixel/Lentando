@@ -92,3 +92,32 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+
+// Handle reminder notification from main thread
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SHOW_REMINDER') {
+    self.registration.showNotification(event.data.title, {
+      body: event.data.body,
+      icon: event.data.icon,
+      tag: 'daily-reminder',
+      renotify: true
+    });
+  }
+});
+
+// Open app when notification is clicked
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      // Focus existing window if one is open
+      for (const client of windowClients) {
+        if (client.url.includes('index.html') || client.url.endsWith('/')) {
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      return clients.openWindow('./');
+    })
+  );
+});
