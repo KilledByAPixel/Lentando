@@ -1,7 +1,7 @@
 {
   "name": "lentando",
   "version": "1.0.0",
-  "description": "Mindful progress tracking — A zero-friction habit and substance use tracker that runs in your browser.",
+  "description": "Lentando - Private habit and substance tracker",
   "main": "code.js",
   "scripts": {
     "build": "node build.js",
