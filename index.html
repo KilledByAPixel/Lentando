@@ -216,6 +216,7 @@ header .date { font-size: 14px; color: var(--muted); }
 
 /* ===== ACTION BUTTONS ===== */
 .action-group { margin-bottom: 8px; }
+.action-group + .action-group { margin-top: 12px; }
 
 .big-btn {
   width: 100%;
@@ -250,6 +251,135 @@ header .date { font-size: 14px; color: var(--muted); }
 .used-row.has-undo .btn-undo { display: block; }
 .btn-undo:active { background: #c98f0e; color: #fff; }
 
+/* ===== FORM INPUTS (shared base) ===== */
+.form-input,
+.todo-input,
+.login-input,
+.custom-field input[type="text"] {
+  padding: 10px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus,
+.todo-input:focus,
+.login-input:focus,
+.custom-field input[type="text"]:focus {
+  border-color: var(--primary);
+}
+.form-input::placeholder,
+.todo-input::placeholder,
+.login-input::placeholder,
+.custom-field input[type="text"]::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+/* Form input variants */
+.form-input { font-size: 16px; width: 100%; }
+.todo-input { flex: 1; }
+.login-input { width: 100%; background: var(--bg); min-width: 0; padding: 12px; }
+.custom-field input[type="text"] { font-size: 16px; }
+
+/* ===== REUSABLE COMPONENTS ===== */
+
+/* Info card — card-style container for settings/info sections */
+.info-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.info-card p { margin-bottom: 12px; }
+.info-card p:last-child { margin-bottom: 0; }
+
+/* Primary-colored link */
+.link { color: var(--primary); text-decoration: none; }
+.link-bold { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+/* Small muted text */
+.text-sm { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* Card-style background */
+.card-bg,
+.tile,
+.day-nav,
+.graph-container,
+.history-summary {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+}
+
+/* Uppercase muted label */
+.label-caps,
+.chip-row-label,
+.modal-field label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+/* Icon-only button (no chrome) */
+.btn-icon,
+.chip-dismiss,
+.tl-act-btn,
+.password-toggle,
+.modal-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 4px;
+}
+
+/* Muted full-width action */
+.btn-muted-full,
+#todo-clear-btn,
+#clear-day-btn {
+  width: 100%;
+  font-size: 13px;
+  padding: 10px;
+  color: var(--muted);
+}
+
+/* Small centered note */
+.note-muted,
+.login-skip-note,
+.onboarding-note {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Text-only button (muted, no background) */
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 0;
+  font-size: inherit;
+}
+.btn-text-underline { text-decoration: underline; }
+
+/* Centered onboarding icon */
+.onboarding-icon { width: 80px; height: 80px; margin: 0 auto; display: block; }
+
+/* Display-only value in modals */
+.modal-value { font-size: 16px; }
+
 /* ===== CHIP ROWS ===== */
 .chip-row {
   margin-top: 8px;
@@ -261,13 +391,6 @@ header .date { font-size: 14px; color: var(--muted); }
 }
 .chip-row.hidden { display: none; }
 
-.chip-row-label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
 .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .chip-group:last-child { margin-bottom: 0; }
 
@@ -292,11 +415,7 @@ header .date { font-size: 14px; color: var(--muted); }
   display: block;
   margin-top: 6px;
   font-size: 12px;
-  color: var(--muted);
-  cursor: pointer;
   text-align: right;
-  border: none;
-  background: none;
 }
 
 /* ===== COACHING TIP ===== */
@@ -381,9 +500,6 @@ header .date { font-size: 14px; color: var(--muted); }
 }
 .tile {
   padding: 12px;
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm);
 }
 .tile[data-tooltip] {
   cursor: pointer;
@@ -413,11 +529,7 @@ header .date { font-size: 14px; color: var(--muted); }
   padding-top: 2px;
 }
 .tl-act-btn {
-  border: none;
-  background: none;
   font-size: 14px;
-  cursor: pointer;
-  padding: 4px;
   opacity: 0.7;
   color: var(--text);
 }
@@ -431,6 +543,7 @@ header .date { font-size: 14px; color: var(--muted); }
   font-size: 14px;
   white-space: nowrap;
 }
+.empty-state.compact { padding: 12px 0; }
 
 /* ===== BADGES ===== */
 .badge-list { 
@@ -587,6 +700,15 @@ header .date { font-size: 14px; color: var(--muted); }
   gap: 8px;
   padding-bottom: 40px;
 }
+.custom-config-form .section-label { margin-bottom: 4px; }
+.config-hint { font-size: 16px; color: var(--muted); margin-bottom: 6px; }
+#btn-save-custom {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 20px;
+}
 .custom-field {
   display: flex;
   flex-direction: column;
@@ -597,23 +719,7 @@ header .date { font-size: 14px; color: var(--muted); }
   font-weight: 600;
   color: var(--muted);
 }
-.custom-field input[type="text"] {
-  padding: 10px 12px;
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  color: var(--text);
-  font-size: 16px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.custom-field input[type="text"]:focus {
-  border-color: var(--primary);
-}
-.custom-field input[type="text"]::placeholder {
-  color: var(--muted);
-  opacity: 0.6;
-}
+/* Note: .custom-field input[type="text"] base styles are in the shared form input section */
 .icon-picker {
   display: flex;
   flex-wrap: wrap;
@@ -649,15 +755,35 @@ header .date { font-size: 14px; color: var(--muted); }
   flex-direction: column;
   gap: 8px;
 }
-.login-input {
+/* Note: .login-input base styles are in the shared form input section */
+
+/* Login screen layout */
+#login-overlay .onboarding-content h2 { margin-bottom: 12px; }
+.login-subtitle {
+  font-size: 16px;
+  color: var(--muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+  text-align: center;
+}
+.login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.login-actions .google-btn { padding: 14px; font-size: 15px; }
+.login-btn-row { display: flex; gap: 8px; }
+.login-btn-row .export-btn { flex: 1; padding: 12px; font-size: 16px; }
+.login-skip { margin-top: 12px; }
+.login-skip .export-btn {
   width: 100%;
-  padding: 12px;
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  font-size: 14px;
-  min-width: 0;
+  padding: 10px;
+  font-size: 16px;
+  opacity: 0.7;
+}
+.login-skip-note {
+  margin-top: 6px;
 }
 .password-wrap {
   position: relative;
@@ -672,12 +798,7 @@ header .date { font-size: 14px; color: var(--muted); }
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
-  border: none;
   font-size: 18px;
-  cursor: pointer;
-  padding: 4px;
-  color: var(--muted);
   line-height: 1;
 }
 
@@ -719,20 +840,11 @@ header .date { font-size: 14px; color: var(--muted); }
 }
 .modal-header h2 { font-size: 18px; }
 .modal-close {
-  border: none;
-  background: none;
   font-size: 24px;
-  cursor: pointer;
-  color: var(--muted);
 }
 .modal-field { margin-bottom: 14px; }
 .modal-field label {
   display: block;
-  font-size: 12px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
 }
 .modal-actions {
   display: flex;
@@ -790,9 +902,6 @@ header .date { font-size: 14px; color: var(--muted); }
   gap: 12px;
   margin: 12px 0;
   padding: 8px;
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm);
 }
 
 .day-nav-btn {
@@ -832,9 +941,6 @@ header .date { font-size: 14px; color: var(--muted); }
 
 /* ===== GRAPH ===== */
 .graph-container {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm);
   padding: 16px 12px 12px;
   margin-bottom: 12px;
 }
@@ -1008,17 +1114,10 @@ header .date { font-size: 14px; color: var(--muted); }
   gap: 8px;
   margin-bottom: 8px;
 }
-.todo-input {
-  flex: 1;
-  padding: 10px 12px;
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 14px;
+/* Note: .todo-input base styles are in the shared form input section */
+#todo-clear-btn {
+  margin-top: 8px;
 }
-.todo-input::placeholder { color: var(--muted); }
 .todo-add-btn {
   padding: 10px 16px;
   border: 1px solid var(--primary);
@@ -1073,6 +1172,84 @@ header .date { font-size: 14px; color: var(--muted); }
 
 /* ===== UTILITIES ===== */
 .hidden { display: none !important; }
+
+/* Onboarding note */
+.onboarding-note {
+  margin-top: 20px;
+}
+
+/* Reminder modal */
+#reminder-overlay .modal-sheet {
+  text-align: center;
+  padding: 24px 20px 32px;
+}
+.reminder-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 8px 0 20px;
+  line-height: 1.5;
+}
+.reminder-field {
+  margin-bottom: 20px;
+}
+.reminder-field label {
+  font-size: 13px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 6px;
+}
+#reminder-time-input {
+  text-align: center;
+  background: var(--bg);
+  font-size: 16px;
+}
+#reminder-overlay .modal-actions {
+  flex-direction: column;
+  gap: 8px;
+}
+#reminder-overlay .modal-actions button {
+  width: 100%;
+}
+
+/* Auth status card */
+#auth-status { margin-bottom: 4px; }
+
+/* Badge hints — full-width, subtle, inside badge grids */
+.badge-hint {
+  grid-column: 1 / -1;
+  margin-top: -20px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  font-style: italic;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+/* History day summary bar */
+.history-summary {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Load more button */
+.load-more-wrap { text-align: center; padding: 12px; }
+.load-more-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Clear-day button in history */
+#clear-day-btn {
+  margin-top: 12px;
+}
 .flash { animation: flash 0.3s ease; }
 @keyframes flash {
   0% { transform: scale(1); }
@@ -1346,7 +1523,7 @@ header .date { font-size: 14px; color: var(--muted); }
       <div class="chip-row hidden" id="used-chips"></div>
     </div>
 
-    <div class="action-group" style="margin-top:12px">
+    <div class="action-group">
       <button class="big-btn btn-resisted" id="btn-resisted" title="Track urges you resist">Resist 💪</button>
       <div class="chip-row hidden" id="resisted-chips"></div>
       <div class="coaching-tip hidden" id="coaching-tip">
@@ -1387,7 +1564,7 @@ header .date { font-size: 14px; color: var(--muted); }
     <button class="todo-add-btn" id="todo-add-btn">+</button>
   </div>
   <ul class="todo-list" id="todo-list"></ul>
-  <button class="export-btn hidden" id="todo-clear-btn" onclick="App.clearTodos()" style="width:100%;margin-top:8px;font-size:13px;padding:10px;color:var(--muted)">🗑️ Clear Goals</button>
+  <button class="export-btn hidden" id="todo-clear-btn" onclick="App.clearTodos()">🗑️ Clear Goals</button>
 
 </div>
 
@@ -1427,11 +1604,11 @@ header .date { font-size: 14px; color: var(--muted); }
 <!-- ===== SETTINGS TAB ===== -->
 <div class="tab-panel" id="tab-settings">
   <div class="section-label">Account</div>
-  <div id="auth-status" style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:12px;margin-bottom:4px">
+  <div class="info-card" id="auth-status">
     Loading...
   </div>
 
-  <div class="section-label" style="margin-top:20px">Customization</div>
+  <div class="section-label">Customization</div>
   <div class="export-bar">
     <button class="export-btn" id="btn-theme-toggle-settings" onclick="App.toggleTheme()">
       <span id="theme-icon-settings">🌙</span> <span id="theme-text-settings">Enable Dark Theme</span>
@@ -1457,18 +1634,18 @@ header .date { font-size: 14px; color: var(--muted); }
     <button class="export-btn" id="btn-install-app" onclick="App.installApp()">📲 Install App</button>
   </div>
 
-  <div class="section-label" style="margin-top: 24px;">Data Management</div>
-  <div style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;font-size:12px;color:var(--muted);line-height:1.5">
+  <div class="section-label">Data Management</div>
+  <div class="info-card text-sm">
     🔒 Your data stays on your device unless you sign in to sync. No ads, no data selling. Export or delete anytime.
-    <a href="./privacy.html" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">Privacy Policy</a> · 
-    <a href="./terms.html" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">Terms of Service</a>
+    <a href="./privacy.html" target="_blank" rel="noopener noreferrer" class="link">Privacy Policy</a> · 
+    <a href="./terms.html" target="_blank" rel="noopener noreferrer" class="link">Terms of Service</a>
   </div>
   <div class="export-bar">
     <button class="export-btn" id="btn-export-json" onclick="App.exportJSON()">📥 Export Database</button>
   </div>
   <div class="export-bar">
     <button class="export-btn" id="btn-import-json" onclick="document.getElementById('import-file').click()">📤 Import Database</button>
-    <input type="file" id="import-file" accept=".json" style="display:none" onchange="App.importJSON(this)">
+    <input type="file" id="import-file" accept=".json" class="hidden" onchange="App.importJSON(this)">
   </div>
   <div class="import-status hidden" id="import-status"></div>
   <div class="export-bar">
@@ -1478,16 +1655,12 @@ header .date { font-size: 14px; color: var(--muted); }
     <button class="export-btn danger-btn" onclick="App.deleteAccount()">❌ Delete Account</button>
   </div>
 
-  <div class="section-label" style="margin-top: 24px;">About</div>
-  <div style="background: var(--card); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 16px; font-size: 14px; line-height: 1.6;">
-    <p style="margin-bottom: 12px;">🐢 Recovery isn't a race. <strong>Lentando</strong> helps you track substance use, resist urges, and build healthy habits - one day at a time, without judgment.</p>
-    <p style="margin-bottom: 12px; font-size: 12px; color: var(--muted); line-height: 1.5;">Lentando is a self-help tool, not a replacement for professional care. SAMHSA National Helpline is available 24/7: <a href="tel:1-800-662-4357" style="color:var(--primary);text-decoration:none;font-weight:600">1-800-662-HELP</a></p>
-    <p style="margin-bottom: 12px;">
-      <a href="https://github.com/KilledByAPixel/Lentando" target="_blank" rel="noopener noreferrer" style="color: var(--primary); text-decoration: none; font-weight: 600;">
-        View on GitHub →
-      </a>
-    </p>
-    <p style="margin-bottom: 0px; color: var(--muted); font-size: 12px;">Lentando © 2026 Frank Force</p>
+  <div class="section-label">About</div>
+  <div class="info-card">
+    <p>🐢 Recovery isn't a race. <strong>Lentando</strong> helps you track substance use, resist urges, and build healthy habits - one day at a time, without judgment.</p>
+    <p class="text-sm">Lentando is a self-help tool, not a replacement for professional care. SAMHSA National Helpline is available 24/7: <a href="tel:1-800-662-4357" class="link-bold">1-800-662-HELP</a></p>
+    <p><a href="https://github.com/KilledByAPixel/Lentando" target="_blank" rel="noopener noreferrer" class="link-bold">View on GitHub →</a></p>
+    <p class="text-sm">Lentando © 2026 Frank Force</p>
   </div>
 </div>
 
@@ -1495,27 +1668,27 @@ header .date { font-size: 14px; color: var(--muted); }
 <div class="modal-overlay hidden" id="login-overlay">
   <div class="onboarding-sheet">
     <div class="onboarding-header">
-      <img src="icon-192.png" alt="Lentando - Progress at your pace" style="width:80px;height:80px;margin:0 auto;display:block">
+      <img class="onboarding-icon" src="icon-192.png" alt="Lentando - Progress at your pace">
       <h1><span class="brand">Lentando</span></h1>
       <p class="tagline">progress at your pace</p>
     </div>
     <div class="onboarding-content">
-      <h2 style="margin-bottom:12px">Sign in to sync your data</h2>
-      <p style="font-size:16px;color:var(--muted);margin-bottom:16px;line-height:1.5;text-align:center;">Create an account or sign in to sync your progress across all your devices.</p>
+      <h2>Sign in to sync your data</h2>
+      <p class="login-subtitle">Create an account or sign in to sync your progress across all your devices.</p>
       
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
-        <button class="export-btn google-btn" style="padding:14px;font-size:15px" onclick="App.loginWithGoogle()">Sign in with Google</button>
+      <div class="login-actions">
+        <button class="export-btn google-btn" onclick="App.loginWithGoogle()">Sign in with Google</button>
         <div class="login-inputs"></div>
-        <div style="display:flex;gap:8px">
-          <button class="export-btn" style="flex:1;padding:12px;font-size:16px" onclick="App.loginWithEmailFromScreen()">🔓 Log In</button>
-          <button class="export-btn" style="flex:1;padding:12px;font-size:16px" onclick="App.signupWithEmailFromScreen()">✨ Sign Up</button>
+        <div class="login-btn-row">
+          <button class="export-btn" onclick="App.loginWithEmailFromScreen()">🔓 Log In</button>
+          <button class="export-btn" onclick="App.signupWithEmailFromScreen()">✨ Sign Up</button>
         </div>
-        <button style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 0;text-decoration:underline" onclick="App.forgotPasswordFromScreen()">Forgot password?</button>
+        <button class="btn-text btn-text-underline" onclick="App.forgotPasswordFromScreen()">Forgot password?</button>
       </div>
 
-      <div style="margin-top:12px">
-        <button class="export-btn" style="width:100%;padding:10px;font-size:16px;opacity:0.7" onclick="App.skipLogin()">Continue without account</button>
-        <p style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.4">Your data will only be saved on this device and won't sync to other devices.</p>
+      <div class="login-skip">
+        <button class="export-btn" onclick="App.skipLogin()">Continue without account</button>
+        <p class="login-skip-note">Your data will only be saved on this device and won't sync to other devices.</p>
       </div>
     </div>
   </div>
@@ -1525,7 +1698,7 @@ header .date { font-size: 14px; color: var(--muted); }
 <div class="modal-overlay hidden" id="onboarding-overlay">
   <div class="onboarding-sheet">
     <div class="onboarding-header">
-      <img src="icon-192.png" alt="Lentando - Progress at your pace" style="width:80px;height:80px;margin:0 auto;display:block">
+      <img class="onboarding-icon" src="icon-192.png" alt="Lentando - Progress at your pace">
       <h1><span class="brand">Lentando</span></h1>
       <p class="tagline">progress at your pace</p>
     </div>
@@ -1549,7 +1722,7 @@ header .date { font-size: 14px; color: var(--muted); }
           <div class="profile-name">Custom</div>
         </button>
       </div>
-      <p style="margin-top:20px;font-size:12px;color:var(--muted);text-align:center;line-height:1.5">⚠️ Reducing or stopping heavy daily use can be dangerous. If you are a heavy user, please talk to a clinician before making changes.</p>
+      <p class="onboarding-note">⚠️ Reducing or stopping heavy daily use can be dangerous. If you are a heavy user, please talk to a clinician before making changes.</p>
     </div>
   </div>
 </div>
@@ -1561,17 +1734,17 @@ header .date { font-size: 14px; color: var(--muted); }
 
 <!-- ===== REMINDER MODAL ===== -->
 <div class="modal-overlay hidden" id="reminder-overlay">
-  <div class="modal-sheet" style="text-align:center;padding:24px 20px 32px">
+  <div class="modal-sheet">
     <div class="modal-header"><h2>Daily Reminder</h2><button class="modal-close" onclick="App.closeReminderModal()">✕</button></div>
-    <p style="font-size:14px;color:var(--muted);margin:8px 0 20px;line-height:1.5">We'll send you a gentle reminder each day to check in with Lentando.</p>
-    <div style="margin-bottom:20px">
-      <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:6px">Reminder time</label>
-      <input type="time" id="reminder-time-input" value="18:00" style="padding:10px 14px;font-size:16px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--text);width:100%;text-align:center">
+    <p class="reminder-subtitle">We'll send you a gentle reminder each day to check in with Lentando.</p>
+    <div class="reminder-field">
+      <label>Reminder time</label>
+      <input type="time" id="reminder-time-input" value="18:00" class="form-input">
     </div>
-    <div class="modal-actions" style="flex-direction:column;gap:8px">
-      <button class="btn-save" onclick="App.saveReminder()" style="width:100%;padding:14px;font-size:15px">🔔 Enable Reminder</button>
-      <button class="btn-delete" id="btn-disable-reminder" onclick="App.disableReminder()" style="width:100%;padding:12px;font-size:14px;display:none">🔕 Disable Reminder</button>
-      <button style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:8px 0" onclick="App.closeReminderModal()">Cancel</button>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="App.saveReminder()">🔔 Enable Reminder</button>
+      <button class="btn-delete hidden" id="btn-disable-reminder" onclick="App.disableReminder()">🔕 Disable Reminder</button>
+      <button class="btn-text" onclick="App.closeReminderModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1585,13 +1758,13 @@ header .date { font-size: 14px; color: var(--muted); }
     </div>
     <div class="onboarding-content">
       <div class="custom-config-form">
-        <div class="section-label" style="margin-bottom:4px">Tracker Name</div>
-        <p style="font-size:16px;color:var(--muted);margin-bottom:6px">What would you like to quit or use less of?</p>
+        <div class="section-label">Tracker Name</div>
+        <p class="config-hint">What would you like to quit or use less of?</p>
         <div class="custom-field">
           <input type="text" id="custom-name" maxlength="24" placeholder="e.g. Junk Food, Opioids, Porn, etc.">
         </div>
-        <div class="section-label" style="margin-top:16px;margin-bottom:4px">Category Types</div>
-        <p style="font-size:16px;color:var(--muted);margin-bottom:6px">Customize 3 types to track your patterns. Leave blank for defaults.</p>
+        <div class="section-label">Category Types</div>
+        <p class="config-hint">Customize 3 types to track your patterns. Leave blank for defaults.</p>
         <div class="custom-field">
           <input type="text" id="custom-type1" maxlength="20" placeholder="Type 1">
           <div class="icon-picker" id="custom-icon1"></div>
@@ -1604,7 +1777,7 @@ header .date { font-size: 14px; color: var(--muted); }
           <input type="text" id="custom-type3" maxlength="20" placeholder="Type 3">
           <div class="icon-picker" id="custom-icon3"></div>
         </div>
-        <button class="export-btn" id="btn-save-custom" onclick="App.saveCustomConfig()" style="width:100%;padding:14px;font-size:16px;font-weight:600;margin-top:20px">✅ Save &amp; Continue</button>
+        <button class="export-btn" id="btn-save-custom" onclick="App.saveCustomConfig()">✅ Save &amp; Continue</button>
       </div>
     </div>
   </div>

@@ -1205,9 +1205,9 @@ const Badges = {
 
 // ========== SHARED HTML BUILDERS ==========
 
-function emptyStateHTML(message, style) {
-  const attr = style ? ` style="${style}"` : '';
-  return `<div class="empty-state"${attr}>${message}</div>`;
+function emptyStateHTML(message, extraClass) {
+  const cls = extraClass ? ` ${extraClass}` : '';
+  return `<div class="empty-state${cls}">${message}</div>`;
 }
 
 function tileHTML(val, label, sub = '', tooltip = '') {
@@ -1753,7 +1753,7 @@ function renderBadges() {
     // Today's badges: only show earned badges
     todayEl.innerHTML = earnedBadges.length > 0
       ? earnedBadges.map(w => badgeCardHTML(w, false)).join('') + 
-        '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">Daily badges update based on your activity.</div>'
+        '<div class="empty-state badge-hint">Daily badges update based on your activity.</div>'
       : '';
   }
 
@@ -1767,8 +1767,8 @@ function renderBadges() {
     
     yesterdayEl.innerHTML = yesterdayBadges.length > 0
       ? yesterdayBadges.map(w => badgeCardHTML(w, false)).join('') + 
-        '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">These are badges you earned yesterday and won\'t change.</div>'
-      : '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">No badges earned yesterday.</div>';
+        '<div class="empty-state badge-hint">These are badges you earned yesterday and won\'t change.</div>'
+      : '<div class="empty-state badge-hint">No badges earned yesterday.</div>';
   }
 
   const totalEl = $('badges-total');
@@ -1789,7 +1789,7 @@ function renderBadges() {
   
   const allLifetime = [...earnedLifetime, ...unearnedLifetime];
   totalEl.innerHTML = allLifetime.map(w => badgeCardHTML(w, true)).join('') + 
-    '<div class="empty-state" style="grid-column:1/-1;margin-top:-20px;font-size:0.9rem;opacity:0.7;font-style:italic;word-wrap:break-word;overflow-wrap:break-word;white-space:normal">Every badge you\'ve earned will accumulate here.</div>';
+    '<div class="empty-state badge-hint">Every badge you\'ve earned will accumulate here.</div>';
 }
 
 function hasRecentWater() {
@@ -1842,7 +1842,7 @@ function renderDayHistory() {
   if (exerciseMins > 0) summaryParts.push(`Exercised ${exerciseMins}m`);
   
   const summary = summaryParts.length > 0 
-    ? `<div style="padding:8px 12px;background:var(--card);border:1px solid var(--card-border);border-radius:8px;margin-bottom:12px;font-size:13px;color:var(--muted);text-align:center">${summaryParts.join(' • ')}</div>`
+    ? `<div class="history-summary">${summaryParts.join(' • ')}</div>`
     : '';
 
   // Build HTML in reverse order, limited to historyShowCount
@@ -1856,15 +1856,15 @@ function renderDayHistory() {
   // Show "Load More" button if there are more events
   if (start > 0) {
     const remaining = start;
-    html += `<div style="text-align:center;padding:12px">
-      <button onclick="App.loadMoreHistory()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--card-border);background:var(--card);color:var(--text);cursor:pointer">
+    html += `<div class="load-more-wrap">
+      <button class="load-more-btn" onclick="App.loadMoreHistory()">
         Show ${Math.min(remaining, HISTORY_PAGE_SIZE)} more (${remaining} remaining)
       </button>
     </div>`;
   }
   
   // Clear Day button
-  html += `<button class="export-btn danger-btn" onclick="App.clearDay()" style="width:100%;margin-top:12px;font-size:13px;padding:10px;color:var(--muted)">🗑️ Clear Day</button>`;
+  html += `<button class="export-btn danger-btn" id="clear-day-btn" onclick="App.clearDay()">🗑️ Clear Day</button>`;
 
   historyEl.innerHTML = html;
 }
@@ -2064,7 +2064,7 @@ function renderGraphs() {
   hourHtml += `<div class="graph-container" data-tooltip="Shows your use over the past 24 hours, broken down by hour. Helps identify your peak usage times."><div class="graph-title">🕒 Usage Over Past 24 Hours</div>`;
   hourHtml += hasHourData
     ? buildHourGraphBars(hourCounts, maxCount, 'var(--primary)', graphStartHour)
-    : emptyStateHTML('No data yet', 'padding:12px 0');
+    : emptyStateHTML('No data yet', 'compact');
   hourHtml += `</div>`;
 
   // Add 7-day summary grid
@@ -2103,7 +2103,7 @@ function renderGraphs() {
   dayHtml += `<div class="graph-container" data-tooltip="Your average hourly usage across days you used. Reveals your habitual usage patterns."><div class="graph-title">⚡ Average Usage by Hour</div>`;
   dayHtml += hasHeatmapData
     ? buildHourGraphBars(hourAverages, maxAvg, '#e53935')
-    : emptyStateHTML('No data yet', 'padding:12px 0');
+    : emptyStateHTML('No data yet', 'compact');
   dayHtml += `</div>`;
   
   // Render all GRAPH_DEFS graphs
@@ -2155,7 +2155,7 @@ function renderGraphs() {
     dayHtml += `<div class="graph-container"${tipAttr}><div class="graph-title">${label}</div>`;
     dayHtml += hasData 
       ? buildGraphBars(vals, days, max, def)
-      : emptyStateHTML('No data yet', 'padding:12px 0');
+      : emptyStateHTML('No data yet', 'compact');
     dayHtml += `</div>`;
   }
   
@@ -2680,8 +2680,8 @@ function openCreateEventModal() {
     <div class="modal-header"><h2>Log Past Use</h2><button class="modal-close" onclick="App.closeModal()">✕</button></div>
     ${profileSwitcher}
     <div id="create-modal-fields">${fieldsHTML}</div>
-    <div class="modal-field"><label>Date</label><input type="date" id="modal-date-input" value="${dateValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
-    <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
+    <div class="modal-field"><label>Date</label><input type="date" id="modal-date-input" value="${dateValue}" class="form-input"></div>
+    <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" class="form-input"></div>
     <div class="modal-actions">
       <button class="btn-delete" onclick="App.closeModal()">Cancel</button>
       <button class="btn-save" onclick="App.saveCreateModal()">Done</button>
@@ -2824,7 +2824,7 @@ function openEditModal(eventId) {
         ? profile.sessionLabel
         : key[0].toUpperCase() + key.slice(1);
       const fields = [
-        `<label>Tracking</label><div style="font-size:16px">${escapeHTML(displayName)}</div>`,
+        `<label>Tracking</label><div class="modal-value">${escapeHTML(displayName)}</div>`,
         chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, evt.substance, v => (profile.icons[v] || '') + ' ' + profile.substanceDisplay[v])
       ];
       if (profile.methods) {
@@ -2842,7 +2842,7 @@ function openEditModal(eventId) {
       chipGroupHTML('Trigger', 'trigger', REASONS, evt.trigger)
     ],
     habit: () => {
-      const fields = [`<label>Habit</label><div style="font-size:16px">${HABIT_LABELS[evt.habit] || evt.habit}</div>`];
+      const fields = [`<label>Habit</label><div class="modal-value">${HABIT_LABELS[evt.habit] || evt.habit}</div>`];
       if (HABIT_SHOW_CHIPS[evt.habit]) {
         fields.push(chipGroupHTML('Minutes', 'minutes', HABIT_DURATIONS, evt.minutes ?? 0, v => v === 0 ? '-' : String(v)));
       }
@@ -2862,7 +2862,7 @@ function openEditModal(eventId) {
   $('modal-sheet').innerHTML = `
     <div class="modal-header"><h2>Edit Event</h2><button class="modal-close" onclick="App.closeModal()">✕</button></div>
     ${fieldsHTML}
-    <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" style="padding:8px 12px;font-size:14px;border:1px solid var(--card-border);border-radius:8px;background:var(--card);color:var(--text);width:100%"></div>
+    <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" class="form-input"></div>
     <div class="modal-actions">
       <button class="btn-delete" onclick="if(App.deleteEvent('${escapeHTML(evt.id)}')) App.closeModal()">Delete</button>
       <button class="btn-save" onclick="App.saveModal()">Done</button>
@@ -2998,13 +2998,13 @@ function showLoginScreen() {
   const loginInputs = overlay.querySelector('.login-inputs');
   if (loginInputs && !loginInputs.children.length) {
     loginInputs.innerHTML = `
-      <form id="login-form" onsubmit="App.loginWithEmailFromScreen(); return false" style="display:flex;flex-direction:column;gap:8px">
+      <form id="login-form" onsubmit="App.loginWithEmailFromScreen(); return false">
         <input type="email" id="login-email" name="email" autocomplete="username" placeholder="Email" class="login-input">
         <div class="password-wrap">
           <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Password" class="login-input">
           <button type="button" class="password-toggle" onclick="App.togglePasswordVisibility(this)" title="Show password">👁️</button>
         </div>
-        <button type="submit" style="display:none"></button>
+        <button type="submit" class="hidden"></button>
       </form>`;
   }
 }
@@ -3721,7 +3721,7 @@ function openReminderModal() {
   }
   // Show disable button only if currently enabled
   const disableBtn = $('btn-disable-reminder');
-  if (disableBtn) disableBtn.style.display = settings.reminderEnabled ? '' : 'none';
+  if (disableBtn) disableBtn.classList.toggle('hidden', !settings.reminderEnabled);
   // Update save button text
   const overlay = $('reminder-overlay');
   const saveBtn = overlay?.querySelector('.btn-save');
