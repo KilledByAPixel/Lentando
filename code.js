@@ -933,10 +933,10 @@ const Badges = {
     // One Session: exactly one use event today
     addBadge(profileUsed.length === 1, 'one-session');
 
-    // No Liquor Day: alcohol profile, used today, but no liquor
+    // No Liquor Day: alcohol profile and no liquor uses (including zero-use days)
     const isAlcohol = settings.addictionProfile === 'alcohol';
     if (isAlcohol) {
-      addBadge(profileUsed.length > 0 && !profileUsed.some(e => e.substance === 'liquor'), 'no-liquor');
+      addBadge(!profileUsed.some(e => e.substance === 'liquor'), 'no-liquor');
     }
 
     // --- Habit-based badges ---
