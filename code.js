@@ -2075,7 +2075,7 @@ function buildWeekSummaryHTML() {
   // Star row: 🏅 for clean days (no usage at all) — shown first
   const hasAnyCleanDay = dayData.some(dd => !dd.hasUse);
   if (hasAnyCleanDay) {
-    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? 'week-row-alt' : ''}"><div class="week-row-label"></div>`;
+    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? '' : 'week-row-alt'}"><div class="week-row-label"></div>`;
     for (const dd of dayData) {
       html += dd.hasUse
         ? '<div class="week-cell"></div>'
@@ -2089,7 +2089,7 @@ function buildWeekSummaryHTML() {
     const hasAny = dayData.some(dd => dd.bySubstance[sub] > 0);
     if (!hasAny) continue;
     const icon = profile.icons[sub] || '⚡';
-    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? 'week-row-alt' : ''}"><div class="week-row-label">${icon}</div>`;
+    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? '' : 'week-row-alt'}"><div class="week-row-label">${icon}</div>`;
     for (const dd of dayData) {
       const amt = dd.bySubstance[sub];
       if (amt > 0) {
@@ -2105,7 +2105,7 @@ function buildWeekSummaryHTML() {
   // Resist row
   const hasAnyResist = dayData.some(dd => dd.resistTotal > 0);
   if (hasAnyResist) {
-    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? 'week-row-alt' : ''}"><div class="week-row-label">💪</div>`;
+    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? '' : 'week-row-alt'}"><div class="week-row-label">💪</div>`;
     for (const dd of dayData) {
       if (dd.resistTotal > 0) {
         const display = Number.isInteger(dd.resistTotal) ? dd.resistTotal : dd.resistTotal.toFixed(1);
@@ -2123,7 +2123,7 @@ function buildWeekSummaryHTML() {
     const hasAny = dayData.some(dd => dd.actTotals[act]);
     if (!hasAny) continue;
     const icon = HABIT_ICONS[act] || '✅';
-    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? 'week-row-alt' : ''}"><div class="week-row-label">${icon}</div>`;
+    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? '' : 'week-row-alt'}"><div class="week-row-label">${icon}</div>`;
     for (const dd of dayData) {
       const val = dd.actTotals[act];
       html += val
