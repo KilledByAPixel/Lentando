@@ -564,7 +564,9 @@ const DB = {
       if (clearedAt > 0) {
         this._events = this._events.filter(e => getUidTimestamp(e.id) > clearedAt);
       }
-    } catch {
+    } catch (e) {
+      console.error('Failed to load events from localStorage:', e);
+      alert('⚠️ Your saved data appears to be corrupted and could not be loaded. If you have cloud sync enabled, your data will be restored on next sync.');
       this._events = [];
     }
     this._invalidateDateIndex();
