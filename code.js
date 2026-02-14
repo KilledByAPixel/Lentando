@@ -905,7 +905,7 @@ const Badges = {
       addBadge(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
       const cbdAmt = sumAmount(cbdUsed);
       const totalUsedAmt = sumAmount(profileUsed);
-      addBadge(profileUsed.length > 0 && totalUsedAmt > 0 && cbdAmt >= totalUsedAmt * 0.5, 'half-cbd-day');
+      addBadge(profileUsed.length > 0 && totalUsedAmt > 0 && cbdAmt * 2 >= totalUsedAmt, 'half-cbd-day');
       addBadge(profileUsed.length > 0 && profileUsed.every(e => e.method === 'edible'), 'edibles-only');
     }
 
