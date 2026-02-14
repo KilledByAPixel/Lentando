@@ -1940,9 +1940,9 @@ function buildGraphBars(vals, days, max, def) {
     // Show fewer labels for longer date ranges to prevent overlap
     let showLabel;
     if (graphDays <= 14) {
-      showLabel = true; // Show all labels for short ranges
+      showLabel = true; // Show all labels for 7-14 days
     } else if (graphDays <= 30) {
-      showLabel = i % 5 === 0; // Show every 5th label (6 labels for 30 days)
+      showLabel = i % 4 === 0; // Show every 4th label (8 labels for 30 days)
     } else {
       showLabel = i % 10 === 0; // Show every 10th label (6 labels for 60 days)
     }
