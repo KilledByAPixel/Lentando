@@ -1864,7 +1864,7 @@ function renderDayHistory() {
   }
   
   // Clear Day button
-  html += `<button class="export-btn danger-btn" id="clear-day-btn" onclick="App.clearDay()">🗑️ Clear Day</button>`;
+  html += `<button class="action-btn danger-btn" id="clear-day-btn" onclick="App.clearDay()">🗑️ Clear Day</button>`;
 
   historyEl.innerHTML = html;
 }

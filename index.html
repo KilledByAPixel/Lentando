@@ -183,7 +183,7 @@ body {
 }
 
 /* Remove tap delay on interactive elements */
-button, .chip, .tab-btn, .habit-btn, .big-btn, .tl-act-btn, .export-btn, input[type="checkbox"] {
+button, .chip, .tab-btn, .habit-btn, .big-btn, .tl-act-btn, .action-btn, input[type="checkbox"] {
   touch-action: manipulation;
 }
 
@@ -348,7 +348,7 @@ header .date { font-size: 14px; color: var(--muted); }
 #todo-clear-btn,
 #clear-day-btn {
   width: 100%;
-  font-size: 13px;
+  font-size: 14px;
   padding: 10px;
   color: var(--muted);
 }
@@ -588,7 +588,7 @@ header .date { font-size: 14px; color: var(--muted); }
   border-radius: 12px;
   background: var(--badge-light);
   color: var(--badge);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
 }
 .badge-item.unearned {
@@ -774,9 +774,9 @@ header .date { font-size: 14px; color: var(--muted); }
 }
 .login-actions .google-btn { padding: 14px; font-size: 15px; }
 .login-btn-row { display: flex; gap: 8px; }
-.login-btn-row .export-btn { flex: 1; padding: 12px; font-size: 16px; }
+.login-btn-row .action-btn { flex: 1; padding: 12px; font-size: 16px; }
 .login-skip { margin-top: 12px; }
-.login-skip .export-btn {
+.login-skip .action-btn {
   width: 100%;
   padding: 10px;
   font-size: 16px;
@@ -949,7 +949,7 @@ header .date { font-size: 14px; color: var(--muted); }
   touch-action: manipulation;
 }
 .graph-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   margin-bottom: 12px;
 }
@@ -982,7 +982,7 @@ header .date { font-size: 14px; color: var(--muted); }
   opacity: 0.85;
 }
 .graph-bar-label {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
   white-space: nowrap;
@@ -1056,25 +1056,25 @@ header .date { font-size: 14px; color: var(--muted); }
   overflow: hidden;
 }
 
-/* ===== EXPORT ===== */
-.export-bar {
+/* ===== ACTION BUTTONS (settings / data management) ===== */
+.action-bar {
   display: flex;
   gap: 8px;
   margin-top: 16px;
 }
-.export-btn {
+.action-btn {
   flex: 1;
   padding: 12px;
   border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
   background: var(--card);
   color: var(--text);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   text-align: center;
 }
-.export-btn:active { background: var(--chip-bg); }
+.action-btn:active { background: var(--chip-bg); }
 .google-btn {
   display:flex;align-items:center;justify-content:center;gap:10px;
   background:#fff;color:#3c4043;border:1px solid #dadce0;
@@ -1564,7 +1564,7 @@ header .date { font-size: 14px; color: var(--muted); }
     <button class="todo-add-btn" id="todo-add-btn">+</button>
   </div>
   <ul class="todo-list" id="todo-list"></ul>
-  <button class="export-btn danger-btn hidden" id="todo-clear-btn" onclick="App.clearTodos()">🗑️ Clear Goals</button>
+  <button class="action-btn danger-btn hidden" id="todo-clear-btn" onclick="App.clearTodos()">🗑️ Clear Goals</button>
 
 </div>
 
@@ -1609,29 +1609,29 @@ header .date { font-size: 14px; color: var(--muted); }
   </div>
 
   <div class="section-label">Customization</div>
-  <div class="export-bar">
-    <button class="export-btn" id="btn-theme-toggle-settings" onclick="App.toggleTheme()">
+  <div class="action-bar">
+    <button class="action-btn" id="btn-theme-toggle-settings" onclick="App.toggleTheme()">
       <span id="theme-icon-settings">🌙</span> <span id="theme-text-settings">Enable Dark Theme</span>
     </button>
   </div>
-  <div class="export-bar">
-    <button class="export-btn" id="btn-sound-toggle" onclick="App.toggleSound()">
+  <div class="action-bar">
+    <button class="action-btn" id="btn-sound-toggle" onclick="App.toggleSound()">
       <span id="sound-icon-settings">🔊</span> <span id="sound-text-settings">Disable Sounds</span>
     </button>
   </div>
-  <div class="export-bar">
-    <button class="export-btn" id="btn-reminder-toggle" onclick="App.openReminderModal()">
+  <div class="action-bar">
+    <button class="action-btn" id="btn-reminder-toggle" onclick="App.openReminderModal()">
       <span id="reminder-icon-settings">🔕</span> <span id="reminder-text-settings">Enable Daily Reminder</span>
     </button>
   </div>
-  <div class="export-bar">
-    <button class="export-btn" id="btn-add-prior-event" onclick="App.openCreateEventModal()">📝 Log Past Use</button>
+  <div class="action-bar">
+    <button class="action-btn" id="btn-add-prior-event" onclick="App.openCreateEventModal()">📝 Log Past Use</button>
   </div>
-  <div class="export-bar">
-    <button class="export-btn" id="btn-change-addiction" onclick="App.changeAddiction()">🔄 Change Tracked Substance</button>
+  <div class="action-bar">
+    <button class="action-btn" id="btn-change-addiction" onclick="App.changeAddiction()">🔄 Change Tracked Substance</button>
   </div>
-  <div class="export-bar hidden" id="install-app-bar">
-    <button class="export-btn" id="btn-install-app" onclick="App.installApp()">📲 Install App</button>
+  <div class="action-bar hidden" id="install-app-bar">
+    <button class="action-btn" id="btn-install-app" onclick="App.installApp()">📲 Install App</button>
   </div>
 
   <div class="section-label">Data Management</div>
@@ -1640,19 +1640,19 @@ header .date { font-size: 14px; color: var(--muted); }
     <a href="./privacy.html" target="_blank" rel="noopener noreferrer" class="link">Privacy Policy</a> · 
     <a href="./terms.html" target="_blank" rel="noopener noreferrer" class="link">Terms of Service</a>
   </div>
-  <div class="export-bar">
-    <button class="export-btn" id="btn-export-json" onclick="App.exportJSON()">📥 Export Database</button>
+  <div class="action-bar">
+    <button class="action-btn" id="btn-export-json" onclick="App.exportJSON()">📥 Export Database</button>
   </div>
-  <div class="export-bar">
-    <button class="export-btn" id="btn-import-json" onclick="document.getElementById('import-file').click()">📤 Import Database</button>
+  <div class="action-bar">
+    <button class="action-btn" id="btn-import-json" onclick="document.getElementById('import-file').click()">📤 Import Database</button>
     <input type="file" id="import-file" accept=".json" class="hidden" onchange="App.importJSON(this)">
   </div>
   <div class="import-status hidden" id="import-status"></div>
-  <div class="export-bar">
-    <button class="export-btn danger-btn" id="btn-clear-db" onclick="App.clearDatabase()">🗑️ Clear Database</button>
+  <div class="action-bar">
+    <button class="action-btn danger-btn" id="btn-clear-db" onclick="App.clearDatabase()">🗑️ Clear Database</button>
   </div>
-  <div class="export-bar hidden" id="delete-account-bar">
-    <button class="export-btn danger-btn" onclick="App.deleteAccount()">❌ Delete Account</button>
+  <div class="action-bar hidden" id="delete-account-bar">
+    <button class="action-btn danger-btn" onclick="App.deleteAccount()">❌ Delete Account</button>
   </div>
 
   <div class="section-label">About</div>
@@ -1677,17 +1677,17 @@ header .date { font-size: 14px; color: var(--muted); }
       <p class="login-subtitle">Create an account or sign in to sync your progress across all your devices.</p>
       
       <div class="login-actions">
-        <button class="export-btn google-btn" onclick="App.loginWithGoogle()">Sign in with Google</button>
+        <button class="action-btn google-btn" onclick="App.loginWithGoogle()">Sign in with Google</button>
         <div class="login-inputs"></div>
         <div class="login-btn-row">
-          <button class="export-btn" onclick="App.loginWithEmailFromScreen()">🔓 Log In</button>
-          <button class="export-btn" onclick="App.signupWithEmailFromScreen()">✨ Sign Up</button>
+          <button class="action-btn" onclick="App.loginWithEmailFromScreen()">🔓 Log In</button>
+          <button class="action-btn" onclick="App.signupWithEmailFromScreen()">✨ Sign Up</button>
         </div>
         <button class="btn-text btn-text-underline" onclick="App.forgotPasswordFromScreen()">Forgot password?</button>
       </div>
 
       <div class="login-skip">
-        <button class="export-btn" onclick="App.skipLogin()">Continue without account</button>
+        <button class="action-btn" onclick="App.skipLogin()">Continue without account</button>
         <p class="login-skip-note">Your data will only be saved on this device and won't sync to other devices.</p>
       </div>
     </div>
@@ -1777,7 +1777,7 @@ header .date { font-size: 14px; color: var(--muted); }
           <input type="text" id="custom-type3" maxlength="20" placeholder="Type 3">
           <div class="icon-picker" id="custom-icon3"></div>
         </div>
-        <button class="export-btn" id="btn-save-custom" onclick="App.saveCustomConfig()">✅ Save &amp; Continue</button>
+        <button class="action-btn" id="btn-save-custom" onclick="App.saveCustomConfig()">✅ Save &amp; Continue</button>
       </div>
     </div>
   </div>

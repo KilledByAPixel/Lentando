@@ -541,7 +541,7 @@ if (isConfigured) {
 // Auth form HTML kept out of DOM until Settings tab is visible
 const AUTH_FORM_HTML = `
   <div style="display:flex;flex-direction:column;gap:8px">
-    <button class="export-btn google-btn" style="margin:0" onclick="FirebaseSync.loginWithGoogle()">Sign in with Google</button>
+    <button class="action-btn google-btn" style="margin:0" onclick="FirebaseSync.loginWithGoogle()">Sign in with Google</button>
     <form id="auth-form" onsubmit="FirebaseSync.loginWithEmailForm(); return false" style="display:flex;flex-direction:column;gap:6px">
       <input type="email" id="auth-email" name="email" autocomplete="username" placeholder="Email" 
         style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:14px">
@@ -553,10 +553,10 @@ const AUTH_FORM_HTML = `
       <button type="submit" style="display:none"></button>
     </form>
     <div style="display:flex;gap:6px">
-      <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.loginWithEmailForm()">🔓 Log In</button>
-      <button class="export-btn" style="flex:1;margin:0" onclick="FirebaseSync.signupWithEmailForm()">✨ Sign Up</button>
+      <button class="action-btn" style="flex:1;margin:0" onclick="FirebaseSync.loginWithEmailForm()">🔓 Log In</button>
+      <button class="action-btn" style="flex:1;margin:0" onclick="FirebaseSync.signupWithEmailForm()">✨ Sign Up</button>
     </div>
-    <button style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:2px 0;text-decoration:underline" onclick="FirebaseSync.forgotPasswordForm()">Forgot password?</button>
+    <button style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 0;text-decoration:underline" onclick="FirebaseSync.forgotPasswordForm()">Forgot password?</button>
   </div>`;
 
 let _authUIState = null; // 'logged-in', 'logged-out', or 'not-configured'
@@ -583,8 +583,8 @@ function updateAuthUI(user) {
       <div style="display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap">
         <span style="font-size:14px">✅ <strong>${name}</strong></span>
         <div style="display:flex;gap:6px">
-          <button class="export-btn" style="flex:none;padding:8px 12px;font-size:12px;margin:0" onclick="FirebaseSync.sync()">🔄 Sync</button>
-          <button class="export-btn" style="flex:none;padding:8px 12px;font-size:12px;margin:0" onclick="FirebaseSync.logout()">Sign Out</button>
+          <button class="action-btn" style="flex:none;padding:8px 12px;font-size:12px;margin:0" onclick="FirebaseSync.sync()">🔄 Sync</button>
+          <button class="action-btn" style="flex:none;padding:8px 12px;font-size:12px;margin:0" onclick="FirebaseSync.logout()">Sign Out</button>
         </div>
       </div>`;
     // Show delete account button when logged in
