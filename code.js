@@ -3623,7 +3623,6 @@ function renderTodos() {
           <span class="todo-text" data-idx="${i}">${escapeHTML(t.text)}</span>
         </div>
         <div class="tl-actions">
-          <button class="tl-act-btn" data-idx="${i}" title="Edit">✏️</button>
           <button class="tl-act-btn" data-idx="${i}" title="Delete">🗑️</button>
         </div>
       </li>`).join('');
