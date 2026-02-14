@@ -3510,10 +3510,14 @@ function renderTodos() {
   $('todo-list').innerHTML = todos.length === 0
     ? ''
     : todos.map((t, i) => `<li class="todo-item${t.done ? ' done' : ''}">
-        <button class="tl-act-btn" data-idx="${i}" title="Move Up"${i === 0 ? ' disabled' : ''}>↑</button>
-        <button class="tl-act-btn" data-idx="${i}" title="Move Down"${i === todos.length - 1 ? ' disabled' : ''}>↓</button>
+        <div class="todo-controls">
+          <button class="tl-act-btn" data-idx="${i}" title="Move Up"${i === 0 ? ' disabled' : ''}>↑</button>
+          <button class="tl-act-btn" data-idx="${i}" title="Move Down"${i === todos.length - 1 ? ' disabled' : ''}>↓</button>
+        </div>
         <input type="checkbox" class="todo-check" data-idx="${i}"${t.done ? ' checked' : ''}>
-        <span class="todo-text" data-idx="${i}">${escapeHTML(t.text)}</span>
+        <div class="tl-body">
+          <span class="todo-text" data-idx="${i}">${escapeHTML(t.text)}</span>
+        </div>
         <div class="tl-actions">
           <button class="tl-act-btn" data-idx="${i}" title="Edit">✏️</button>
           <button class="tl-act-btn" data-idx="${i}" title="Delete">🗑️</button>

@@ -1135,17 +1135,21 @@ header .date { font-size: 14px; color: var(--muted); }
 .todo-list { list-style: none; }
 .todo-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
-  padding: 10px 12px;
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm);
-  margin-bottom: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--card-border);
 }
+.todo-item:last-child { border-bottom: none; }
 .todo-item.done .todo-text {
   text-decoration: line-through;
   color: var(--muted);
+}
+.todo-controls {
+  display: flex;
+  gap: 2px;
+  min-width: 28px;
+  padding-top: 2px;
 }
 .todo-check {
   width: 20px;
@@ -1153,14 +1157,11 @@ header .date { font-size: 14px; color: var(--muted); }
   flex-shrink: 0;
   cursor: pointer;
   accent-color: var(--primary);
+  margin-top: 2px;
 }
 .todo-text {
-  flex: 1;
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
+  font-size: 16px;
+  font-weight: 600;
 }
 .todo-edit-input {
   flex: 1;
