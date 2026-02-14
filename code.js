@@ -3514,8 +3514,10 @@ function renderTodos() {
         <button class="tl-act-btn" data-idx="${i}" title="Move Down"${i === todos.length - 1 ? ' disabled' : ''}>↓</button>
         <input type="checkbox" class="todo-check" data-idx="${i}"${t.done ? ' checked' : ''}>
         <span class="todo-text" data-idx="${i}">${escapeHTML(t.text)}</span>
-        <button class="tl-act-btn" data-idx="${i}" title="Edit">✏️</button>
-        <button class="tl-act-btn" data-idx="${i}" title="Delete">🗑️</button>
+        <div class="tl-actions">
+          <button class="tl-act-btn" data-idx="${i}" title="Edit">✏️</button>
+          <button class="tl-act-btn" data-idx="${i}" title="Delete">🗑️</button>
+        </div>
       </li>`).join('');
   const clearBtn = $('todo-clear-btn');
   if (clearBtn) clearBtn.classList.toggle('hidden', todos.length === 0);
