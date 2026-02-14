@@ -1071,7 +1071,7 @@ const Badges = {
     addBadge(hasNightGap, 'night-gap');
 
     // --- Comparison badges ---
-    if (yesterdayEvents && yesterdayEvents.length > 0) {
+    if (profileUsed.length > 0 && yesterdayEvents && yesterdayEvents.length > 0) {
       const yProfile = filterProfileUsed(yesterdayEvents);
 
       addBadge(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
