@@ -2314,11 +2314,15 @@ async function clearDatabase() {
 
   clearAllStorage();
 
-  // Restore clearedAt so it gets pushed to cloud and propagates to other devices
-  safeSetItem(STORAGE_CLEARED_AT, String(clearedAt));
+  // Only persist clearedAt when logged in — it needs to propagate to cloud
+  // so other devices discard old events. For local-only users, a full wipe
+  // is sufficient and leaving clearedAt behind would block future imports.
+  if (isLoggedIn) {
+    safeSetItem(STORAGE_CLEARED_AT, String(clearedAt));
+  }
 
   // Push cleared state + clearedAt to cloud so other devices pick it up
-  if (window.FirebaseSync) {
+  if (isLoggedIn && window.FirebaseSync) {
     try {
       await FirebaseSync.pushNow();
     } catch (_e) {
