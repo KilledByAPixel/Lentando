@@ -29,28 +29,19 @@ const firebaseConfig = {
 };
 
 
-const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
-
-let app, auth, db, provider;
-
-if (isConfigured) {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-  provider = new GoogleAuthProvider();
-  provider.setCustomParameters({
-    prompt: 'select_account'
-  });
-} else {
-  console.warn('[Firebase] Not configured. Edit firebase-sync.js with your Firebase project config.');
-}
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+provider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 // ========== AUTH FUNCTIONS ==========
 
 let isSigningIn = false;
 
 async function loginWithGoogle() {
-  if (!isConfigured) return alert('⚠️ Firebase not configured yet. See firebase-sync.js.');
   if (isSigningIn) return;
   
   isSigningIn = true;
@@ -77,13 +68,11 @@ async function loginWithGoogle() {
 }
 
 async function loginWithEmail(email, password) {
-  if (!isConfigured) return alert('⚠️ Firebase not configured yet. See firebase-sync.js.');
   const result = await signInWithEmailAndPassword(auth, email, password);
   return result.user;
 }
 
 async function signupWithEmail(email, password) {
-  if (!isConfigured) return alert('⚠️ Firebase not configured yet. See firebase-sync.js.');
   const result = await createUserWithEmailAndPassword(auth, email, password);
   try {
     await sendEmailVerification(result.user);
@@ -95,17 +84,15 @@ async function signupWithEmail(email, password) {
 }
 
 async function logout() {
-  if (!isConfigured) return;
   await signOut(auth);
 }
 
 async function resetPassword(email) {
-  if (!isConfigured) return alert('⚠️ Firebase not configured yet. See firebase-sync.js.');
   await sendPasswordResetEmail(auth, email);
 }
 
 async function deleteAccountAndData() {
-  if (!isConfigured || !currentUser) return;
+  if (!currentUser) return;
   // Best effort: flush any pending local changes before wiping
   try {
     if (_syncTimer) { clearTimeout(_syncTimer); _syncTimer = null; }
@@ -255,7 +242,7 @@ function getUidTimestamp(id) {
 
 /** Push all localStorage data to Firestore */
 async function pushToCloud(uid) {
-  if (!isConfigured || !uid) return;
+  if (!uid) return;
   const userDoc = doc(db, 'users', uid);
   const data = getLocalData();
   // Ensure updatedAt is set before pushing so the cloud can win/lose based on recency
@@ -269,7 +256,7 @@ async function pushToCloud(uid) {
 
 /** Pull from Firestore and merge into localStorage */
 async function pullFromCloud(uid) {
-  if (!isConfigured || !uid) return;
+  if (!uid) return;
   const userDoc = doc(db, 'users', uid);
   const snap = await getDoc(userDoc);
 
@@ -508,48 +495,40 @@ async function pullFromCloud(uid) {
 let currentUser = null;
 let authCheckComplete = false;
 
-if (isConfigured) {
-  onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-    updateAuthUI(user);
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  updateAuthUI(user);
 
-    if (user) {
-      try {
-        // Pull from cloud (which now invalidates caches internally)
-        await pullFromCloud(user.uid);
-        
-        if (typeof window.hideLoginScreen === 'function') {
-          window.hideLoginScreen();
-        }
-        
-        // Continue to app after successful login (caches already invalidated by pullFromCloud)
-        if (typeof window.continueToApp === 'function') {
-          window.continueToApp();
-        }
-      } catch (err) {
-        console.error('[Sync] Pull failed:', err);
-        // Fallback: continue with local data so login never blocks app access
-        if (typeof window.hideLoginScreen === 'function') {
-          window.hideLoginScreen();
-        }
-        if (typeof window.continueToApp === 'function') {
-          window.continueToApp();
-        }
-        showSyncWarning('Cloud sync failed. Loaded local data; sync will retry when online.');
+  if (user) {
+    try {
+      // Pull from cloud (which now invalidates caches internally)
+      await pullFromCloud(user.uid);
+      
+      if (typeof window.hideLoginScreen === 'function') {
+        window.hideLoginScreen();
       }
-    } else if (!authCheckComplete) {
-      // First auth check complete, user is not logged in
-      authCheckComplete = true;
-      checkAuthAndContinue();
+      
+      // Continue to app after successful login (caches already invalidated by pullFromCloud)
+      if (typeof window.continueToApp === 'function') {
+        window.continueToApp();
+      }
+    } catch (err) {
+      console.error('[Sync] Pull failed:', err);
+      // Fallback: continue with local data so login never blocks app access
+      if (typeof window.hideLoginScreen === 'function') {
+        window.hideLoginScreen();
+      }
+      if (typeof window.continueToApp === 'function') {
+        window.continueToApp();
+      }
+      showSyncWarning('Cloud sync failed. Loaded local data; sync will retry when online.');
     }
-  });
-} else {
-  // Not configured — show setup instructions after delay
-  setTimeout(() => {
-    updateAuthUI(null);
+  } else if (!authCheckComplete) {
+    // First auth check complete, user is not logged in
+    authCheckComplete = true;
     checkAuthAndContinue();
-  }, 100);
-}
+  }
+});
 
 function checkAuthAndContinue() {
   const hasSkippedLogin = localStorage.getItem(STORAGE_KEYS.loginSkipped) === 'true';
@@ -574,8 +553,7 @@ function checkAuthAndContinue() {
 
 // Pull fresh data when app regains focus (e.g., switching back from another tab/app)
 let _lastFocusPull = 0;
-if (isConfigured) {
-  window.addEventListener('focus', async () => {
+window.addEventListener('focus', async () => {
     if (currentUser && Date.now() - _lastFocusPull > 30000) {
       _lastFocusPull = Date.now();
       try {
@@ -596,7 +574,6 @@ if (isConfigured) {
       }
     }
   });
-}
 
 // ========== AUTH UI ==========
 
@@ -621,22 +598,11 @@ const AUTH_FORM_HTML = `
     <button style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 0;text-decoration:underline" onclick="FirebaseSync.forgotPasswordForm()">Forgot password?</button>
   </div>`;
 
-let _authUIState = null; // 'logged-in', 'logged-out', or 'not-configured'
+let _authUIState = null; // 'logged-in' or 'logged-out'
 
 function updateAuthUI(user) {
   const el = document.getElementById('auth-status');
   if (!el) return;
-
-  if (!isConfigured) {
-    _authUIState = 'not-configured';
-    el.innerHTML = `
-      <div style="text-align:center;color:var(--muted);font-size:13px;line-height:1.5">
-        <div style="font-size:18px;margin-bottom:4px">🔧</div>
-        <strong>Firebase not configured yet</strong><br>
-        Edit <code>firebase-sync.js</code> with your Firebase project config to enable login &amp; cloud sync.
-      </div>`;
-    return;
-  }
 
   if (user) {
     _authUIState = 'logged-in';
@@ -718,12 +684,10 @@ function flushPendingSync() {
 }
 
 // Flush pending writes when the user hides or closes the tab
-if (isConfigured) {
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flushPendingSync();
-  });
-  window.addEventListener('beforeunload', () => flushPendingSync());
-}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushPendingSync();
+});
+window.addEventListener('beforeunload', () => flushPendingSync());
 
 // ========== WELCOME MESSAGE ==========
 

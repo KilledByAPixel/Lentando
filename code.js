@@ -1456,7 +1456,7 @@ function renderMetrics() {
 
   const exerciseEvents = getHabits(events, 'exercise');
   const exerciseMins = exerciseEvents.reduce((sum, e) => sum + (e.minutes || 0), 0);
-  const allHabits = sumHabitCounts(events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
+  const allHabits = sumHabitCounts(events, Object.keys(HABIT_LABELS));
   
   // Build 4th tile based on whether there's exercise time
   let fourthTile;
@@ -1566,7 +1566,7 @@ function renderProgress() {
 
   const exerciseEvents = getHabits(thisWeek.events, 'exercise');
   const exerciseMins = exerciseEvents.reduce((sum, e) => sum + (e.minutes || 0), 0);
-  const weekHabits = sumHabitCounts(thisWeek.events, ['water', 'breaths', 'clean', 'outside', 'exercise']);
+  const weekHabits = sumHabitCounts(thisWeek.events, Object.keys(HABIT_LABELS));
   
   // Build 4th tile based on whether there's exercise time
   let fourthTile;
@@ -2049,8 +2049,7 @@ function buildWeekSummaryHTML() {
     const resistTotal = resisted.reduce((sum, e) => sum + (e.intensity || 1), 0);
     // Activity totals
     const actTotals = {};
-    const activityTypes = ['water', 'exercise', 'breaths', 'clean', 'outside'];
-    for (const act of activityTypes) {
+    for (const act of Object.keys(HABIT_LABELS)) {
       const actEvents = habits.filter(e => e.habit === act);
       if (actEvents.length === 0) continue;
       const anyHaveMin = actEvents.some(e => e.minutes > 0);
@@ -2132,8 +2131,7 @@ function buildWeekSummaryHTML() {
   }
 
   // Activity rows — one per type, only if any day has it
-  const activityTypes = ['water', 'exercise', 'breaths', 'clean', 'outside'];
-  for (const act of activityTypes) {
+  for (const act of Object.keys(HABIT_LABELS)) {
     const hasAny = dayData.some(dd => dd.actTotals[act]);
     if (!hasAny) continue;
     const icon = HABIT_ICONS[act] || '✅';
@@ -2570,7 +2568,7 @@ function importJSON(inputEl) {
       if (data.todos && Array.isArray(data.todos) && loadTodos().length === 0) {
         const validTodos = data.todos
           .filter(t => t && typeof t.text === 'string' && t.text.trim())
-          .map(t => ({ ...t, text: t.text.trim().slice(0, 120) }));
+          .map(t => ({ ...t, text: t.text.trim().slice(0, 250) }));
         if (validTodos.length > 0) saveTodos(validTodos);
       }
 
@@ -4236,7 +4234,7 @@ if (debugMode) {
   }
 
   function generateTestHabits(numPerHabit = 20) {
-    const habitTypes = ['water', 'breaths', 'clean', 'exercise', 'outside'];
+    const habitTypes = Object.keys(HABIT_LABELS);
     const nowTs = now();
     const thirtyDaysAgo = nowTs - (30 * 24 * 60 * 60 * 1000);
     DB.loadEvents();
