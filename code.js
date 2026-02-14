@@ -3,7 +3,7 @@
 
 'use strict';
 
-const debugMode = false; // Set to true to enable debug logging and debug time system messages
+const debugMode = 1; // Set to true to enable debug logging and debug time system messages
 
 // ========== DEBUG TIME SYSTEM ==========
 // Allows advancing time for testing badges, day boundaries, etc.
@@ -851,6 +851,35 @@ const Badges = {
     const habits   = filterByType(todayEvents, 'habit');
     const subs = new Set(getProfile().substances);
     const profileUsed = used.filter(e => subs.has(e.substance)); // Profile-aware: only substances in current profile
+    const settings = DB.loadSettings();
+
+    // --- Pre-compute shared lookups (used by multiple badge groups) ---
+    const allKeys = DB.getAllDayKeys(); // sorted most recent first
+    const yesterdayProfileUsed = yesterdayEvents ? filterProfileUsed(yesterdayEvents) : [];
+    const profileAmt = sumAmount(profileUsed);
+
+    // Check if this is the user's first day using the app
+    // Use appStartDate if available (reliable across zero-event days), else fall back to event check
+    let isFirstDay;
+    let hasHistoricalProfileUse = false; // Track if they have any past use events
+    if (appStartDate) {
+      isFirstDay = evaluationDate === appStartDate;
+      // Check for historical profile use events before today
+      if (isFirstDay) {
+        hasHistoricalProfileUse = allKeys.some(key => {
+          if (key >= evaluationDate) return false;
+          return filterProfileUsed(DB.forDate(key)).length > 0;
+        });
+      }
+    } else {
+      const hasEventsBeforeToday = allKeys.some(key => key < evaluationDate && DB.forDate(key).length > 0);
+      isFirstDay = !hasEventsBeforeToday;
+      // While we have the keys, also check for profile-specific use events in previous days
+      hasHistoricalProfileUse = allKeys.some(key => {
+        if (key >= evaluationDate) return false;
+        return filterProfileUsed(DB.forDate(key)).length > 0;
+      });
+    }
 
     // --- Daily Check-in badge ---
     addBadge(todayEvents.length > 0, 'daily-checkin');
@@ -858,7 +887,6 @@ const Badges = {
     // --- Welcome Back badge ---
     // Use event timestamps (stable) so the badge is consistent across renders.
     if (todayEvents.length > 0) {
-      const allKeys = DB.getAllDayKeys(); // sorted most recent first
       for (const key of allKeys) {
         if (key >= evaluationDate) continue; // skip the day being evaluated
         const prevDayEvents = DB.forDate(key);
@@ -869,7 +897,6 @@ const Badges = {
         }
       }
     }
-    const settings = DB.loadSettings();
 
     // --- Session-based badges ---
     addBadge(resisted.length > 0, 'resist');
@@ -901,9 +928,8 @@ const Badges = {
       const thcUsed = filterTHC(used);
       addBadge(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
       // Half CBD Day: THC (via calcBadAmount, mix counts 50%) is at most half of total
-      const totalUsedAmt = sumAmount(profileUsed);
       const thcAmt = calcBadAmount(profileUsed, 'cannabis', null);
-      addBadge(profileUsed.length > 0 && totalUsedAmt > 0 && thcAmt * 2 <= totalUsedAmt, 'half-cbd-day');
+      addBadge(profileUsed.length > 0 && profileAmt > 0 && thcAmt * 2 <= profileAmt, 'half-cbd-day');
       addBadge(profileUsed.length > 0 && profileUsed.every(e => e.method === 'edible'), 'edibles-only');
     }
 
@@ -919,7 +945,6 @@ const Badges = {
     addBadge(used.some(e => e.amount < 1), 'dose-half');
     addBadge(used.some(e => e.reason), 'mindful');
 
-    const profileAmt = sumAmount(profileUsed);
     // Light Day: used today, but less than half of trailing 7-day average
     const avg7DayAmount = avgDailyAmount(getLastNDays(7, 1), filterProfileUsed);
     addBadge(profileUsed.length > 0 && avg7DayAmount > 0 && profileAmt < (avg7DayAmount / 2), 'low-day');
@@ -960,15 +985,12 @@ const Badges = {
 
     // --- Timing-based badges ---
     // Gap badges — include all sessions but skip gaps that cross the 6am boundary (sleep gap)
-    if (profileUsed.length >= 1 || (yesterdayEvents && yesterdayEvents.length > 0)) {
+    if (profileUsed.length >= 1 || yesterdayProfileUsed.length > 0) {
       // Include last event from yesterday to capture gap crossing midnight
       const gapEvents = [...profileUsed];
-      if (yesterdayEvents && yesterdayEvents.length > 0) {
-        const yUsed = filterProfileUsed(yesterdayEvents);
-        if (yUsed.length > 0) {
-          // Add the last event from yesterday to the beginning of the list
-          gapEvents.unshift(yUsed[yUsed.length - 1]);
-        }
+      if (yesterdayProfileUsed.length > 0) {
+        // Add the last event from yesterday to the beginning of the list
+        gapEvents.unshift(yesterdayProfileUsed[yesterdayProfileUsed.length - 1]);
       }
       
       const todayGapsMs = getGapsMs(gapEvents);
@@ -999,33 +1021,6 @@ const Badges = {
       return h >= start && h < end;
     });
 
-    // Check if this is the user's first day using the app
-    // Use appStartDate if available (reliable across zero-event days), else fall back to event check
-    let isFirstDay;
-    let hasHistoricalProfileUse = false; // Track if they have any past use events
-    if (appStartDate) {
-      isFirstDay = evaluationDate === appStartDate;
-      // Check for historical profile use events before today
-      if (isFirstDay) {
-        const allKeys = DB.getAllDayKeys();
-        hasHistoricalProfileUse = allKeys.some(key => {
-          if (key >= evaluationDate) return false;
-          const dayUsed = filterProfileUsed(DB.forDate(key));
-          return dayUsed.length > 0;
-        });
-      }
-    } else {
-      const allKeys = DB.getAllDayKeys();
-      const hasEventsBeforeToday = allKeys.some(key => key < evaluationDate && DB.forDate(key).length > 0);
-      isFirstDay = !hasEventsBeforeToday;
-      // While we have the keys, also check for profile-specific use events in previous days
-      hasHistoricalProfileUse = allKeys.some(key => {
-        if (key >= evaluationDate) return false;
-        const dayUsed = filterProfileUsed(DB.forDate(key));
-        return dayUsed.length > 0;
-      });
-    }
-    
     // On first day only: user must have started before the badge period to be eligible
     const isEligibleForSkipBadge = (end) => {
       if (!isFirstDay) return true; // After first day, always eligible
@@ -1066,8 +1061,6 @@ const Badges = {
     const today6am = new Date(evaluationDate + 'T06:00:00').getTime();
     const yesterday6pm = today6am - 12 * 3600000; // 6pm previous day
     
-    // Get all profile use events from yesterday and today
-    const yesterdayProfileUsed = yesterdayEvents ? filterProfileUsed(yesterdayEvents) : [];
     const allRecent = sortedByTime([...yesterdayProfileUsed, ...profileUsed]);
     
     // Find last use between 6pm yesterday and 6am today
@@ -1092,14 +1085,12 @@ const Badges = {
     addBadge(hasNightGap, 'night-gap');
 
     // --- Comparison badges ---
-    if (profileUsed.length > 0 && yesterdayEvents && yesterdayEvents.length > 0) {
-      const yProfile = filterProfileUsed(yesterdayEvents);
-
-      addBadge(yProfile.length > 0 && profileAmt < sumAmount(yProfile), 'lower-amount');
+    if (profileUsed.length > 0 && yesterdayProfileUsed.length > 0) {
+      addBadge(profileAmt < sumAmount(yesterdayProfileUsed), 'lower-amount');
       
       // First session later than yesterday — only awarded if you used today (compares first use after 6am)
       const todayDaytime = filterDaytime(profileUsed);
-      const yesterdayDaytime = filterDaytime(yProfile);
+      const yesterdayDaytime = filterDaytime(yesterdayProfileUsed);
       
       if (todayDaytime.length > 0 && yesterdayDaytime.length > 0) {
         addBadge(timeOfDayMin(todayDaytime[0].ts) > timeOfDayMin(yesterdayDaytime[0].ts), 'first-later');
