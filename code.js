@@ -62,7 +62,7 @@ const STORAGE_VERSION = 'ht_data_version';
 const STORAGE_DELETED_IDS = 'ht_deleted_ids';
 const STORAGE_DELETED_TODO_IDS = 'ht_deleted_todo_ids';
 const STORAGE_CLEARED_AT = 'ht_cleared_at';
-const DATA_VERSION = 2;
+const DATA_VERSION = 3;
 
 const ADDICTION_PROFILES = {
   cannabis: {
