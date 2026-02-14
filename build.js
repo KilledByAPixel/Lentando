@@ -20,6 +20,32 @@ const STATIC_FILES = [
   'social.jpg',
 ];
 
+function bumpCacheVersion() {
+  console.log('🔼 Bumping service worker cache version...\n');
+  
+  const swPath = 'sw.js';
+  let swContent = fs.readFileSync(swPath, 'utf8');
+  
+  // Match pattern like: const CACHE_NAME = 'lentando-v213';
+  const versionMatch = swContent.match(/const CACHE_NAME = 'lentando-v(\d+)';/);
+  
+  if (!versionMatch) {
+    console.error('  ❌ ERROR: Could not find cache version in sw.js!');
+    process.exit(1);
+  }
+  
+  const oldVersion = parseInt(versionMatch[1], 10);
+  const newVersion = oldVersion + 1;
+  
+  swContent = swContent.replace(
+    /const CACHE_NAME = 'lentando-v\d+';/,
+    `const CACHE_NAME = 'lentando-v${newVersion}';`
+  );
+  
+  fs.writeFileSync(swPath, swContent, 'utf8');
+  console.log(`  ✓ Cache version: v${oldVersion} → v${newVersion}\n`);
+}
+
 function preBuildChecks() {
   console.log('🔍 Running pre-build checks...\n');
   
@@ -64,6 +90,7 @@ function preBuildChecks() {
 }
 
 (async () => {
+  bumpCacheVersion();
   preBuildChecks();
   if (fs.existsSync(BUILD_DIR)) {
     fs.rmSync(BUILD_DIR, { recursive: true });
