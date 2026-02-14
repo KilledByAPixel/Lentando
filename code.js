@@ -2391,20 +2391,22 @@ function importJSON(inputEl) {
         return showStatus(validation.error, 'error');
       }
 
-      // Apply imported clearedAt (take max so a clear is never weakened)
+      // When importing, reset clearedAt so pre-clear events aren't blocked.
+      // The user is explicitly choosing to restore data — honour that intent.
+      // If the import file carries its own clearedAt, adopt it; otherwise clear it.
       const importedClearedAt = parseInt(data.clearedAt, 10) || 0;
       if (importedClearedAt > 0) {
-        const currentClearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
-        const effectiveClearedAt = Math.max(currentClearedAt, importedClearedAt);
-        safeSetItem(STORAGE_CLEARED_AT, String(effectiveClearedAt));
-        // Invalidate cache so loadEvents() re-reads with new clearedAt
-        DB._events = null;
-        DB._dateIndex = null;
+        safeSetItem(STORAGE_CLEARED_AT, String(importedClearedAt));
+      } else {
+        localStorage.removeItem(STORAGE_CLEARED_AT);
       }
+      // Invalidate cache so loadEvents() re-reads with updated clearedAt
+      DB._events = null;
+      DB._dateIndex = null;
 
       const existing = DB.loadEvents();
       const existingIds = new Set(existing.map(e => e.id));
-      // Filter imported events through clearedAt so pre-clear events don't sneak in
+      // Filter imported events through clearedAt (from the import file, not from a later local clear)
       const activeClearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
       const newEvents = validation.events.filter(evt =>
         !existingIds.has(evt.id) && (activeClearedAt <= 0 || getUidTimestamp(evt.id) > activeClearedAt)
