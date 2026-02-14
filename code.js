@@ -261,7 +261,7 @@ const BADGE_DEFINITIONS = {
   'cbd-only': { label: 'CBD-Only Day', icon: '🍃', desc: 'Used only CBD products, no THC' },
   'half-cbd-day': { label: 'Half CBD Day', icon: '🍂', desc: 'At least 50% of usage was CBD' },
   'edibles-only': { label: 'Edibles Only Day', icon: '🍪', desc: 'Only used edibles' },
-  'no-liquor': { label: 'No Liquor Day', icon: '🥃', desc: 'Did not drink liquor' },
+  'no-liquor': { label: 'No Liquor Day', icon: '🥃', desc: 'Did not drink liquor (alcohol tracking only)' },
   'one-session': { label: 'One Session', icon: '☝️', desc: 'Limited use to a single session' },
   'microdose-day': { label: 'Small Amount', icon: '🤏', desc: 'Total amount used of 2 or less' },
   'first-later': { label: 'Held Off', icon: '⏰', desc: 'First session later than yesterday (after 6am)' },
