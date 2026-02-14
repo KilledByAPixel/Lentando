@@ -1227,9 +1227,8 @@ function emptyStateHTML(message, extraClass) {
 
 function tileHTML(val, label, sub = '', tooltip = '') {
   const subHTML = sub ? `<div class="sub">${escapeHTML(String(sub))}</div>` : '';
-  const titleAttr = tooltip ? ` title="${escapeHTML(tooltip)}"` : '';
   const dataTooltip = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
-  return `<div class="tile"${titleAttr}${dataTooltip}><div class="val">${escapeHTML(String(val))}</div><div class="label">${escapeHTML(String(label))}</div>${subHTML}</div>`;
+  return `<div class="tile"${dataTooltip}><div class="val">${escapeHTML(String(val))}</div><div class="label">${escapeHTML(String(label))}</div>${subHTML}</div>`;
 }
 
 /** Generates a labelled chip group. displayFn defaults to String(v). */
@@ -1593,7 +1592,7 @@ function renderProgress() {
 function badgeCardHTML(w, showCount = true) {
   const unearnedClass = w.count === 0 ? ' unearned' : '';
   const badgeHTML = showCount ? `<span class="badge-card">${w.count}</span>` : '';
-  return `<li class="badge-item${unearnedClass}" title="${escapeHTML(w.desc || '')}">${badgeHTML}<div class="badge-icon">${w.icon}</div><div class="badge-label">${escapeHTML(w.label)}</div></li>`;
+  return `<li class="badge-item${unearnedClass}" data-tooltip="${escapeHTML(w.desc || '')}">${badgeHTML}<div class="badge-icon">${w.icon}</div><div class="badge-label">${escapeHTML(w.label)}</div></li>`;
 }
 
 function calculateAndUpdateBadges() {
@@ -4517,7 +4516,7 @@ function setupBadgeTooltips() {
       e.preventDefault();
       e.stopPropagation();
       
-      const tooltipText = badgeItem.getAttribute('title');
+      const tooltipText = badgeItem.getAttribute('data-tooltip');
       
       // If clicking the same badge, toggle it off
       if (activeTooltip && activeTooltip.textContent === tooltipText) {
