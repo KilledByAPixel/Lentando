@@ -1,3 +1,6 @@
+// LENTANDO - Progress At Your Pace
+// Copyright (c) 2026 Frank Force
+
 // ============================================================
 // FIREBASE AUTH + CLOUD SYNC FOR LENTANDO
 // ============================================================

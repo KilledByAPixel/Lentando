@@ -1,3 +1,6 @@
+// LENTANDO - Progress At Your Pace
+// Copyright (c) 2026 Frank Force
+
 const fs = require('fs');
 const path = require('path');
 const { minify } = require('terser');
