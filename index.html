@@ -349,7 +349,7 @@ header .date { font-size: 14px; color: var(--muted); }
   border-radius: var(--radius-sm);
   background: var(--card);
   color: var(--text);
-  font-size: 11px;
+  font-size: 14px;
   text-align: center;
   cursor: pointer;
   line-height: 1.3;
@@ -367,7 +367,7 @@ header .date { font-size: 14px; color: var(--muted); }
 
 /* ===== DASHBOARD TILES ===== */
 .section-label {
-  font-size: 12px;
+  font-size: 18px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -458,7 +458,7 @@ header .date { font-size: 14px; color: var(--muted); }
   line-height: 1;
 }
 .badge-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1.3;
   color: var(--text);
@@ -535,7 +535,8 @@ header .date { font-size: 14px; color: var(--muted); }
   background-clip: text;
 }
 .onboarding-header .tagline {
-  font-size: 12px;
+  font-style: italic;
+  font-size: 14px;
   font-weight: 400;
   color: var(--muted);
   letter-spacing: 0.5px;
@@ -602,7 +603,7 @@ header .date { font-size: 14px; color: var(--muted); }
   border-radius: var(--radius-sm);
   background: var(--card);
   color: var(--text);
-  font-size: 15px;
+  font-size: 16px;
   outline: none;
   transition: border-color 0.2s;
 }
@@ -842,7 +843,7 @@ header .date { font-size: 14px; color: var(--muted); }
   touch-action: manipulation;
 }
 .graph-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   margin-bottom: 12px;
 }
@@ -875,7 +876,7 @@ header .date { font-size: 14px; color: var(--muted); }
   opacity: 0.85;
 }
 .graph-bar-label {
-  font-size: 8px;
+  font-size: 10px;
   color: var(--muted);
   margin-top: 2px;
   white-space: nowrap;
@@ -900,14 +901,14 @@ header .date { font-size: 14px; color: var(--muted); }
   min-width: 0;
 }
 .week-col-head {
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 .week-col-date {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text);
   margin-bottom: 6px;
@@ -922,7 +923,7 @@ header .date { font-size: 14px; color: var(--muted); }
 }
 .week-item {
   display: contents;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text);
 }
 .week-item > .week-icon {
@@ -936,7 +937,7 @@ header .date { font-size: 14px; color: var(--muted); }
 .week-item > .week-val {
   text-align: left;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 18px;
   height: 18px;
 }
@@ -1220,7 +1221,7 @@ header .date { font-size: 14px; color: var(--muted); }
 }
 
 .landing-feature-icon {
-  font-size: 24px;
+  font-size: 28px;
   flex-shrink: 0;
   line-height: 1;
   margin-top: 2px;
@@ -1233,6 +1234,7 @@ header .date { font-size: 14px; color: var(--muted); }
 }
 
 .landing-feature-text strong {
+  font-size: 18px;
   display: block;
   margin-bottom: 2px;
 }
@@ -1240,7 +1242,7 @@ header .date { font-size: 14px; color: var(--muted); }
 .landing-cta {
   width: 100%;
   padding: 16px;
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 600;
   border: none;
   border-radius: var(--radius);
@@ -1499,21 +1501,21 @@ header .date { font-size: 14px; color: var(--muted); }
     </div>
     <div class="onboarding-content">
       <h2 style="margin-bottom:12px">Sign in to sync your data</h2>
-      <p style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.5">Create an account or sign in to sync your progress across all your devices.</p>
+      <p style="font-size:16px;color:var(--muted);margin-bottom:16px;line-height:1.5;text-align:center;">Create an account or sign in to sync your progress across all your devices.</p>
       
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
         <button class="export-btn google-btn" style="padding:14px;font-size:15px" onclick="App.loginWithGoogle()">Sign in with Google</button>
         <div class="login-inputs"></div>
         <div style="display:flex;gap:8px">
-          <button class="export-btn" style="flex:1;padding:12px;font-size:14px" onclick="App.loginWithEmailFromScreen()">🔓 Log In</button>
-          <button class="export-btn" style="flex:1;padding:12px;font-size:14px" onclick="App.signupWithEmailFromScreen()">✨ Sign Up</button>
+          <button class="export-btn" style="flex:1;padding:12px;font-size:16px" onclick="App.loginWithEmailFromScreen()">🔓 Log In</button>
+          <button class="export-btn" style="flex:1;padding:12px;font-size:16px" onclick="App.signupWithEmailFromScreen()">✨ Sign Up</button>
         </div>
-        <button style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px 0;text-decoration:underline" onclick="App.forgotPasswordFromScreen()">Forgot password?</button>
+        <button style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 0;text-decoration:underline" onclick="App.forgotPasswordFromScreen()">Forgot password?</button>
       </div>
 
       <div style="margin-top:12px">
-        <button class="export-btn" style="width:100%;padding:10px;font-size:13px;opacity:0.7" onclick="App.skipLogin()">Continue without account</button>
-        <p style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.4">Your data will only be saved on this device and won't sync to other devices.</p>
+        <button class="export-btn" style="width:100%;padding:10px;font-size:16px;opacity:0.7" onclick="App.skipLogin()">Continue without account</button>
+        <p style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.4">Your data will only be saved on this device and won't sync to other devices.</p>
       </div>
     </div>
   </div>
@@ -1584,12 +1586,12 @@ header .date { font-size: 14px; color: var(--muted); }
     <div class="onboarding-content">
       <div class="custom-config-form">
         <div class="section-label" style="margin-bottom:4px">Tracker Name</div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:6px">What would you like to quit or use less of?</p>
+        <p style="font-size:16px;color:var(--muted);margin-bottom:6px">What would you like to quit or use less of?</p>
         <div class="custom-field">
           <input type="text" id="custom-name" maxlength="24" placeholder="e.g. Junk Food, Opioids, Porn, etc.">
         </div>
         <div class="section-label" style="margin-top:16px;margin-bottom:4px">Category Types</div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:6px">Customize 3 types to track your patterns. Leave blank for defaults.</p>
+        <p style="font-size:16px;color:var(--muted);margin-bottom:6px">Customize 3 types to track your patterns. Leave blank for defaults.</p>
         <div class="custom-field">
           <input type="text" id="custom-type1" maxlength="20" placeholder="Type 1">
           <div class="icon-picker" id="custom-icon1"></div>
