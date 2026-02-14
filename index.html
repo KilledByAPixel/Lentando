@@ -110,34 +110,7 @@
   --radius-sm: 8px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #1a1a1a;
-    --card: #2c2c2c;
-    --card-border: #3a3a3a;
-    --text: #e8e8e8;
-    --muted: #a0a0a0;
-    --primary: #7986cb;
-    --primary-light: #2a2f4a;
-    --badge: #66bb6a;
-    --badge-light: #1e3a1f;
-    --resist: #81c784;
-    --habit-bg: #2e3338;
-    --secondary: #26a69a;
-    --secondary-light: #1a2e2c;
-    --danger: #ef5350;
-    --chip-bg: #3a3a3a;
-    --chip-active: #7986cb;
-    --chip-active-text: #fff;
-    --danger-light: #3a1f1f;
-    --warn-light: #3a3120;
-    --warn: #ffb74d;
-    --brandColor1: #0079ca;
-    --brandColor2: #9cffa4;
-  }
-}
-
-/* Explicit dark theme toggle (shares same variables as prefers-color-scheme) */
+/* Dark theme (set by inline script or toggle — no media-query duplication needed) */
 [data-theme="dark"] {
   --bg: #1a1a1a;
   --card: #2c2c2c;
@@ -1082,10 +1055,6 @@ header .date {
   background:#fff;color:#3c4043;border:1px solid #dadce0;
 }
 .google-btn:active { background:#f8f9fa; }
-@media (prefers-color-scheme:dark) {
-  :root:not([data-theme="light"]) .google-btn { background:#131314;color:#e3e3e3;border-color:#8e918f; }
-  :root:not([data-theme="light"]) .google-btn:active { background:#1f1f1f; }
-}
 [data-theme="dark"] .google-btn { background:#131314;color:#e3e3e3;border-color:#8e918f; }
 [data-theme="dark"] .google-btn:active { background:#1f1f1f; }
 .google-btn::before {
@@ -1448,6 +1417,8 @@ header .date {
   text-decoration: none;
 }
 </style>
+<script>/* Set theme before first paint to prevent flash */
+(function(){var t=localStorage.getItem('ht_theme');if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.dataset.theme=t})()</script>
 </head>
 <body>
 
