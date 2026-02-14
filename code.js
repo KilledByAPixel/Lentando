@@ -903,7 +903,12 @@ const Badges = {
       const cbdUsed = filterCBD(used);
       const thcUsed = filterTHC(used);
       addBadge(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
-      const cbdAmt = sumAmount(cbdUsed);
+      // CBD amount: pure CBD at full + mix at 50% (same logic as ratio tile)
+      const cbdAmt = profileUsed.reduce((sum, e) => {
+        if (e.substance === 'cbd') return sum + (e.amount || 0);
+        if (e.substance === 'mix') return sum + (e.amount || 0) * 0.5;
+        return sum;
+      }, 0);
       const totalUsedAmt = sumAmount(profileUsed);
       addBadge(profileUsed.length > 0 && totalUsedAmt > 0 && cbdAmt * 2 >= totalUsedAmt, 'half-cbd-day');
       addBadge(profileUsed.length > 0 && profileUsed.every(e => e.method === 'edible'), 'edibles-only');
