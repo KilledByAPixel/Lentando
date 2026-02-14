@@ -2018,70 +2018,122 @@ function buildWeekSummaryHTML() {
   const profile = getProfile();
   const _weekdayFmt = new Intl.DateTimeFormat([], { weekday: 'short' });
 
-  let html = '<div class="graph-container" data-tooltip="Daily snapshot of the past week. Shows usage by type, resists, and healthy activities for each day. A 🏅 means no usage that day. Untimed activities rounded up to 5 minutes each."><div class="graph-title">📅 Past 7 Day Summary</div>';
-  html += '<div class="week-grid">';
-
-  for (const dayKey of days) {
+  // Pre-compute per-day data
+  const dayData = days.map(dayKey => {
     const d = new Date(dayKey + 'T12:00:00');
-    const dayLabel = dayKey === todayKey() ? 'Today' : _weekdayFmt.format(d);
-    const dayNum = d.getDate();
     const events = DB.forDate(dayKey);
     const used = filterProfileUsed(events);
     const resisted = filterByType(events, 'resisted');
     const habits = getHabits(events);
-
-    html += '<div class="week-col">';
-    html += `<div class="week-col-head">${escapeHTML(dayLabel)}</div>`;
-    html += `<div class="week-col-date">${dayNum}</div>`;
-    html += '<div class="week-col-body">';
-
-    // Usage icons grouped by substance with total amount
-    if (used.length > 0) {
-      const bySubstance = {};
-      used.forEach(e => {
-        const sub = e.substance || 'unknown';
-        if (!bySubstance[sub]) bySubstance[sub] = 0;
-        bySubstance[sub] += (e.amount ?? 1);
-      });
-      for (const sub of profile.substances) {
-        const amt = bySubstance[sub];
-        if (!amt) continue;
-        const icon = profile.icons[sub] || '⚡';
-        const displayAmt = Number.isInteger(amt) ? amt : amt.toFixed(1);
-        html += `<div class="week-item"><span class="week-icon">${icon}</span><span class="week-val">${displayAmt}</span></div>`;
-      }
-    } else {
-      html += '<div class="week-star">🏅</div>';
-    }
-
-    // Resists
-    if (resisted.length > 0) {
-      const totalIntensity = resisted.reduce((sum, e) => sum + (e.urge_intensity || 1), 0);
-      const displayIntensity = Number.isInteger(totalIntensity) ? totalIntensity : totalIntensity.toFixed(1);
-      html += `<div class="week-item"><span class="week-icon">💪</span><span class="week-val">${displayIntensity}</span></div>`;
-    }
-
-    // Activities
+    // Substance amounts
+    const bySubstance = {};
+    used.forEach(e => {
+      const sub = e.substance || 'unknown';
+      bySubstance[sub] = (bySubstance[sub] || 0) + (e.amount ?? 1);
+    });
+    // Resist total
+    const resistTotal = resisted.reduce((sum, e) => sum + (e.urge_intensity || 1), 0);
+    // Activity totals
+    const actTotals = {};
     const activityTypes = ['water', 'exercise', 'breaths', 'clean', 'outside'];
     for (const act of activityTypes) {
       const actEvents = habits.filter(e => e.habit === act);
       if (actEvents.length === 0) continue;
-      const icon = HABIT_ICONS[act] || '✅';
       const anyHaveMin = actEvents.some(e => e.minutes > 0);
       const totalMin = anyHaveMin
         ? actEvents.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0)
         : 0;
-      if (totalMin > 0) {
-        html += `<div class="week-item"><span class="week-icon">${icon}</span><span class="week-val">${totalMin}m</span></div>`;
-      } else {
-        html += `<div class="week-item"><span class="week-icon">${icon}</span><span class="week-val">${actEvents.length}</span></div>`;
-      }
+      actTotals[act] = totalMin > 0 ? `${totalMin}m` : `${actEvents.length}`;
     }
+    return {
+      dayKey,
+      dayLabel: dayKey === todayKey() ? 'Today' : _weekdayFmt.format(d),
+      dayNum: d.getDate(),
+      bySubstance,
+      hasUse: used.length > 0,
+      resistTotal,
+      actTotals
+    };
+  });
 
-    html += '</div></div>'; // close week-col-body, week-col
+  let html = '<div class="graph-container" data-tooltip="Daily snapshot of the past week. Shows usage by type, resists, and healthy activities for each day. A 🏅 means no usage that day. Untimed activities rounded up to 5 minutes each."><div class="graph-title">📅 Past 7 Day Summary</div>';
+  html += '<div class="week-table">';
+
+  // Header row: day names
+  html += '<div class="week-row week-header-row"><div class="week-row-label"></div>';
+  for (const dd of dayData) html += `<div class="week-cell week-col-head">${escapeHTML(dd.dayLabel)}</div>`;
+  html += '</div>';
+
+  // Date row
+  html += '<div class="week-row week-date-row"><div class="week-row-label"></div>';
+  for (const dd of dayData) html += `<div class="week-cell week-col-date">${dd.dayNum}</div>`;
+  html += '</div>';
+
+  // Data rows use week-data-row class for alternating stripe
+  let dataRowIdx = 0;
+
+  // Star row: 🏅 for clean days (no usage at all) — shown first
+  const hasAnyCleanDay = dayData.some(dd => !dd.hasUse);
+  if (hasAnyCleanDay) {
+    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? 'week-row-alt' : ''}"><div class="week-row-label"></div>`;
+    for (const dd of dayData) {
+      html += dd.hasUse
+        ? '<div class="week-cell"></div>'
+        : '<div class="week-cell week-star">🏅</div>';
+    }
+    html += '</div>';
   }
 
-  html += '</div></div>'; // close week-grid, graph-container
+  // Substance rows — one per substance, only if any day has it
+  for (const sub of profile.substances) {
+    const hasAny = dayData.some(dd => dd.bySubstance[sub] > 0);
+    if (!hasAny) continue;
+    const icon = profile.icons[sub] || '⚡';
+    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? 'week-row-alt' : ''}"><div class="week-row-label">${icon}</div>`;
+    for (const dd of dayData) {
+      const amt = dd.bySubstance[sub];
+      if (amt > 0) {
+        const displayAmt = Number.isInteger(amt) ? amt : amt.toFixed(1);
+        html += `<div class="week-cell week-val">${displayAmt}</div>`;
+      } else {
+        html += '<div class="week-cell"></div>';
+      }
+    }
+    html += '</div>';
+  }
+
+  // Resist row
+  const hasAnyResist = dayData.some(dd => dd.resistTotal > 0);
+  if (hasAnyResist) {
+    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? 'week-row-alt' : ''}"><div class="week-row-label">💪</div>`;
+    for (const dd of dayData) {
+      if (dd.resistTotal > 0) {
+        const display = Number.isInteger(dd.resistTotal) ? dd.resistTotal : dd.resistTotal.toFixed(1);
+        html += `<div class="week-cell week-val">${display}</div>`;
+      } else {
+        html += '<div class="week-cell"></div>';
+      }
+    }
+    html += '</div>';
+  }
+
+  // Activity rows — one per type, only if any day has it
+  const activityTypes = ['water', 'exercise', 'breaths', 'clean', 'outside'];
+  for (const act of activityTypes) {
+    const hasAny = dayData.some(dd => dd.actTotals[act]);
+    if (!hasAny) continue;
+    const icon = HABIT_ICONS[act] || '✅';
+    html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? 'week-row-alt' : ''}"><div class="week-row-label">${icon}</div>`;
+    for (const dd of dayData) {
+      const val = dd.actTotals[act];
+      html += val
+        ? `<div class="week-cell week-val">${val}</div>`
+        : '<div class="week-cell"></div>';
+    }
+    html += '</div>';
+  }
+
+  html += '</div></div>'; // close week-table, graph-container
   return html;
 }
 

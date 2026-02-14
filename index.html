@@ -1010,66 +1010,55 @@ header .date {
   margin-bottom: 12px;
 }
 
-/* ===== WEEK SUMMARY GRID ===== */
-.week-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-.week-col {
+/* ===== WEEK SUMMARY TABLE ===== */
+.week-table {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-width: 0;
+  gap: 2px;
 }
-.week-col-head {
-  font-size: 14px;
+.week-row {
+  display: grid;
+  grid-template-columns: 24px repeat(7, 1fr);
+  gap: 2px;
+  align-items: center;
+}
+.week-row-label {
+  font-size: 13px;
+  text-align: center;
+  line-height: 1;
+}
+.week-cell {
+  text-align: center;
+  font-size: 13px;
+  min-width: 0;
+  line-height: 20px;
+}
+.week-header-row .week-cell {
+  font-size: 13px;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
-.week-col-date {
-  font-size: 20px;
+.week-date-row .week-cell {
+  font-size: 18px;
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 6px;
+  padding-bottom: 4px;
 }
-.week-col-body {
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 2px 3px;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-}
-.week-item {
-  display: contents;
-  font-size: 12px;
+.week-cell.week-val {
   color: var(--text);
-}
-.week-item > .week-icon {
-  text-align: center;
-  justify-self: end;
   font-size: 12px;
-  line-height: 18px;
-  height: 18px;
-  overflow: hidden;
 }
-.week-item > .week-val {
-  text-align: left;
-  white-space: nowrap;
-  font-size: 12px;
-  line-height: 18px;
-  height: 18px;
+.week-cell.week-star {
+  font-size: 14px;
 }
-.week-star {
-  font-size: 16px;
-  grid-column: 1 / -1;
-  text-align: center;
-  line-height: 18px;
-  height: 18px;
-  overflow: hidden;
+.week-data-row {
+  padding: 2px 0;
+  border-radius: 4px;
+}
+.week-row-alt {
+  background: rgba(128, 128, 128, 0.1);
 }
 
 /* ===== ACTION BUTTONS (settings / data management) ===== */
