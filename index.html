@@ -1574,6 +1574,9 @@ header .date {
 
 <!-- ===== HISTORY TAB ===== -->
 <div class="tab-panel" id="tab-history">
+  <div class="action-bar">
+    <button class="action-btn" id="btn-add-prior-event" onclick="App.openCreateEventModal()">📝 Add Past Session</button>
+  </div>
   <div class="day-nav" id="day-nav">
     <button class="day-nav-btn" id="prev-day">← Prev</button>
     <span class="day-nav-date" id="current-day-label">Today</span>
@@ -1628,9 +1631,6 @@ header .date {
     <button class="action-btn" id="btn-reminder-toggle" onclick="App.openReminderModal()">
       <span id="reminder-icon-settings">🔕</span> <span id="reminder-text-settings">Enable Daily Reminder</span>
     </button>
-  </div>
-  <div class="action-bar">
-    <button class="action-btn" id="btn-add-prior-event" onclick="App.openCreateEventModal()">📝 Log Past Use</button>
   </div>
   <div class="action-bar">
     <button class="action-btn" id="btn-change-addiction" onclick="App.changeAddiction()">🔄 Change Tracked Substance</button>

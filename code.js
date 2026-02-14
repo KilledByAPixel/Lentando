@@ -2782,7 +2782,7 @@ function openCreateEventModal() {
   const timeValue = `${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`;
 
   $('modal-sheet').innerHTML = `
-    <div class="modal-header"><h2>Add Earlier Session</h2><button class="modal-close" onclick="App.closeModal()">✕</button></div>
+    <div class="modal-header"><h2>Add Past Session</h2><button class="modal-close" onclick="App.closeModal()">✕</button></div>
     ${profileSwitcher}
     <div id="create-modal-fields">${fieldsHTML}</div>
     <div class="modal-field"><label>Date</label><input type="date" id="modal-date-input" value="${dateValue}" class="form-input"></div>
