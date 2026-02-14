@@ -1912,7 +1912,7 @@ function navigateDay(offset) {
 // ========== GRAPHS ==========
 const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: '#f39c12',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
-  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').reduce((sum, e) => sum + (e.urge_intensity || 1), 0), activity: false, tooltip: 'Total urge intensity resisted each day. Higher bars mean stronger urges resisted.' },
+  { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').reduce((sum, e) => sum + (e.intensity || 1), 0), activity: false, tooltip: 'Total urge intensity resisted each day. Higher bars mean stronger urges resisted.' },
   { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true, tooltip: 'Number of water uses logged each day. Staying hydrated supports recovery.' },
   { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'exercise', tooltip: 'Exercise minutes each day. Physical activity helps manage cravings.',
     countFn: evs => getHabits(evs, 'exercise').length, countLabel: '🏃 Exercise / Day', countTooltip: 'Number of exercise sessions each day.' },
@@ -2044,7 +2044,7 @@ function buildWeekSummaryHTML() {
       bySubstance[sub] = (bySubstance[sub] || 0) + (e.amount ?? 1);
     });
     // Resist total
-    const resistTotal = resisted.reduce((sum, e) => sum + (e.urge_intensity || 1), 0);
+    const resistTotal = resisted.reduce((sum, e) => sum + (e.intensity || 1), 0);
     // Activity totals
     const actTotals = {};
     const activityTypes = ['water', 'exercise', 'breaths', 'clean', 'outside'];
