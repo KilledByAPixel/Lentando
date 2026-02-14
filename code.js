@@ -2295,6 +2295,11 @@ function navHandleBack() {
   // Custom config overlay
   if (!$('custom-config-overlay').classList.contains('hidden')) {
     $('custom-config-overlay').classList.add('hidden');
+    // If opened from settings, return to settings tab
+    if (customConfigFromSettings) {
+      switchTab('settings');
+      return true;
+    }
     // Fall through to close onboarding too (if open) and go to Today
   }
   // Onboarding overlay
