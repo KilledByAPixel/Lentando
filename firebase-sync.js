@@ -544,10 +544,10 @@ const AUTH_FORM_HTML = `
     <button class="export-btn google-btn" style="margin:0" onclick="FirebaseSync.loginWithGoogle()">Sign in with Google</button>
     <form id="auth-form" onsubmit="FirebaseSync.loginWithEmailForm(); return false" style="display:flex;flex-direction:column;gap:6px">
       <input type="email" id="auth-email" name="email" autocomplete="username" placeholder="Email" 
-        style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
+        style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:14px">
       <div class="password-wrap">
         <input type="password" id="auth-password" name="password" autocomplete="current-password" placeholder="Password" 
-          style="width:100%;padding:10px;padding-right:40px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px">
+          style="width:100%;padding:10px;padding-right:40px;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:14px">
         <button type="button" class="password-toggle" onclick="App.togglePasswordVisibility(this)" title="Show password">👁️</button>
       </div>
       <button type="submit" style="display:none"></button>
