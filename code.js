@@ -277,7 +277,7 @@ const BADGE_DEFINITIONS = {
   'week-streak': { label: 'App Week Streak', icon: '📅', desc: 'Used the app every day for a week' },
   'month-streak': { label: 'App Month Streak', icon: '🗓️', desc: 'Used the app every day for a month' },
   'year-streak': { label: 'App Year Streak', icon: '🎉', desc: 'Used the app every day for a year!' },
-  'tbreak-1d': { label: 'One Day', icon: '🌱', desc: '24 hours with no use' },
+  'tbreak-1d': { label: 'One Day', icon: '🌱', desc: '24 hour gap with no use' },
   'tbreak-7d': { label: 'One Week', icon: '🌿', desc: 'One week with no use' },
   'tbreak-14d': { label: 'Two Weeks', icon: '🍀', desc: 'Two weeks with no use' },
   'tbreak-21d': { label: 'Three Weeks', icon: '🌳', desc: 'Three weeks with no use' },
