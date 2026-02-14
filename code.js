@@ -3879,7 +3879,7 @@ function fireReminder() {
 }
 
 function showReminderNotification() {
-  if (Notification.permission !== 'granted') return;
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   const msg = {
     type: 'SHOW_REMINDER',
     title: 'How\'s your day going?',

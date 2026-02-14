@@ -20,8 +20,8 @@
     "recovery",
     "harm-reduction"
   ],
-  "author": "",
-  "license": "SEE LICENSE IN LICENSE",
+  "author": "Frank Force",
+  "license": "GPL-3.0-only",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/KilledByAPixel/lentando/issues"
