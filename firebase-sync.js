@@ -322,28 +322,42 @@ async function pullFromCloud(uid) {
   }
 
   // --- Events: merge by ID (union of local + cloud, deduplicated), filter deleted ---
+  // Per-event modifiedAt is used for conflict resolution when the same event was edited on two devices
   const cloudEvents = asArray(cloud.events);
   const localEvents = readLocalArray(STORAGE_KEYS.events);
-  const seenIds = new Set();
-  const merged = [];
+  const eventMap = new Map();
   const orderedEvents = preferCloud ? [...cloudEvents, ...localEvents] : [...localEvents, ...cloudEvents];
   for (const e of orderedEvents) {
-    if (!e || !e.id || seenIds.has(e.id) || seenDeletedIds.has(e.id)) continue;
+    if (!e || !e.id || seenDeletedIds.has(e.id)) continue;
     // Filter out events created before the last database clear
     if (mergedClearedAt > 0 && getUidTimestamp(e.id) <= mergedClearedAt) continue;
     const parsedTs = typeof e.ts === 'number' ? e.ts : parseInt(e.ts, 10);
     if (!Number.isFinite(parsedTs)) continue;
-    seenIds.add(e.id);
-    merged.push(parsedTs === e.ts ? e : { ...e, ts: parsedTs });
+    const normalized = parsedTs === e.ts ? e : { ...e, ts: parsedTs };
+    const existing = eventMap.get(e.id);
+    if (!existing) {
+      eventMap.set(e.id, normalized);
+    } else {
+      // Per-event conflict: prefer the version with the higher modifiedAt.
+      // For unmodified events (no modifiedAt), keep the preferred source (first seen via preferCloud ordering).
+      const existingMod = existing.modifiedAt || 0;
+      const newMod = normalized.modifiedAt || 0;
+      if (newMod > existingMod) {
+        eventMap.set(e.id, normalized);
+      }
+    }
   }
-  merged.sort((a, b) => a.ts - b.ts);
+  const merged = Array.from(eventMap.values()).sort((a, b) => a.ts - b.ts);
   (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.events, JSON.stringify(merged));
 
-  // Check if local contributed events cloud didn't have, or if cloud events
-  // were filtered out (by tombstones/clearedAt). Compare actual IDs, not just count.
-  const cloudEventIds = new Set(cloudEvents.map(e => e?.id).filter(Boolean));
+  // Check if local contributed events cloud didn't have, if cloud events were filtered
+  // out (by tombstones/clearedAt), or if a local edit won a per-event conflict.
+  const cloudEventMap = new Map(cloudEvents.filter(e => e?.id).map(e => [e.id, e]));
   for (const e of merged) {
-    if (!cloudEventIds.has(e.id)) { needsPushBack = true; break; }
+    if (!cloudEventMap.has(e.id)) { needsPushBack = true; break; }
+    // Check if a locally-edited event should overwrite the cloud copy
+    const cloudCopy = cloudEventMap.get(e.id);
+    if ((e.modifiedAt || 0) > (cloudCopy.modifiedAt || 0)) { needsPushBack = true; break; }
   }
   // Also check if merged is smaller (cloud events got filtered out by tombstones/clear)
   if (merged.length !== cloudEvents.length) {

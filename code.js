@@ -656,6 +656,7 @@ const DB = {
     const idx = this._events.findIndex(e => e.id === id);
     if (idx === -1) return null;
     Object.assign(this._events[idx], data);
+    this._events[idx].modifiedAt = now(); // Track edit time for sync conflict resolution
     this._invalidateDateIndex(); // Rebuild index if timestamp changed
     this.saveEvents();
     return this._events[idx];
