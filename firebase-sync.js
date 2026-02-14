@@ -172,6 +172,7 @@ const STORAGE_KEYS = {
   badges: 'ht_badges',
   todos: 'ht_todos',
   deletedIds: 'ht_deleted_ids',
+  deletedTodoIds: 'ht_deleted_todo_ids',
   clearedAt: 'ht_cleared_at',
   loginSkipped: 'ht_login_skipped',
   version: 'ht_data_version',
@@ -237,6 +238,7 @@ function getLocalData() {
     badges: readLocalObject(STORAGE_KEYS.badges),
     todos: readLocalArray(STORAGE_KEYS.todos),
     deletedIds: readTombstoneMap(STORAGE_KEYS.deletedIds),
+    deletedTodoIds: readTombstoneMap(STORAGE_KEYS.deletedTodoIds),
     clearedAt: parseInt(localStorage.getItem(STORAGE_KEYS.clearedAt), 10) || 0,
     version: parseInt(localStorage.getItem(STORAGE_KEYS.version), 10) || 0,
     updatedAt: parseInt(localStorage.getItem(STORAGE_KEYS.updatedAt), 10) || 0
@@ -395,19 +397,66 @@ async function pullFromCloud(uid) {
     (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.settings, JSON.stringify(mergedSettings));
   }
 
-  // --- Todos: most-recent-writer wins ---
-  // Todos are a simple ordered list without per-item IDs or tombstones, so
-  // union-merge can't handle individual deletions (deleted items resurrect from
-  // the other side). Instead, whichever device wrote more recently wins outright.
-  const hasCloudTodosField = Object.prototype.hasOwnProperty.call(cloud, 'todos');
-  if (hasCloudTodosField) {
-    const cloudTodos = asArray(cloud.todos);
+  // --- Todos: per-item merge by ID with tombstones ---
+  const cloudTodoTombstones = normalizeTombstones(cloud.deletedTodoIds);
+  const localTodoTombstones = readTombstoneMap(STORAGE_KEYS.deletedTodoIds);
+  const mergedTodoTombstones = {};
+  for (const [id, deletedAt] of [...Object.entries(cloudTodoTombstones), ...Object.entries(localTodoTombstones)]) {
+    const ts = typeof deletedAt === 'number' ? deletedAt : Date.now();
+    if (ts > ninetyDaysAgo) {
+      const existing = mergedTodoTombstones[id];
+      if (!existing || ts > existing) mergedTodoTombstones[id] = ts;
+    }
+  }
+  const deletedTodoIds = new Set(Object.keys(mergedTodoTombstones));
+  (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.deletedTodoIds, JSON.stringify(mergedTodoTombstones));
+
+  // Check if local had todo tombstones cloud didn't
+  for (const id of Object.keys(mergedTodoTombstones)) {
+    if (!(id in cloudTodoTombstones)) { needsPushBack = true; break; }
+  }
+
+  const cloudTodos = asArray(cloud.todos);
+  const localTodos = readLocalArray(STORAGE_KEYS.todos);
+
+  // Detect pre-migration cloud data (old { text, done } format without IDs).
+  // Per-item merge requires IDs; fall back to most-recent-writer-wins for transition.
+  const cloudNeedsMigration = cloudTodos.length > 0 && !cloudTodos.some(t => t?.id);
+
+  if (cloudNeedsMigration) {
+    // Legacy cloud format — use recency to pick a winner; loadTodos() will migrate on read
     if (preferCloud) {
-      // Cloud is newer — adopt its todo list (handles both clears and single deletes)
       (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.todos, JSON.stringify(cloudTodos));
     } else {
-      // When local is newer we keep local as-is (already in localStorage)
-      needsPushBack = true; // Local todos need to go to cloud
+      needsPushBack = true;
+    }
+  } else {
+    // Normal per-item merge
+    const mergedTodos = [];
+    const allTodos = [...cloudTodos, ...localTodos];
+    const todoById = new Map();
+    for (const t of allTodos) {
+      if (!t || !t.id || deletedTodoIds.has(t.id)) continue;
+      // Filter out todos created before the last database clear
+      if (mergedClearedAt > 0 && getUidTimestamp(t.id) <= mergedClearedAt) continue;
+      const existing = todoById.get(t.id);
+      if (!existing || (t.modifiedAt || 0) > (existing.modifiedAt || 0)) {
+        todoById.set(t.id, t);
+      }
+    }
+    for (const [, t] of todoById) {
+      mergedTodos.push(t);
+    }
+    mergedTodos.sort((a, b) => (a.position || 0) - (b.position || 0));
+    (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.todos, JSON.stringify(mergedTodos));
+
+    // Check if local contributed todos cloud didn't have
+    const cloudTodoIds = new Set(cloudTodos.map(t => t?.id).filter(Boolean));
+    for (const t of mergedTodos) {
+      if (!cloudTodoIds.has(t.id)) { needsPushBack = true; break; }
+    }
+    if (mergedTodos.length !== cloudTodos.length) {
+      needsPushBack = true;
     }
   }
 

@@ -60,6 +60,7 @@ const STORAGE_BADGES = 'ht_badges';
 const STORAGE_LOGIN_SKIPPED = 'ht_login_skipped';
 const STORAGE_VERSION = 'ht_data_version';
 const STORAGE_DELETED_IDS = 'ht_deleted_ids';
+const STORAGE_DELETED_TODO_IDS = 'ht_deleted_todo_ids';
 const STORAGE_CLEARED_AT = 'ht_cleared_at';
 const DATA_VERSION = 2;
 
@@ -430,6 +431,7 @@ function clearAllStorage() {
   localStorage.removeItem(STORAGE_LOGIN_SKIPPED);
   localStorage.removeItem(STORAGE_VERSION);
   localStorage.removeItem(STORAGE_DELETED_IDS);
+  localStorage.removeItem(STORAGE_DELETED_TODO_IDS);
   localStorage.removeItem(STORAGE_CLEARED_AT);
   localStorage.removeItem('ht_last_updated');
   DB._events = null;
@@ -3589,18 +3591,18 @@ function bindEvents() {
     }
   });
   $('todo-list').addEventListener('click', e => {
-    const idx = +e.target.dataset.idx;
-    if (e.target.classList.contains('todo-check')) toggleTodo(idx);
-    if (e.target.classList.contains('todo-text')) editTodo(idx);
+    const todoId = e.target.dataset.id;
+    if (e.target.classList.contains('todo-check')) toggleTodo(todoId);
+    if (e.target.classList.contains('todo-text')) editTodo(todoId);
     
     // Handle button clicks (move up, move down, edit and delete)
     const btn = e.target.closest('.tl-act-btn');
-    if (btn && btn.dataset.idx !== undefined) {
-      const buttonIdx = +btn.dataset.idx;
-      if (btn.title === 'Move Up') moveUpTodo(buttonIdx);
-      if (btn.title === 'Move Down') moveDownTodo(buttonIdx);
-      if (btn.title === 'Edit') editTodo(buttonIdx);
-      if (btn.title === 'Delete') deleteTodo(buttonIdx);
+    if (btn && btn.dataset.id) {
+      const btnId = btn.dataset.id;
+      if (btn.title === 'Move Up') moveUpTodo(btnId);
+      if (btn.title === 'Move Down') moveDownTodo(btnId);
+      if (btn.title === 'Edit') editTodo(btnId);
+      if (btn.title === 'Delete') deleteTodo(btnId);
     }
   });
   
@@ -3611,9 +3613,66 @@ function bindEvents() {
 }
 
 // ========== TO-DO LIST ==========
+
+// --- Todo tombstone helpers ---
+function addTodoTombstone(todoId) {
+  try {
+    const raw = readTodoTombstoneMap();
+    if (raw[todoId]) return;
+    raw[todoId] = now();
+    safeSetItem(STORAGE_DELETED_TODO_IDS, JSON.stringify(raw));
+    if (window.FirebaseSync) FirebaseSync.onDataChanged();
+  } catch (e) {
+    console.error('Failed to add todo tombstone:', e);
+  }
+}
+
+function readTodoTombstoneMap() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_DELETED_TODO_IDS) || '{}');
+    return (typeof raw === 'object' && raw !== null) ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+function cleanOldTodoTombstones() {
+  try {
+    const raw = readTodoTombstoneMap();
+    const entries = Object.entries(raw);
+    const ninetyDaysAgo = now() - (90 * 24 * 60 * 60 * 1000);
+    const cleaned = {};
+    for (const [id, deletedAt] of entries) {
+      if (deletedAt > ninetyDaysAgo) cleaned[id] = deletedAt;
+    }
+    if (Object.keys(cleaned).length < entries.length) {
+      safeSetItem(STORAGE_DELETED_TODO_IDS, JSON.stringify(cleaned));
+    }
+  } catch (e) {
+    console.error('Failed to clean todo tombstones:', e);
+  }
+}
+
+// --- Todo data model: { id, text, done, position, modifiedAt } ---
+
 function loadTodos() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_TODOS)) || []; }
-  catch { return []; }
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_TODOS)) || [];
+    // Migrate legacy todos (plain { text, done } without id/position)
+    let needsMigration = false;
+    const todos = raw.map((t, i) => {
+      if (!t.id) {
+        needsMigration = true;
+        return { id: uid(), text: t.text || '', done: !!t.done, position: (i + 1) * 1.0, modifiedAt: now() };
+      }
+      return t;
+    });
+    if (needsMigration) {
+      safeSetItem(STORAGE_TODOS, JSON.stringify(todos));
+    }
+    // Always return sorted by position
+    return todos.sort((a, b) => a.position - b.position);
+  } catch { return []; }
 }
 
 function saveTodos(todos) {
@@ -3625,83 +3684,109 @@ function renderTodos() {
   const todos = loadTodos();
   $('todo-list').innerHTML = todos.length === 0
     ? ''
-    : todos.map((t, i) => `<li class="todo-item${t.done ? ' done' : ''}">
+    : todos.map((t, i) => { const safeId = escapeHTML(t.id); return `<li class="todo-item${t.done ? ' done' : ''}">
         <div class="todo-controls">
-          <button class="tl-act-btn" data-idx="${i}" title="Move Up"${i === 0 ? ' disabled' : ''}>↑</button>
-          <button class="tl-act-btn" data-idx="${i}" title="Move Down"${i === todos.length - 1 ? ' disabled' : ''}>↓</button>
+          <button class="tl-act-btn" data-id="${safeId}" title="Move Up"${i === 0 ? ' disabled' : ''}>↑</button>
+          <button class="tl-act-btn" data-id="${safeId}" title="Move Down"${i === todos.length - 1 ? ' disabled' : ''}>↓</button>
         </div>
-        <input type="checkbox" class="todo-check" data-idx="${i}"${t.done ? ' checked' : ''}>
+        <input type="checkbox" class="todo-check" data-id="${safeId}"${t.done ? ' checked' : ''}>
         <div class="tl-body">
-          <span class="todo-text" data-idx="${i}">${escapeHTML(t.text)}</span>
+          <span class="todo-text" data-id="${safeId}">${escapeHTML(t.text)}</span>
         </div>
         <div class="tl-actions">
-          <button class="tl-act-btn" data-idx="${i}" title="Delete">🗑️</button>
+          <button class="tl-act-btn" data-id="${safeId}" title="Delete">🗑️</button>
         </div>
-      </li>`).join('');
+      </li>`; }).join('');
   const clearBtn = $('todo-clear-btn');
   if (clearBtn) clearBtn.classList.toggle('hidden', todos.length === 0);
 }
 
 function addTodo(text) {
   const trimmed = text.trim();
-  if (!trimmed || trimmed.length > 120) return;
+  if (!trimmed || trimmed.length > 250) return;
   const todos = loadTodos();
-  todos.push({ text: trimmed, done: false });
+  const maxPos = todos.length > 0 ? Math.max(...todos.map(t => t.position)) : 0;
+  todos.push({ id: uid(), text: trimmed, done: false, position: maxPos + 1, modifiedAt: now() });
   saveTodos(todos);
   renderTodos();
 }
 
-function toggleTodo(idx) {
+function toggleTodo(todoId) {
   const todos = loadTodos();
-  if (todos[idx]) todos[idx].done = !todos[idx].done;
-  saveTodos(todos);
-  renderTodos();
+  const todo = todos.find(t => t.id === todoId);
+  if (todo) {
+    todo.done = !todo.done;
+    todo.modifiedAt = now();
+    saveTodos(todos);
+    renderTodos();
+  }
 }
 
-async function deleteTodo(idx) {
+function deleteTodo(todoId) {
   if (!confirm('Delete this goal?')) return;
   const todos = loadTodos();
-  todos.splice(idx, 1);
-  saveTodos(todos);
+  const todo = todos.find(t => t.id === todoId);
+  if (todo) addTodoTombstone(todo.id);
+  saveTodos(todos.filter(t => t.id !== todoId));
   renderTodos();
-  // Push immediately so focus-triggered pull doesn't restore the deleted item
-  if (window.FirebaseSync) {
-    try { await FirebaseSync.pushNow(); } catch (_e) { /* ignore */ }
-  }
+  cleanOldTodoTombstones();
 }
 
-async function clearTodos() {
+function clearTodos() {
   if (!confirm('Clear all goal items?')) return;
+  const todos = loadTodos();
+  for (const t of todos) addTodoTombstone(t.id);
   saveTodos([]);
   renderTodos();
-  if (window.FirebaseSync) {
-    try { await FirebaseSync.pushNow(); } catch (_e) { /* ignore */ }
+  cleanOldTodoTombstones();
+}
+
+function moveUpTodo(todoId) {
+  const todos = loadTodos(); // already sorted by position
+  const idx = todos.findIndex(t => t.id === todoId);
+  if (idx <= 0) return;
+  // Swap positions using float midpoint: move this item above the previous one
+  const prev = todos[idx - 1];
+  const prevPrev = todos[idx - 2];
+  const newPos = prevPrev ? (prevPrev.position + prev.position) / 2 : prev.position - 1;
+  todos[idx].position = newPos;
+  todos[idx].modifiedAt = now();
+  // Renormalize if gap is too small
+  if (Math.abs(newPos - prev.position) < 0.001) {
+    todos.sort((a, b) => a.position - b.position);
+    todos.forEach((t, i) => { t.position = i + 1; t.modifiedAt = now(); });
   }
-}
-
-function moveUpTodo(idx) {
-  if (idx === 0) return;
-  const todos = loadTodos();
-  [todos[idx - 1], todos[idx]] = [todos[idx], todos[idx - 1]];
   saveTodos(todos);
   renderTodos();
 }
 
-function moveDownTodo(idx) {
-  const todos = loadTodos();
-  if (idx >= todos.length - 1) return;
-  [todos[idx], todos[idx + 1]] = [todos[idx + 1], todos[idx]];
+function moveDownTodo(todoId) {
+  const todos = loadTodos(); // already sorted by position
+  const idx = todos.findIndex(t => t.id === todoId);
+  if (idx === -1 || idx >= todos.length - 1) return;
+  // Swap positions using float midpoint: move this item below the next one
+  const next = todos[idx + 1];
+  const nextNext = todos[idx + 2];
+  const newPos = nextNext ? (next.position + nextNext.position) / 2 : next.position + 1;
+  todos[idx].position = newPos;
+  todos[idx].modifiedAt = now();
+  // Renormalize if gap is too small
+  if (Math.abs(newPos - next.position) < 0.001) {
+    todos.sort((a, b) => a.position - b.position);
+    todos.forEach((t, i) => { t.position = i + 1; t.modifiedAt = now(); });
+  }
   saveTodos(todos);
   renderTodos();
 }
 
-function editTodo(idx) {
+function editTodo(todoId) {
   const todos = loadTodos();
-  const todo = todos[idx];
+  const todo = todos.find(t => t.id === todoId);
   if (!todo) return;
   
   const todoItems = $('todo-list').querySelectorAll('.todo-item');
-  const item = todoItems[idx];
+  const sortedIdx = todos.findIndex(t => t.id === todoId);
+  const item = todoItems[sortedIdx];
   if (!item) return;
   
   const textSpan = item.querySelector('.todo-text');
@@ -3713,8 +3798,8 @@ function editTodo(idx) {
   input.type = 'text';
   input.className = 'todo-edit-input';
   input.value = currentText;
-  input.maxLength = 120;
-  input.dataset.idx = idx;
+  input.maxLength = 250;
+  input.dataset.id = todoId;
   
   let saved = false;
   const saveEdit = () => {
@@ -3722,8 +3807,13 @@ function editTodo(idx) {
     saved = true;
     const newText = input.value.trim();
     if (newText && newText !== currentText) {
-      todos[idx].text = newText;
-      saveTodos(todos);
+      const freshTodos = loadTodos();
+      const freshTodo = freshTodos.find(t => t.id === todoId);
+      if (freshTodo) {
+        freshTodo.text = newText;
+        freshTodo.modifiedAt = now();
+        saveTodos(freshTodos);
+      }
     }
     renderTodos();
   };
