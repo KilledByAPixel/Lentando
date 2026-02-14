@@ -1920,25 +1920,26 @@ function formatGraphValue(val) {
   return Number.isInteger(val) ? val : val.toFixed(1);
 }
 
-/** Pick nice round grid-line intervals based on max value. Returns [{value, px}] */
-function calcGridLines(max) {
-  if (max <= 0) return [];
-  const BAR_HEIGHT = 96; // must match the px used in bar height calc
-  // Pick a "nice" interval so we get ~2-5 intermediate grid lines
+/** Pick a nice round interval and round max up to the next multiple */
+function calcGridScale(max) {
   const niceSteps = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000];
   let interval = 1;
   for (const s of niceSteps) {
     if (max / s <= 5) { interval = s; break; }
   }
+  const gridMax = Math.ceil(max / interval) * interval || max;
+  return { interval, gridMax };
+}
+
+/** Pick nice round grid-line intervals based on max value. Returns [{value, px}] */
+function calcGridLines(max) {
+  if (max <= 0) return [];
+  const BAR_HEIGHT = 96; // must match the px used in bar height calc
+  const { interval, gridMax } = calcGridScale(max);
   const lines = [];
-  // Zero baseline
-  lines.push({ value: 0, px: 0 });
-  // Intermediate lines
-  for (let v = interval; v < max; v += interval) {
-    lines.push({ value: v, px: Math.round((v / max) * BAR_HEIGHT) });
+  for (let v = 0; v <= gridMax; v += interval) {
+    lines.push({ value: v, px: Math.round((v / gridMax) * BAR_HEIGHT) });
   }
-  // Top line at max value
-  lines.push({ value: max, px: BAR_HEIGHT });
   return lines;
 }
 
@@ -1980,10 +1981,11 @@ function wrapBarsWithGrid(barsInnerHTML, max) {
 }
 
 function buildGraphBars(vals, days, max, def) {
+  const effectiveMax = max > 0 ? calcGridScale(max).gridMax : 0;
   let inner = '';
   for (let i = 0; i < vals.length; i++) {
     const v = vals[i];
-    const h = max > 0 ? Math.round((v / max) * 96) : 0;
+    const h = effectiveMax > 0 ? Math.round((v / effectiveMax) * 96) : 0;
     const dayLabel = days[i].slice(5);
     
     // Show fewer labels for longer date ranges to prevent overlap
@@ -2002,11 +2004,12 @@ function buildGraphBars(vals, days, max, def) {
 }
 
 function buildHourGraphBars(hourCounts, max, color, startHour = 0) {
+  const effectiveMax = max > 0 ? calcGridScale(max).gridMax : 0;
   let inner = '';
   for (let i = 0; i < 24; i++) {
     const hour = (startHour + i) % 24;
     const count = hourCounts[hour] || 0;
-    const h = max > 0 ? Math.round((count / max) * 96) : 0;
+    const h = effectiveMax > 0 ? Math.round((count / effectiveMax) * 96) : 0;
     const hourLabel = hour === 0 ? '12a' : hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`;
     inner += graphBarCol(count, h, { color, text: hourLabel }, i % 3 === 0);
   }
