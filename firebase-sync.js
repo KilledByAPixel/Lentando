@@ -29,7 +29,6 @@ const firebaseConfig = {
 };
 
 
-// Check if Firebase has been configured
 const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
 
 let app, auth, db, provider;
@@ -86,7 +85,6 @@ async function loginWithEmail(email, password) {
 async function signupWithEmail(email, password) {
   if (!isConfigured) return alert('⚠️ Firebase not configured yet. See firebase-sync.js.');
   const result = await createUserWithEmailAndPassword(auth, email, password);
-  // Send verification email
   try {
     await sendEmailVerification(result.user);
     console.log('[Auth] Verification email sent to', email);
@@ -135,7 +133,6 @@ async function deleteAccountAndData() {
   }
   currentUser = null;
 
-  // Wipe all local data and reset app state
   if (window.clearAllStorage) {
     window.clearAllStorage();
   }
@@ -458,7 +455,6 @@ if (isConfigured) {
         // Pull from cloud (which now invalidates caches internally)
         await pullFromCloud(user.uid);
         
-        // Hide login screen and clear auth inputs from DOM
         if (typeof window.hideLoginScreen === 'function') {
           window.hideLoginScreen();
         }
@@ -590,12 +586,10 @@ function updateAuthUI(user) {
           <button class="action-btn" style="flex:none;padding:8px 12px;font-size:12px;margin:0" onclick="FirebaseSync.logout()">Sign Out</button>
         </div>
       </div>`;
-    // Show delete account button when logged in
     const deleteAccountBar = document.getElementById('delete-account-bar');
     if (deleteAccountBar) deleteAccountBar.classList.remove('hidden');
   } else {
     _authUIState = 'logged-out';
-    // Hide delete account button when not logged in
     const deleteAccountBar = document.getElementById('delete-account-bar');
     if (deleteAccountBar) deleteAccountBar.classList.add('hidden');
     
@@ -754,19 +748,12 @@ window.FirebaseSync = {
     await logout();
     currentUser = null;
     
-    // Clear all local data on sign out
     if (window.clearAllStorage) {
       window.clearAllStorage();
     }
-    
-    // Stop background timers
     if (window.stopTimers) window.stopTimers();
-    
-    // Reset theme to default
     document.documentElement.setAttribute('data-theme', 'dark');
-    
     updateAuthUI(null);
-    // Show login screen
     if (typeof window.showLoginScreen === 'function') {
       window.showLoginScreen();
     }

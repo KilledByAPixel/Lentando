@@ -137,7 +137,6 @@ function buildCustomProfile(settings) {
     type3: typeNames[2] || 'Type 3'
   };
 
-  // Build custom icons
   const icons = {
     type1: customIcons[0] || '⚡',
     type2: customIcons[1] || '⚡',
@@ -286,7 +285,6 @@ const BADGE_DEFINITIONS = {
   'tbreak-365d': { label: 'One Year', icon: '👑', desc: 'One year with no use!' },
 };
 
-// Auto-assign sortOrder based on position in BADGE_DEFINITIONS object
 Object.keys(BADGE_DEFINITIONS).forEach((key, index) => {
   BADGE_DEFINITIONS[key].sortOrder = index;
 });
@@ -312,7 +310,6 @@ const DEFAULT_SETTINGS = {
 let ZZFXSound = null;
 let SOUNDS = null;
 
-// Initialize sounds on startup
 async function initSounds() {
   try {
     const zzfxModule = await import('./zzfx.js');
@@ -584,7 +581,7 @@ const DB = {
   _addTombstone(eventId) {
     try {
       const raw = this._readTombstoneMap();
-      if (raw[eventId]) return; // Don't duplicate
+      if (raw[eventId]) return;
       raw[eventId] = now();
       safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(raw));
       if (window.FirebaseSync) FirebaseSync.onDataChanged();
@@ -1380,11 +1377,9 @@ function buildSinceLastUsedTile(used) {
     const elapsedMs = now() - lastUsedTs;
     const elapsedDays = Math.floor(elapsedMs / (24 * 60 * 60 * 1000));
     
-    // Always show full duration in main value
     sinceLastVal = formatDuration(elapsedMs);
     
     if (elapsedDays >= 1) {
-      // Show date of last use if over a day
       const lastUsedDate = new Date(lastUsedTs);
       const options = { month: 'short', day: 'numeric' };
       const dateStr = lastUsedDate.toLocaleDateString([], options);
@@ -3182,7 +3177,6 @@ function selectProfile(profileKey) {
   const profile = ADDICTION_PROFILES[profileKey];
   if (!profile) return;
 
-  // For custom, show config screen first (onboarding flow)
   if (profileKey === 'custom') {
     $('onboarding-overlay').classList.add('hidden');
     showCustomConfig(false);
@@ -4329,10 +4323,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   applyTheme(localStorage.getItem(STORAGE_THEME) || (systemDark ? 'dark' : 'light'));
   
-  // Initialize sound system
   initSounds();
   
-  // Register service worker for PWA support
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
       .then(reg => console.log('[PWA] Service worker registered:', reg.scope))
@@ -4351,7 +4343,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 2000);
   
-  // Mobile badge tooltip handling
   setupBadgeTooltips();
 });
 

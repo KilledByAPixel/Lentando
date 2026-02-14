@@ -7,10 +7,8 @@ const { minify } = require('terser');
 
 const BUILD_DIR = 'dist';
 
-// JS files to minify
 const JS_FILES = ['code.js', 'firebase-sync.js', 'zzfx.js', 'sw.js'];
 
-// Other files to copy as-is
 const STATIC_FILES = [
   'index.html',
   'manifest.json',
@@ -22,7 +20,6 @@ const STATIC_FILES = [
   'social.jpg',
 ];
 
-// Pre-build checks
 function preBuildChecks() {
   console.log('🔍 Running pre-build checks...\n');
   
@@ -67,9 +64,7 @@ function preBuildChecks() {
 }
 
 (async () => {
-  // Run pre-build checks first
   preBuildChecks();
-  // Clean and create build directory
   if (fs.existsSync(BUILD_DIR)) {
     fs.rmSync(BUILD_DIR, { recursive: true });
   }
@@ -77,7 +72,6 @@ function preBuildChecks() {
 
   let copied = 0;
 
-  // Copy static files as-is
   for (const file of STATIC_FILES) {
     if (fs.existsSync(file)) {
       fs.copyFileSync(file, path.join(BUILD_DIR, file));
@@ -89,7 +83,6 @@ function preBuildChecks() {
     }
   }
 
-  // Minify JS files
   for (const file of JS_FILES) {
     if (fs.existsSync(file)) {
       const original = fs.readFileSync(file, 'utf8');
@@ -109,7 +102,6 @@ function preBuildChecks() {
     }
   }
 
-  // Show total size
   const totalBytes = [...STATIC_FILES, ...JS_FILES].reduce((sum, file) => {
     const dest = path.join(BUILD_DIR, file);
     return sum + (fs.existsSync(dest) ? fs.statSync(dest).size : 0);
