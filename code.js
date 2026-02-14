@@ -3474,8 +3474,8 @@ function renderFlowStepWelcomeGuide(container) {
     <ul class="ob-flow-guide">
       <li>☑️ Tap <strong>${escapeHTML(sessionLabel.charAt(0).toUpperCase() + sessionLabel.slice(1))}</strong> whenever you use - tap <strong>Undo</strong> anytime to cancel</li>
       <li>💪 Tap <strong>Resist</strong> when you feel the urge but choose not to</li>
-      <li>📝 Use <strong>Add Past Session</strong> in History to earlier log events</li>
-      <li>✅ Track healthy <strong>actions</strong>: Water, Exercise, Breaths, Cleaning, Outside</li>
+      <li>📝 Use <strong>Add Past Session</strong> in History to log earlier events</li>
+      <li>✅ Track healthy <strong>actions</strong>: Water, Exercise, Breaths, Tidy, Outside</li>
       <li>💧 Lentando will remind you to <strong>drink water</strong> every two hours</li>
       <li>🏆 Earn <strong>badges</strong> that update throughout the day based on your activity</li>
       <li>🔄 You can <strong>change what you're tracking</strong> anytime in Settings</li>
