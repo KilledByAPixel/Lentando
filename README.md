@@ -76,6 +76,14 @@ Lentando recognizes progress in many forms:
 
 Pure vanilla JavaScript, HTML5, and CSS3. No frameworks, no dependencies - just clean, fast code that works everywhere.
 
+## 📄 License
+
+Copyright © 2026 Frank Force
+
+Lentando is licensed under the GNU General Public License v3.0.
+
+This means you're free to use, study, modify, and distribute this software. If you build on it, your version must also remain open source under the same license. See the GPL v3 full text for details.
+
 ![Lentando Screenshot](screenshot.png)
 
 **Made with ❤️ for recovery and harm reduction**
