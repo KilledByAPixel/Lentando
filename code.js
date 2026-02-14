@@ -1002,17 +1002,38 @@ const Badges = {
     // Check if this is the user's first day using the app
     // Use appStartDate if available (reliable across zero-event days), else fall back to event check
     let isFirstDay;
+    let hasHistoricalProfileUse = false; // Track if they have any past use events
     if (appStartDate) {
       isFirstDay = evaluationDate === appStartDate;
+      // Check for historical profile use events before today
+      if (isFirstDay) {
+        const allKeys = DB.getAllDayKeys();
+        hasHistoricalProfileUse = allKeys.some(key => {
+          if (key >= evaluationDate) return false;
+          const dayUsed = filterProfileUsed(DB.forDate(key));
+          return dayUsed.length > 0;
+        });
+      }
     } else {
       const allKeys = DB.getAllDayKeys();
       const hasEventsBeforeToday = allKeys.some(key => key < evaluationDate && DB.forDate(key).length > 0);
       isFirstDay = !hasEventsBeforeToday;
+      // While we have the keys, also check for profile-specific use events in previous days
+      hasHistoricalProfileUse = allKeys.some(key => {
+        if (key >= evaluationDate) return false;
+        const dayUsed = filterProfileUsed(DB.forDate(key));
+        return dayUsed.length > 0;
+      });
     }
     
     // On first day only: user must have started before the badge period to be eligible
     const isEligibleForSkipBadge = (end) => {
       if (!isFirstDay) return true; // After first day, always eligible
+      
+      // If they have historical use events, they're eligible for all skip badges
+      if (hasHistoricalProfileUse) return true;
+      
+      // Otherwise, check if they started before the period end (original logic)
       // Use earliest of: app start time (same day) or first event on that day (whichever is earlier)
       const sameDayStartTs = (appStartDate === evaluationDate) ? appStartTs : null;
       let earliestTs = null;
