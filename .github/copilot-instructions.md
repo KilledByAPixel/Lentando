@@ -13,13 +13,13 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 - `local/` — Dev notes, not deployed
 
 ## Storage & Data
-**localStorage keys:** `ht_events`, `ht_settings`, `ht_todos`, `ht_theme`, `ht_badges`, `ht_login_skipped`
+**localStorage keys:** `ht_events`, `ht_settings`, `ht_todos`, `ht_theme`, `ht_badges`, `ht_login_skipped`, `ht_data_version`, `ht_deleted_ids`, `ht_deleted_todo_ids`, `ht_cleared_at`, `ht_last_updated`
 
 **DB module** wraps localStorage with in-memory caches (`DB._events`, `DB._settings`, `DB._dateIndex`). The `_dateIndex` is a lazy `Map<dateKey, events[]>`.
 
 **Data model:**
 - **Events** — `{id, type, ts, ...}` where type is `used`, `resisted`, or `habit`
-- **Badges** — `{todayDate, todayBadges, lifetimeBadges, todayUndoCount}`. Merge strategy: max count per badge ID.
+- **Badges** — `{todayDate, todayBadges, yesterdayBadges, lifetimeBadges, todayUndoCount, appStartDate, appStartTs}`. Merge strategy: max count per badge ID.
 
 ### Cache Invalidation (Critical)
 `firebase-sync.js` uses `invalidateDBCaches()` after cloud merges — this nulls `DB._events`, `DB._settings`, `DB._dateIndex`. Must happen **inside** the function that writes to localStorage, not after it returns.
@@ -30,15 +30,18 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 `logUsed()` / `logResisted()` / `logHabit()` → `DB.addEvent()` → `calculateAndUpdateBadges()` → `render()`. Cloud sync fires automatically: `DB.saveEvents()` calls `FirebaseSync.onDataChanged()` internally (debounced 3s push).
 
 ### Badge System
-`calculateAndUpdateBadges()` recalculates all badges on every event change. Define new badges in `BADGE_DEFINITIONS`, add logic using `addBadge(condition, 'badge-id')` inside `calculateAndUpdateBadges()`.
+`calculateAndUpdateBadges()` recalculates all badges on every event change. Define new badges in `BADGE_DEFINITIONS`, add logic using `addBadge(condition, 'badge-id')` inside `Badges.calculate()`.
 
 ### Time Boundaries
 - **Day boundary:** Calendar days (midnight), BUT gap calculations exclude gaps crossing 6am (`EARLY_HOUR = 6`)
 - **Gap calculations:** All gap metrics (longest gap, average gap, hour gaps) exclude gaps crossing 6am to filter out overnight sleep
 - **Skip badges:** Eligible once past start time
 
+### Deletion Model
+Soft-delete via tombstones (`ht_deleted_ids` / `ht_deleted_todo_ids`): maps of `{id: deletedAtTimestamp}`, cleaned after 90 days. Bulk clear uses `ht_cleared_at` timestamp — events with uid created before that timestamp are discarded.
+
 ### Firebase Sync
-- **Pull:** `onAuthStateChanged` → `pullFromCloud()` → merge events (union by ID), merge settings (`{...local, ...cloud}`), max badges → `invalidateDBCaches()` → `continueToApp()`
+- **Pull:** `onAuthStateChanged` → `pullFromCloud()` → merge tombstones (union) → merge events (union by ID, per-event `modifiedAt` wins conflicts) → merge settings (recency-based) → max badges → `invalidateDBCaches()` → `continueToApp()`
 - **Push:** Data change → `onDataChanged()` → debounced 3s → `pushToCloud()`
 - **Focus-pull:** App regains focus → flush pending push, then pull fresh data
 
@@ -55,7 +58,7 @@ npm run lint       # ESLint across code.js, firebase-sync.js, sw.js, build.js
 ```
 
 ### Test Data Generators
-Defined at bottom of `code.js` (not currently exposed on `window`). To use, temporarily add `window.generateAllTestData = generateAllTestData;` etc:
+Defined at bottom of `code.js`, gated behind `debugMode`. When `debugMode = true`, they are auto-exposed on `window`:
 - `generateAllTestData()` — Mix of everything
 - `generateUseEvent(7)` — Single use event 7 days ago
 
