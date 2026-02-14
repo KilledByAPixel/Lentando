@@ -2456,7 +2456,7 @@ async function clearDatabase() {
 let _previousProfile = null; // saved when changeAddiction opens onboarding
 
 function changeAddiction() {
-  if (!confirm('🔄 Change what you\'re tracking?\n\nYour data will be kept, but substance/method types will change. Continue?')) return;
+  if (!confirm('🔄 Change what you\'re tracking?\n\nYour data will be kept, but tracked substance will change. Continue?')) return;
   const settings = DB.loadSettings();
   _previousProfile = settings.addictionProfile; // save for back button restore
   settings.addictionProfile = null;
@@ -3843,11 +3843,11 @@ function setThemeIcon(theme) {
   const text = $('theme-text-settings');
   // Show what you'll toggle TO
   if (theme === 'light') {
-    if (icon) icon.textContent = '🌙';
-    if (text) text.textContent = 'Enable Dark Theme';
-  } else {
     if (icon) icon.textContent = '☀️';
-    if (text) text.textContent = 'Enable Light Theme';
+    if (text) text.textContent = 'Light Theme Enabled';
+  } else {
+    if (icon) icon.textContent = '🌙';
+    if (text) text.textContent = 'Dark Theme Enabled';
   }
 }
 
@@ -3982,10 +3982,10 @@ function setSoundButton(soundEnabled) {
   // Show what you'll toggle TO
   if (soundEnabled) {
     if (icon) icon.textContent = '🔊';
-    if (text) text.textContent = 'Sounds enabled';
+    if (text) text.textContent = 'Sounds Enabled';
   } else {
     if (icon) icon.textContent = '🔇';
-    if (text) text.textContent = 'Enable Sounds';
+    if (text) text.textContent = 'Sounds Disabled';
   }
 }
 
