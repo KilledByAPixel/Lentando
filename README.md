@@ -7,7 +7,7 @@
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/Vanilla_JS-F7DF1E?style=flat&logo=javascript&logoColor=black)
 ![PWA](https://img.shields.io/badge/PWA-Installable-5c6bc0)
-![License](https://img.shields.io/badge/License-PolyForm--Noncommercial-green)
+![License](https://img.shields.io/badge/License-GPLv3-blue)
 
 ## Why Lentando? 🐢
 
