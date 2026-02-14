@@ -926,6 +926,43 @@ header .date {
   font-weight: 600;
   margin-bottom: 12px;
 }
+/* wrapper that places y-axis labels beside the bar area */
+.graph-with-grid {
+  display: flex;
+  align-items: flex-end;
+}
+/* y-axis number labels */
+.gy-axis {
+  position: relative;
+  width: 28px;
+  flex-shrink: 0;
+  height: 96px;           /* matches bar area height */
+  margin-bottom: 22px;    /* matches bar bottom-padding for x labels */
+  margin-right: 4px;
+}
+.gy-label {
+  position: absolute;
+  right: 2px;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1;
+  transform: translateY(50%);
+  white-space: nowrap;
+}
+/* dashed grid-lines that sit behind bars */
+.g-gridlines {
+  position: absolute;
+  left: 0; right: 0; bottom: 22px; /* above the x-label area */
+  height: 96px;
+  pointer-events: none;
+  z-index: 0;
+}
+.g-gridline {
+  position: absolute;
+  left: 0; right: 0;
+  border-top: 1px dashed var(--muted);
+  opacity: 0.25;
+}
 .graph-bars {
   display: flex;
   align-items: flex-end;
@@ -933,20 +970,20 @@ header .date {
   height: 135px;
   padding-bottom: 22px;
   position: relative;
+  flex: 1;
+  min-width: 0;
 }
 .graph-bar-col {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   flex: 1;
   min-width: 0;
+  z-index: 1;
+  position: relative;
 }
-.graph-bar-val {
-  font-size: 9px;
-  color: var(--muted);
-  margin-bottom: 2px;
-  min-height: 12px;
-}
+.graph-bar-val { display: none; }
 .graph-bar {
   border-radius: 3px 3px 0 0;
   min-width: 6px;
@@ -955,6 +992,10 @@ header .date {
   opacity: 0.85;
 }
 .graph-bar-label {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
   font-size: 11px;
   color: var(--muted);
   margin-top: 2px;

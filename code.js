@@ -1920,19 +1920,67 @@ function formatGraphValue(val) {
   return Number.isInteger(val) ? val : val.toFixed(1);
 }
 
+/** Pick nice round grid-line intervals based on max value. Returns [{value, px}] */
+function calcGridLines(max) {
+  if (max <= 0) return [];
+  const BAR_HEIGHT = 96; // must match the px used in bar height calc
+  // Pick a "nice" interval so we get ~2-5 intermediate grid lines
+  const niceSteps = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000];
+  let interval = 1;
+  for (const s of niceSteps) {
+    if (max / s <= 5) { interval = s; break; }
+  }
+  const lines = [];
+  // Zero baseline
+  lines.push({ value: 0, px: 0 });
+  // Intermediate lines
+  for (let v = interval; v < max; v += interval) {
+    lines.push({ value: v, px: Math.round((v / max) * BAR_HEIGHT) });
+  }
+  // Top line at max value
+  lines.push({ value: max, px: BAR_HEIGHT });
+  return lines;
+}
+
+/** Build the y-axis labels + dashed gridlines HTML */
+function gridHTML(lines) {
+  if (!lines.length) return { yAxis: '', overlayLines: '' };
+  let yAxis = '';
+  let overlayLines = '';
+  for (const l of lines) {
+    overlayLines += `<span class="g-gridline" style="bottom:${l.px}px"></span>`;
+    // Show label for all lines except zero (baseline is obvious)
+    if (l.value > 0) {
+      const label = formatGraphValue(l.value);
+      yAxis += `<span class="gy-label" style="bottom:${l.px}px">${label}</span>`;
+    }
+  }
+  return { yAxis, overlayLines };
+}
+
 function graphBarCol(val, height, label, showLabel) {
-  const valStr = formatGraphValue(val);
   const labelStyle = showLabel ? '' : 'visibility:hidden';
   const barStyle = `height:${height}px;background:${label.color};${val > 0 ? 'min-height:2px' : ''}`;
   return `<div class="graph-bar-col">
-    <div class="graph-bar-val">${valStr}</div>
     <div class="graph-bar" style="${barStyle}"></div>
     <div class="graph-bar-label" style="${labelStyle}">${label.text}</div>
   </div>`;
 }
 
+function wrapBarsWithGrid(barsInnerHTML, max) {
+  const lines = calcGridLines(max);
+  const g = gridHTML(lines);
+  const yAxisDiv = lines.length
+    ? `<div class="gy-axis">${g.yAxis}</div>`
+    : '';
+  const gridOverlay = lines.length
+    ? `<div class="g-gridlines">${g.overlayLines}</div>`
+    : '';
+  return `<div class="graph-with-grid">${yAxisDiv}<div class="graph-bars">${gridOverlay}${barsInnerHTML}</div></div>`;
+}
+
 function buildGraphBars(vals, days, max, def) {
-  let html = '<div class="graph-bars">';
+  let inner = '';
   for (let i = 0; i < vals.length; i++) {
     const v = vals[i];
     const h = max > 0 ? Math.round((v / max) * 96) : 0;
@@ -1948,21 +1996,21 @@ function buildGraphBars(vals, days, max, def) {
       showLabel = i % 10 === 0; // Show every 10th label (6 labels for 60 days)
     }
     
-    html += graphBarCol(v, h, { color: def.color, text: dayLabel }, showLabel);
+    inner += graphBarCol(v, h, { color: def.color, text: dayLabel }, showLabel);
   }
-  return html + '</div>';
+  return wrapBarsWithGrid(inner, max);
 }
 
 function buildHourGraphBars(hourCounts, max, color, startHour = 0) {
-  let html = '<div class="graph-bars">';
+  let inner = '';
   for (let i = 0; i < 24; i++) {
     const hour = (startHour + i) % 24;
     const count = hourCounts[hour] || 0;
     const h = max > 0 ? Math.round((count / max) * 96) : 0;
     const hourLabel = hour === 0 ? '12a' : hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`;
-    html += graphBarCol(count, h, { color, text: hourLabel }, i % 3 === 0);
+    inner += graphBarCol(count, h, { color, text: hourLabel }, i % 3 === 0);
   }
-  return html + '</div>';
+  return wrapBarsWithGrid(inner, max);
 }
 
 function buildWeekSummaryHTML() {
