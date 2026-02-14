@@ -1600,22 +1600,17 @@ function calculateAndUpdateBadges() {
   const today = todayKey();
   const isSameDay = badgeData.todayDate === today;
 
-  // Derive app start timestamp/date if missing.
-  // appStartTs captures the first time the app was opened; fallback to earliest event ts; else now.
-  let appStartTs = badgeData.appStartTs || null;
-  if (!appStartTs) {
-    const events = DB.loadEvents();
-    if (events.length > 0) {
-      appStartTs = Math.min(...events.map(e => e.ts));
-    } else {
-      appStartTs = now();
-    }
+  // Derive app start timestamp/date from current events only.
+  // Always revalidated — never carried over from storage — so deleted events
+  // can't leave a stale anchor that inflates t-break badges.
+  let appStartTs;
+  const allEvents = DB.loadEvents();
+  if (allEvents.length > 0) {
+    appStartTs = Math.min(...allEvents.map(e => e.ts));
+  } else {
+    appStartTs = now();
   }
-
-  // Keep the earliest date between stored appStartDate and derived ts.
-  let appStartDate = badgeData.appStartDate || dateKey(appStartTs);
-  const tsDateKey = dateKey(appStartTs);
-  if (tsDateKey < appStartDate) appStartDate = tsDateKey;
+  const appStartDate = dateKey(appStartTs);
   
   // Step 1: If it's a new day, add yesterday's badges to lifetime before clearing
   const lifetimeMap = new Map();
@@ -2292,6 +2287,17 @@ function navGuard() {
 
 /** Close the topmost overlay/modal/tab. Returns true if something was closed. */
 function navHandleBack() {
+  // Onboarding flow overlay — go back one step or close
+  if (!$('onboarding-flow-overlay').classList.contains('hidden')) {
+    if (_onboardingFlowStep > 0) {
+      _onboardingFlowStep--;
+      showOnboardingFlowStep();
+    } else {
+      // On first step, skip to finish
+      finishOnboardingFlow();
+    }
+    return true;
+  }
   // Custom config overlay
   if (!$('custom-config-overlay').classList.contains('hidden')) {
     $('custom-config-overlay').classList.add('hidden');
@@ -3224,13 +3230,263 @@ function selectProfile(profileKey) {
   
   $('onboarding-overlay').classList.add('hidden');
   playSound('resist');
+
+  // New user: start full multi-step onboarding flow
+  if (!_previousProfile) {
+    startOnboardingFlow();
+    return;
+  }
   
+  // Changing tracked substance: just prompt for most recent use
+  _previousProfile = null;
+  startChangeTrackingFlow();
+  return;
+}
+
+// ========== ONBOARDING FLOW (multi-step for new users) ==========
+let _onboardingFlowStep = 0;
+let _onboardingFlowSteps = [];
+
+function startOnboardingFlow() {
+  _onboardingFlowStep = 0;
+  _onboardingFlowSteps = ['recent-use', 'daily-reminder', 'welcome-guide'];
+  // PWA install is always last — prompt won't be consumed before it's shown
+  if (_deferredInstallPrompt) _onboardingFlowSteps.push('install-app');
+  showOnboardingFlowStep();
+}
+
+/** Abbreviated flow for changing tracked substance (just log recent use, then enter app) */
+function startChangeTrackingFlow() {
+  _onboardingFlowStep = 0;
+  _onboardingFlowSteps = ['recent-use'];
+  showOnboardingFlowStep();
+}
+
+function showOnboardingFlowStep() {
+  const steps = _onboardingFlowSteps;
+  if (_onboardingFlowStep >= steps.length) {
+    finishOnboardingFlow();
+    return;
+  }
+
+  const overlay = $('onboarding-flow-overlay');
+  const content = $('onboarding-flow-content');
+  overlay.classList.remove('hidden');
+
+  const step = steps[_onboardingFlowStep];
+  switch (step) {
+    case 'recent-use': renderFlowStepRecentUse(content); break;
+    case 'daily-reminder': renderFlowStepDailyReminder(content); break;
+    case 'install-app': renderFlowStepInstallApp(content); break;
+    case 'welcome-guide': renderFlowStepWelcomeGuide(content); break;
+  }
+}
+
+function advanceOnboardingFlow() {
+  _onboardingFlowStep++;
+  showOnboardingFlowStep();
+}
+
+function finishOnboardingFlow() {
+  _onboardingFlowSteps = [];
+  $('onboarding-flow-overlay').classList.add('hidden');
   calculateAndUpdateBadges();
   bindEvents();
   render();
-  // Clear existing interval if selectProfile is called multiple times
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => renderMetrics(), METRICS_REFRESH_MS);
+  setReminderButton();
+  scheduleReminder();
+}
+
+/** Step 1: Log most recent use */
+function renderFlowStepRecentUse(container) {
+  const profile = getProfile();
+  const settings = DB.loadSettings();
+  const sessionLabel = profile.sessionLabel || 'Use';
+
+  const defaultSubstance = settings.lastSubstance || profile.substances[0];
+  const defaultAmount = settings.lastAmount || profile.amounts.find(a => a >= 1) || profile.amounts[0];
+  const defaultMethod = profile.methods ? (settings.lastMethod || profile.methods[0]) : null;
+
+  // Build chip groups for substance/method/amount
+  const fields = [
+    chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, defaultSubstance,
+      v => (profile.icons[v] || '') + ' ' + profile.substanceDisplay[v])
+  ];
+  if (profile.methods) {
+    const methodFn = profile.methodDisplay ? (v => profile.methodDisplay[v] || capitalize(v)) : undefined;
+    fields.push(chipGroupHTML(profile.methodLabel, 'method', profile.methods, defaultMethod, methodFn));
+  }
+  fields.push(chipGroupHTML('Amount', 'amount', profile.amounts, defaultAmount));
+  const fieldsHTML = fields.map(modalFieldWrap).join('');
+
+  // Default date/time to now
+  const nowDate = currentDate();
+  const dateValue = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}-${String(nowDate.getDate()).padStart(2, '0')}`;
+  const timeValue = `${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`;
+
+  container.innerHTML = `
+    <h2>Log your most recent ${escapeHTML(sessionLabel.toLowerCase())}</h2>
+    <p class="ob-flow-subtitle">When did you last use? This helps set your starting point.</p>
+    <div class="ob-flow-fields" id="ob-flow-use-fields">
+      ${fieldsHTML}
+      <div class="modal-field"><label>Date</label><input type="date" id="ob-flow-date" value="${dateValue}" class="form-input"></div>
+      <div class="modal-field"><label>Time</label><input type="time" id="ob-flow-time" value="${timeValue}" class="form-input"></div>
+    </div>
+    <div class="ob-flow-actions">
+      <button class="action-btn" onclick="App.saveOnboardingRecentUse()">✅ Log ${escapeHTML(sessionLabel)}</button>
+      <button class="btn-text" onclick="App.skipOnboardingStep()">Skip for now</button>
+    </div>`;
+
+  // Bind chip click handlers within the flow fields
+  container.querySelectorAll('.chip-group .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const group = chip.closest('.chip-group');
+      const field = group.dataset.field;
+      // For optional fields, allow deselect
+      if (OPTIONAL_FIELDS.has(field) && chip.classList.contains('active')) {
+        chip.classList.remove('active');
+        return;
+      }
+      group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+}
+
+function saveOnboardingRecentUse() {
+  const container = $('ob-flow-use-fields');
+  if (!container) return advanceOnboardingFlow();
+
+  const dateInput = $('ob-flow-date');
+  const timeInput = $('ob-flow-time');
+  if (!dateInput?.value || !timeInput?.value) {
+    alert('Please set both date and time.');
+    return;
+  }
+
+  const [year, month, day] = dateInput.value.split('-').map(Number);
+  const [hours, minutes] = timeInput.value.split(':').map(Number);
+  if (isNaN(year) || isNaN(hours)) {
+    alert('Invalid date or time.');
+    return;
+  }
+
+  const ts = new Date(year, month - 1, day, hours, minutes, 0, 0).getTime();
+  if (ts > now()) {
+    alert('Cannot log events in the future.');
+    return;
+  }
+
+  const readChip = (field) => {
+    const group = container.querySelector(`.chip-group[data-field="${field}"]`);
+    if (!group) return null;
+    const active = group.querySelector('.chip.active');
+    return active ? parseChipVal(field, active.dataset.val) : null;
+  };
+
+  const profile = getProfile();
+  const substance = readChip('substance') || profile.substances[0];
+  const method = readChip('method') || null;
+  const amount = readChip('amount') ?? 1.0;
+
+  const evt = {
+    id: uid(), type: 'used', ts,
+    substance, amount
+  };
+  if (method) evt.method = method;
+
+  DB.addEvent(evt);
+  playSound('used');
+  showToast(`✅ Logged ${profile.sessionLabel}`);
+  advanceOnboardingFlow();
+}
+
+/** Step 2: Daily reminder */
+function renderFlowStepDailyReminder(container) {
+  container.innerHTML = `
+    <h2>Daily Check-in Reminder</h2>
+    <p class="ob-flow-subtitle">Get a gentle daily reminder to check in with Lentando and track your progress.</p>
+    <div class="ob-flow-fields">
+      <div class="modal-field">
+        <label>Reminder time</label>
+        <input type="time" id="ob-flow-reminder-time" value="18:00" class="form-input" style="text-align:center; background:var(--bg);">
+      </div>
+    </div>
+    <div class="ob-flow-actions">
+      <button class="action-btn" onclick="App.enableOnboardingReminder()">🔔 Enable Reminder</button>
+      <button class="btn-text" onclick="App.skipOnboardingStep()">Continue without reminder</button>
+    </div>`;
+}
+
+async function enableOnboardingReminder() {
+  const granted = await requestNotificationPermission();
+  if (!granted) return;
+
+  const timeInput = $('ob-flow-reminder-time');
+  const [hours, mins] = (timeInput?.value || '18:00').split(':').map(Number);
+  const settings = DB.loadSettings();
+  settings.reminderEnabled = true;
+  settings.reminderHour = isNaN(hours) ? 18 : hours;
+  settings.reminderMinute = isNaN(mins) ? 0 : mins;
+  DB.saveSettings();
+  showToast('🔔 Reminder set!');
+  advanceOnboardingFlow();
+}
+
+/** Step 4 (last, optional): Install PWA — only shown if beforeinstallprompt fired */
+function renderFlowStepInstallApp(container) {
+  container.innerHTML = `
+    <h2>Install Lentando</h2>
+    <p class="ob-flow-subtitle">Add Lentando to your home screen for quick access. It works offline and feels like a native app.</p>
+    <div class="ob-flow-actions">
+      <button class="action-btn" onclick="App.installAppOnboarding()">📲 Install App</button>
+      <button class="btn-text" onclick="App.skipOnboardingStep()">Continue in browser</button>
+    </div>`;
+}
+
+function installAppOnboarding() {
+  if (!_deferredInstallPrompt) {
+    showToast('Use your browser menu to install');
+    advanceOnboardingFlow();
+    return;
+  }
+  _deferredInstallPrompt.prompt();
+  _deferredInstallPrompt.userChoice.then((result) => {
+    if (result.outcome === 'accepted') {
+      showToast('Installing app… 📲');
+    }
+    _deferredInstallPrompt = null;
+    const bar = $('install-app-bar');
+    if (bar) bar.classList.add('hidden');
+    advanceOnboardingFlow();
+  });
+}
+
+/** Step 3: Welcome guide */
+function renderFlowStepWelcomeGuide(container) {
+  const profile = getProfile();
+  const sessionLabel = (profile.sessionLabel || 'Use').toLowerCase();
+
+  container.innerHTML = `
+    <h2>How to Use Lentando</h2>
+    <ul class="ob-flow-guide">
+      <li>☑️ Tap <strong>${escapeHTML(sessionLabel.charAt(0).toUpperCase() + sessionLabel.slice(1))}</strong> whenever you use — tap <strong>Undo</strong> anytime to cancel</li>
+      <li>🛡️ Tap <strong>Resist</strong> when you feel the urge but choose not to</li>
+      <li>💧 Lentando will remind you to <strong>drink water</strong> every two hours</li>
+      <li>✅ Track healthy <strong>activities</strong> — exercise, cleaning, meditation, and going outside</li>
+      <li>📝 Use <strong>Add Past Session</strong> in History to log events from before you started tracking</li>
+      <li>🏆 Earn <strong>badges</strong> that update throughout the day based on your usage and activity</li>
+      <li>🔄 You can <strong>change what you're tracking</strong> anytime in Settings</li>
+    </ul>
+    <div class="ob-flow-actions">
+      <button class="action-btn" onclick="App.skipOnboardingStep()">👍 Got it — let's go!</button>
+    </div>`;
+}
+
+function skipOnboardingStep() {
+  advanceOnboardingFlow();
 }
 
 /** Emoji picker helpers */
@@ -3338,12 +3594,17 @@ function saveCustomConfig() {
     
     $('custom-config-overlay').classList.add('hidden');
     playSound('resist');
+
+    // New user: start full multi-step onboarding flow
+    if (!_previousProfile) {
+      startOnboardingFlow();
+      return;
+    }
     
-    calculateAndUpdateBadges();
-    bindEvents();
-    render();
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(() => renderMetrics(), METRICS_REFRESH_MS);
+    // Changing tracked substance: just prompt for most recent use
+    _previousProfile = null;
+    startChangeTrackingFlow();
+    return;
   }
 }
 
@@ -4094,6 +4355,10 @@ window.App = {
   switchTab,
   logWaterFromReminder,
   loadMoreHistory,
+  saveOnboardingRecentUse,
+  enableOnboardingReminder,
+  installAppOnboarding,
+  skipOnboardingStep,
   togglePasswordVisibility(btn) {
     const input = btn.parentElement.querySelector('input');
     if (!input) return;

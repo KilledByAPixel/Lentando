@@ -670,6 +670,52 @@ header .date {
   color: var(--text);
 }
 
+/* Onboarding flow (new user multi-step) */
+#onboarding-flow-overlay:not(.hidden) { display: block; background: var(--bg); }
+#onboarding-flow-overlay .onboarding-content { text-align: center; }
+.ob-flow-subtitle {
+  font-size: 15px;
+  color: var(--muted);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.ob-flow-fields {
+  text-align: left;
+  margin-bottom: 16px;
+}
+.ob-flow-fields .modal-field {
+  margin-bottom: 12px;
+}
+.ob-flow-fields .chip-group { justify-content: center; }
+.ob-flow-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+.ob-flow-actions .action-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.ob-flow-actions .btn-text {
+  font-size: 15px;
+  padding: 8px;
+}
+.ob-flow-guide {
+  text-align: left;
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.ob-flow-guide li {
+  margin-bottom: 8px;
+}
+.ob-flow-guide li strong {
+  color: var(--text);
+}
+
 /* Custom config form */
 #custom-config-overlay:not(.hidden) { display: block; background: var(--bg); }
 .custom-config-form {
@@ -790,6 +836,7 @@ header .date {
 /* Login and onboarding overlays should have opaque background */
 #login-overlay,
 #onboarding-overlay,
+#onboarding-flow-overlay,
 #custom-config-overlay {
   background: var(--bg);
   align-items: flex-start;
@@ -1750,6 +1797,20 @@ header .date {
       <button class="btn-save" onclick="App.saveReminder()">🔔 Enable Reminder</button>
       <button class="btn-delete hidden" id="btn-disable-reminder" onclick="App.disableReminder()">🔕 Disable Reminder</button>
       <button class="btn-text" onclick="App.closeReminderModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ONBOARDING FLOW (new user multi-step) ===== -->
+<div class="modal-overlay hidden" id="onboarding-flow-overlay">
+  <div class="onboarding-sheet">
+    <div class="onboarding-header">
+      <img class="onboarding-icon" src="icon-192.png" alt="Lentando">
+      <h1><span class="brand">Lentando</span></h1>
+      <p class="tagline">progress at your pace</p>
+    </div>
+    <div class="onboarding-content" id="onboarding-flow-content">
+      <!-- Steps are injected dynamically by code.js -->
     </div>
   </div>
 </div>
