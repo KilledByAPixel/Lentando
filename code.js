@@ -4150,7 +4150,8 @@ window.App = {
     if (!confirm('⚠️ Delete your account?\n\nThis will permanently delete your cloud data and account. Local data will also be cleared.\n\nThis cannot be undone.')) return;
     try {
       if (window.FirebaseSync) {
-        await FirebaseSync.deleteAccount();
+        const result = await FirebaseSync.deleteAccount();
+        if (result === false) return; // Deletion was aborted (e.g. requires recent login)
       }
       clearAllStorage();
       location.reload();

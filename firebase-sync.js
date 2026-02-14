@@ -127,7 +127,7 @@ async function deleteAccountAndData() {
   } catch (err) {
     if (err.code === 'auth/requires-recent-login') {
       alert('⚠️ For security, please sign out, sign back in, and try deleting again.');
-      return;
+      return false;
     }
     throw err;
   }
