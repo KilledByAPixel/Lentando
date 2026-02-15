@@ -3778,6 +3778,41 @@ function bindEvents() {
   $('tab-bar').addEventListener('click', e => { const b = e.target.closest('.tab-btn'); if (b) switchTab(b.dataset.tab); });
   document.querySelector('header h1 .brand').addEventListener('click', () => switchTab('today'));
 
+  // Swipe between tabs on mobile
+  {
+    const TAB_ORDER = ['today', 'history', 'graph', 'badges', 'settings'];
+    const SWIPE_THRESHOLD = 50;
+    const SWIPE_MAX_Y = 80;
+    let touchStartX = 0, touchStartY = 0;
+
+    const isModalOpen = () =>
+      ['modal-overlay', 'login-overlay', 'onboarding-overlay',
+       'onboarding-flow-overlay', 'custom-config-overlay', 'reminder-overlay', 'landing-page'
+      ].some(id => { const el = $(id); return el && !el.classList.contains('hidden'); });
+
+    const getActiveTab = () => {
+      const btn = document.querySelector('.tab-btn.active');
+      return btn ? btn.dataset.tab : 'today';
+    };
+
+    document.addEventListener('touchstart', e => {
+      if (isModalOpen()) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      if (isModalOpen()) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+      if (dy > SWIPE_MAX_Y || Math.abs(dx) < SWIPE_THRESHOLD) return;
+      const cur = TAB_ORDER.indexOf(getActiveTab());
+      if (cur === -1) return;
+      const next = dx < 0 ? cur + 1 : cur - 1;
+      if (next >= 0 && next < TAB_ORDER.length) switchTab(TAB_ORDER[next]);
+    }, { passive: true });
+  }
+
   $('graph-range').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
     if (!chip) return;
