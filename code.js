@@ -368,7 +368,7 @@ function safeSetItem(key, value) {
     return true;
   } catch (e) {
     if (e.name === 'QuotaExceededError') {
-      alert('⚠️ Storage full — your data may not have saved.\n\nPlease export your data from Settings and clear old events to free up space.');
+      alert('⚠️ Storage full - your data may not have saved.\n\nPlease export your data from Settings and clear old events to free up space.');
       console.error('QuotaExceededError writing key:', key);
       return false;
     }
