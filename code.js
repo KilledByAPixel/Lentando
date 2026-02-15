@@ -1893,8 +1893,12 @@ function renderDayHistory() {
   // Resists
   if (resisted.length > 0) {
     const resistTotal = resisted.reduce((sum, e) => sum + (e.intensity || 1), 0);
-    const display = Number.isInteger(resistTotal) ? resistTotal : resistTotal.toFixed(1);
-    summaryParts.push(`💪${display}`);
+    if (resistTotal === 1) {
+      summaryParts.push('💪');
+    } else {
+      const display = Number.isInteger(resistTotal) ? resistTotal : resistTotal.toFixed(1);
+      summaryParts.push(`💪${display}`);
+    }
   }
   // Activities — emoji only if done that day, grouped together
   const doneHabits = HABIT_ORDER.filter(act => habits.some(e => e.habit === act));
