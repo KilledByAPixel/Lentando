@@ -1084,6 +1084,63 @@ header .date {
   margin-bottom: 12px;
 }
 
+/* ===== HEATMAP ===== */
+.heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.hm-row {
+  display: grid;
+  grid-template-columns: 40px repeat(24, 1fr);
+  gap: 2px;
+  align-items: center;
+}
+.hm-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  padding-right: 4px;
+  white-space: nowrap;
+  line-height: 1;
+}
+.hm-cell {
+  height: 18px;
+  border-radius: 2px;
+  min-width: 0;
+}
+.hm-hour-label {
+  height: auto;
+  font-size: 9px;
+  color: var(--muted);
+  background: none !important;
+  text-align: center;
+  line-height: 18px;
+}
+.hm-lvl-0 { background: var(--chip-bg); }
+.hm-lvl-1 { background: rgba(89, 130, 246, 0.30); }
+.hm-lvl-2 { background: rgba(89, 130, 246, 0.58); }
+.hm-lvl-3 { background: rgba(89, 130, 246, 0.88); }
+.hm-legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+.hm-legend-label {
+  font-size: 10px;
+  color: var(--muted);
+}
+.hm-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
 /* ===== WEEK SUMMARY TABLE ===== */
 .week-table {
   display: flex;

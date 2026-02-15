@@ -2112,6 +2112,77 @@ function buildCategoryGraph(title, keys, totals, max, color, tooltip) {
   return `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${title}</div>${wrapBarsWithGrid(inner, max)}</div>`;
 }
 
+function buildHeatmapHTML() {
+  const days = getLastNDays(7);
+  const _weekdayFmt = new Intl.DateTimeFormat([], { weekday: 'short' });
+
+  // Build grid[dayIndex][hour] = count. dayIndex 0 = 6 days ago, 6 = today
+  const grid = [];
+  const dayLabels = [];
+  for (let d = 0; d < 7; d++) {
+    const dayKey = days[d];
+    const date = new Date(dayKey + 'T12:00:00');
+    dayLabels.push(dayKey === todayKey() ? 'Today' : _weekdayFmt.format(date));
+    const used = filterProfileUsed(DB.forDate(dayKey));
+    const hourCounts = new Array(24).fill(0);
+    used.forEach(e => {
+      const h = new Date(e.ts).getHours();
+      hourCounts[h] += (e.amount ?? 1);
+    });
+    grid.push(hourCounts);
+  }
+
+  // Hide entirely if no usage in the past 7 days
+  const hasAnyUse = grid.some(row => row.some(c => c > 0));
+  if (!hasAnyUse) return '';
+
+  // Color level: 0 = none, 1 = light, 2 = medium, 3 = dark
+  function level(count) {
+    if (count <= 0) return 0;
+    if (count < 2) return 1;
+    if (count < 5) return 2;
+    return 3;
+  }
+
+  let html = '<div class="graph-container" data-tooltip="Hourly usage heatmap for the past 7 days. Darker blue means more usage in that hour. Helps identify your peak usage times and days.">';
+  html += '<div class="graph-title">\uD83D\uDFE6 Weekly Usage Heatmap</div>';
+  html += '<div class="heatmap">';
+
+  // Hour labels row
+  html += '<div class="hm-row hm-header"><div class="hm-label"></div>';
+  for (let h = 0; h < 24; h++) {
+    const show = h % 3 === 0;
+    const txt = show ? (h === 0 ? '12a' : h < 12 ? h + 'a' : h === 12 ? '12p' : (h - 12) + 'p') : '';
+    html += `<div class="hm-cell hm-hour-label">${txt}</div>`;
+  }
+  html += '</div>';
+
+  // Day rows (today at top, oldest at bottom)
+  for (let d = 6; d >= 0; d--) {
+    html += `<div class="hm-row"><div class="hm-label">${escapeHTML(dayLabels[d])}</div>`;
+    for (let h = 0; h < 24; h++) {
+      const count = grid[d][h];
+      const lvl = level(count);
+      const display = count > 0 ? (Number.isInteger(count) ? count : count.toFixed(1)) : '0';
+      html += `<div class="hm-cell hm-lvl-${lvl}" title="${escapeHTML(dayLabels[d])} ${h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : (h - 12) + 'pm'}: ${display}"></div>`;
+    }
+    html += '</div>';
+  }
+
+  // Legend
+  html += '<div class="hm-legend">';
+  html += '<span class="hm-legend-label">Less</span>';
+  html += '<div class="hm-cell hm-swatch hm-lvl-0"></div>';
+  html += '<div class="hm-cell hm-swatch hm-lvl-1"></div>';
+  html += '<div class="hm-cell hm-swatch hm-lvl-2"></div>';
+  html += '<div class="hm-cell hm-swatch hm-lvl-3"></div>';
+  html += '<span class="hm-legend-label">More</span>';
+  html += '</div>';
+
+  html += '</div></div>';
+  return html;
+}
+
 function buildWeekSummaryHTML() {
   const days = getLastNDays(7);
   const profile = getProfile();
@@ -2264,6 +2335,9 @@ function renderGraphs() {
     ? buildHourGraphBars(hourCounts, maxCount, 'var(--primary)', graphStartHour)
     : emptyStateHTML('No data yet', 'compact');
   hourHtml += `</div>`;
+
+  // Add 7-day usage heatmap
+  hourHtml += buildHeatmapHTML();
 
   // Add 7-day summary grid
   hourHtml += buildWeekSummaryHTML();
