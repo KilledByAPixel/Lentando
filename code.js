@@ -2623,11 +2623,12 @@ function importJSON(inputEl) {
         return showStatus(validation.error, 'error');
       }
 
-      // --- Step 1: Restore clearedAt ---
-      // If the import file carries its own clearedAt, adopt it; otherwise clear it.
+      // --- Step 1: Merge clearedAt (keep the most recent clear) ---
+      const localClearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
       const importedClearedAt = parseInt(data.clearedAt, 10) || 0;
-      if (importedClearedAt > 0) {
-        safeSetItem(STORAGE_CLEARED_AT, String(importedClearedAt));
+      const mergedClearedAt = Math.max(localClearedAt, importedClearedAt);
+      if (mergedClearedAt > 0) {
+        safeSetItem(STORAGE_CLEARED_AT, String(mergedClearedAt));
       } else {
         localStorage.removeItem(STORAGE_CLEARED_AT);
       }
@@ -2758,6 +2759,7 @@ function importJSON(inputEl) {
         : `✅ Imported ${added} new events${skipped ? ` (${skipped} duplicates skipped)` : ''}.`;
       showStatus(msg, added === 0 ? 'warn' : 'success');
 
+      calculateAndUpdateBadges();
       render();
     } catch (err) {
       showStatus('❌ Could not parse file: ' + err.message, 'error');
