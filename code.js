@@ -90,7 +90,7 @@ const ADDICTION_PROFILES = {
     substanceLabel: 'Type',
     substances: ['cigarette', 'vape', 'other'],
     substanceDisplay: { cigarette: 'Cigarette', vape: 'Vape', other: 'Other' },
-    amounts: [0.5, 1, 2, 3, 5, 10, 20],
+    amounts: [0.5, 1, 2, 3, 4, 5, 10],
     amountUnit: 'count',
     icons: { cigarette: '🚬', vape: '💨', other: '🍂' }
     
@@ -102,7 +102,7 @@ const ADDICTION_PROFILES = {
     substances: ['type1', 'type2', 'type3'],
     substanceDisplay: { type1: 'Type 1', type2: 'Type 2', type3: 'Type 3' },
     methods: ['method1', 'method2', 'method3'],
-    amounts: [0.5, 1, 1.5, 2, 5, 10, 20],
+    amounts: [0.5, 1, 2, 3, 4, 5, 10],
     amountUnit: 'units',
     icons: { type1: '⚡', type2: '✨', type3: '🔥' }
   }
