@@ -1,6 +1,6 @@
 # Lentando
 
-**Progress At Your Pace** - A compassionate, zero-friction habit and substance use tracker that runs entirely in your browser.
+**Progress At Your Pace** - A habit and substance use tracker that runs entirely in your browser.
 
 ![Lentando Logo](icon-192.png)
 
