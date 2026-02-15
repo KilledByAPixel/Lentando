@@ -424,6 +424,18 @@ function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function getStorageUsageDisplay() {
+  let total = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith('ht_')) {
+      total += (key.length + (localStorage.getItem(key)?.length || 0)) * 2;
+    }
+  }
+  const kb = total / 1024;
+  return kb > 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.round(kb)} KB`;
+}
+
 /** Clear all app localStorage keys and invalidate DB caches */
 function clearAllStorage() {
   localStorage.removeItem(STORAGE_EVENTS);
@@ -2466,6 +2478,11 @@ function switchTab(tabName) {
   if (window.FirebaseSync) {
     if (tabName === 'settings') FirebaseSync.mountAuthForm();
     else FirebaseSync.unmountAuthForm();
+  }
+
+  if (tabName === 'settings') {
+    const el = $('storage-usage');
+    if (el) el.textContent = `💾 Storage used: ${getStorageUsageDisplay()} of ~5 MB`;
   }
   
   if (tabName === 'badges') renderBadges();

@@ -95,7 +95,7 @@ function runTests() {
   try {
     execSync('node test.js', { stdio: 'inherit' });
     console.log('');
-  } catch (_e) {
+  } catch {
     console.error('\n❌ Tests failed! Fix test failures before building.\n');
     process.exit(1);
   }
