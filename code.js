@@ -92,7 +92,7 @@ const ADDICTION_PROFILES = {
     substanceDisplay: { cigarette: 'Cigarette', vape: 'Vape', other: 'Other' },
     amounts: [0.5, 1, 2, 3, 5, 10, 20],
     amountUnit: 'count',
-    icons: { cigarette: '🚬', vape: '💨', other: '⚡' }
+    icons: { cigarette: '🚬', vape: '💨', other: '🍂' }
   },
   custom: {
     sessionLabel: 'Use',
@@ -2942,6 +2942,21 @@ function switchCreateEventType(type) {
   } else if (type === 'habit') {
     container.innerHTML = buildCreateHabitFields();
   }
+
+  // Re-bind chip clicks in the new fields
+  container.querySelectorAll('.chip-group .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const group = chip.closest('.chip-group');
+      const field = group.dataset.field;
+      const isOptional = OPTIONAL_FIELDS.has(field);
+      if (isOptional && chip.classList.contains('active')) {
+        chip.classList.remove('active');
+      } else {
+        group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      }
+    });
+  });
 }
 
 /** Build fields for creating a resisted event */
@@ -3162,16 +3177,13 @@ function saveModal() {
 function handleModalChipClick(e) {
   const chip = e.target.closest('.chip');
   if (!chip) return;
-
-  // Skip event-type selector chips (handled by switchCreateEventType)
-  const group = chip.closest('.chip-group');
-  if (group && group.dataset.field === 'create-type') return;
   
   const eventId = $('modal-sheet').dataset.eventId;
   const isCreateMode = $('modal-sheet').dataset.createMode === 'true';
 
   if (isCreateMode) {
     // In create mode, just toggle chip selection visually (no DB writes)
+    const group = chip.closest('.chip-group');
     const field = group.dataset.field;
     const wasActive = chip.classList.contains('active');
     // For optional fields, allow deselect; for required, always select
