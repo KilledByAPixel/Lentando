@@ -93,6 +93,7 @@ const ADDICTION_PROFILES = {
     amounts: [0.5, 1, 2, 3, 5, 10, 20],
     amountUnit: 'count',
     icons: { cigarette: '🚬', vape: '💨', other: '🍂' }
+    
   },
   custom: {
     sessionLabel: 'Use',
