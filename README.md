@@ -36,10 +36,11 @@ Whether you're working toward abstinence, harm reduction, or just understanding 
 - **Optional cloud sync** - Sign in to sync across devices
 - **No ads, no data selling** - Your data stays yours
 
-### 📱 **Modern & Accessible**
+### 📱 **Modern & Mobile-Friendly**
 - **Cross-platform** - Works on phone, tablet, and desktop
 - **No downloads required** - Runs in any modern browser
 - **PWA support** - Install to your home screen like a native app
+- **Offline-capable** - Service worker caches all app resources
 
 ## 🏅 Badge Categories
 
@@ -72,9 +73,27 @@ Lentando recognizes progress in many forms:
 - **🔐 Privacy Matters** - Your recovery journey is personal and private
 - **⭐ Small Wins Add Up** - Every moment of awareness counts
 
+### ♿ **Accessible**
+- **ARIA landmarks** - Tab bar, modals, charts, and buttons all have proper roles and labels
+- **System theme support** - Automatically matches light/dark mode preference
+- **Screen reader friendly** - Live regions for toasts, labeled inputs, and descriptive chart summaries
+- **Keyboard navigable** - Tab navigation with `aria-selected` state on tabs
+
 ## 🛠️ Built With
 
 Pure vanilla JavaScript, HTML5, and CSS3. No frameworks, no dependencies - just clean, fast code that works everywhere.
+
+### 🔨 Build Pipeline
+
+The build system (`node build.js`) runs a full safety check before every deploy:
+
+1. **Cache version bump** - Auto-increments the service worker cache name
+2. **Pre-build checks** - Verifies debug flags are off, all required files exist
+3. **Automated test suite** - Runs 60+ unit tests covering badges, data integrity, import validation, and gap calculations
+4. **Minification** - Compresses all JS via Terser with 2-pass optimization
+5. **Output** - Produces a ready-to-deploy `dist/` folder
+
+If any check fails, the build aborts — no broken code ships.
 
 ## 📄 License
 
