@@ -7,7 +7,7 @@
     "build": "node build.js",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true}); console.log('✅ Cleaned dist/')\"",
     "lint": "eslint code.js firebase-sync.js sw.js build.js",
-    "test": "echo \"No automated tests configured yet\""
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",

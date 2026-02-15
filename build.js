@@ -89,9 +89,22 @@ function preBuildChecks() {
   console.log('✅ Pre-build checks passed!\n');
 }
 
+function runTests() {
+  console.log('🧪 Running automated tests...\n');
+  const { execSync } = require('child_process');
+  try {
+    execSync('node test.js', { stdio: 'inherit' });
+    console.log('');
+  } catch (_e) {
+    console.error('\n❌ Tests failed! Fix test failures before building.\n');
+    process.exit(1);
+  }
+}
+
 (async () => {
   bumpCacheVersion();
   preBuildChecks();
+  runTests();
   if (fs.existsSync(BUILD_DIR)) {
     fs.rmSync(BUILD_DIR, { recursive: true });
   }
