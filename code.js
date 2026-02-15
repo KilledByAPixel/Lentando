@@ -3649,7 +3649,6 @@ function renderFlowStepWelcomeGuide(container) {
       <li>💪 Tap <strong>Resist</strong> when you feel the urge but choose not to.</li>
       <li>📝 Use <strong>Add Past Session</strong> in History to log earlier events.</li>
       <li>✅ Track healthy <strong>actions</strong>: Water, Exercise, Breaths, Tidy, Outside.</li>
-      <li>💧 Lentando will remind you to <strong>drink water</strong> every two hours.</li>
       <li>🏆 Earn <strong>badges</strong> that update throughout the day based on your activity.</li>
       <li>🔄 You can <strong>change what you're tracking</strong> anytime in Settings.</li>
     </ul>
