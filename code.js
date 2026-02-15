@@ -1881,6 +1881,10 @@ function renderDayHistory() {
   const habits = getHabits(events);
   
   const summaryParts = [];
+  // Clear Day badge if no usage at all
+  if (used.length === 0) {
+    summaryParts.push('🏅');
+  }
   // Substance amounts by type
   for (const sub of profile.substances) {
     const subAmt = used.filter(e => (e.substance || 'unknown') === sub).reduce((s, e) => s + (e.amount ?? 1), 0);
