@@ -163,7 +163,7 @@ const HABIT_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60, 120];
 const OPTIONAL_FIELDS = new Set(['reason', 'trigger', 'intensity']);
 
 // Timeouts and durations
-const CHIP_TIMEOUT_MS = 5000;
+const CHIP_TIMEOUT_MS = 10000;
 const FLASH_ANIMATION_MS = 300;
 const IMPORT_STATUS_HIDE_MS = 5000;
 const METRICS_REFRESH_MS = 30000;
