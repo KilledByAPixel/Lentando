@@ -175,12 +175,8 @@ const exposePatch = `
   _w.getLastNDays = getLastNDays;
   _w.avgWithinDayGapMs = avgWithinDayGapMs;
   _w.avgDailyAmount = avgDailyAmount;
-  _w.calcBadAmount = calcBadAmount;
-  _w.getProfileForSubstance = getProfileForSubstance;
-  _w.sortByTime = sortByTime;
-  _w.getHour = getHour;
-  _w.dateKey = dateKey;
-  _w.timeOfDayMin = timeOfDayMin;
+  _w.DB = DB;
+  _w.STORAGE_VERSION = STORAGE_VERSION;
 })();
 `;
 
@@ -194,26 +190,39 @@ try {
 
 // Pull all needed symbols from the sandbox into our scope
 const {
+  // Utility functions
   escapeHTML, dateKey, formatDuration, getUidTimestamp, validatePassword,
-  uid, now, currentDate, todayKey, daysAgoKey, gapCrosses6am, getGapsMs,
-  countUrgeSurfed, countSwapCompleted, getMilestoneBadges, validateImportData,
+  uid, now, currentDate, todayKey, daysAgoKey,
+  // Gap & urge calculations
+  gapCrosses6am, getGapsMs, countUrgeSurfed, countSwapCompleted,
+  // Badge system
+  getMilestoneBadges, Badges, calculateAndUpdateBadges,
+  loadBadgeData, saveBadgeData, getBadgeDef, BADGE_DEFINITIONS,
+  // Filters & stats
   filterByType, filterUsed, filterProfileUsed, filterTHC, filterCBD,
-  sumAmount, getHabits, filterDaytime, getProfile, sortedByTime,
-  DB, Badges, calculateAndUpdateBadges, loadBadgeData, saveBadgeData,
-  BADGE_DEFINITIONS, DEFAULT_SETTINGS, ADDICTION_PROFILES, EARLY_HOUR,
-  FIFTEEN_MINUTES_MS, GAP_MILESTONES, TBREAK_MILESTONES, APP_STREAK_MILESTONES,
-  STORAGE_EVENTS, STORAGE_SETTINGS, STORAGE_BADGES, STORAGE_DELETED_IDS,
+  filterDaytime, sumAmount, getHabits, getProfile, sortedByTime,
+  avgWithinDayGapMs, avgDailyAmount, getLastNDays,
+  // Import/export
+  validateImportData,
+  // Event factories
   createUsedEvent, createResistedEvent, createHabitEvent,
-  getBadgeDef, getLastNDays, avgWithinDayGapMs, avgDailyAmount,
+  // Data layer
+  DB, DEFAULT_SETTINGS, ADDICTION_PROFILES,
+  // Constants
+  EARLY_HOUR, FIFTEEN_MINUTES_MS, GAP_MILESTONES, TBREAK_MILESTONES,
+  APP_STREAK_MILESTONES, STORAGE_EVENTS, STORAGE_SETTINGS, STORAGE_BADGES,
+  STORAGE_DELETED_IDS, STORAGE_VERSION,
 } = sandbox;
 
 // ========== TEST FRAMEWORK ==========
 let _passed = 0;
 let _failed = 0;
 let _currentGroup = '';
+let _groupCounts = {}; // { groupName: { passed, failed } }
 
 function group(name) {
   _currentGroup = name;
+  if (!_groupCounts[name]) _groupCounts[name] = { passed: 0, failed: 0 };
 }
 
 function test(name, fn) {
@@ -221,8 +230,10 @@ function test(name, fn) {
   try {
     fn();
     _passed++;
+    if (_currentGroup) _groupCounts[_currentGroup].passed++;
   } catch (e) {
     _failed++;
+    if (_currentGroup) _groupCounts[_currentGroup].failed++;
     console.error(`  FAIL: ${label}`);
     console.error(`        ${e.message}`);
   }
@@ -253,7 +264,7 @@ function notIncludes(arr, val, msg) {
 function resetState() {
   _storage.clear();
   // Stamp data version so DB._migrateDataIfNeeded() doesn't log migration messages
-  localStorage.setItem('ht_data_version', '3');
+  localStorage.setItem(STORAGE_VERSION, '3');
   // Reset in-memory caches
   DB._events = null;
   DB._settings = null;
@@ -262,12 +273,12 @@ function resetState() {
 
 function setSettings(overrides) {
   const settings = { ...DEFAULT_SETTINGS, ...overrides };
-  localStorage.setItem('ht_settings', JSON.stringify(settings));
+  localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings));
   DB._settings = null; // force reload
 }
 
 function addEvents(events) {
-  localStorage.setItem('ht_events', JSON.stringify(events));
+  localStorage.setItem(STORAGE_EVENTS, JSON.stringify(events));
   DB._events = null;
   DB._dateIndex = null;
 }
@@ -641,7 +652,7 @@ test('deleteEvent removes event and adds tombstone', () => {
   DB._events = null;
   eq(DB.loadEvents().length, 0);
   // Tombstone should exist
-  const tombstones = JSON.parse(localStorage.getItem('ht_deleted_ids') || '{}');
+  const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '{}');
   ok(tombstones[evt.id]);
 });
 
@@ -677,7 +688,7 @@ test('getAllDayKeys returns sorted keys', () => {
 
 test('loadSettings merges with defaults', () => {
   resetState();
-  localStorage.setItem('ht_settings', JSON.stringify({ showCoaching: false }));
+  localStorage.setItem(STORAGE_SETTINGS, JSON.stringify({ showCoaching: false }));
   DB._settings = null;
   const s = DB.loadSettings();
   eq(s.showCoaching, false); // overridden
@@ -1333,7 +1344,7 @@ test('lifetime badges accumulate across days', () => {
     lifetimeBadges: [{ id: 'daily-checkin', count: 5 }],
     todayUndoCount: 0
   };
-  localStorage.setItem('ht_badges', JSON.stringify(prevBadgeData));
+  localStorage.setItem(STORAGE_BADGES, JSON.stringify(prevBadgeData));
   
   // Now add today's events
   const today = todayKey();
@@ -1349,7 +1360,321 @@ test('lifetime badges accumulate across days', () => {
   ok(result.lifetimeBadges.length > 0);
 });
 
+// ========== TESTS: FILTER & STATS FUNCTIONS ==========
+
+group('filterByType');
+
+test('filters events by type', () => {
+  const events = [
+    { type: 'used', ts: 1 },
+    { type: 'resisted', ts: 2 },
+    { type: 'used', ts: 3 },
+    { type: 'habit', ts: 4 },
+  ];
+  const result = filterByType(events, 'used');
+  eq(result.length, 2);
+  ok(result.every(e => e.type === 'used'));
+});
+
+test('returns empty for no matches', () => {
+  const events = [{ type: 'used', ts: 1 }];
+  deepEq(filterByType(events, 'resisted'), []);
+});
+
+group('filterUsed');
+
+test('returns only used events', () => {
+  const events = [
+    { type: 'used', ts: 1 },
+    { type: 'resisted', ts: 2 },
+    { type: 'used', ts: 3 },
+  ];
+  const result = filterUsed(events);
+  eq(result.length, 2);
+});
+
+group('filterTHC / filterCBD');
+
+test('filterTHC returns only thc events', () => {
+  const events = [
+    { type: 'used', substance: 'thc', ts: 1 },
+    { type: 'used', substance: 'cbd', ts: 2 },
+    { type: 'used', substance: 'thc', ts: 3 },
+  ];
+  eq(filterTHC(events).length, 2);
+});
+
+test('filterCBD returns only cbd events', () => {
+  const events = [
+    { type: 'used', substance: 'thc', ts: 1 },
+    { type: 'used', substance: 'cbd', ts: 2 },
+  ];
+  const result = filterCBD(events);
+  eq(result.length, 1);
+  eq(result[0].substance, 'cbd');
+});
+
+group('sumAmount');
+
+test('sums amount field of events', () => {
+  const events = [
+    { amount: 2 },
+    { amount: 3.5 },
+    { amount: 1 },
+  ];
+  eq(sumAmount(events), 6.5);
+});
+
+test('returns 0 for empty array', () => {
+  eq(sumAmount([]), 0);
+});
+
+test('treats missing amount as 1 (default dose)', () => {
+  const events = [{ amount: 2 }, {}];
+  eq(sumAmount(events), 3); // missing amount defaults to 1
+});
+
+group('getHabits');
+
+test('returns only habit events', () => {
+  const events = [
+    { type: 'habit', ts: 1, habit: 'water' },
+    { type: 'used', ts: 2, substance: 'thc' },
+    { type: 'habit', ts: 3, habit: 'exercise' },
+  ];
+  const result = getHabits(events);
+  eq(result.length, 2);
+  ok(result.every(e => e.type === 'habit'));
+});
+
+group('sortedByTime');
+
+test('sorts events ascending by ts', () => {
+  const events = [{ ts: 300 }, { ts: 100 }, { ts: 200 }];
+  const result = sortedByTime(events);
+  eq(result[0].ts, 100);
+  eq(result[1].ts, 200);
+  eq(result[2].ts, 300);
+});
+
+test('does not mutate original array', () => {
+  const events = [{ ts: 300 }, { ts: 100 }];
+  const result = sortedByTime(events);
+  eq(events[0].ts, 300); // original unchanged
+  eq(result[0].ts, 100);
+});
+
+group('filterProfileUsed');
+
+test('filters used events for current profile substances', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const events = [
+    { type: 'used', substance: 'thc', ts: 1 },
+    { type: 'used', substance: 'beer', ts: 2 }, // not cannabis profile
+    { type: 'used', substance: 'cbd', ts: 3 },
+  ];
+  addEvents(events);
+  const result = filterProfileUsed(events);
+  eq(result.length, 2); // thc + cbd
+  ok(result.every(e => e.substance === 'thc' || e.substance === 'cbd'));
+});
+
+group('avgDailyAmount');
+
+test('calculates average daily amount across day keys', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const today = todayKey();
+  const yesterday = daysAgoKey(1);
+  const events = [
+    makeUsedEvent(makeTs(today, 10), 'thc', 3),
+    makeUsedEvent(makeTs(today, 14), 'thc', 1),    // today total: 4
+    makeUsedEvent(makeTs(yesterday, 10), 'thc', 2), // yesterday total: 2
+  ];
+  addEvents(events);
+  // avgDailyAmount takes (dayKeys[], filterFn) — averages over days with use
+  const result = avgDailyAmount([today, yesterday], filterUsed);
+  eq(result, 3); // (4+2)/2 = 3
+});
+
+group('getProfile');
+
+test('returns profile for cannabis', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const profile = getProfile();
+  ok(profile);
+  ok(profile.substances.includes('thc'));
+  ok(profile.substances.includes('cbd'));
+});
+
+test('returns profile for alcohol', () => {
+  resetState();
+  setSettings({ addictionProfile: 'alcohol' });
+  const profile = getProfile();
+  ok(profile);
+  ok(profile.substances.includes('beer'));
+  ok(profile.substances.includes('liquor'));
+});
+
+group('createUsedEvent / createResistedEvent / createHabitEvent');
+
+test('createUsedEvent produces valid event', () => {
+  // signature: createUsedEvent(substance, method, amount, reason)
+  const evt = createUsedEvent('thc', 'vape', 2, 'test');
+  eq(evt.type, 'used');
+  eq(evt.substance, 'thc');
+  eq(evt.amount, 2);
+  eq(evt.method, 'vape');
+  eq(evt.reason, 'test');
+  ok(evt.id);
+  ok(evt.ts > 0);
+});
+
+test('createResistedEvent produces valid event', () => {
+  // signature: createResistedEvent(intensity, trigger)
+  const evt = createResistedEvent(3, 'stress');
+  eq(evt.type, 'resisted');
+  eq(evt.intensity, 3);
+  eq(evt.trigger, 'stress');
+  ok(evt.id);
+  ok(evt.ts > 0);
+});
+
+test('createHabitEvent produces valid event', () => {
+  const evt = createHabitEvent('water');
+  eq(evt.type, 'habit');
+  eq(evt.habit, 'water');
+  ok(evt.id);
+  ok(evt.ts > 0);
+});
+
+group('getBadgeDef');
+
+test('returns definition for known badge', () => {
+  const def = getBadgeDef('daily-checkin');
+  ok(def);
+  ok(def.label);
+  ok(def.icon);
+});
+
+test('returns fallback for unknown badge', () => {
+  const def = getBadgeDef('nonexistent-badge-xyz');
+  eq(def.label, 'Unknown Badge');
+});
+
+group('getLastNDays');
+
+test('returns correct date keys (oldest first)', () => {
+  const days = getLastNDays(3);
+  eq(days.length, 3);
+  // getLastNDays returns oldest → newest
+  eq(days[0], daysAgoKey(2));
+  eq(days[1], daysAgoKey(1));
+  eq(days[2], todayKey());
+});
+
+group('loadBadgeData / saveBadgeData');
+
+test('round-trips badge data through localStorage', () => {
+  resetState();
+  const data = {
+    todayDate: todayKey(),
+    todayBadges: [{ id: 'daily-checkin', count: 1 }],
+    yesterdayBadges: [],
+    lifetimeBadges: [{ id: 'daily-checkin', count: 3 }],
+    todayUndoCount: 0,
+  };
+  saveBadgeData(data);
+  const loaded = loadBadgeData();
+  eq(loaded.todayDate, data.todayDate);
+  eq(loaded.todayBadges.length, 1);
+  eq(loaded.todayBadges[0].id, 'daily-checkin');
+  eq(loaded.lifetimeBadges[0].count, 3);
+});
+
+group('BADGE_DEFINITIONS integrity');
+
+test('all badge definitions have required fields', () => {
+  const ids = Object.keys(BADGE_DEFINITIONS);
+  ok(ids.length > 0, 'BADGE_DEFINITIONS should not be empty');
+  for (const id of ids) {
+    const def = BADGE_DEFINITIONS[id];
+    ok(def.label, `Badge ${id} missing label`);
+    ok(def.icon, `Badge ${id} missing icon`);
+  }
+});
+
+test('no empty badge IDs or labels', () => {
+  const ids = Object.keys(BADGE_DEFINITIONS);
+  for (const id of ids) {
+    ok(id.length > 0, 'Badge ID should not be empty');
+    ok(id === id.trim(), `Badge ID '${id}' has whitespace`);
+    ok(BADGE_DEFINITIONS[id].label.length > 0, `Badge ${id} has empty label`);
+  }
+});
+
+group('filterDaytime');
+
+test('excludes events before 6am', () => {
+  const events = [
+    { ts: makeTs('2025-06-15', 3, 0), type: 'used' },  // 3am — excluded
+    { ts: makeTs('2025-06-15', 5, 30), type: 'used' },  // 5:30am — excluded
+    { ts: makeTs('2025-06-15', 6, 0), type: 'used' },   // 6am — included
+    { ts: makeTs('2025-06-15', 14, 0), type: 'used' },  // 2pm — included
+  ];
+  const result = filterDaytime(events);
+  eq(result.length, 2);
+  ok(result.every(e => new Date(e.ts).getHours() >= EARLY_HOUR));
+});
+
+test('returns all events when none before 6am', () => {
+  const events = [
+    { ts: makeTs('2025-06-15', 8, 0), type: 'used' },
+    { ts: makeTs('2025-06-15', 20, 0), type: 'used' },
+  ];
+  eq(filterDaytime(events).length, 2);
+});
+
+group('avgWithinDayGapMs');
+
+test('averages gaps across multiple days', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const today = todayKey();
+  const yesterday = daysAgoKey(1);
+  // Today: 10am and 12pm = 2h gap
+  // Yesterday: 9am and 12pm = 3h gap
+  addEvents([
+    makeUsedEvent(makeTs(today, 10), 'thc', 1),
+    makeUsedEvent(makeTs(today, 12), 'thc', 1),
+    makeUsedEvent(makeTs(yesterday, 9), 'thc', 1),
+    makeUsedEvent(makeTs(yesterday, 12), 'thc', 1),
+  ]);
+  const result = avgWithinDayGapMs([today, yesterday], filterUsed);
+  // Average of 2h and 3h = 2.5h = 9_000_000 ms
+  eq(result, 2.5 * 3600000);
+});
+
+test('returns 0 when no gaps exist', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const today = todayKey();
+  addEvents([makeUsedEvent(makeTs(today, 10), 'thc', 1)]); // single event = no gap
+  eq(avgWithinDayGapMs([today], filterUsed), 0);
+});
+
 // ========== REPORT RESULTS ==========
+
+// Per-group summary
+const groups = Object.entries(_groupCounts);
+const maxNameLen = Math.max(...groups.map(([n]) => n.length));
+for (const [name, { passed, failed }] of groups) {
+  const status = failed ? '\x1b[31m✗\x1b[0m' : '\x1b[32m✓\x1b[0m';
+  const count = failed ? `${passed}/${passed + failed}` : `${passed}`;
+  console.log(`  ${status} ${name.padEnd(maxNameLen)}  ${count}`);
+}
 
 console.log('');
 if (_failed === 0) {
