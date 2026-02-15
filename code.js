@@ -2620,8 +2620,7 @@ function importJSON(inputEl) {
         return showStatus(validation.error, 'error');
       }
 
-      // When importing, reset clearedAt so pre-clear events aren't blocked.
-      // The user is explicitly choosing to restore data — honour that intent.
+      // --- Step 1: Restore clearedAt ---
       // If the import file carries its own clearedAt, adopt it; otherwise clear it.
       const importedClearedAt = parseInt(data.clearedAt, 10) || 0;
       if (importedClearedAt > 0) {
@@ -2629,26 +2628,49 @@ function importJSON(inputEl) {
       } else {
         localStorage.removeItem(STORAGE_CLEARED_AT);
       }
-      // Invalidate cache so loadEvents() re-reads with updated clearedAt
+
+      // --- Step 2: Merge tombstones BEFORE importing events/todos ---
+      // This way imported items are filtered against the full merged tombstone set.
+      if (data.deletedIds && typeof data.deletedIds === 'object' && !Array.isArray(data.deletedIds)) {
+        const currentTombstones = DB._readTombstoneMap();
+        for (const [id, ts] of Object.entries(data.deletedIds)) {
+          if (!currentTombstones[id] || ts > currentTombstones[id]) {
+            currentTombstones[id] = ts;
+          }
+        }
+        safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(currentTombstones));
+      }
+      if (data.deletedTodoIds && typeof data.deletedTodoIds === 'object' && !Array.isArray(data.deletedTodoIds)) {
+        const currentTodoTombstones = readTodoTombstoneMap();
+        for (const [id, ts] of Object.entries(data.deletedTodoIds)) {
+          if (!currentTodoTombstones[id] || ts > currentTodoTombstones[id]) {
+            currentTodoTombstones[id] = ts;
+          }
+        }
+        safeSetItem(STORAGE_DELETED_TODO_IDS, JSON.stringify(currentTodoTombstones));
+      }
+
+      // --- Step 3: Import events (filtered by clearedAt + tombstones) ---
+      // Invalidate cache so loadEvents() re-reads with updated clearedAt & tombstones
       DB._events = null;
       DB._dateIndex = null;
 
       const existing = DB.loadEvents();
       const existingIds = new Set(existing.map(e => e.id));
-      // Filter imported events through clearedAt (from the import file, not from a later local clear)
       const activeClearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
+      const eventTombstones = DB._getDeletedIds();
       const newEvents = validation.events.filter(evt =>
-        !existingIds.has(evt.id) && (activeClearedAt <= 0 || getUidTimestamp(evt.id) > activeClearedAt)
+        !existingIds.has(evt.id) &&
+        !eventTombstones.has(evt.id) &&
+        (activeClearedAt <= 0 || getUidTimestamp(evt.id) > activeClearedAt)
       );
       
       DB._events = sortedByTime([...existing, ...newEvents]);
       DB.saveEvents();
 
-      // Import badge data and appStartDate/appStartTs
+      // --- Step 4: Import badges and appStartDate/appStartTs ---
       const badgeData = loadBadgeData();
 
-      // Restore appStartDate and appStartTs — independent of badge counts
-      // Use imported values if present and older than current values
       let finalAppStartDate = badgeData.appStartDate;
       let finalAppStartTs = badgeData.appStartTs;
       if (data.appStartDate && data.appStartTs) {
@@ -2658,7 +2680,7 @@ function importJSON(inputEl) {
         }
       }
 
-      // Import lifetime badges if present (merge: higher counts win)
+      // Merge lifetime badges (higher counts win)
       const importedLifetime = data.lifetimeBadges;
       const lifetimeMap = new Map();
       badgeData.lifetimeBadges.forEach(w => lifetimeMap.set(w.id, w.count));
@@ -2682,48 +2704,43 @@ function importJSON(inputEl) {
       };
       saveBadgeData(mergedBadgeData);
 
-      // Import todos if present - merge by ID to avoid duplicates
+      // --- Step 5: Import todos (filtered by tombstones, modifiedAt resolution) ---
       if (data.todos && Array.isArray(data.todos)) {
         const existingTodos = loadTodos();
-        const existingTodoIds = new Set(existingTodos.map(t => t.id).filter(Boolean));
+        const todoTombstones = readTodoTombstoneMap();
+        const existingTodoMap = new Map();
+        existingTodos.forEach(t => { if (t.id) existingTodoMap.set(t.id, t); });
+
         const validImported = data.todos
           .filter(t => t && typeof t.text === 'string' && t.text.trim())
-          .map(t => t.id ? t : { ...t, id: uid() }) // Assign IDs to legacy todos without them
-          .filter(t => !existingTodoIds.has(t.id)) // Skip duplicates
+          .map(t => t.id ? t : { ...t, id: uid() }) // Assign IDs to legacy todos
+          .filter(t => !todoTombstones[t.id]) // Skip tombstoned todos
           .map(t => ({ ...t, text: t.text.trim().slice(0, 250) }));
-        if (validImported.length > 0) {
-          saveTodos([...existingTodos, ...validImported]);
+
+        let changed = false;
+        for (const imported of validImported) {
+          const local = existingTodoMap.get(imported.id);
+          if (!local) {
+            // New todo — add it
+            existingTodos.push(imported);
+            changed = true;
+          } else if ((imported.modifiedAt || 0) > (local.modifiedAt || 0)) {
+            // Same ID but import is newer — update local copy
+            Object.assign(local, imported);
+            changed = true;
+          }
+          // Otherwise local is same or newer — keep it
         }
+        if (changed) saveTodos(existingTodos);
       }
       
-      // Import theme preference if present
+      // --- Step 6: Import theme ---
       if (data.theme) {
         safeSetItem(STORAGE_THEME, data.theme);
         applyTheme(data.theme);
       }
 
-      // Restore tombstones so Firebase sync won't resurrect deleted items
-      if (data.deletedIds && typeof data.deletedIds === 'object' && !Array.isArray(data.deletedIds)) {
-        const currentTombstones = DB._readTombstoneMap();
-        // Merge: keep the most recent deletion timestamp per ID
-        for (const [id, ts] of Object.entries(data.deletedIds)) {
-          if (!currentTombstones[id] || ts > currentTombstones[id]) {
-            currentTombstones[id] = ts;
-          }
-        }
-        safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(currentTombstones));
-      }
-      if (data.deletedTodoIds && typeof data.deletedTodoIds === 'object' && !Array.isArray(data.deletedTodoIds)) {
-        const currentTodoTombstones = readTodoTombstoneMap();
-        for (const [id, ts] of Object.entries(data.deletedTodoIds)) {
-          if (!currentTodoTombstones[id] || ts > currentTodoTombstones[id]) {
-            currentTodoTombstones[id] = ts;
-          }
-        }
-        safeSetItem(STORAGE_DELETED_TODO_IDS, JSON.stringify(currentTodoTombstones));
-      }
-
-      // Restore settings from export
+      // --- Step 7: Restore settings ---
       if (data.settings && typeof data.settings === 'object') {
         const settings = DB.loadSettings();
         Object.assign(settings, data.settings);
