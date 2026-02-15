@@ -214,6 +214,8 @@ const HABIT_LABELS = {
   exercise: 'Exercise',
   outside: 'Outside'
 };
+// Canonical display order matching main screen buttons
+const HABIT_ORDER = ['water', 'exercise', 'breaths', 'clean', 'outside'];
 
 // Habits that show duration chips (time tracking) - set to true to enable
 const HABIT_SHOW_CHIPS = {
@@ -1860,14 +1862,12 @@ function renderDayHistory() {
   labelEl.textContent = friendlyDate(currentHistoryDay);
   
   // Update navigation button disabled states (before possible early return)
+  const allKeys = DB.getAllDayKeys(); // sorted reverse (newest first)
+  const today = todayKey();
   const nextBtn = $('next-day');
-  if (nextBtn) nextBtn.disabled = (currentHistoryDay === todayKey());
+  if (nextBtn) nextBtn.disabled = (currentHistoryDay >= today);
   const prevBtn = $('prev-day');
-  if (prevBtn) {
-    const allKeys = DB.getAllDayKeys(); // sorted reverse (newest first)
-    const earliest = allKeys.length > 0 ? allKeys[allKeys.length - 1] : null;
-    prevBtn.disabled = !earliest || currentHistoryDay <= earliest;
-  }
+  if (prevBtn) prevBtn.disabled = !allKeys.some(k => k < currentHistoryDay);
   
   if (events.length === 0) {
     historyEl.innerHTML = emptyStateHTML('No events for this day');
@@ -1875,18 +1875,43 @@ function renderDayHistory() {
   }
 
   // Calculate summary stats
+  const profile = getProfile();
   const used = filterProfileUsed(events);
   const resisted = filterByType(events, 'resisted');
-  const exerciseMins = getHabits(events, 'exercise').reduce((sum, e) => sum + (e.minutes || 0), 0);
-  const totalAmt = sumAmount(used);
+  const habits = getHabits(events);
   
   const summaryParts = [];
-  if (used.length > 0) summaryParts.push(`Used ${used.length}x (${totalAmt} ${getProfile().amountUnit})`);
-  if (resisted.length > 0) summaryParts.push(`Resisted ${resisted.length}x`);
-  if (exerciseMins > 0) summaryParts.push(`Exercised ${exerciseMins}m`);
+  // Substance amounts by type
+  for (const sub of profile.substances) {
+    const subAmt = used.filter(e => (e.substance || 'unknown') === sub).reduce((s, e) => s + (e.amount ?? 1), 0);
+    if (subAmt > 0) {
+      const icon = profile.icons[sub] || '⚡';
+      const displayAmt = Number.isInteger(subAmt) ? subAmt : subAmt.toFixed(1);
+      summaryParts.push(`${icon}${displayAmt}`);
+    }
+  }
+  // Resists
+  if (resisted.length > 0) {
+    const resistTotal = resisted.reduce((sum, e) => sum + (e.intensity || 1), 0);
+    const display = Number.isInteger(resistTotal) ? resistTotal : resistTotal.toFixed(1);
+    summaryParts.push(`💪${display}`);
+  }
+  // Activities — emoji only if done that day, grouped together
+  const doneHabits = HABIT_ORDER.filter(act => habits.some(e => e.habit === act));
+  if (doneHabits.length === 5) {
+    // All 5 habits — show Five Star Day icon
+    summaryParts.push('🌟');
+  } else if (doneHabits.length > 0) {
+    const waterCount = getHabits(events, 'water').length;
+    const actIcons = doneHabits.map(act => {
+      if (act === 'water' && waterCount >= 5) return '🌊'; // Hydrated
+      return HABIT_ICONS[act] || '✅';
+    }).join('');
+    summaryParts.push(actIcons);
+  }
   
   const summary = summaryParts.length > 0 
-    ? `<div class="history-summary">${summaryParts.join(' • ')}</div>`
+    ? `<div class="history-summary">${summaryParts.join(' &nbsp;')}</div>`
     : '';
 
   // Build HTML in reverse order, limited to historyShowCount
@@ -1919,6 +1944,9 @@ function loadMoreHistory() {
 }
 
 function navigateDay(offset) {
+  // Guard against touch events firing on disabled buttons (mobile)
+  const btn = offset < 0 ? $('prev-day') : $('next-day');
+  if (btn && btn.disabled) return;
   const allKeys = DB.getAllDayKeys(); // sorted reverse (newest first)
   
   if (offset < 0) {
@@ -2179,8 +2207,8 @@ function buildWeekSummaryHTML() {
     html += '</div>';
   }
 
-  // Activity rows — one per type, only if any day has it
-  for (const act of Object.keys(HABIT_LABELS)) {
+  // Activity rows — one per type, only if any day has it (ordered to match main screen)
+  for (const act of HABIT_ORDER) {
     const hasAny = dayData.some(dd => dd.actTotals[act]);
     if (!hasAny) continue;
     const icon = HABIT_ICONS[act] || '✅';
