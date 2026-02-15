@@ -3922,6 +3922,10 @@ function bindEvents() {
     if (!btn) return;
     const habit = btn.dataset.habit;
     
+    // Always dismiss use/resist chips when any habit button is tapped
+    hideUsedChips();
+    hideResistedChips();
+
     // Check if this habit shows duration chips
     if (HABIT_SHOW_CHIPS[habit]) {
       // Check cooldown before showing chips
@@ -3950,8 +3954,6 @@ function bindEvents() {
     }
     
     hideHabitChips();
-    hideUsedChips();
-    hideResistedChips();
     logHabit(habit);
     flashEl(btn);
   });
