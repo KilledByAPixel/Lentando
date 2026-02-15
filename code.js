@@ -2085,19 +2085,6 @@ function buildGraphBars(vals, days, max, def) {
   return wrapBarsWithGrid(inner, max);
 }
 
-function buildHourGraphBars(hourCounts, max, color, startHour = 0) {
-  const effectiveMax = max > 0 ? calcGridScale(max).gridMax : 0;
-  let inner = '';
-  for (let i = 0; i < 24; i++) {
-    const hour = (startHour + i) % 24;
-    const count = hourCounts[hour] || 0;
-    const h = effectiveMax > 0 ? Math.round((count / effectiveMax) * 96) : 0;
-    const hourLabel = hour === 0 ? '12a' : hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`;
-    inner += graphBarCol(count, h, { color, text: hourLabel }, i % 3 === 0);
-  }
-  return wrapBarsWithGrid(inner, max);
-}
-
 // Fixed palette for substance stacked bars (up to 3 substances per profile)
 const SUBSTANCE_COLORS = ['#5c6bc0', '#e6a23c', '#66bb6a'];
 
@@ -2168,6 +2155,155 @@ function buildStackedHourGraphBars(events, startHour) {
       const icon = icons[sub] || '';
       legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
       legend += `<span class="hm-legend-label">${icon}</span>`;
+    }
+    legend += '</div>';
+  }
+
+  return wrapBarsWithGrid(inner, maxTotal) + legend;
+}
+
+/** Stacked average-usage-by-hour bars — averages per substance across days with use */
+function buildStackedAvgHourBars(days) {
+  const profile = getProfile();
+  const subs = profile.substances;
+  const icons = profile.icons || {};
+  const colorMap = {};
+  subs.forEach((sub, i) => { colorMap[sub] = SUBSTANCE_COLORS[i % SUBSTANCE_COLORS.length]; });
+
+  // hourTotals[hour][sub] = total amount, daysWithUse = count of days with any use
+  const hourTotals = {};
+  let daysWithUse = 0;
+  const usedSubs = new Set();
+
+  days.forEach(dayKey => {
+    const dayUsed = filterProfileUsed(DB.forDate(dayKey));
+    if (dayUsed.length === 0) return;
+    daysWithUse++;
+    dayUsed.forEach(evt => {
+      const hour = getHour(evt.ts);
+      if (!hourTotals[hour]) hourTotals[hour] = {};
+      const sub = evt.substance || subs[0];
+      hourTotals[hour][sub] = (hourTotals[hour][sub] || 0) + (evt.amount ?? 1);
+      usedSubs.add(sub);
+    });
+  });
+
+  if (daysWithUse === 0) return null;
+
+  // Compute averages and find max
+  let maxTotal = 0;
+  for (let h = 0; h < 24; h++) {
+    const data = hourTotals[h] || {};
+    let total = 0;
+    for (const sub of subs) { total += (data[sub] || 0) / daysWithUse; }
+    if (total > maxTotal) maxTotal = total;
+  }
+  const effectiveMax = maxTotal > 0 ? calcGridScale(maxTotal).gridMax : 0;
+
+  let inner = '';
+  for (let h = 0; h < 24; h++) {
+    const data = hourTotals[h] || {};
+    let total = 0;
+    for (const sub of subs) { total += (data[sub] || 0) / daysWithUse; }
+    const totalH = effectiveMax > 0 ? Math.round((total / effectiveMax) * 96) : 0;
+    const hourLabel = h === 0 ? '12a' : h < 12 ? `${h}a` : h === 12 ? '12p' : `${h - 12}p`;
+    const showLabel = h % 3 === 0;
+    const labelStyle = showLabel ? '' : 'visibility:hidden';
+
+    let segments = '';
+    for (const sub of subs) {
+      const avg = (data[sub] || 0) / daysWithUse;
+      if (avg <= 0) continue;
+      const segH = effectiveMax > 0 ? Math.max(Math.round((avg / effectiveMax) * 96), 2) : 0;
+      segments += `<div class="graph-bar-seg" style="height:${segH}px;background:${colorMap[sub]}"></div>`;
+    }
+
+    inner += `<div class="graph-bar-col">
+      <div class="graph-bar graph-bar-stacked" style="height:${totalH}px;${total > 0 ? 'min-height:2px' : ''}">${segments}</div>
+      <div class="graph-bar-label" style="${labelStyle}">${hourLabel}</div>
+    </div>`;
+  }
+
+  const activeSubs = subs.filter(s => usedSubs.has(s));
+  let legend = '';
+  if (activeSubs.length > 1) {
+    legend = '<div class="hm-legend" style="margin-top:4px">';
+    for (const sub of activeSubs) {
+      legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
+      legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
+    }
+    legend += '</div>';
+  }
+
+  return wrapBarsWithGrid(inner, maxTotal) + legend;
+}
+
+/** Stacked amount-used-per-day bars — per substance per day */
+function buildStackedDayBars(days) {
+  const profile = getProfile();
+  const subs = profile.substances;
+  const icons = profile.icons || {};
+  const colorMap = {};
+  subs.forEach((sub, i) => { colorMap[sub] = SUBSTANCE_COLORS[i % SUBSTANCE_COLORS.length]; });
+
+  // dayData[i] = { sub: amount, ... }
+  const dayData = [];
+  const usedSubs = new Set();
+  let maxTotal = 0;
+
+  for (const dayKey of days) {
+    const used = filterProfileUsed(DB.forDate(dayKey));
+    const subAmounts = {};
+    used.forEach(e => {
+      const sub = e.substance || subs[0];
+      subAmounts[sub] = (subAmounts[sub] || 0) + (e.amount ?? 1);
+      usedSubs.add(sub);
+    });
+    let total = 0;
+    for (const sub of subs) total += (subAmounts[sub] || 0);
+    if (total > maxTotal) maxTotal = total;
+    dayData.push(subAmounts);
+  }
+
+  if (maxTotal <= 0) return null;
+
+  const effectiveMax = calcGridScale(maxTotal).gridMax;
+  let inner = '';
+  for (let i = 0; i < days.length; i++) {
+    const data = dayData[i];
+    let total = 0;
+    for (const sub of subs) total += (data[sub] || 0);
+    const totalH = effectiveMax > 0 ? Math.round((total / effectiveMax) * 96) : 0;
+    const dayLabel = days[i].slice(5);
+
+    let showLabel;
+    if (graphDays <= 7) showLabel = true;
+    else if (graphDays <= 14) showLabel = i % 2 === 0;
+    else if (graphDays <= 30) showLabel = i % 4 === 0;
+    else showLabel = i % 10 === 0;
+    const labelStyle = showLabel ? '' : 'visibility:hidden';
+
+    let segments = '';
+    for (const sub of subs) {
+      const val = data[sub] || 0;
+      if (val <= 0) continue;
+      const segH = effectiveMax > 0 ? Math.max(Math.round((val / effectiveMax) * 96), 2) : 0;
+      segments += `<div class="graph-bar-seg" style="height:${segH}px;background:${colorMap[sub]}"></div>`;
+    }
+
+    inner += `<div class="graph-bar-col">
+      <div class="graph-bar graph-bar-stacked" style="height:${totalH}px;${total > 0 ? 'min-height:2px' : ''}">${segments}</div>
+      <div class="graph-bar-label" style="${labelStyle}">${dayLabel}</div>
+    </div>`;
+  }
+
+  const activeSubs = subs.filter(s => usedSubs.has(s));
+  let legend = '';
+  if (activeSubs.length > 1) {
+    legend = '<div class="hm-legend" style="margin-top:4px">';
+    for (const sub of activeSubs) {
+      legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
+      legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
     }
     legend += '</div>';
   }
@@ -2413,40 +2549,31 @@ function renderGraphs() {
   // Usage heatmap by day-of-week (affected by day selector)
   dayHtml += buildHeatmapHTML(days);
 
-  // Render average usage by hour first (filtered by selected time window)
-  const hourTotals = {};
-  let daysWithUse = 0;
-  
-  days.forEach(dayKey => {
-    const dayUsed = filterProfileUsed(DB.forDate(dayKey));
-    if (dayUsed.length > 0) {
-      daysWithUse++;
-      dayUsed.forEach(evt => {
-        const hour = getHour(evt.ts);
-        hourTotals[hour] = (hourTotals[hour] || 0) + (evt.amount ?? 1);
-      });
-    }
-  });
-  
-  // Calculate averages (only count days with at least 1 use)
-  const hourAverages = {};
-  for (let hour = 0; hour < 24; hour++) {
-    if (hourTotals[hour] && daysWithUse > 0) {
-      hourAverages[hour] = hourTotals[hour] / daysWithUse;
-    }
-  }
-  
-  const hasHeatmapData = Object.keys(hourAverages).length > 0;
-  const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
-  dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Average usage by hour of day" data-tooltip="Your average hourly usage across days you used. Reveals your habitual usage patterns."><div class="graph-title">🕐 Average Usage by Hour</div>`;
-  dayHtml += hasHeatmapData
-    ? buildHourGraphBars(hourAverages, maxAvg, '#e53935')
+  // Render average usage by hour — stacked by substance
+  const avgHourResult = buildStackedAvgHourBars(days);
+  dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Average usage by hour of day" data-tooltip="Your average hourly usage across days you used, broken down by type. Reveals your habitual usage patterns."><div class="graph-title">🕐 Average Usage by Hour</div>`;
+  dayHtml += avgHourResult
+    ? avgHourResult
     : emptyStateHTML('No data yet', 'compact');
   dayHtml += `</div>`;
   
   // Render all GRAPH_DEFS graphs
   for (let gi = 0; gi < GRAPH_DEFS.length; gi++) {
     const def = GRAPH_DEFS[gi];
+
+    // Amount Used / Day — use stacked bars
+    if (gi === 0) {
+      const stackedResult = buildStackedDayBars(days);
+      const tipAttr = def.tooltip ? ` data-tooltip="${escapeHTML(def.tooltip + ' Stacked by substance type.')}"` : '';
+      const ariaLabel = `Bar chart: ${def.label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
+      dayHtml += `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${def.label}</div>`;
+      dayHtml += stackedResult
+        ? stackedResult
+        : emptyStateHTML('No data yet', 'compact');
+      dayHtml += `</div>`;
+      continue;
+    }
+
     let vals = days.map(dk => def.valueFn(DB.forDate(dk)));
     let max  = Math.max(...vals, 1);
     let hasData = vals.some(v => v > 0);
@@ -2509,7 +2636,7 @@ function renderGraphs() {
   const reasonKeys = REASONS.filter(r => reasonTotals[r]);
   if (reasonKeys.length > 0) {
     const reasonMax = Math.max(...reasonKeys.map(r => reasonTotals[r]), 1);
-    dayHtml += buildCategoryGraph('🧠 Use by Reason', reasonKeys, reasonTotals, reasonMax, '#f39c12',
+    dayHtml += buildCategoryGraph('🧠 Use by Reason', reasonKeys, reasonTotals, reasonMax, '#ef5350',
       'Total amount used broken down by reason. Shows which triggers drive the most usage.');
   }
 
