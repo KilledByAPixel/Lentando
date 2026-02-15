@@ -2411,16 +2411,13 @@ function buildWeekSummaryHTML() {
     });
     // Resist total
     const resistTotal = resisted.reduce((sum, e) => sum + (e.intensity || 1), 0);
-    // Activity totals
+    // Activity totals - always show minutes, default to 5min for untimed events
     const actTotals = {};
     for (const act of Object.keys(HABIT_LABELS)) {
       const actEvents = habits.filter(e => e.habit === act);
       if (actEvents.length === 0) continue;
-      const anyHaveMin = actEvents.some(e => e.minutes > 0);
-      const totalMin = anyHaveMin
-        ? actEvents.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0)
-        : 0;
-      actTotals[act] = totalMin > 0 ? `${totalMin}m` : `${actEvents.length}`;
+      const totalMin = actEvents.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0);
+      actTotals[act] = `${totalMin}m`;
     }
     return {
       dayKey,
