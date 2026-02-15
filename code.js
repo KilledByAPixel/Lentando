@@ -3489,6 +3489,19 @@ function skipOnboardingStep() {
   advanceOnboardingFlow();
 }
 
+/** Show the "How to Use" guide from Settings */
+function showHowToUse() {
+  const overlay = $('onboarding-flow-overlay');
+  const content = $('onboarding-flow-content');
+  overlay.classList.remove('hidden');
+  renderFlowStepWelcomeGuide(content);
+  // Override the button to close the overlay instead of advancing onboarding
+  const btn = content.querySelector('.ob-flow-actions .action-btn');
+  if (btn) {
+    btn.onclick = () => overlay.classList.add('hidden');
+  }
+}
+
 /** Emoji picker helpers */
 const CUSTOM_ICON_OPTIONS = ['⚡','☕','🥤','🍬','🍩','🍔','🎮','🎲','🏷️','💊','❄️','📱','📺','🖥️','🎧','💸','🛒','📦','🍆','💦','🧠','⏳','🧭','🧿'];
 
@@ -4359,6 +4372,7 @@ window.App = {
   enableOnboardingReminder,
   installAppOnboarding,
   skipOnboardingStep,
+  showHowToUse,
   togglePasswordVisibility(btn) {
     const input = btn.parentElement.querySelector('input');
     if (!input) return;
