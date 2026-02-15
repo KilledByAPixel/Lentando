@@ -1,6 +1,37 @@
-# Lentando (private habit + substance tracker)
+# Lentando
+
+> Progress at your pace 🐢 — A private, judgment-free habit and substance use tracker built for harm reduction.
+
+Lentando is a free, open-source PWA for tracking substance use, resisted urges, and healthy habits. 
+Built for people pursuing harm reduction, gradual tapering, or abstinence — without shame or pressure.
+Runs entirely in the browser. No account required. No ads. No data selling.
+
+## Philosophy
+- Harm reduction first — any positive change is worth celebrating
+- No shame, no judgment — progress isn't always linear
+- Privacy matters — your recovery journey is personal
+- Small wins add up — every moment of awareness counts
+
+## Key Features
+- One-tap logging for sessions, resists, and healthy habits
+- 50+ badges celebrating streaks, gaps, timing improvements, and mindful choices
+- Visual analytics and day-by-day history
+- Gentle coaching tips and alternative habit suggestions
+- Optional cloud sync across devices (requires sign-in)
+- Installable as a native-like PWA
+- Fully offline capable
+
+## Privacy Model
+- All data stored locally in browser by default
+- No tracking, no ads, no data selling
+- Optional Firebase sync — user's own data only
+- Full export and delete anytime
+
+## Alternatives
+Free open-source alternative to Nomo, I Am Sober, and Sober Time.
+
+## Links
 - App: https://lentando.3d2k.com/
+- Source: https://github.com/KilledByAPixel/Lentando
 - Privacy: https://lentando.3d2k.com/privacy.html
 - Terms: https://lentando.3d2k.com/terms.html
-- Source: https://github.com/KilledByAPixel/Lentando
-- Key points: local-first, no ads/tracking, optional sync, export/delete anytime
