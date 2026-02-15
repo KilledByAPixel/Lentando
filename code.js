@@ -2795,8 +2795,8 @@ function openCreateEventModal() {
   const s = DB.loadSettings();
   const profileKey = s.addictionProfile || 'cannabis';
 
-  // Build profile switcher buttons
-  const profileSwitcher = buildCreateModalProfileSwitcher(profileKey);
+  // Get profile display name for read-only label
+  const trackingLabel = getTrackingLabel(profileKey);
 
   // Build substance/method/amount fields for the current profile
   const fieldsHTML = buildCreateModalFields(profileKey);
@@ -2808,10 +2808,12 @@ function openCreateEventModal() {
 
   $('modal-sheet').innerHTML = `
     <div class="modal-header"><h2>Add Past Session</h2><button class="modal-close" onclick="App.closeModal()">✕</button></div>
-    ${profileSwitcher}
+    <div class="modal-field"><label>Tracking</label><div class="modal-value">${escapeHTML(trackingLabel)}</div></div>
     <div id="create-modal-fields">${fieldsHTML}</div>
-    <div class="modal-field"><label>Date</label><input type="date" id="modal-date-input" value="${dateValue}" class="form-input"></div>
-    <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" class="form-input"></div>
+    <div class="modal-field" style="display: flex; gap: 8px;">
+      <div style="flex: 1;"><label>Date</label><input type="date" id="modal-date-input" value="${dateValue}" class="form-input"></div>
+      <div style="flex: 1;"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" class="form-input"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn-delete" onclick="App.closeModal()">Cancel</button>
       <button class="btn-save" onclick="App.saveCreateModal()">Done</button>
@@ -2822,32 +2824,23 @@ function openCreateEventModal() {
   $('modal-overlay').classList.remove('hidden');
 }
 
-/** Build the profile switcher chip row for the create modal */
-function buildCreateModalProfileSwitcher(activeKey) {
-  const profiles = [
-    { key: 'cannabis', icon: '🌿', label: 'Cannabis' },
-    { key: 'alcohol', icon: '🍺', label: 'Alcohol' },
-    { key: 'smoking', icon: '🚬', label: 'Smoking' },
-  ];
-  // Custom profile — use saved name/icon if available
-  const s = DB.loadSettings();
-  const cp = s.customProfile || {};
-  const customLabel = cp.name || 'Custom';
-  const customIcon = (cp.icons && cp.icons[0]) || '⚡';
-  profiles.push({ key: 'custom', icon: customIcon, label: customLabel });
-
-  const chips = profiles.map(p =>
-    `<span class="chip${p.key === activeKey ? ' active' : ''}" data-profile="${p.key}" onclick="App.switchCreateProfile('${p.key}')">${p.icon} ${escapeHTML(p.label)}</span>`
-  ).join('');
-
-  return `<div class="modal-field">
-    <div class="chip-row-label">Tracking</div>
-    <div class="chip-group" data-field="profile">${chips}</div>
-  </div>`;
+/** Get the display label for a tracking profile */
+function getTrackingLabel(profileKey) {
+  if (profileKey === 'custom') {
+    const s = DB.loadSettings();
+    const cp = s.customProfile || {};
+    return cp.name || 'Custom';
+  }
+  const labels = {
+    cannabis: 'Cannabis',
+    alcohol: 'Alcohol',
+    smoking: 'Smoking'
+  };
+  return labels[profileKey] || profileKey;
 }
 
 /** Build the substance/method/amount/reason fields for a given profile in create mode */
-function buildCreateModalFields(profileKey, activeReason) {
+function buildCreateModalFields(profileKey) {
   const profile = profileKey === 'custom' ? buildCustomProfile(DB.loadSettings()) : ADDICTION_PROFILES[profileKey];
   if (!profile) return '';
 
@@ -2863,32 +2856,10 @@ function buildCreateModalFields(profileKey, activeReason) {
   }
   fields.push(
     chipGroupHTML('Amount', 'amount', profile.amounts, defaultAmount),
-    chipGroupHTML('Reason', 'reason', REASONS, activeReason || null)
+    chipGroupHTML('Reason', 'reason', REASONS, null)
   );
 
   return fields.map(modalFieldWrap).join('');
-}
-
-/** Switch the profile in the create modal and rebuild substance/method/amount fields */
-function switchCreateProfile(profileKey) {
-  const container = $('create-modal-fields');
-  if (!container) return;
-
-  // Preserve currently selected reason before rebuilding
-  const reasonGroup = container.querySelector('.chip-group[data-field="reason"]');
-  const activeReason = reasonGroup?.querySelector('.chip.active')?.dataset.val || null;
-
-  // Update active chip
-  const group = $('modal-sheet').querySelector('.chip-group[data-field="profile"]');
-  if (group) {
-    group.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.profile === profileKey));
-  }
-
-  // Rebuild fields for the new profile, preserving reason selection
-  container.innerHTML = buildCreateModalFields(profileKey, activeReason);
-
-  // Store selected profile
-  $('modal-sheet').dataset.createProfile = profileKey;
 }
 
 function saveCreateModal() {
@@ -4335,7 +4306,6 @@ window.App = {
   closeModal,
   saveModal,
   dismissLanding,
-  switchCreateProfile,
   deleteEvent(id) {
     if (!confirm('Delete this event?')) return false;
     DB.deleteEvent(id);
