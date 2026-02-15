@@ -70,7 +70,7 @@ Lentando recognizes progress in many forms:
 
 - **🌱 Harm Reduction First** - Any positive change is worth celebrating
 - **🤝 No Shame, No Judgment** - Progress isn't always linear, and that's okay
-- **🔐 Privacy Matters** - Your recovery journey is personal and private
+- **🔐 Privacy Matters** - Your recovery is personal and private
 - **⭐ Small Wins Add Up** - Every moment of awareness counts
 
 ### ♿ **Accessible**
