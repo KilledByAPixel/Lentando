@@ -165,7 +165,6 @@ const OPTIONAL_FIELDS = new Set(['reason', 'trigger', 'intensity']);
 // Timeouts and durations
 const CHIP_TIMEOUT_MS = 10000;
 const FLASH_ANIMATION_MS = 300;
-const IMPORT_STATUS_HIDE_MS = 5000;
 const METRICS_REFRESH_MS = 30000;
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
@@ -2468,6 +2467,10 @@ function switchTab(tabName) {
     const row = $('used-row');
     if (row) row.classList.remove('has-undo');
   }
+  // Hide import status when leaving settings
+  const importStatus = $('import-status');
+  if (importStatus) importStatus.classList.add('hidden');
+
   hideUsedChips();
   hideResistedChips();
   hideHabitChips();
@@ -2603,13 +2606,17 @@ function importJSON(inputEl) {
   const file = inputEl.files && inputEl.files[0];
   if (!file) return;
 
+  if (!confirm('⚠️ Import will completely replace all your current data.\n\nExport your data first if you want to keep it.\n\nContinue?')) {
+    inputEl.value = '';
+    return;
+  }
+
   const statusEl = $('import-status');
   if (!statusEl) return;
   
   const showStatus = (msg, cls) => {
     statusEl.textContent = msg;
     statusEl.className = `import-status ${cls}`;
-    setTimeout(() => statusEl.classList.add('hidden'), IMPORT_STATUS_HIDE_MS);
   };
 
   const reader = new FileReader();
@@ -2623,141 +2630,65 @@ function importJSON(inputEl) {
         return showStatus(validation.error, 'error');
       }
 
-      // --- Step 1: Merge clearedAt (keep the most recent clear) ---
-      const localClearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
+      // --- Step 1: Wipe all local data ---
+      // Preserve login-skipped flag — user is already in the app
+      const loginSkipped = localStorage.getItem(STORAGE_LOGIN_SKIPPED);
+      clearAllStorage();
+      if (loginSkipped) safeSetItem(STORAGE_LOGIN_SKIPPED, loginSkipped);
+      safeSetItem(STORAGE_VERSION, DATA_VERSION.toString());
+
+      // --- Step 2: Restore clearedAt from import ---
       const importedClearedAt = parseInt(data.clearedAt, 10) || 0;
-      const mergedClearedAt = Math.max(localClearedAt, importedClearedAt);
-      if (mergedClearedAt > 0) {
-        safeSetItem(STORAGE_CLEARED_AT, String(mergedClearedAt));
-      } else {
-        localStorage.removeItem(STORAGE_CLEARED_AT);
+      if (importedClearedAt > 0) {
+        safeSetItem(STORAGE_CLEARED_AT, String(importedClearedAt));
       }
 
-      // --- Step 2: Merge tombstones BEFORE importing events/todos ---
-      // This way imported items are filtered against the full merged tombstone set.
+      // --- Step 3: Restore tombstones from import ---
       if (data.deletedIds && typeof data.deletedIds === 'object' && !Array.isArray(data.deletedIds)) {
-        const currentTombstones = DB._readTombstoneMap();
-        for (const [id, ts] of Object.entries(data.deletedIds)) {
-          if (!currentTombstones[id] || ts > currentTombstones[id]) {
-            currentTombstones[id] = ts;
-          }
-        }
-        safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(currentTombstones));
+        safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(data.deletedIds));
       }
       if (data.deletedTodoIds && typeof data.deletedTodoIds === 'object' && !Array.isArray(data.deletedTodoIds)) {
-        const currentTodoTombstones = readTodoTombstoneMap();
-        for (const [id, ts] of Object.entries(data.deletedTodoIds)) {
-          if (!currentTodoTombstones[id] || ts > currentTodoTombstones[id]) {
-            currentTodoTombstones[id] = ts;
-          }
-        }
-        safeSetItem(STORAGE_DELETED_TODO_IDS, JSON.stringify(currentTodoTombstones));
+        safeSetItem(STORAGE_DELETED_TODO_IDS, JSON.stringify(data.deletedTodoIds));
       }
 
-      // --- Step 3: Import events (filtered by clearedAt + tombstones) ---
-      // Invalidate cache so loadEvents() re-reads with updated clearedAt & tombstones
-      DB._events = null;
-      DB._dateIndex = null;
-
-      const existing = DB.loadEvents();
-      const existingIds = new Set(existing.map(e => e.id));
-      const activeClearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
-      const eventTombstones = DB._getDeletedIds();
-      const newEvents = validation.events.filter(evt =>
-        !existingIds.has(evt.id) &&
-        !eventTombstones.has(evt.id) &&
-        (activeClearedAt <= 0 || getUidTimestamp(evt.id) > activeClearedAt)
-      );
-      
-      DB._events = sortedByTime([...existing, ...newEvents]);
+      // --- Step 4: Restore events ---
+      DB._events = sortedByTime(validation.events);
       DB.saveEvents();
 
-      // --- Step 4: Import badges and appStartDate/appStartTs ---
-      const badgeData = loadBadgeData();
-
-      let finalAppStartDate = badgeData.appStartDate;
-      let finalAppStartTs = badgeData.appStartTs;
-      if (data.appStartDate && data.appStartTs) {
-        if (!finalAppStartDate || data.appStartDate < finalAppStartDate) {
-          finalAppStartDate = data.appStartDate;
-          finalAppStartTs = data.appStartTs;
-        }
-      }
-
-      // Merge lifetime badges (higher counts win)
-      const importedLifetime = data.lifetimeBadges;
-      const lifetimeMap = new Map();
-      badgeData.lifetimeBadges.forEach(w => lifetimeMap.set(w.id, w.count));
-      if (importedLifetime && Array.isArray(importedLifetime)) {
-        importedLifetime.forEach(w => {
-          const current = lifetimeMap.get(w.id) || 0;
-          lifetimeMap.set(w.id, Math.max(current, w.count));
-        });
-      }
-
-      const mergedBadgeData = {
-        todayDate: badgeData.todayDate,
-        todayBadges: badgeData.todayBadges,
-        yesterdayBadges: badgeData.yesterdayBadges,
-        todayUndoCount: badgeData.todayUndoCount || 0,
-        appStartDate: finalAppStartDate,
-        appStartTs: finalAppStartTs,
-        lifetimeBadges: Array.from(lifetimeMap.entries())
-          .filter(([, count]) => count > 0)
-          .map(([id, count]) => ({ id, count }))
+      // --- Step 5: Restore badges ---
+      const badgeData = {
+        todayDate: null,
+        todayBadges: [],
+        yesterdayBadges: [],
+        todayUndoCount: 0,
+        appStartDate: data.appStartDate || null,
+        appStartTs: data.appStartTs || null,
+        lifetimeBadges: Array.isArray(data.lifetimeBadges) ? data.lifetimeBadges : []
       };
-      saveBadgeData(mergedBadgeData);
+      saveBadgeData(badgeData);
 
-      // --- Step 5: Import todos (filtered by tombstones, modifiedAt resolution) ---
+      // --- Step 6: Restore todos ---
       if (data.todos && Array.isArray(data.todos)) {
-        const existingTodos = loadTodos();
-        const todoTombstones = readTodoTombstoneMap();
-        const existingTodoMap = new Map();
-        existingTodos.forEach(t => { if (t.id) existingTodoMap.set(t.id, t); });
-
-        const validImported = data.todos
+        const validTodos = data.todos
           .filter(t => t && typeof t.text === 'string' && t.text.trim())
-          .map(t => t.id ? t : { ...t, id: uid() }) // Assign IDs to legacy todos
-          .filter(t => !todoTombstones[t.id]) // Skip tombstoned todos
+          .map(t => t.id ? t : { ...t, id: uid() })
           .map(t => ({ ...t, text: t.text.trim().slice(0, 250) }));
-
-        let changed = false;
-        for (const imported of validImported) {
-          const local = existingTodoMap.get(imported.id);
-          if (!local) {
-            // New todo — add it
-            existingTodos.push(imported);
-            changed = true;
-          } else if ((imported.modifiedAt || 0) > (local.modifiedAt || 0)) {
-            // Same ID but import is newer — update local copy
-            Object.assign(local, imported);
-            changed = true;
-          }
-          // Otherwise local is same or newer — keep it
-        }
-        if (changed) saveTodos(existingTodos);
+        safeSetItem(STORAGE_TODOS, JSON.stringify(validTodos));
       }
-      
-      // --- Step 6: Import theme ---
+
+      // --- Step 7: Restore theme ---
       if (data.theme) {
         safeSetItem(STORAGE_THEME, data.theme);
         applyTheme(data.theme);
       }
 
-      // --- Step 7: Restore settings ---
+      // --- Step 8: Restore settings ---
       if (data.settings && typeof data.settings === 'object') {
-        const settings = DB.loadSettings();
-        Object.assign(settings, data.settings);
-        DB._settings = settings;
+        DB._settings = { ...DEFAULT_SETTINGS, ...data.settings };
         DB.saveSettings();
       }
 
-      const added = newEvents.length;
-      const skipped = validation.events.length - added;
-      const msg = added === 0 
-        ? `⚠️ All ${validation.events.length} events already exist — nothing imported.`
-        : `✅ Imported ${added} new events${skipped ? ` (${skipped} duplicates skipped)` : ''}.`;
-      showStatus(msg, added === 0 ? 'warn' : 'success');
+      showStatus(`✅ Imported ${validation.events.length} events.`, 'success');
 
       calculateAndUpdateBadges();
       render();
