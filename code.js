@@ -2003,12 +2003,13 @@ function gridHTML(lines) {
   return { yAxis, overlayLines };
 }
 
-function graphBarCol(val, height, label, showLabel) {
+function graphBarCol(val, height, label, showLabel, extraClass) {
   const labelStyle = showLabel ? '' : 'visibility:hidden';
   const barStyle = `height:${height}px;background:${label.color};${val > 0 ? 'min-height:2px' : ''}`;
+  const cls = 'graph-bar-label' + (extraClass ? ' ' + extraClass : '');
   return `<div class="graph-bar-col">
     <div class="graph-bar" style="${barStyle}"></div>
-    <div class="graph-bar-label" style="${labelStyle}">${label.text}</div>
+    <div class="${cls}" style="${labelStyle}">${label.text}</div>
   </div>`;
 }
 
@@ -2034,8 +2035,10 @@ function buildGraphBars(vals, days, max, def) {
     
     // Show fewer labels for longer date ranges to prevent overlap
     let showLabel;
-    if (graphDays <= 14) {
-      showLabel = true; // Show all labels for 7-14 days
+    if (graphDays <= 7) {
+      showLabel = true; // Show all labels for 7 days
+    } else if (graphDays <= 14) {
+      showLabel = i % 2 === 0; // Show every 2nd label for 14 days
     } else if (graphDays <= 30) {
       showLabel = i % 4 === 0; // Show every 4th label (8 labels for 30 days)
     } else {
@@ -2067,7 +2070,7 @@ function buildCategoryGraph(title, keys, totals, max, color, tooltip) {
   for (const key of keys) {
     const val = totals[key] || 0;
     const h = effectiveMax > 0 ? Math.round((val / effectiveMax) * 96) : 0;
-    inner += graphBarCol(val, h, { color, text: capitalize(key) }, true);
+    inner += graphBarCol(val, h, { color, text: capitalize(key) }, true, 'graph-bar-label-sm');
   }
   const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
   const ariaLabel = `Bar chart: ${title.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
