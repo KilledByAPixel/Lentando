@@ -26,7 +26,7 @@
   "bugs": {
     "url": "https://github.com/KilledByAPixel/lentando/issues"
   },
-  "homepage": "https://github.com/KilledByAPixel/lentando#readme",
+  "homepage": "https://lentando.3d2k.com",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.0.0",
