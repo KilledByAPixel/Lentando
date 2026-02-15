@@ -2411,13 +2411,17 @@ function buildWeekSummaryHTML() {
     });
     // Resist total
     const resistTotal = resisted.reduce((sum, e) => sum + (e.intensity || 1), 0);
-    // Activity totals - always show minutes, default to 5min for untimed events
+    // Activity totals - minutes for timed habits, count for water
     const actTotals = {};
     for (const act of Object.keys(HABIT_LABELS)) {
       const actEvents = habits.filter(e => e.habit === act);
       if (actEvents.length === 0) continue;
-      const totalMin = actEvents.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0);
-      actTotals[act] = `${totalMin}m`;
+      if (HABIT_SHOW_CHIPS[act]) {
+        const totalMin = actEvents.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0);
+        actTotals[act] = `${totalMin}m`;
+      } else {
+        actTotals[act] = `${actEvents.length}`;
+      }
     }
     return {
       dayKey,
@@ -3236,14 +3240,18 @@ function buildCreateResistedFields() {
 /** Build fields for a habit event in create mode */
 function buildCreateHabitFields() {
   const habitKeys = Object.keys(HABIT_LABELS);
+  const defaultHabit = habitKeys[0];
+  const showMinutes = HABIT_SHOW_CHIPS[defaultHabit];
   const fields = [
-    chipGroupHTML('Habit', 'habit', habitKeys, habitKeys[0], v => (HABIT_ICONS[v] || '') + ' ' + (HABIT_LABELS[v] || v))
+    chipGroupHTML('Habit', 'habit', habitKeys, defaultHabit, v => (HABIT_ICONS[v] || '') + ' ' + (HABIT_LABELS[v] || v)),
+    chipGroupHTML('Minutes', 'minutes', HABIT_DURATIONS, 0, v => v === 0 ? '\u2013' : String(v))
   ];
-  // Show duration chips if the default habit supports them
-  if (HABIT_SHOW_CHIPS[habitKeys[0]]) {
-    fields.push(chipGroupHTML('Minutes', 'minutes', HABIT_DURATIONS, 0, v => v === 0 ? '-' : String(v)));
+  let html = fields.map(modalFieldWrap).join('');
+  // If the default habit doesn't support minutes, disable the minutes group
+  if (!showMinutes) {
+    html = html.replace('data-field="minutes"', 'data-field="minutes" data-disabled="true"');
   }
-  return fields.map(modalFieldWrap).join('');
+  return html;
 }
 
 /** Build the substance/method/amount/reason fields for a given profile in create mode */
@@ -3315,8 +3323,10 @@ function saveCreateModal() {
   } else if (createType === 'habit') {
     const habit = readChip('habit') || Object.keys(HABIT_LABELS)[0];
     evt = { id: uid(), type: 'habit', ts, habit };
-    const mins = readChip('minutes');
-    if (mins) evt.minutes = mins;
+    if (HABIT_SHOW_CHIPS[habit]) {
+      const mins = readChip('minutes');
+      if (mins) evt.minutes = mins;
+    }
     const icon = HABIT_ICONS[habit] || '';
     const label = HABIT_LABELS[habit] || habit;
     toastMsg = `${icon} Logged ${label}`;
@@ -3463,11 +3473,24 @@ function handleModalChipClick(e) {
   if (isCreateMode) {
     // In create mode, just toggle chip selection visually (no DB writes)
     const field = group.dataset.field;
+
+    // Don't allow clicking disabled chip groups (e.g. minutes for water)
+    if (group.dataset.disabled === 'true') return;
+
     const wasActive = chip.classList.contains('active');
     // For optional fields, allow deselect; for required, always select
     group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     if (!wasActive || !OPTIONAL_FIELDS.has(field)) {
       chip.classList.add('active');
+    }
+
+    // When switching habits, enable/disable the minutes chip group
+    if (field === 'habit') {
+      const selectedHabit = chip.dataset.val;
+      const minutesGroup = $('modal-sheet').querySelector('.chip-group[data-field="minutes"]');
+      if (minutesGroup) {
+        minutesGroup.dataset.disabled = HABIT_SHOW_CHIPS[selectedHabit] ? '' : 'true';
+      }
     }
     return;
   }
