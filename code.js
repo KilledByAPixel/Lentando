@@ -3232,7 +3232,15 @@ function continueToApp() {
   if (splash) splash.classList.add('hidden');
   
   // After login or skip, check if we need onboarding
-  if (!DB.loadSettings().addictionProfile) {
+  const settings = DB.loadSettings();
+  if (!settings.addictionProfile) {
+    showOnboarding();
+  } else if (settings.onboardingComplete === false) {
+    // Profile selected but onboarding flow not finished (e.g. reload mid-onboarding)
+    // Reset profile so user restarts from the profile selection screen
+    settings.addictionProfile = null;
+    DB._settings = settings;
+    DB.saveSettings();
     showOnboarding();
   } else {
     calculateAndUpdateBadges();
@@ -3296,6 +3304,10 @@ function selectProfile(profileKey) {
 
   // New user: start full multi-step onboarding flow
   if (!_previousProfile) {
+    // Mark onboarding as incomplete so reload restarts the flow
+    settings.onboardingComplete = false;
+    DB._settings = settings;
+    DB.saveSettings();
     startOnboardingFlow();
     return;
   }
@@ -3351,6 +3363,12 @@ function advanceOnboardingFlow() {
 }
 
 function finishOnboardingFlow() {
+  // Mark onboarding as complete so reload enters the app normally
+  const settings = DB.loadSettings();
+  settings.onboardingComplete = true;
+  DB._settings = settings;
+  DB.saveSettings();
+
   _onboardingFlowSteps = [];
   $('onboarding-flow-overlay').classList.add('hidden');
   calculateAndUpdateBadges();
