@@ -2561,6 +2561,9 @@ async function clearDatabase() {
 
 let _previousProfile = null; // saved when changeAddiction opens onboarding
 
+// Remember last selections in the Add Past Event modal (in-memory only, not persisted)
+const _pastEventDefaults = { substance: null, method: null, amount: null };
+
 function changeAddiction() {
   if (!confirm('🔄 Change what you\'re tracking?\n\nYour data will be kept, but tracked substance will change. Continue?')) return;
   const settings = DB.loadSettings();
@@ -3043,15 +3046,19 @@ function buildCreateModalFields(profileKey) {
   const profile = profileKey === 'custom' ? buildCustomProfile(DB.loadSettings()) : ADDICTION_PROFILES[profileKey];
   if (!profile) return '';
 
-  const defaultSubstance = profile.substances[0];
-  const defaultAmount = profile.amounts.find(a => a >= 1) || profile.amounts[0];
+  const defaultSubstance = (_pastEventDefaults.substance && profile.substances.includes(_pastEventDefaults.substance))
+    ? _pastEventDefaults.substance : profile.substances[0];
+  const defaultAmount = (_pastEventDefaults.amount != null && profile.amounts.includes(_pastEventDefaults.amount))
+    ? _pastEventDefaults.amount : (profile.amounts.find(a => a >= 1) || profile.amounts[0]);
+  const defaultMethod = (_pastEventDefaults.method && profile.methods && profile.methods.includes(_pastEventDefaults.method))
+    ? _pastEventDefaults.method : (profile.methods ? profile.methods[0] : null);
 
   const fields = [
     chipGroupHTML(profile.substanceLabel, 'substance', profile.substances, defaultSubstance, v => (profile.icons[v] || '') + ' ' + profile.substanceDisplay[v])
   ];
   if (profile.methods) {
     const methodFn = profile.methodDisplay ? (v => profile.methodDisplay[v] || capitalize(v)) : undefined;
-    fields.push(chipGroupHTML(profile.methodLabel, 'method', profile.methods, profile.methods[0], methodFn));
+    fields.push(chipGroupHTML(profile.methodLabel, 'method', profile.methods, defaultMethod, methodFn));
   }
   fields.push(
     chipGroupHTML('Amount', 'amount', profile.amounts, defaultAmount),
@@ -3116,6 +3123,10 @@ function saveCreateModal() {
     const amount = readChip('amount') ?? 1.0;
     const reason = readChip('reason') || null;
     evt = { id: uid(), type: 'used', ts, substance, method, amount, reason };
+    // Remember selections for next time the Add Past Event modal is opened
+    _pastEventDefaults.substance = substance;
+    _pastEventDefaults.method = method;
+    _pastEventDefaults.amount = amount;
     const sessionLabel = getProfile().sessionLabel || 'Use';
     toastMsg = `☑️ Logged ${sessionLabel}`;
   }
