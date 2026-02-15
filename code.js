@@ -3525,9 +3525,13 @@ function renderFlowStepRecentUse(container) {
   const settings = DB.loadSettings();
   const sessionLabel = profile.sessionLabel || 'Use';
 
-  const defaultSubstance = settings.lastSubstance || profile.substances[0];
-  const defaultAmount = settings.lastAmount || profile.amounts.find(a => a >= 1) || profile.amounts[0];
-  const defaultMethod = profile.methods ? (settings.lastMethod || profile.methods[0]) : null;
+  const defaultSubstance = (settings.lastSubstance && profile.substances.includes(settings.lastSubstance))
+    ? settings.lastSubstance : profile.substances[0];
+  const defaultAmount = (settings.lastAmount != null && profile.amounts.includes(settings.lastAmount))
+    ? settings.lastAmount : (profile.amounts.find(a => a >= 1) || profile.amounts[0]);
+  const defaultMethod = profile.methods
+    ? ((settings.lastMethod && profile.methods.includes(settings.lastMethod)) ? settings.lastMethod : profile.methods[0])
+    : null;
 
   // Build chip groups for substance/method/amount
   const fields = [
@@ -4945,10 +4949,13 @@ if (debugMode) {
     const randomMs = Math.floor(Math.random() * msPerDay); // Random time within the day
     const targetTimestamp = targetDate.getTime() + randomMs;
     
-    // Create event with current settings
-    const substance = settings.lastSubstance || profile.substances[0];
-    const method = profile.methods ? (settings.lastMethod || profile.methods[0]) : null;
-    const amount = settings.lastAmount || profile.amounts[0];
+    // Create event with last substance, random method and amount
+    const substance = (settings.lastSubstance && profile.substances.includes(settings.lastSubstance))
+      ? settings.lastSubstance : profile.substances[0];
+    const method = profile.methods
+      ? profile.methods[Math.floor(Math.random() * profile.methods.length)]
+      : null;
+    const amount = profile.amounts[Math.floor(Math.random() * profile.amounts.length)];
     
     const evt = {
       id: uid(),
