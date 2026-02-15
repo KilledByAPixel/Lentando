@@ -3415,7 +3415,6 @@ function saveOnboardingRecentUse() {
 
   DB.addEvent(evt);
   playSound('used');
-  showToast(`✅ Logged ${profile.sessionLabel}`);
   advanceOnboardingFlow();
 }
 
