@@ -200,7 +200,7 @@ const COACHING_MESSAGES = [
   '🦶 Feel your feet on the floor',
   '🗑️ Throw away one piece of trash',
   '🍽️ Wash or put away a few dishes',
-  '📈 Small steps add up',
+  '🐢 Small steps add up',
   '🌊 This urge will pass',
   '📦 Put it out of reach (for now)',
   '🌱 Do something small for future you',
