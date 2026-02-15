@@ -2553,9 +2553,6 @@ function changeAddiction() {
   if (!confirm('🔄 Change what you\'re tracking?\n\nYour data will be kept, but tracked substance will change. Continue?')) return;
   const settings = DB.loadSettings();
   _previousProfile = settings.addictionProfile; // save for back button restore
-  settings.addictionProfile = null;
-  DB._settings = settings;
-  DB.saveSettings();
   switchTab('today');
   showOnboarding();
 }
