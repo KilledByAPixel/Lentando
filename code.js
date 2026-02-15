@@ -2112,27 +2112,22 @@ function buildCategoryGraph(title, keys, totals, max, color, tooltip) {
   return `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${title}</div>${wrapBarsWithGrid(inner, max)}</div>`;
 }
 
-function buildHeatmapHTML() {
-  const days = getLastNDays(7);
-  const _weekdayFmt = new Intl.DateTimeFormat([], { weekday: 'short' });
+function buildHeatmapHTML(days) {
+  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Build grid[dayIndex][hour] = count. dayIndex 0 = 6 days ago, 6 = today
-  const grid = [];
-  const dayLabels = [];
-  for (let d = 0; d < 7; d++) {
-    const dayKey = days[d];
-    const date = new Date(dayKey + 'T12:00:00');
-    dayLabels.push(dayKey === todayKey() ? 'Today' : _weekdayFmt.format(date));
+  // Aggregate usage by day-of-week (0=Sun..6=Sat) and hour (0..23)
+  // grid[dow][hour] = total amount
+  const grid = Array.from({ length: 7 }, () => new Array(24).fill(0));
+  for (const dayKey of days) {
+    const dow = new Date(dayKey + 'T12:00:00').getDay();
     const used = filterProfileUsed(DB.forDate(dayKey));
-    const hourCounts = new Array(24).fill(0);
     used.forEach(e => {
       const h = new Date(e.ts).getHours();
-      hourCounts[h] += (e.amount ?? 1);
+      grid[dow][h] += (e.amount ?? 1);
     });
-    grid.push(hourCounts);
   }
 
-  // Hide entirely if no usage in the past 7 days
+  // Hide entirely if no usage in the selected period
   const hasAnyUse = grid.some(row => row.some(c => c > 0));
   if (!hasAnyUse) return '';
 
@@ -2144,8 +2139,8 @@ function buildHeatmapHTML() {
     return 3;
   }
 
-  let html = '<div class="graph-container" data-tooltip="Hourly usage heatmap for the past 7 days. Darker blue means more usage in that hour. Helps identify your peak usage times and days.">';
-  html += '<div class="graph-title">\uD83D\uDFE6 Weekly Usage Heatmap</div>';
+  let html = '<div class="graph-container" data-tooltip="Usage heatmap by day of week and hour. Darker blue means more total usage. Helps identify which days and times you use the most.">';
+  html += '<div class="graph-title">☑️ Usage Heatmap</div>';
   html += '<div class="heatmap">';
 
   // Hour labels row
@@ -2157,14 +2152,14 @@ function buildHeatmapHTML() {
   }
   html += '</div>';
 
-  // Day rows (today at top, oldest at bottom)
-  for (let d = 6; d >= 0; d--) {
-    html += `<div class="hm-row"><div class="hm-label">${escapeHTML(dayLabels[d])}</div>`;
+  // Day-of-week rows: Sunday (0) at top → Saturday (6) at bottom
+  for (let dow = 0; dow < 7; dow++) {
+    html += `<div class="hm-row"><div class="hm-label">${DAY_NAMES[dow]}</div>`;
     for (let h = 0; h < 24; h++) {
-      const count = grid[d][h];
+      const count = grid[dow][h];
       const lvl = level(count);
       const display = count > 0 ? (Number.isInteger(count) ? count : count.toFixed(1)) : '0';
-      html += `<div class="hm-cell hm-lvl-${lvl}" title="${escapeHTML(dayLabels[d])} ${h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : (h - 12) + 'pm'}: ${display}"></div>`;
+      html += `<div class="hm-cell hm-lvl-${lvl}" title="${DAY_NAMES[dow]} ${h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : (h - 12) + 'pm'}: ${display}"></div>`;
     }
     html += '</div>';
   }
@@ -2338,14 +2333,14 @@ function renderGraphs() {
 
   // Add 7-day summary grid
   hourHtml += buildWeekSummaryHTML();
-
-  // Add 7-day usage heatmap (below summary)
-  hourHtml += buildHeatmapHTML();
   
   hourContainer.innerHTML = hourHtml;
   
   // Day-based graphs (affected by 7/14/30 day selector)
   let dayHtml = '';
+
+  // Usage heatmap by day-of-week (affected by day selector)
+  dayHtml += buildHeatmapHTML(days);
 
   // Render average usage by hour first (filtered by selected time window)
   const hourTotals = {};
