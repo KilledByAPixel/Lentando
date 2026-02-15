@@ -301,6 +301,7 @@ const DEFAULT_SETTINGS = {
   lastAmount: 1.0,
   showCoaching: true,
   soundEnabled: true,
+  useButtonHidden: false,
   customProfile: { name: '', types: ['', '', ''], icons: ['⚡', '⚡', '⚡'] },
   reminderEnabled: false,
   reminderHour: 18, // 24h format, default 6 PM
@@ -1356,8 +1357,10 @@ function renderDate() {
   const usedLabel = $('used-label');
   if (usedLabel) usedLabel.textContent = 'Use';
   
-  // Update sound button to reflect current setting
-  setSoundButton(DB.loadSettings().soundEnabled);
+  // Update sound/use-button toggles to reflect current settings
+  const settings = DB.loadSettings();
+  setSoundButton(settings.soundEnabled);
+  setUseButtonVisibility(settings.useButtonHidden);
 }
 
 function sumHabitCounts(events, habitTypes) {
@@ -4339,6 +4342,21 @@ function setSoundButton(soundEnabled) {
   }
 }
 
+function setUseButtonVisibility(hidden) {
+  const icon = $('use-btn-icon-settings');
+  const text = $('use-btn-text-settings');
+  if (hidden) {
+    if (icon) icon.textContent = '🚫';
+    if (text) text.textContent = 'Use Button Hidden';
+  } else {
+    if (icon) icon.textContent = '👁️';
+    if (text) text.textContent = 'Use Button Shown';
+  }
+  // Hide/show the actual use button row
+  const usedRow = $('used-row');
+  if (usedRow) usedRow.classList.toggle('hidden', !!hidden);
+}
+
 function getToggleTheme(current) {
   return current === 'light' ? 'dark' : 'light';
 }
@@ -4464,6 +4482,12 @@ window.App = {
     settings.soundEnabled = !settings.soundEnabled;
     DB.saveSettings();
     setSoundButton(settings.soundEnabled);
+  },
+  toggleUseButton() {
+    const settings = DB.loadSettings();
+    settings.useButtonHidden = !settings.useButtonHidden;
+    DB.saveSettings();
+    setUseButtonVisibility(settings.useButtonHidden);
   },
   openReminderModal,
   closeReminderModal,
