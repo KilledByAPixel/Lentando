@@ -2544,6 +2544,12 @@ async function clearDatabase() {
 
   clearAllStorage();
 
+  // Preserve login-skipped flag so non-logged-in users go back to onboarding
+  // (substance selection) instead of the Get Started screen after reload
+  if (!isLoggedIn) {
+    safeSetItem(STORAGE_LOGIN_SKIPPED, 'true');
+  }
+
   // Only persist clearedAt when logged in — it needs to propagate to cloud
   // so other devices discard old events. For local-only users, a full wipe
   // is sufficient and leaving clearedAt behind would block future imports.
