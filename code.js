@@ -2336,11 +2336,11 @@ function renderGraphs() {
     : emptyStateHTML('No data yet', 'compact');
   hourHtml += `</div>`;
 
-  // Add 7-day usage heatmap
-  hourHtml += buildHeatmapHTML();
-
   // Add 7-day summary grid
   hourHtml += buildWeekSummaryHTML();
+
+  // Add 7-day usage heatmap (below summary)
+  hourHtml += buildHeatmapHTML();
   
   hourContainer.innerHTML = hourHtml;
   
@@ -2372,7 +2372,7 @@ function renderGraphs() {
   
   const hasHeatmapData = Object.keys(hourAverages).length > 0;
   const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
-  dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Average usage by hour of day" data-tooltip="Your average hourly usage across days you used. Reveals your habitual usage patterns."><div class="graph-title">⚡ Average Usage by Hour</div>`;
+  dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Average usage by hour of day" data-tooltip="Your average hourly usage across days you used. Reveals your habitual usage patterns."><div class="graph-title">🕐 Average Usage by Hour</div>`;
   dayHtml += hasHeatmapData
     ? buildHourGraphBars(hourAverages, maxAvg, '#e53935')
     : emptyStateHTML('No data yet', 'compact');
