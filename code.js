@@ -160,7 +160,7 @@ function buildCustomProfile(settings) {
 const REASONS = ['habit', 'stress', 'social', 'reward','bored', 'pain', 'hungry', 'angry', 'lonely', 'tired'];
 const INTENSITIES = [1, 2, 3, 4, 5];
 const HABIT_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60, 120];
-const OPTIONAL_FIELDS = new Set(['reason', 'trigger']);
+const OPTIONAL_FIELDS = new Set(['reason', 'trigger', 'intensity']);
 
 // Timeouts and durations
 const CHIP_TIMEOUT_MS = 5000;
@@ -2884,26 +2884,27 @@ function openCreateEventModal() {
 
   const s = DB.loadSettings();
   const profileKey = s.addictionProfile || 'cannabis';
+  const profile = profileKey === 'custom' ? buildCustomProfile(s) : ADDICTION_PROFILES[profileKey];
+  const sessionLabel = profile.sessionLabel || 'Use';
+
+  // Build substance/method/amount fields for the current profile (default to "used" type)
+  const fieldsHTML = buildCreateModalFields(profileKey);
 
   // Default to now (use currentDate() so debug time offset is respected)
   const nowDate = currentDate();
   const dateValue = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}-${String(nowDate.getDate()).padStart(2, '0')}`;
   const timeValue = `${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`;
 
-  const profile = getProfile();
-  const sessionLabel = profile.sessionLabel || 'Use';
-
   $('modal-sheet').innerHTML = `
     <div class="modal-header"><h2>Add Past Event</h2><button class="modal-close" onclick="App.closeModal()" aria-label="Close">✕</button></div>
-    <div class="modal-field">
-      <label>Event Type</label>
+    <div class="modal-field"><label>Type</label>
       <div class="chip-group" data-field="create-type">
-        <span class="chip active" data-val="used" onclick="App.switchCreateEventType('used')">${escapeHTML(sessionLabel)}</span>
-        <span class="chip" data-val="resisted" onclick="App.switchCreateEventType('resisted')">Resist</span>
-        <span class="chip" data-val="habit" onclick="App.switchCreateEventType('habit')">Habit</span>
+        <button class="chip active" data-val="used" onclick="App.switchCreateEventType('used')">${escapeHTML(sessionLabel)}</button>
+        <button class="chip" data-val="resisted" onclick="App.switchCreateEventType('resisted')">Resist</button>
+        <button class="chip" data-val="habit" onclick="App.switchCreateEventType('habit')">Habit</button>
       </div>
     </div>
-    <div id="create-modal-fields">${buildCreateModalFields(profileKey)}</div>
+    <div id="create-modal-fields">${fieldsHTML}</div>
     <div class="modal-field" style="display: flex; gap: 8px;">
       <div style="flex: 1;"><label>Date</label><input type="date" id="modal-date-input" value="${dateValue}" class="form-input"></div>
       <div style="flex: 1;"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" class="form-input"></div>
@@ -2919,63 +2920,49 @@ function openCreateEventModal() {
   $('modal-overlay').classList.remove('hidden');
 }
 
-/** Switch the event type in the create modal and rebuild fields */
+/** Switch event type in the create modal and rebuild fields */
 function switchCreateEventType(type) {
   const sheet = $('modal-sheet');
   sheet.dataset.createType = type;
 
-  // Update active chip
+  // Update type chip visuals
   const typeGroup = sheet.querySelector('.chip-group[data-field="create-type"]');
   if (typeGroup) {
     typeGroup.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.val === type));
   }
 
-  // Rebuild the fields section
+  // Rebuild fields for selected type
   const container = $('create-modal-fields');
   if (!container) return;
-
   const profileKey = sheet.dataset.createProfile || DB.loadSettings().addictionProfile || 'cannabis';
 
-  if (type === 'used') {
-    container.innerHTML = buildCreateModalFields(profileKey);
-  } else if (type === 'resisted') {
+  if (type === 'resisted') {
     container.innerHTML = buildCreateResistedFields();
   } else if (type === 'habit') {
     container.innerHTML = buildCreateHabitFields();
+  } else {
+    container.innerHTML = buildCreateModalFields(profileKey);
   }
-
-  // Re-bind chip clicks in the new fields
-  container.querySelectorAll('.chip-group .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const group = chip.closest('.chip-group');
-      const field = group.dataset.field;
-      const isOptional = OPTIONAL_FIELDS.has(field);
-      if (isOptional && chip.classList.contains('active')) {
-        chip.classList.remove('active');
-      } else {
-        group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-      }
-    });
-  });
 }
 
-/** Build fields for creating a resisted event */
+/** Build fields for a resisted event in create mode */
 function buildCreateResistedFields() {
-  const fields = [
+  return [
     chipGroupHTML('Urge Intensity', 'intensity', INTENSITIES, null),
     chipGroupHTML('Trigger', 'trigger', REASONS, null)
-  ];
-  return fields.map(modalFieldWrap).join('');
+  ].map(modalFieldWrap).join('');
 }
 
-/** Build fields for creating a habit event */
+/** Build fields for a habit event in create mode */
 function buildCreateHabitFields() {
   const habitKeys = Object.keys(HABIT_LABELS);
   const fields = [
-    chipGroupHTML('Habit', 'habit', habitKeys, habitKeys[0], v => (HABIT_ICONS[v] || '') + ' ' + HABIT_LABELS[v]),
-    chipGroupHTML('Duration', 'minutes', [5, 10, 20, 30, 60], null, v => v + ' min')
+    chipGroupHTML('Habit', 'habit', habitKeys, habitKeys[0], v => (HABIT_ICONS[v] || '') + ' ' + (HABIT_LABELS[v] || v))
   ];
+  // Show duration chips if the default habit supports them
+  if (HABIT_SHOW_CHIPS[habitKeys[0]]) {
+    fields.push(chipGroupHTML('Minutes', 'minutes', HABIT_DURATIONS, 0, v => v === 0 ? '-' : String(v)));
+  }
   return fields.map(modalFieldWrap).join('');
 }
 
@@ -3032,8 +3019,7 @@ function saveCreateModal() {
   };
 
   const createType = $('modal-sheet').dataset.createType || 'used';
-  let evt;
-  let toastMsg;
+  let evt, toastMsg;
 
   if (createType === 'resisted') {
     evt = { id: uid(), type: 'resisted', ts };
@@ -3043,12 +3029,12 @@ function saveCreateModal() {
     if (trigger) evt.trigger = trigger;
     toastMsg = '🛡️ Logged Resist';
   } else if (createType === 'habit') {
-    const habit = readChip('habit') || 'water';
+    const habit = readChip('habit') || Object.keys(HABIT_LABELS)[0];
     evt = { id: uid(), type: 'habit', ts, habit };
     const mins = readChip('minutes');
     if (mins) evt.minutes = mins;
-    const label = HABIT_LABELS[habit] || habit;
     const icon = HABIT_ICONS[habit] || '';
+    const label = HABIT_LABELS[habit] || habit;
     toastMsg = `${icon} Logged ${label}`;
   } else {
     const selectedProfileKey = $('modal-sheet').dataset.createProfile || DB.loadSettings().addictionProfile || 'cannabis';
@@ -3178,13 +3164,16 @@ function saveModal() {
 function handleModalChipClick(e) {
   const chip = e.target.closest('.chip');
   if (!chip) return;
+
+  // Type selector chips have their own onclick handlers — skip them here
+  const group = chip.closest('.chip-group');
+  if (group && group.dataset.field === 'create-type') return;
   
   const eventId = $('modal-sheet').dataset.eventId;
   const isCreateMode = $('modal-sheet').dataset.createMode === 'true';
 
   if (isCreateMode) {
     // In create mode, just toggle chip selection visually (no DB writes)
-    const group = chip.closest('.chip-group');
     const field = group.dataset.field;
     const wasActive = chip.classList.contains('active');
     // For optional fields, allow deselect; for required, always select
