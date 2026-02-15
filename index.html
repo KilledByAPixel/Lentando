@@ -1062,6 +1062,19 @@ header .date {
   width: 100%;
   opacity: 0.85;
 }
+.graph-bar-stacked {
+  display: flex;
+  flex-direction: column-reverse;
+  background: none;
+  overflow: hidden;
+}
+.graph-bar-seg {
+  width: 100%;
+  flex-shrink: 0;
+}
+.graph-bar-stacked .graph-bar-seg:last-child {
+  border-radius: 3px 3px 0 0;
+}
 .graph-bar-label {
   position: absolute;
   top: 100%;

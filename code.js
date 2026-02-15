@@ -2098,6 +2098,83 @@ function buildHourGraphBars(hourCounts, max, color, startHour = 0) {
   return wrapBarsWithGrid(inner, max);
 }
 
+// Fixed palette for substance stacked bars (up to 3 substances per profile)
+const SUBSTANCE_COLORS = ['#5c6bc0', '#e6a23c', '#66bb6a'];
+
+function buildStackedHourGraphBars(events, startHour) {
+  const profile = getProfile();
+  const subs = profile.substances;
+  const icons = profile.icons || {};
+
+  // Build per-substance per-hour counts
+  // hourData[hour] = { sub1: amount, sub2: amount, ... }
+  const hourData = {};
+  events.forEach(evt => {
+    const hour = getHour(evt.ts);
+    if (!hourData[hour]) hourData[hour] = {};
+    const sub = evt.substance || subs[0];
+    hourData[hour][sub] = (hourData[hour][sub] || 0) + (evt.amount ?? 1);
+  });
+
+  // Find max total per hour for scaling
+  let maxTotal = 0;
+  for (let i = 0; i < 24; i++) {
+    const hour = (startHour + i) % 24;
+    const data = hourData[hour] || {};
+    const total = subs.reduce((s, sub) => s + (data[sub] || 0), 0);
+    if (total > maxTotal) maxTotal = total;
+  }
+  const effectiveMax = maxTotal > 0 ? calcGridScale(maxTotal).gridMax : 0;
+
+  // Track which substances actually appear
+  const usedSubs = new Set();
+  events.forEach(e => { if (e.substance) usedSubs.add(e.substance); });
+
+  // Build color map for substances
+  const colorMap = {};
+  subs.forEach((sub, i) => { colorMap[sub] = SUBSTANCE_COLORS[i % SUBSTANCE_COLORS.length]; });
+
+  let inner = '';
+  for (let i = 0; i < 24; i++) {
+    const hour = (startHour + i) % 24;
+    const data = hourData[hour] || {};
+    const total = subs.reduce((s, sub) => s + (data[sub] || 0), 0);
+    const totalH = effectiveMax > 0 ? Math.round((total / effectiveMax) * 96) : 0;
+    const hourLabel = hour === 0 ? '12a' : hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`;
+    const showLabel = i % 3 === 0;
+    const labelStyle = showLabel ? '' : 'visibility:hidden';
+
+    // Build stacked segments bottom-up
+    let segments = '';
+    for (const sub of subs) {
+      const val = data[sub] || 0;
+      if (val <= 0) continue;
+      const segH = effectiveMax > 0 ? Math.max(Math.round((val / effectiveMax) * 96), 2) : 0;
+      segments += `<div class="graph-bar-seg" style="height:${segH}px;background:${colorMap[sub]}"></div>`;
+    }
+
+    inner += `<div class="graph-bar-col">
+      <div class="graph-bar graph-bar-stacked" style="height:${totalH}px;${total > 0 ? 'min-height:2px' : ''}">${segments}</div>
+      <div class="graph-bar-label" style="${labelStyle}">${hourLabel}</div>
+    </div>`;
+  }
+
+  // Legend — only show substances that have actual usage in this period
+  let legend = '';
+  const activeSubs = subs.filter(s => usedSubs.has(s));
+  if (activeSubs.length > 1) {
+    legend = '<div class="hm-legend" style="margin-top:4px">';
+    for (const sub of activeSubs) {
+      const icon = icons[sub] || '';
+      legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
+      legend += `<span class="hm-legend-label">${icon}</span>`;
+    }
+    legend += '</div>';
+  }
+
+  return wrapBarsWithGrid(inner, maxTotal) + legend;
+}
+
 /** Build a category graph (one bar per category key, e.g. reason/trigger) */
 function buildCategoryGraph(title, keys, totals, max, color, tooltip) {
   const effectiveMax = max > 0 ? calcGridScale(max).gridMax : 0;
@@ -2317,17 +2394,11 @@ function renderGraphs() {
   const past24Hours = startOfCurrentHour.getTime() - (23 * 60 * 60 * 1000);
   const allEvents = DB.loadEvents();
   const past24Used = filterProfileUsed(allEvents.filter(evt => evt.ts >= past24Hours && evt.ts <= nowMs));
-  const hourCounts = {};
-  past24Used.forEach(evt => {
-    const hour = getHour(evt.ts);
-    hourCounts[hour] = (hourCounts[hour] || 0) + (evt.amount ?? 1);
-  });
   const hasHourData = past24Used.length > 0;
-  const maxCount = hasHourData ? Math.max(...Object.values(hourCounts), 1) : 1;
   const graphStartHour = (currentHour + 1) % 24;
-  hourHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Usage over past 24 hours by hour" data-tooltip="Shows your use over the past 24 hours, broken down by hour. Helps identify your peak usage times."><div class="graph-title">🕒 Usage Over Past 24 Hours</div>`;
+  hourHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Usage over past 24 hours by hour" data-tooltip="Shows your use over the past 24 hours, broken down by hour and type. Helps identify your peak usage times."><div class="graph-title">🕒 Usage Over Past 24 Hours</div>`;
   hourHtml += hasHourData
-    ? buildHourGraphBars(hourCounts, maxCount, 'var(--primary)', graphStartHour)
+    ? buildStackedHourGraphBars(past24Used, graphStartHour)
     : emptyStateHTML('No data yet', 'compact');
   hourHtml += `</div>`;
 
