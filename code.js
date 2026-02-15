@@ -401,6 +401,8 @@ function showToast(message, durationMs = 2000) {
     toast = document.createElement('div');
     toast.id = 'toast';
     toast.className = 'toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
     document.body.appendChild(toast);
   }
   
@@ -1303,8 +1305,8 @@ function eventRowHTML(e) {
     <span class="tl-icon">${escapeHTML(icon)}</span>
     <div class="tl-body"><div class="tl-title">${escapeHTML(title)}</div><div class="tl-detail">${escapeHTML(detail)}</div></div>
     <div class="tl-actions">
-          <button class="tl-act-btn" onclick="App.editEvent('${safeId}')" title="Edit">✏️</button>
-          <button class="tl-act-btn" onclick="App.deleteEvent('${safeId}')" title="Delete">🗑️</button>
+          <button class="tl-act-btn" onclick="App.editEvent('${safeId}')" title="Edit" aria-label="Edit event">✏️</button>
+          <button class="tl-act-btn" onclick="App.deleteEvent('${safeId}')" title="Delete" aria-label="Delete event">🗑️</button>
         </div>
   </li>`;
 }
@@ -2052,7 +2054,8 @@ function buildCategoryGraph(title, keys, totals, max, color, tooltip) {
     inner += graphBarCol(val, h, { color, text: capitalize(key) }, true);
   }
   const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
-  return `<div class="graph-container"${tipAttr}><div class="graph-title">${title}</div>${wrapBarsWithGrid(inner, max)}</div>`;
+  const ariaLabel = `Bar chart: ${title.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
+  return `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${title}</div>${wrapBarsWithGrid(inner, max)}</div>`;
 }
 
 function buildWeekSummaryHTML() {
@@ -2202,7 +2205,7 @@ function renderGraphs() {
   const hasHourData = past24Used.length > 0;
   const maxCount = hasHourData ? Math.max(...Object.values(hourCounts), 1) : 1;
   const graphStartHour = (currentHour + 1) % 24;
-  hourHtml += `<div class="graph-container" data-tooltip="Shows your use over the past 24 hours, broken down by hour. Helps identify your peak usage times."><div class="graph-title">🕒 Usage Over Past 24 Hours</div>`;
+  hourHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Usage over past 24 hours by hour" data-tooltip="Shows your use over the past 24 hours, broken down by hour. Helps identify your peak usage times."><div class="graph-title">🕒 Usage Over Past 24 Hours</div>`;
   hourHtml += hasHourData
     ? buildHourGraphBars(hourCounts, maxCount, 'var(--primary)', graphStartHour)
     : emptyStateHTML('No data yet', 'compact');
@@ -2241,7 +2244,7 @@ function renderGraphs() {
   
   const hasHeatmapData = Object.keys(hourAverages).length > 0;
   const maxAvg = hasHeatmapData ? Math.max(...Object.values(hourAverages)) : 1;
-  dayHtml += `<div class="graph-container" data-tooltip="Your average hourly usage across days you used. Reveals your habitual usage patterns."><div class="graph-title">⚡ Average Usage by Hour</div>`;
+  dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Average usage by hour of day" data-tooltip="Your average hourly usage across days you used. Reveals your habitual usage patterns."><div class="graph-title">⚡ Average Usage by Hour</div>`;
   dayHtml += hasHeatmapData
     ? buildHourGraphBars(hourAverages, maxAvg, '#e53935')
     : emptyStateHTML('No data yet', 'compact');
@@ -2293,7 +2296,8 @@ function renderGraphs() {
 
     if (didRoundUp) tooltip = (tooltip ? tooltip + ' ' : '') + 'Untimed activities rounded up to 5 minutes each.';
     const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
-    dayHtml += `<div class="graph-container"${tipAttr}><div class="graph-title">${label}</div>`;
+    const ariaLabel = `Bar chart: ${label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
+    dayHtml += `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${label}</div>`;
     dayHtml += hasData 
       ? buildGraphBars(vals, days, max, def)
       : emptyStateHTML('No data yet', 'compact');
@@ -4040,15 +4044,15 @@ function renderTodos() {
     ? ''
     : todos.map((t, i) => { const safeId = escapeHTML(t.id); return `<li class="todo-item${t.done ? ' done' : ''}">
         <div class="todo-controls">
-          <button class="tl-act-btn" data-id="${safeId}" title="Move Up"${i === 0 ? ' disabled' : ''}>↑</button>
-          <button class="tl-act-btn" data-id="${safeId}" title="Move Down"${i === todos.length - 1 ? ' disabled' : ''}>↓</button>
+          <button class="tl-act-btn" data-id="${safeId}" title="Move Up" aria-label="Move goal up"${i === 0 ? ' disabled' : ''}>↑</button>
+          <button class="tl-act-btn" data-id="${safeId}" title="Move Down" aria-label="Move goal down"${i === todos.length - 1 ? ' disabled' : ''}>↓</button>
         </div>
-        <input type="checkbox" class="todo-check" data-id="${safeId}"${t.done ? ' checked' : ''}>
+        <input type="checkbox" class="todo-check" data-id="${safeId}"${t.done ? ' checked' : ''} aria-label="${escapeHTML(t.text)}">
         <div class="tl-body">
           <span class="todo-text" data-id="${safeId}">${escapeHTML(t.text)}</span>
         </div>
         <div class="tl-actions">
-          <button class="tl-act-btn" data-id="${safeId}" title="Delete">🗑️</button>
+          <button class="tl-act-btn" data-id="${safeId}" title="Delete" aria-label="Delete goal">🗑️</button>
         </div>
       </li>`; }).join('');
   const clearBtn = $('todo-clear-btn');
