@@ -480,7 +480,7 @@ function formatTime(ts) {
 }
 
 function formatDuration(ms) {
-  if (ms < 0) return '—';
+  if (!Number.isFinite(ms) || ms < 0) return '—';
   const totalMin = Math.floor(ms / 60000);
   if (totalMin < 60) return totalMin + 'm';
   const totalHours = Math.floor(totalMin / 60);
@@ -1610,7 +1610,8 @@ function calculateAndUpdateBadges() {
   let appStartTs;
   const allEvents = DB.loadEvents();
   if (allEvents.length > 0) {
-    appStartTs = Math.min(...allEvents.map(e => e.ts));
+    appStartTs = allEvents[0].ts;
+    for (let i = 1; i < allEvents.length; i++) if (allEvents[i].ts < appStartTs) appStartTs = allEvents[i].ts;
   } else {
     appStartTs = now();
   }
@@ -1621,7 +1622,11 @@ function calculateAndUpdateBadges() {
   // Used by Welcome Back badge to avoid false triggers from backdated events.
   let installTs = now();
   if (allEvents.length > 0) {
-    installTs = Math.min(...allEvents.map(e => getUidTimestamp(e.id) || e.ts));
+    installTs = getUidTimestamp(allEvents[0].id) || allEvents[0].ts;
+    for (let i = 1; i < allEvents.length; i++) {
+      const t = getUidTimestamp(allEvents[i].id) || allEvents[i].ts;
+      if (t < installTs) installTs = t;
+    }
   }
   const installDate = dateKey(installTs);
   
@@ -2568,6 +2573,7 @@ function importJSON(inputEl) {
   };
 
   const reader = new FileReader();
+  reader.onerror = () => showStatus('❌ Failed to read file', 'error');
   reader.onload = function (ev) {
     try {
       const data = JSON.parse(ev.target.result);
@@ -3001,7 +3007,7 @@ function openEditModal(eventId) {
       chipGroupHTML('Trigger', 'trigger', REASONS, evt.trigger)
     ],
     habit: () => {
-      const fields = [`<label>Habit</label><div class="modal-value">${HABIT_LABELS[evt.habit] || evt.habit}</div>`];
+      const fields = [`<label>Habit</label><div class="modal-value">${escapeHTML(HABIT_LABELS[evt.habit] || evt.habit)}</div>`];
       if (HABIT_SHOW_CHIPS[evt.habit]) {
         fields.push(chipGroupHTML('Minutes', 'minutes', HABIT_DURATIONS, evt.minutes ?? 0, v => v === 0 ? '-' : String(v)));
       }
