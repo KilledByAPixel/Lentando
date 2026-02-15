@@ -2508,12 +2508,20 @@ function switchTab(tabName) {
 function exportJSON() {
   const badgeData = loadBadgeData();
   const clearedAt = parseInt(localStorage.getItem(STORAGE_CLEARED_AT) || '0', 10);
+  const theme = localStorage.getItem(STORAGE_THEME);
+  const deletedIds = DB._readTombstoneMap();
+  const deletedTodoIds = readTodoTombstoneMap();
   const data = { 
     events: DB.loadEvents(), 
     settings: DB.loadSettings(), 
     todos: loadTodos(),
     lifetimeBadges: badgeData.lifetimeBadges,
+    appStartDate: badgeData.appStartDate,
+    appStartTs: badgeData.appStartTs,
+    theme: theme || undefined,
     clearedAt: clearedAt || undefined,
+    deletedIds: Object.keys(deletedIds).length > 0 ? deletedIds : undefined,
+    deletedTodoIds: Object.keys(deletedTodoIds).length > 0 ? deletedTodoIds : undefined,
     exportedAt: currentDate().toISOString() 
   };
   downloadFile(JSON.stringify(data, null, 2), 'lentando-' + todayKey() + '.json', 'application/json');
@@ -2636,43 +2644,87 @@ function importJSON(inputEl) {
       DB._events = sortedByTime([...existing, ...newEvents]);
       DB.saveEvents();
 
-      // Import lifetime badges if present
+      // Import badge data and appStartDate/appStartTs
+      const badgeData = loadBadgeData();
+
+      // Restore appStartDate and appStartTs — independent of badge counts
+      // Use imported values if present and older than current values
+      let finalAppStartDate = badgeData.appStartDate;
+      let finalAppStartTs = badgeData.appStartTs;
+      if (data.appStartDate && data.appStartTs) {
+        if (!finalAppStartDate || data.appStartDate < finalAppStartDate) {
+          finalAppStartDate = data.appStartDate;
+          finalAppStartTs = data.appStartTs;
+        }
+      }
+
+      // Import lifetime badges if present (merge: higher counts win)
       const importedLifetime = data.lifetimeBadges;
+      const lifetimeMap = new Map();
+      badgeData.lifetimeBadges.forEach(w => lifetimeMap.set(w.id, w.count));
       if (importedLifetime && Array.isArray(importedLifetime)) {
-        const badgeData = loadBadgeData();
-        const lifetimeMap = new Map();
-        badgeData.lifetimeBadges.forEach(w => lifetimeMap.set(w.id, w.count));
-        
-        // Merge imported badges (higher counts win)
         importedLifetime.forEach(w => {
           const current = lifetimeMap.get(w.id) || 0;
           lifetimeMap.set(w.id, Math.max(current, w.count));
         });
-        
-        const mergedBadgeData = {
-          todayDate: badgeData.todayDate,
-          todayBadges: badgeData.todayBadges,
-          yesterdayBadges: badgeData.yesterdayBadges,
-          todayUndoCount: badgeData.todayUndoCount || 0,
-          appStartDate: badgeData.appStartDate,
-          appStartTs: badgeData.appStartTs,
-          lifetimeBadges: Array.from(lifetimeMap.entries())
-            .filter(([, count]) => count > 0)
-            .map(([id, count]) => ({ id, count }))
-        };
-        saveBadgeData(mergedBadgeData);
       }
 
-      // Import todos if present and local list is empty
-      if (data.todos && Array.isArray(data.todos) && loadTodos().length === 0) {
-        const validTodos = data.todos
+      const mergedBadgeData = {
+        todayDate: badgeData.todayDate,
+        todayBadges: badgeData.todayBadges,
+        yesterdayBadges: badgeData.yesterdayBadges,
+        todayUndoCount: badgeData.todayUndoCount || 0,
+        appStartDate: finalAppStartDate,
+        appStartTs: finalAppStartTs,
+        lifetimeBadges: Array.from(lifetimeMap.entries())
+          .filter(([, count]) => count > 0)
+          .map(([id, count]) => ({ id, count }))
+      };
+      saveBadgeData(mergedBadgeData);
+
+      // Import todos if present - merge by ID to avoid duplicates
+      if (data.todos && Array.isArray(data.todos)) {
+        const existingTodos = loadTodos();
+        const existingTodoIds = new Set(existingTodos.map(t => t.id).filter(Boolean));
+        const validImported = data.todos
           .filter(t => t && typeof t.text === 'string' && t.text.trim())
+          .map(t => t.id ? t : { ...t, id: uid() }) // Assign IDs to legacy todos without them
+          .filter(t => !existingTodoIds.has(t.id)) // Skip duplicates
           .map(t => ({ ...t, text: t.text.trim().slice(0, 250) }));
-        if (validTodos.length > 0) saveTodos(validTodos);
+        if (validImported.length > 0) {
+          saveTodos([...existingTodos, ...validImported]);
+        }
+      }
+      
+      // Import theme preference if present
+      if (data.theme) {
+        safeSetItem(STORAGE_THEME, data.theme);
+        applyTheme(data.theme);
       }
 
-      // Restore settings including addiction profile from export
-      if (data.settings && data.settings.addictionProfile) {
+      // Restore tombstones so Firebase sync won't resurrect deleted items
+      if (data.deletedIds && typeof data.deletedIds === 'object' && !Array.isArray(data.deletedIds)) {
+        const currentTombstones = DB._readTombstoneMap();
+        // Merge: keep the most recent deletion timestamp per ID
+        for (const [id, ts] of Object.entries(data.deletedIds)) {
+          if (!currentTombstones[id] || ts > currentTombstones[id]) {
+            currentTombstones[id] = ts;
+          }
+        }
+        safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(currentTombstones));
+      }
+      if (data.deletedTodoIds && typeof data.deletedTodoIds === 'object' && !Array.isArray(data.deletedTodoIds)) {
+        const currentTodoTombstones = readTodoTombstoneMap();
+        for (const [id, ts] of Object.entries(data.deletedTodoIds)) {
+          if (!currentTodoTombstones[id] || ts > currentTodoTombstones[id]) {
+            currentTodoTombstones[id] = ts;
+          }
+        }
+        safeSetItem(STORAGE_DELETED_TODO_IDS, JSON.stringify(currentTodoTombstones));
+      }
+
+      // Restore settings from export
+      if (data.settings && typeof data.settings === 'object') {
         const settings = DB.loadSettings();
         Object.assign(settings, data.settings);
         DB._settings = settings;
