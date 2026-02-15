@@ -1367,7 +1367,7 @@ function renderDate() {
   $('header-date').textContent = _dateFormatter.format(currentDate());
   
   const usedLabel = $('used-label');
-  if (usedLabel) usedLabel.textContent = 'Use';
+  if (usedLabel) usedLabel.textContent = getProfile().sessionLabel || 'Use';
   
   // Update sound/use-button toggles to reflect current settings
   const settings = DB.loadSettings();
