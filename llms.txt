@@ -1,0 +1,6 @@
+# Lentando (private habit + substance tracker)
+- App: https://lentando.3d2k.com/
+- Privacy: https://lentando.3d2k.com/privacy.html
+- Terms: https://lentando.3d2k.com/terms.html
+- Source: https://github.com/KilledByAPixel/Lentando
+- Key points: local-first, no ads/tracking, optional sync, export/delete anytime
