@@ -3302,8 +3302,10 @@ function renderFlowStepRecentUse(container) {
     <p class="ob-flow-subtitle">When did you last use? This helps set your starting point.</p>
     <div class="ob-flow-fields" id="ob-flow-use-fields">
       ${fieldsHTML}
-      <div class="modal-field"><label>Date</label><input type="date" id="ob-flow-date" value="${dateValue}" class="form-input"></div>
-      <div class="modal-field"><label>Time</label><input type="time" id="ob-flow-time" value="${timeValue}" class="form-input"></div>
+      <div class="modal-field" style="display: flex; gap: 8px;">
+        <div style="flex: 1;"><label>Date</label><input type="date" id="ob-flow-date" value="${dateValue}" class="form-input"></div>
+        <div style="flex: 1;"><label>Time</label><input type="time" id="ob-flow-time" value="${timeValue}" class="form-input"></div>
+      </div>
     </div>
     <div class="ob-flow-actions">
       <button class="action-btn" onclick="App.saveOnboardingRecentUse()">✅ Log ${escapeHTML(sessionLabel)}</button>
