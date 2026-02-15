@@ -19,6 +19,7 @@ const STATIC_FILES = [
   'icon-192.png',
   'icon-512.png',
   'social.jpg',
+  'screenshot.png',
 ];
 
 function bumpCacheVersion() {

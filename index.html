@@ -10,6 +10,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="color-scheme" content="light dark">
 <link rel="canonical" href="https://lentando.3d2k.com">
+<link rel="privacy-policy" href="https://lentando.3d2k.com/privacy.html">
+<link rel="terms-of-service" href="https://lentando.3d2k.com/terms.html">
+<link rel="license" href="https://github.com/KilledByAPixel/Lentando/blob/main/LICENSE">
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
@@ -43,43 +46,56 @@
 <meta name="format-detection" content="telephone=no">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Lentando">
-
 <!-- Structured Data (JSON-LD) -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "Lentando",
-  "applicationCategory": "HealthApplication",
-  "operatingSystem": "Web",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "description": "Free open-source app for tracking substance use with a harm reduction approach. Track cannabis, alcohol, smoking, or custom substances. Earn badges for progress, resist urges, build healthy habits. Private and offline-first.",
-  "url": "https://lentando.3d2k.com",
-  "author": {
-    "@type": "Person",
-    "name": "Frank Force"
-  },
-  "datePublished": "2026-02-10",
-  "softwareVersion": "1.0",
-  "screenshot": {
-    "@type": "ImageObject",
-    "url": "https://lentando.3d2k.com/social.jpg",
-    "width": 1200,
-    "height": 630
-  },
-  "featureList": [
-    "Track substance use patterns",
-    "Harm reduction approach",
-    "Badge and progress system",
-    "Urge resistance tracking",
-    "Healthy habit building",
-    "Private and offline-first",
-    "Optional cloud sync",
-    "No ads or tracking"
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://lentando.3d2k.com/#website",
+      "url": "https://lentando.3d2k.com/",
+      "name": "Lentando",
+      "inLanguage": "en"
+    },
+    {
+      "@type": ["SoftwareApplication", "WebApplication"],
+      "@id": "https://lentando.3d2k.com/#app",
+      "name": "Lentando",
+      "url": "https://lentando.3d2k.com/",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "Web",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+
+      "description": "Private, offline-first tracker for substance use, urges, and habits (harm reduction, no judgment). Track cannabis, alcohol, smoking, or custom substances. Earn badges, resist urges, and build healthy actions.",
+      "featureList": [
+        "Track substance use patterns",
+        "Urge resistance tracking",
+        "Healthy habit building",
+        "Badges and progress",
+        "Offline-first (PWA)",
+        "Optional cloud sync",
+        "No ads or tracking"
+      ],
+
+      "author": { "@type": "Person", "name": "Frank Force" },
+      "datePublished": "2026-02-10",
+      "softwareVersion": "1.0",
+
+      "image": "https://lentando.3d2k.com/social.jpg",
+      "screenshot": [
+        "https://lentando.3d2k.com/screenshot.png",
+        "https://lentando.3d2k.com/social.jpg"
+      ],
+
+      "browserRequirements": "Requires JavaScript and HTML5. Works offline as a PWA.",
+      "isPartOf": { "@id": "https://lentando.3d2k.com/#website" },
+
+      "sameAs": [
+        "https://github.com/KilledByAPixel/Lentando"
+      ]
+    }
   ]
 }
 </script>
