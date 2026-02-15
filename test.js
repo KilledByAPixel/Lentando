@@ -252,15 +252,12 @@ function notIncludes(arr, val, msg) {
 // ========== HELPER: RESET STATE BETWEEN TESTS ==========
 function resetState() {
   _storage.clear();
+  // Stamp data version so DB._migrateDataIfNeeded() doesn't log migration messages
+  localStorage.setItem('ht_data_version', '3');
   // Reset in-memory caches
   DB._events = null;
   DB._settings = null;
   DB._dateIndex = null;
-  // Reset uid counter
-  if (typeof _uidCounter !== 'undefined') {
-    // _uidCounter is a let in code.js scope — we can't reset it directly,
-    // but uid generation still works fine across tests
-  }
 }
 
 function setSettings(overrides) {
@@ -996,6 +993,20 @@ test('awards resist-majority when more resists than uses', () => {
   
   const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
   includes(badges, 'resist-majority');
+});
+
+test('does not award resist-majority when equal resists and uses', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const today = todayKey();
+  const events = [
+    makeResistEvent(makeTs(today, 9)),
+    makeUsedEvent(makeTs(today, 14), 'thc', 1),
+  ];
+  addEvents(events);
+  
+  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  notIncludes(badges, 'resist-majority');
 });
 
 group('Badges.calculate - gaps');
