@@ -1555,23 +1555,23 @@ header .date {
 </header>
 
 <!-- ===== TAB BAR ===== -->
-<div class="tab-bar" id="tab-bar">
-  <button class="tab-btn active" data-tab="today">Today</button>
-  <button class="tab-btn" data-tab="history">History</button>
-  <button class="tab-btn" data-tab="graph">Stats</button>
-  <button class="tab-btn" data-tab="badges">Badges</button>
-  <button class="tab-btn" data-tab="settings">Settings</button>
+<div class="tab-bar" id="tab-bar" role="tablist">
+  <button class="tab-btn active" data-tab="today" role="tab" aria-selected="true">Today</button>
+  <button class="tab-btn" data-tab="history" role="tab" aria-selected="false">History</button>
+  <button class="tab-btn" data-tab="graph" role="tab" aria-selected="false">Stats</button>
+  <button class="tab-btn" data-tab="badges" role="tab" aria-selected="false">Badges</button>
+  <button class="tab-btn" data-tab="settings" role="tab" aria-selected="false">Settings</button>
 </div>
 
 <!-- ===== TODAY TAB ===== -->
-<div class="tab-panel active" id="tab-today">
+<div class="tab-panel active" id="tab-today" role="tabpanel">
 
   <!-- ACTION BUTTONS -->
   <section>
     <div class="action-group">
       <div class="used-row" id="used-row">
         <button class="big-btn btn-used" id="btn-used"><span id="used-label">Use</span></button>
-        <button class="big-btn btn-undo" id="btn-undo">↩ Undo</button>
+        <button class="big-btn btn-undo" id="btn-undo" aria-label="Undo last action">↩ Undo</button>
       </div>
       <div class="chip-row hidden" id="used-chips"></div>
     </div>
@@ -1613,8 +1613,8 @@ header .date {
 
   <div class="section-label">My Goals</div>
   <div class="todo-input-row">
-    <input type="text" class="todo-input" id="todo-input" placeholder="Add a goal…" maxlength="250">
-    <button class="todo-add-btn" id="todo-add-btn">+</button>
+    <input type="text" class="todo-input" id="todo-input" placeholder="Add a goal…" maxlength="250" aria-label="New goal">
+    <button class="todo-add-btn" id="todo-add-btn" aria-label="Add goal">+</button>
   </div>
   <ul class="todo-list" id="todo-list"></ul>
   <button class="action-btn danger-btn hidden" id="todo-clear-btn" onclick="App.clearTodos()">🗑️ Clear Goals</button>
@@ -1622,7 +1622,7 @@ header .date {
 </div>
 
 <!-- ===== HISTORY TAB ===== -->
-<div class="tab-panel" id="tab-history">
+<div class="tab-panel" id="tab-history" role="tabpanel">
   <div class="action-bar">
     <button class="action-btn" id="btn-add-prior-event" onclick="App.openCreateEventModal()">📝 Add Past Session</button>
   </div>
@@ -1635,7 +1635,7 @@ header .date {
 </div>
 
 <!-- ===== GRAPH TAB ===== -->
-<div class="tab-panel" id="tab-graph">
+<div class="tab-panel" id="tab-graph" role="tabpanel">
   <div id="hour-graphs"></div>
   <div class="graph-range" id="graph-range">
     <span class="chip active" data-days="7">7 days</span>
@@ -1647,7 +1647,7 @@ header .date {
 </div>
 
 <!-- ===== BADGES TAB ===== -->
-<div class="tab-panel" id="tab-badges">
+<div class="tab-panel" id="tab-badges" role="tabpanel">
   <div class="section-label">Today's Badges</div>
   <ul class="badge-list" id="badges-today"></ul>
   
@@ -1659,7 +1659,7 @@ header .date {
 </div>
 
 <!-- ===== SETTINGS TAB ===== -->
-<div class="tab-panel" id="tab-settings">
+<div class="tab-panel" id="tab-settings" role="tabpanel">
   <div class="section-label">Account</div>
   <div class="info-card" id="auth-status">
     Loading...
@@ -1723,7 +1723,7 @@ header .date {
 </div>
 
 <!-- ===== LOGIN SCREEN ===== -->
-<div class="modal-overlay hidden" id="login-overlay">
+<div class="modal-overlay hidden" id="login-overlay" role="dialog" aria-modal="true" aria-label="Sign in">
   <div class="onboarding-sheet">
     <div class="onboarding-header">
       <img class="onboarding-icon" src="icon-192.png" alt="Lentando - Progress at your pace">
@@ -1753,7 +1753,7 @@ header .date {
 </div>
 
 <!-- ===== ONBOARDING MODAL ===== -->
-<div class="modal-overlay hidden" id="onboarding-overlay">
+<div class="modal-overlay hidden" id="onboarding-overlay" role="dialog" aria-modal="true" aria-label="Select tracking profile">
   <div class="onboarding-sheet">
     <div class="onboarding-header">
       <img class="onboarding-icon" src="icon-192.png" alt="Lentando - Progress at your pace">
@@ -1786,14 +1786,14 @@ header .date {
 </div>
 
 <!-- ===== EDIT MODAL ===== -->
-<div class="modal-overlay hidden" id="modal-overlay">
+<div class="modal-overlay hidden" id="modal-overlay" role="dialog" aria-modal="true">
   <div class="modal-sheet" id="modal-sheet"></div>
 </div>
 
 <!-- ===== REMINDER MODAL ===== -->
-<div class="modal-overlay hidden" id="reminder-overlay">
+<div class="modal-overlay hidden" id="reminder-overlay" role="dialog" aria-modal="true" aria-label="Daily Reminder">
   <div class="modal-sheet">
-    <div class="modal-header"><h2>Daily Reminder</h2><button class="modal-close" onclick="App.closeReminderModal()">✕</button></div>
+    <div class="modal-header"><h2>Daily Reminder</h2><button class="modal-close" onclick="App.closeReminderModal()" aria-label="Close">✕</button></div>
     <p class="reminder-subtitle">We'll send you a gentle reminder each day to check in with Lentando.</p>
     <div class="reminder-field">
       <label>Reminder time</label>
@@ -1808,7 +1808,7 @@ header .date {
 </div>
 
 <!-- ===== ONBOARDING FLOW (new user multi-step) ===== -->
-<div class="modal-overlay hidden" id="onboarding-flow-overlay">
+<div class="modal-overlay hidden" id="onboarding-flow-overlay" role="dialog" aria-modal="true" aria-label="Setup">
   <div class="onboarding-sheet">
     <div class="onboarding-header">
       <img class="onboarding-icon" src="icon-192.png" alt="Lentando">
@@ -1822,7 +1822,7 @@ header .date {
 </div>
 
 <!-- ===== CUSTOM CONFIG MODAL ===== -->
-<div class="modal-overlay hidden" id="custom-config-overlay">
+<div class="modal-overlay hidden" id="custom-config-overlay" role="dialog" aria-modal="true" aria-label="Customize tracker">
   <div class="onboarding-sheet">
     <div class="onboarding-header">
       <h1><span class="brand">Customize</span></h1>

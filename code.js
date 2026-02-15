@@ -2448,7 +2448,11 @@ function switchTab(tabName) {
   hideUsedChips();
   hideResistedChips();
   hideHabitChips();
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    const isActive = b.dataset.tab === tabName;
+    b.classList.toggle('active', isActive);
+    b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabName));
   
   // Mount/unmount auth form to prevent browser autofill on other inputs
@@ -2871,7 +2875,7 @@ function openCreateEventModal() {
   const timeValue = `${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`;
 
   $('modal-sheet').innerHTML = `
-    <div class="modal-header"><h2>Add Past Session</h2><button class="modal-close" onclick="App.closeModal()">✕</button></div>
+    <div class="modal-header"><h2>Add Past Session</h2><button class="modal-close" onclick="App.closeModal()" aria-label="Close">✕</button></div>
     <div class="modal-field"><label>Tracking</label><div class="modal-value">${escapeHTML(trackingLabel)}</div></div>
     <div id="create-modal-fields">${fieldsHTML}</div>
     <div class="modal-field" style="display: flex; gap: 8px;">
@@ -3025,7 +3029,7 @@ function openEditModal(eventId) {
   const timeValue = `${hours}:${minutes}`;
 
   $('modal-sheet').innerHTML = `
-    <div class="modal-header"><h2>Edit Event</h2><button class="modal-close" onclick="App.closeModal()">✕</button></div>
+    <div class="modal-header"><h2>Edit Event</h2><button class="modal-close" onclick="App.closeModal()" aria-label="Close">✕</button></div>
     ${fieldsHTML}
     <div class="modal-field"><label>Time</label><input type="time" id="modal-time-input" value="${timeValue}" class="form-input"></div>
     <div class="modal-actions">
