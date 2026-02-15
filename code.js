@@ -2022,6 +2022,19 @@ function buildHourGraphBars(hourCounts, max, color, startHour = 0) {
   return wrapBarsWithGrid(inner, max);
 }
 
+/** Build a category graph (one bar per category key, e.g. reason/trigger) */
+function buildCategoryGraph(title, keys, totals, max, color, tooltip) {
+  const effectiveMax = max > 0 ? calcGridScale(max).gridMax : 0;
+  let inner = '';
+  for (const key of keys) {
+    const val = totals[key] || 0;
+    const h = effectiveMax > 0 ? Math.round((val / effectiveMax) * 96) : 0;
+    inner += graphBarCol(val, h, { color, text: capitalize(key) }, true);
+  }
+  const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
+  return `<div class="graph-container"${tipAttr}><div class="graph-title">${title}</div>${wrapBarsWithGrid(inner, max)}</div>`;
+}
+
 function buildWeekSummaryHTML() {
   const days = getLastNDays(7);
   const profile = getProfile();
@@ -2266,7 +2279,37 @@ function renderGraphs() {
       : emptyStateHTML('No data yet', 'compact');
     dayHtml += `</div>`;
   }
-  
+
+  // Use by Reason graph — horizontal bars per reason, value = sum of amounts
+  const reasonTotals = {};
+  days.forEach(dk => {
+    filterProfileUsed(DB.forDate(dk)).forEach(evt => {
+      if (!evt.reason) return;
+      reasonTotals[evt.reason] = (reasonTotals[evt.reason] || 0) + (evt.amount ?? 1);
+    });
+  });
+  const reasonKeys = REASONS.filter(r => reasonTotals[r]);
+  if (reasonKeys.length > 0) {
+    const reasonMax = Math.max(...reasonKeys.map(r => reasonTotals[r]), 1);
+    dayHtml += buildCategoryGraph('🧠 Use by Reason', reasonKeys, reasonTotals, reasonMax, '#f39c12',
+      'Total amount used broken down by reason. Shows which triggers drive the most usage.');
+  }
+
+  // Resist by Trigger graph — horizontal bars per trigger, value = sum of intensities
+  const triggerTotals = {};
+  days.forEach(dk => {
+    filterByType(DB.forDate(dk), 'resisted').forEach(evt => {
+      if (!evt.trigger) return;
+      triggerTotals[evt.trigger] = (triggerTotals[evt.trigger] || 0) + (evt.intensity || 1);
+    });
+  });
+  const triggerKeys = REASONS.filter(r => triggerTotals[r]);
+  if (triggerKeys.length > 0) {
+    const triggerMax = Math.max(...triggerKeys.map(r => triggerTotals[r]), 1);
+    dayHtml += buildCategoryGraph('🛡️ Resists by Trigger', triggerKeys, triggerTotals, triggerMax, 'var(--resist)',
+      'Total urge intensity resisted broken down by trigger. Shows which situations you resist the most.');
+  }
+
   dayContainer.innerHTML = dayHtml;
 }
 
