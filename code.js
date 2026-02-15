@@ -3634,19 +3634,21 @@ function renderFlowStepWelcomeGuide(container) {
   const profile = getProfile();
   const sessionLabel = (profile.sessionLabel || 'Use').toLowerCase();
 
+  const useButtonText = escapeHTML(sessionLabel.charAt(0).toUpperCase() + sessionLabel.slice(1));
   container.innerHTML = `
     <h2>How to Use Lentando</h2>
     <ul class="ob-flow-guide">
-      <li>☑️ Tap <strong>${escapeHTML(sessionLabel.charAt(0).toUpperCase() + sessionLabel.slice(1))}</strong> whenever you use - tap <strong>Undo</strong> anytime to cancel</li>
-      <li>💪 Tap <strong>Resist</strong> when you feel the urge but choose not to</li>
-      <li>📝 Use <strong>Add Past Session</strong> in History to log earlier events</li>
-      <li>✅ Track healthy <strong>actions</strong>: Water, Exercise, Breaths, Tidy, Outside</li>
-      <li>💧 Lentando will remind you to <strong>drink water</strong> every two hours</li>
-      <li>🏆 Earn <strong>badges</strong> that update throughout the day based on your activity</li>
-      <li>🔄 You can <strong>change what you're tracking</strong> anytime in Settings</li>
+      <li>☑️ Tap <strong>${useButtonText}</strong> whenever you use - tap <strong>Undo</strong> anytime to cancel.</li>
+      <li>🙈 You can <strong>hide the ${useButtonText} button</strong> in Settings if you don't need it.</li>
+      <li>💪 Tap <strong>Resist</strong> when you feel the urge but choose not to.</li>
+      <li>📝 Use <strong>Add Past Session</strong> in History to log earlier events.</li>
+      <li>✅ Track healthy <strong>actions</strong>: Water, Exercise, Breaths, Tidy, Outside.</li>
+      <li>💧 Lentando will remind you to <strong>drink water</strong> every two hours.</li>
+      <li>🏆 Earn <strong>badges</strong> that update throughout the day based on your activity.</li>
+      <li>🔄 You can <strong>change what you're tracking</strong> anytime in Settings.</li>
     </ul>
     <div class="ob-flow-actions">
-      <button class="action-btn" onclick="App.skipOnboardingStep()">👍 Got it — let's go!</button>
+      <button class="action-btn" onclick="App.skipOnboardingStep()">👍 Got it, let's go!</button>
     </div>`;
 }
 
