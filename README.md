@@ -74,10 +74,9 @@ Lentando recognizes progress in many forms:
 - **⭐ Small Wins Add Up** - Every moment of awareness counts
 
 ### ♿ **Accessible**
-- **ARIA landmarks** - Tab bar, modals, charts, and buttons all have proper roles and labels
+- **ARIA labels** - Buttons, modals, charts, and inputs have descriptive labels and roles
 - **System theme support** - Automatically matches light/dark mode preference
 - **Screen reader friendly** - Live regions for toasts, labeled inputs, and descriptive chart summaries
-- **Keyboard navigable** - Tab navigation with `aria-selected` state on tabs
 
 ## 🛠️ Built With
 
