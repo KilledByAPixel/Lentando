@@ -831,7 +831,7 @@ function saveBadgeData(data) {
 // ========== BADGES ENGINE ==========
 const Badges = {
   calculate(todayEvents, yesterdayEvents, options = {}) {
-    const { completedDay = false, forDate = null, appStartDate = null, appStartTs = null } = options;
+    const { completedDay = false, forDate = null, appStartDate = null, appStartTs = null, installDate = null } = options;
     // forDate: the date key being evaluated (defaults to todayKey())
     const evaluationDate = forDate || todayKey();
 
@@ -891,9 +891,13 @@ const Badges = {
 
     // --- Welcome Back badge ---
     // Use event timestamps (stable) so the badge is consistent across renders.
+    // Don't look at days before installDate (uid-based) — backdated onboarding
+    // events have old ts but were created today, so they aren't real previous activity.
+    const welcomeBackBound = installDate || appStartDate;
     if (todayEvents.length > 0) {
       for (const key of allKeys) {
         if (key >= evaluationDate) continue; // skip the day being evaluated
+        if (welcomeBackBound && key < welcomeBackBound) break; // don't look before app was installed
         const prevDayEvents = DB.forDate(key);
         if (prevDayEvents.length > 0) {
           const lastPrevTs = prevDayEvents[prevDayEvents.length - 1].ts;
@@ -1611,6 +1615,15 @@ function calculateAndUpdateBadges() {
     appStartTs = now();
   }
   const appStartDate = dateKey(appStartTs);
+
+  // Real install date: based on when events were *created* (uid timestamp),
+  // not their event timestamp (which can be backdated during onboarding).
+  // Used by Welcome Back badge to avoid false triggers from backdated events.
+  let installTs = now();
+  if (allEvents.length > 0) {
+    installTs = Math.min(...allEvents.map(e => getUidTimestamp(e.id) || e.ts));
+  }
+  const installDate = dateKey(installTs);
   
   // Step 1: If it's a new day, add yesterday's badges to lifetime before clearing
   const lifetimeMap = new Map();
@@ -1631,7 +1644,8 @@ function calculateAndUpdateBadges() {
       completedDay: true,
       forDate: badgeData.todayDate,
       appStartDate,
-      appStartTs
+      appStartTs,
+      installDate
     });
     // Carry over undo-driven badge for the prior day
     if ((badgeData.todayUndoCount || 0) > 0) recalcIds.push('second-thought');
@@ -1664,7 +1678,8 @@ function calculateAndUpdateBadges() {
   const yesterdayEvents = DB.forDate(daysAgoKey(1));
   const freshTodayIds = Badges.calculate(todayEvents, yesterdayEvents, {
     appStartDate,
-    appStartTs
+    appStartTs,
+    installDate
   });
   
   // Add undo badges (tracked separately since undos aren't events)
