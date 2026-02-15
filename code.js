@@ -155,7 +155,7 @@ function buildCustomProfile(settings) {
   };
 }
 
-// User input options
+// User input options for logging events
 const REASONS = ['habit', 'stress', 'social', 'reward','bored', 'pain', 'hungry', 'angry', 'lonely', 'tired'];
 const INTENSITIES = [1, 2, 3, 4, 5];
 const HABIT_DURATIONS = [0, 5, 10, 15, 20, 30, 45, 60, 120];
@@ -224,8 +224,8 @@ const HABIT_SHOW_CHIPS = {
   outside: true
 };
 
-// Badge definitions - maps badge IDs to their display properties
-// Order matters! sortOrder is auto-assigned based on position in this object
+// Badge definitions — maps badge IDs to their display properties
+// Order determines the sort order of badges in the UI
 const BADGE_DEFINITIONS = {
   'welcome-back': { label: 'Welcome Back', icon: '👋', desc: 'Returned to tracking after 24+ hours away' },
   'daily-checkin': { label: 'Showed Up', icon: '✅', desc: 'Logged at least one event, showing up is everything' },
@@ -246,7 +246,7 @@ const BADGE_DEFINITIONS = {
   'breathwork': { label: 'Breathwork', icon: '🌬️', desc: 'Did breathing exercises or meditation' },
   'cleaned': { label: 'Tidied Up', icon: '🧹', desc: 'Tidied up or cleaned something' },
   'went-outside': { label: 'Went Outside', icon: '🌴', desc: 'Spent time outside or got some fresh air' },
-  'five-star-day': { label: 'Five Star Day', icon: '🌟', desc: 'Logged all 5 habit types' },
+  'five-star-day': { label: 'Five Star Day', icon: '🌟', desc: 'Logged all 5 healthy habits in one day' },
   'habit-streak': { label: 'Habit Streak', icon: '🐢', desc: 'Logged healthy habits for consecutive days' },
   'resist-streak': { label: 'Resist Streak', icon: '🛡️', desc: 'Resisted urges for multiple days in a row' },
   'gap-1h': { label: 'Gap 1h', icon: '🕐', desc: 'Maintained a 1+ hour gap between sessions (excludes gaps crossing 6am)' },
@@ -2995,7 +2995,8 @@ function saveCreateModal() {
   DB.addEvent(evt);
   calculateAndUpdateBadges();
   render();
-  showToast('☑️ Past use logged');
+  const sessionLabel = getProfile().sessionLabel || 'Use';
+  showToast(`☑️ Logged ${sessionLabel}`);
   closeModal();
 }
 
@@ -3209,7 +3210,7 @@ function hideLoginScreen() {
 }
 
 function skipLogin() {
-  if (!confirm('⚠️ Continue without an account?\n\nYour data will only be saved on this device and won\'t sync to other devices.\n\nYou can sign in later from Settings to enable cloud backup.')) {
+  if (!confirm('⚠️ Continue without an account?\n\nYour data will only be saved on this device. You can sign in later from Settings to enable cloud backup and sync.')) {
     return;
   }
   safeSetItem(STORAGE_LOGIN_SKIPPED, 'true');
@@ -3479,6 +3480,13 @@ function saveOnboardingRecentUse() {
 
   DB.addEvent(evt);
   playSound('used');
+
+  // Show toast when changing tracked substance (onboarding already completed)
+  if (DB.loadSettings().onboardingComplete === true) {
+    const sessionLabel = profile.sessionLabel || 'Use';
+    showToast(`☑️ Logged ${sessionLabel}`);
+  }
+
   advanceOnboardingFlow();
 }
 
