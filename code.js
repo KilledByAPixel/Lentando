@@ -3936,8 +3936,14 @@ function logUsed() {
   if (!checkCooldown('used')) return;
   const s = DB.loadSettings();
   const profile = getProfile();
-  const method = profile.methods ? s.lastMethod : null;
-  const evt = createUsedEvent(s.lastSubstance, method, s.lastAmount);
+  const method = profile.methods
+    ? ((s.lastMethod && profile.methods.includes(s.lastMethod)) ? s.lastMethod : profile.methods[0])
+    : null;
+  const substance = (s.lastSubstance && profile.substances.includes(s.lastSubstance))
+    ? s.lastSubstance : profile.substances[0];
+  const amount = (s.lastAmount != null && profile.amounts.includes(s.lastAmount))
+    ? s.lastAmount : (profile.amounts.find(a => a >= 1) || profile.amounts[0]);
+  const evt = createUsedEvent(substance, method, amount);
   DB.addEvent(evt);
   calculateAndUpdateBadges();
   render();
