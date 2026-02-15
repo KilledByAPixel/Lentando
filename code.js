@@ -1984,14 +1984,10 @@ const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: '#f39c12',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
   { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').reduce((sum, e) => sum + (e.intensity || 1), 0), activity: false, tooltip: 'Total urge intensity resisted each day. Higher bars mean stronger urges resisted.' },
   { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true, tooltip: 'Number of water uses logged each day. Staying hydrated supports recovery.' },
-  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'exercise', tooltip: 'Exercise minutes each day. Physical activity helps manage cravings.',
-    countFn: evs => getHabits(evs, 'exercise').length, countLabel: '🏃 Exercise / Day', countTooltip: 'Number of exercise sessions each day.' },
-  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'breaths', tooltip: 'Mindfulness or breathing minutes each day. Helps with stress and urges.',
-    countFn: evs => getHabits(evs, 'breaths').length, countLabel: '🌬️ Mindfulness / Day', countTooltip: 'Number of mindfulness or breathing sessions each day.' },
-  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'clean', tooltip: 'Cleaning or tidying minutes each day. Keeping busy is a great distraction.',
-    countFn: evs => getHabits(evs, 'clean').length, countLabel: '🧹 Cleaning / Day', countTooltip: 'Number of cleaning or tidying sessions each day.' },
-  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + (e.minutes || 0), 0), activity: true, habitType: 'outside', tooltip: 'Time spent outside each day. Fresh air and nature can help reset your mood.',
-    countFn: evs => getHabits(evs, 'outside').length, countLabel: '🌳 Outside / Day', countTooltip: 'Number of times you went outside each day.' },
+  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Exercise minutes each day. Physical activity helps manage cravings. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Mindfulness or breathing minutes each day. Helps with stress and urges. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Cleaning or tidying minutes each day. Keeping busy is a great distraction. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Time spent outside each day. Fresh air and nature can help reset your mood. Untimed activities rounded up to 5 minutes each.' },
 ];
 
 function formatGraphValue(val) {
@@ -1999,22 +1995,25 @@ function formatGraphValue(val) {
   return Number.isInteger(val) ? val : val.toFixed(1);
 }
 
-/** Pick a nice round interval and round max up to the next multiple */
-function calcGridScale(max) {
+/** Pick a nice round interval and round max up to the next multiple.
+ *  minStep — force interval to be at least this value and a multiple of it (e.g. 5 for minute graphs) */
+function calcGridScale(max, minStep) {
   const niceSteps = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000];
   let interval = 1;
   for (const s of niceSteps) {
     if (max / s <= 5) { interval = s; break; }
   }
+  if (minStep && interval < minStep) interval = minStep;
+  else if (minStep && interval % minStep !== 0) interval = Math.ceil(interval / minStep) * minStep;
   const gridMax = Math.ceil(max / interval) * interval || max;
   return { interval, gridMax };
 }
 
 /** Pick nice round grid-line intervals based on max value. Returns [{value, px}] */
-function calcGridLines(max) {
+function calcGridLines(max, minStep) {
   if (max <= 0) return [];
   const BAR_HEIGHT = 96; // must match the px used in bar height calc
-  const { interval, gridMax } = calcGridScale(max);
+  const { interval, gridMax } = calcGridScale(max, minStep);
   const lines = [];
   for (let v = 0; v <= gridMax; v += interval) {
     lines.push({ value: v, px: Math.round((v / gridMax) * BAR_HEIGHT) });
@@ -2048,8 +2047,8 @@ function graphBarCol(val, height, label, showLabel, extraClass) {
   </div>`;
 }
 
-function wrapBarsWithGrid(barsInnerHTML, max) {
-  const lines = calcGridLines(max);
+function wrapBarsWithGrid(barsInnerHTML, max, minStep) {
+  const lines = calcGridLines(max, minStep);
   const g = gridHTML(lines);
   const yAxisDiv = lines.length
     ? `<div class="gy-axis">${g.yAxis}</div>`
@@ -2061,7 +2060,8 @@ function wrapBarsWithGrid(barsInnerHTML, max) {
 }
 
 function buildGraphBars(vals, days, max, def) {
-  const effectiveMax = max > 0 ? calcGridScale(max).gridMax : 0;
+  const minStep = def.minStep || 0;
+  const effectiveMax = max > 0 ? calcGridScale(max, minStep).gridMax : 0;
   let inner = '';
   for (let i = 0; i < vals.length; i++) {
     const v = vals[i];
@@ -2082,7 +2082,7 @@ function buildGraphBars(vals, days, max, def) {
     
     inner += graphBarCol(v, h, { color: def.color, text: dayLabel }, showLabel);
   }
-  return wrapBarsWithGrid(inner, max);
+  return wrapBarsWithGrid(inner, max, minStep);
 }
 
 // Fixed palette for substance stacked bars (up to 3 substances per profile)
@@ -2577,42 +2577,8 @@ function renderGraphs() {
     let label = def.label;
     let tooltip = def.tooltip;
 
-    // For activity graphs: if some events have minutes and some don't,
-    // round up events without minutes to 5min for a more accurate view
-    let didRoundUp = false;
-    if (def.activity && def.habitType && def.countFn) {
-      let anyHaveMinutes = false;
-      let anyMissingMinutes = false;
-      for (const dk of days) {
-        const habits = getHabits(DB.forDate(dk), def.habitType);
-        if (habits.some(e => e.minutes > 0)) anyHaveMinutes = true;
-        if (habits.some(e => !e.minutes)) anyMissingMinutes = true;
-        if (anyHaveMinutes && anyMissingMinutes) break;
-      }
-      if (anyHaveMinutes) {
-        vals = days.map(dk => {
-          const habits = getHabits(DB.forDate(dk), def.habitType);
-          return habits.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0);
-        });
-        max = Math.max(...vals, 1);
-        hasData = vals.some(v => v > 0);
-        didRoundUp = anyMissingMinutes;
-      }
-    }
-
-    // For activity graphs with no minutes data, fall back to event count
-    if (def.activity && !hasData && def.countFn) {
-      vals = days.map(dk => def.countFn(DB.forDate(dk)));
-      max = Math.max(...vals, 1);
-      hasData = vals.some(v => v > 0);
-      label = def.countLabel || def.label;
-      tooltip = def.countTooltip || def.tooltip;
-    }
-
     // For activity graphs, skip rendering if no data at all
     if (def.activity && !hasData) continue;
-
-    if (didRoundUp) tooltip = (tooltip ? tooltip + ' ' : '') + 'Untimed activities rounded up to 5 minutes each.';
     const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
     const ariaLabel = `Bar chart: ${label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
     dayHtml += `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${label}</div>`;
