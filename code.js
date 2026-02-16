@@ -2568,6 +2568,14 @@ function buildYearlyHeatmapHTML() {
   const hasAnyUse = grid.some(row => row.some(c => c > 0));
   if (!hasAnyUse) return '';
 
+  // Only show if user has 30+ days of history (first stored event)
+  const allEvents = DB.loadEvents();
+  if (allEvents.length > 0) {
+    const earliest = Math.min(...allEvents.map(e => e.ts));
+    const daysSinceFirst = (now.getTime() - earliest) / (1000 * 60 * 60 * 24);
+    if (daysSinceFirst < 30) return '';
+  }
+
   // For current month, grey out future days
   const todayDay = now.getDate(); // 1-based
 
