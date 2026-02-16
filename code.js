@@ -2258,13 +2258,80 @@ function buildGraphBars(vals, days, max, def) {
 // Fixed palette for substance stacked bars (up to 3 substances per profile)
 const SUBSTANCE_COLORS = ['var(--primary)', '#e6a23c', 'var(--resist)'];
 
-function buildStackedHourGraphBars(events, startHour) {
+function stackedBarSetup() {
   const profile = getProfile();
   const subs = profile.substances;
   const icons = profile.icons || {};
+  const colorMap = {};
+  subs.forEach((sub, i) => { colorMap[sub] = SUBSTANCE_COLORS[i % SUBSTANCE_COLORS.length]; });
+  return { subs, icons, colorMap };
+}
 
-  // Build per-substance per-hour counts
-  // hourData[hour] = { sub1: amount, sub2: amount, ... }
+function formatHourLabel(h) {
+  return h === 0 ? '12a' : h < 12 ? `${h}a` : h === 12 ? '12p' : `${h - 12}p`;
+}
+
+/** Common renderer for stacked bar charts.
+ *  buckets: [{subAmounts: {sub: val}, label: string, showLabel: bool, extraClass?: string}]
+ *  Returns rendered HTML or null if no data. */
+function renderStackedBars(buckets, { subs, icons, colorMap }) {
+  const usedSubs = new Set();
+  let maxTotal = 0;
+  const totals = buckets.map(b => {
+    let total = 0;
+    for (const sub of subs) {
+      const val = b.subAmounts[sub] || 0;
+      total += val;
+      if (val > 0) usedSubs.add(sub);
+    }
+    if (total > maxTotal) maxTotal = total;
+    return total;
+  });
+
+  if (maxTotal <= 0) return null;
+  const effectiveMax = calcGridScale(maxTotal).gridMax;
+
+  let inner = '';
+  for (let i = 0; i < buckets.length; i++) {
+    const b = buckets[i];
+    const total = totals[i];
+    const totalH = effectiveMax > 0 ? Math.round((total / effectiveMax) * 96) : 0;
+
+    let segments = '';
+    for (const sub of subs) {
+      const val = b.subAmounts[sub] || 0;
+      if (val <= 0) continue;
+      const segH = Math.max(Math.round((val / effectiveMax) * 96), 2);
+      segments += `<div class="graph-bar-seg" style="height:${segH}px;background:${colorMap[sub]}"></div>`;
+    }
+
+    const labelStyle = b.showLabel ? '' : 'visibility:hidden';
+    const cls = b.extraClass ? ` ${b.extraClass}` : '';
+    inner += `<div class="graph-bar-col${cls}">
+      <div class="graph-bar graph-bar-stacked" style="height:${totalH}px;${total > 0 ? 'min-height:2px' : ''}">${segments}</div>
+      <div class="graph-bar-label" style="${labelStyle}">${b.label}</div>
+    </div>`;
+  }
+
+  const activeSubs = subs.filter(s => usedSubs.has(s));
+  let legend = '';
+  if (activeSubs.length > 1) {
+    legend = '<div class="hm-legend">';
+    for (const sub of activeSubs) {
+      legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
+      legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
+    }
+    legend += '</div>';
+  }
+
+  return wrapBarsWithGrid(inner, maxTotal) + legend;
+}
+
+function buildStackedHourGraphBars(events, startHour) {
+  const ctx = stackedBarSetup();
+  const { subs } = ctx;
+
+  // Build per-substance per-hour counts (exclude consolidated)
   const hourData = {};
   events.filter(e => !e.consolidated).forEach(evt => {
     const hour = getHour(evt.ts);
@@ -2273,78 +2340,28 @@ function buildStackedHourGraphBars(events, startHour) {
     hourData[hour][sub] = (hourData[hour][sub] || 0) + (evt.amount ?? 1);
   });
 
-  // Find max total per hour for scaling
-  let maxTotal = 0;
+  const buckets = [];
   for (let i = 0; i < 24; i++) {
     const hour = (startHour + i) % 24;
-    const data = hourData[hour] || {};
-    const total = subs.reduce((s, sub) => s + (data[sub] || 0), 0);
-    if (total > maxTotal) maxTotal = total;
-  }
-  const effectiveMax = maxTotal > 0 ? calcGridScale(maxTotal).gridMax : 0;
-
-  // Track which substances actually appear
-  const usedSubs = new Set();
-  events.forEach(e => { if (e.substance) usedSubs.add(e.substance); });
-
-  // Build color map for substances
-  const colorMap = {};
-  subs.forEach((sub, i) => { colorMap[sub] = SUBSTANCE_COLORS[i % SUBSTANCE_COLORS.length]; });
-
-  let inner = '';
-  for (let i = 0; i < 24; i++) {
-    const hour = (startHour + i) % 24;
-    const data = hourData[hour] || {};
-    const total = subs.reduce((s, sub) => s + (data[sub] || 0), 0);
-    const totalH = effectiveMax > 0 ? Math.round((total / effectiveMax) * 96) : 0;
-    const hourLabel = hour === 0 ? '12a' : hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`;
-    const showLabel = i % 3 === 0;
-    const labelStyle = showLabel ? '' : 'visibility:hidden';
-
-    // Build stacked segments bottom-up
-    let segments = '';
-    for (const sub of subs) {
-      const val = data[sub] || 0;
-      if (val <= 0) continue;
-      const segH = effectiveMax > 0 ? Math.max(Math.round((val / effectiveMax) * 96), 2) : 0;
-      segments += `<div class="graph-bar-seg" style="height:${segH}px;background:${colorMap[sub]}"></div>`;
-    }
-
-    const midnightCls = hour === 0 ? ' graph-midnight-marker' : '';
-    inner += `<div class="graph-bar-col${midnightCls}">
-      <div class="graph-bar graph-bar-stacked" style="height:${totalH}px;${total > 0 ? 'min-height:2px' : ''}">${segments}</div>
-      <div class="graph-bar-label" style="${labelStyle}">${hourLabel}</div>
-    </div>`;
+    buckets.push({
+      subAmounts: hourData[hour] || {},
+      label: formatHourLabel(hour),
+      showLabel: i % 3 === 0,
+      extraClass: hour === 0 ? 'graph-midnight-marker' : undefined
+    });
   }
 
-  // Legend — only show substances that have actual usage in this period
-  let legend = '';
-  const activeSubs = subs.filter(s => usedSubs.has(s));
-  if (activeSubs.length > 1) {
-    legend = '<div class="hm-legend">';
-    for (const sub of activeSubs) {
-      const icon = icons[sub] || '';
-      legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
-      legend += `<span class="hm-legend-label">${icon}</span>`;
-    }
-    legend += '</div>';
-  }
-
-  return wrapBarsWithGrid(inner, maxTotal) + legend;
+  return renderStackedBars(buckets, ctx);
 }
 
 /** Stacked average-usage-by-hour bars — averages per substance across days with use */
 function buildStackedAvgHourBars(days) {
-  const profile = getProfile();
-  const subs = profile.substances;
-  const icons = profile.icons || {};
-  const colorMap = {};
-  subs.forEach((sub, i) => { colorMap[sub] = SUBSTANCE_COLORS[i % SUBSTANCE_COLORS.length]; });
+  const ctx = stackedBarSetup();
+  const { subs } = ctx;
 
   // hourTotals[hour][sub] = total amount, daysWithUse = count of days with any use
   const hourTotals = {};
   let daysWithUse = 0;
-  const usedSubs = new Set();
 
   days.forEach(dayKey => {
     const dayUsed = filterProfileUsed(DB.forDate(dayKey)).filter(e => !e.consolidated);
@@ -2355,209 +2372,75 @@ function buildStackedAvgHourBars(days) {
       if (!hourTotals[hour]) hourTotals[hour] = {};
       const sub = evt.substance || subs[0];
       hourTotals[hour][sub] = (hourTotals[hour][sub] || 0) + (evt.amount ?? 1);
-      usedSubs.add(sub);
     });
   });
 
   if (daysWithUse === 0) return null;
 
-  // Compute averages and find max
-  let maxTotal = 0;
+  const buckets = [];
   for (let h = 0; h < 24; h++) {
     const data = hourTotals[h] || {};
-    let total = 0;
-    for (const sub of subs) { total += (data[sub] || 0) / daysWithUse; }
-    if (total > maxTotal) maxTotal = total;
-  }
-  const effectiveMax = maxTotal > 0 ? calcGridScale(maxTotal).gridMax : 0;
-
-  let inner = '';
-  for (let h = 0; h < 24; h++) {
-    const data = hourTotals[h] || {};
-    let total = 0;
-    for (const sub of subs) { total += (data[sub] || 0) / daysWithUse; }
-    const totalH = effectiveMax > 0 ? Math.round((total / effectiveMax) * 96) : 0;
-    const hourLabel = h === 0 ? '12a' : h < 12 ? `${h}a` : h === 12 ? '12p' : `${h - 12}p`;
-    const showLabel = h % 3 === 0;
-    const labelStyle = showLabel ? '' : 'visibility:hidden';
-
-    let segments = '';
-    for (const sub of subs) {
-      const avg = (data[sub] || 0) / daysWithUse;
-      if (avg <= 0) continue;
-      const segH = effectiveMax > 0 ? Math.max(Math.round((avg / effectiveMax) * 96), 2) : 0;
-      segments += `<div class="graph-bar-seg" style="height:${segH}px;background:${colorMap[sub]}"></div>`;
-    }
-
-    inner += `<div class="graph-bar-col">
-      <div class="graph-bar graph-bar-stacked" style="height:${totalH}px;${total > 0 ? 'min-height:2px' : ''}">${segments}</div>
-      <div class="graph-bar-label" style="${labelStyle}">${hourLabel}</div>
-    </div>`;
+    const subAmounts = {};
+    for (const sub of subs) { subAmounts[sub] = (data[sub] || 0) / daysWithUse; }
+    buckets.push({ subAmounts, label: formatHourLabel(h), showLabel: h % 3 === 0 });
   }
 
-  const activeSubs = subs.filter(s => usedSubs.has(s));
-  let legend = '';
-  if (activeSubs.length > 1) {
-    legend = '<div class="hm-legend">';
-    for (const sub of activeSubs) {
-      legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
-      legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
-    }
-    legend += '</div>';
-  }
-
-  return wrapBarsWithGrid(inner, maxTotal) + legend;
+  return renderStackedBars(buckets, ctx);
 }
 
 /** Stacked amount-used-per-day bars — per substance per day */
 function buildStackedDayBars(days) {
-  const profile = getProfile();
-  const subs = profile.substances;
-  const icons = profile.icons || {};
-  const colorMap = {};
-  subs.forEach((sub, i) => { colorMap[sub] = SUBSTANCE_COLORS[i % SUBSTANCE_COLORS.length]; });
+  const ctx = stackedBarSetup();
+  const { subs } = ctx;
 
-  // dayData[i] = { sub: amount, ... }
-  const dayData = [];
-  const usedSubs = new Set();
-  let maxTotal = 0;
-
-  for (const dayKey of days) {
-    const used = filterProfileUsed(DB.forDate(dayKey));
+  const buckets = [];
+  for (let i = 0; i < days.length; i++) {
+    const used = filterProfileUsed(DB.forDate(days[i]));
     const subAmounts = {};
     used.forEach(e => {
       const sub = e.substance || subs[0];
       subAmounts[sub] = (subAmounts[sub] || 0) + (e.amount ?? 1);
-      usedSubs.add(sub);
     });
-    let total = 0;
-    for (const sub of subs) total += (subAmounts[sub] || 0);
-    if (total > maxTotal) maxTotal = total;
-    dayData.push(subAmounts);
-  }
-
-  if (maxTotal <= 0) return null;
-
-  const effectiveMax = calcGridScale(maxTotal).gridMax;
-  let inner = '';
-  for (let i = 0; i < days.length; i++) {
-    const data = dayData[i];
-    let total = 0;
-    for (const sub of subs) total += (data[sub] || 0);
-    const totalH = effectiveMax > 0 ? Math.round((total / effectiveMax) * 96) : 0;
-    const dayLabel = days[i].slice(5);
 
     let showLabel;
     if (graphDays <= 7) showLabel = true;
     else if (graphDays <= 30) showLabel = i % 4 === 0;
     else showLabel = i % 10 === 0;
-    const labelStyle = showLabel ? '' : 'visibility:hidden';
 
-    let segments = '';
-    for (const sub of subs) {
-      const val = data[sub] || 0;
-      if (val <= 0) continue;
-      const segH = effectiveMax > 0 ? Math.max(Math.round((val / effectiveMax) * 96), 2) : 0;
-      segments += `<div class="graph-bar-seg" style="height:${segH}px;background:${colorMap[sub]}"></div>`;
-    }
-
-    inner += `<div class="graph-bar-col">
-      <div class="graph-bar graph-bar-stacked" style="height:${totalH}px;${total > 0 ? 'min-height:2px' : ''}">${segments}</div>
-      <div class="graph-bar-label" style="${labelStyle}">${dayLabel}</div>
-    </div>`;
+    buckets.push({ subAmounts, label: days[i].slice(5), showLabel });
   }
 
-  const activeSubs = subs.filter(s => usedSubs.has(s));
-  let legend = '';
-  if (activeSubs.length > 1) {
-    legend = '<div class="hm-legend">';
-    for (const sub of activeSubs) {
-      legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
-      legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
-    }
-    legend += '</div>';
-  }
-
-  return wrapBarsWithGrid(inner, maxTotal) + legend;
+  return renderStackedBars(buckets, ctx);
 }
 
 /** Stacked amount-used-per-month bars — 12 months, most recent on the right */
 function buildStackedMonthBars() {
   const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const profile = getProfile();
-  const subs = profile.substances;
-  const icons = profile.icons || {};
-  const colorMap = {};
-  subs.forEach((sub, i) => { colorMap[sub] = SUBSTANCE_COLORS[i % SUBSTANCE_COLORS.length]; });
-
+  const ctx = stackedBarSetup();
+  const { subs } = ctx;
   const today = currentDate();
-  const usedSubs = new Set();
-  const monthData = []; // [{label, subAmounts}] oldest→newest (left→right)
-  let maxTotal = 0;
 
-  // Build 12 months: oldest first (left) → current month last (right)
+  const buckets = [];
   for (let i = 11; i >= 0; i--) {
     const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
     const y = d.getFullYear();
     const m = d.getMonth();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
-    const label = MONTH_NAMES[m];
     const subAmounts = {};
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dk = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      // Skip future days in the current month
       if (i === 0 && day > today.getDate()) break;
-      const used = filterProfileUsed(DB.forDate(dk));
-      used.forEach(e => {
+      filterProfileUsed(DB.forDate(dk)).forEach(e => {
         const sub = e.substance || subs[0];
         subAmounts[sub] = (subAmounts[sub] || 0) + (e.amount ?? 1);
-        usedSubs.add(sub);
       });
     }
 
-    let total = 0;
-    for (const sub of subs) total += (subAmounts[sub] || 0);
-    if (total > maxTotal) maxTotal = total;
-    monthData.push({ label, subAmounts });
+    buckets.push({ subAmounts, label: MONTH_NAMES[m], showLabel: true });
   }
 
-  if (maxTotal <= 0) return null;
-
-  const effectiveMax = calcGridScale(maxTotal).gridMax;
-  let inner = '';
-  for (let i = 0; i < monthData.length; i++) {
-    const mo = monthData[i];
-    let total = 0;
-    for (const sub of subs) total += (mo.subAmounts[sub] || 0);
-    const totalH = effectiveMax > 0 ? Math.round((total / effectiveMax) * 96) : 0;
-
-    let segments = '';
-    for (const sub of subs) {
-      const val = mo.subAmounts[sub] || 0;
-      if (val <= 0) continue;
-      const segH = effectiveMax > 0 ? Math.max(Math.round((val / effectiveMax) * 96), 2) : 0;
-      segments += `<div class="graph-bar-seg" style="height:${segH}px;background:${colorMap[sub]}"></div>`;
-    }
-
-    inner += `<div class="graph-bar-col">
-      <div class="graph-bar graph-bar-stacked" style="height:${totalH}px;${total > 0 ? 'min-height:2px' : ''}">${segments}</div>
-      <div class="graph-bar-label">${mo.label}</div>
-    </div>`;
-  }
-
-  const activeSubs = subs.filter(s => usedSubs.has(s));
-  let legend = '';
-  if (activeSubs.length > 1) {
-    legend = '<div class="hm-legend">';
-    for (const sub of activeSubs) {
-      legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
-      legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
-    }
-    legend += '</div>';
-  }
-
-  return wrapBarsWithGrid(inner, maxTotal) + legend;
+  return renderStackedBars(buckets, ctx);
 }
 
 /** Build a category graph (one bar per category key, e.g. reason/trigger) */
@@ -2872,11 +2755,11 @@ function renderGraphs() {
   const past24Hours = startOfCurrentHour.getTime() - (23 * 60 * 60 * 1000);
   const allEvents = DB.loadEvents();
   const past24Used = filterProfileUsed(allEvents.filter(evt => evt.ts >= past24Hours && evt.ts <= nowMs));
-  const hasHourData = past24Used.length > 0;
   const graphStartHour = (currentHour + 1) % 24;
+  const hourResult = past24Used.length > 0 ? buildStackedHourGraphBars(past24Used, graphStartHour) : null;
   hourHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Usage over past 24 hours by hour" data-tooltip="Shows your use over the past 24 hours, broken down by hour and type. Helps identify your peak usage times."><div class="graph-title">🕒 Usage Over Past 24 Hours</div>`;
-  hourHtml += hasHourData
-    ? buildStackedHourGraphBars(past24Used, graphStartHour)
+  hourHtml += hourResult
+    ? hourResult
     : emptyStateHTML('No data yet', 'compact');
   hourHtml += `</div>`;
 
