@@ -811,7 +811,7 @@ function consolidateDay(dayKey) {
 
       if (!keeper.consolidated) {
         // First-time merge: combine ALL events into the keeper
-        keeper.consolidated = true;
+        keeper.consolidated = group.length;
         keeper.modifiedAt = now();
 
         if (keeper.type === 'used') {
@@ -842,7 +842,7 @@ function consolidateDay(dayKey) {
     } else if (!keeper.consolidated) {
       // Single event not yet flagged
       changed = true;
-      keeper.consolidated = true;
+      keeper.consolidated = 1;
       keeper.modifiedAt = now();
     }
     kept.push(keeper);
@@ -3524,6 +3524,7 @@ function saveCreateModal() {
           keeper.minutes = (keeper.minutes || 5) + ((evt.minutes > 0) ? evt.minutes : 5);
         }
       }
+      keeper.consolidated = (keeper.consolidated || 1) + 1;
       keeper.modifiedAt = now();
       DB.saveEvents();
     } else {

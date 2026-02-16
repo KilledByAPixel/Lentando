@@ -1649,7 +1649,7 @@ test('merges multiple used events for same substance', () => {
   eq(evts[0].amount, 6, 'should sum amounts');
   eq(evts[0].method, 'mixed', 'mixed methods');
   eq(evts[0].reason, 'mixed', 'mixed reasons');
-  ok(evts[0].consolidated, 'should have consolidated flag');
+  eq(evts[0].consolidated, 3, 'consolidated count = 3 events');
 });
 
 test('keeps separate groups for different substances', () => {
@@ -1667,7 +1667,9 @@ test('keeps separate groups for different substances', () => {
   const thc = evts.find(e => e.substance === 'thc');
   const cbd = evts.find(e => e.substance === 'cbd');
   eq(thc.amount, 5, 'thc summed');
+  eq(thc.consolidated, 2, 'thc consolidated count = 2');
   eq(cbd.amount, 1, 'cbd unchanged');
+  eq(cbd.consolidated, 1, 'cbd consolidated count = 1');
 });
 
 test('merges resisted events', () => {
@@ -1684,7 +1686,7 @@ test('merges resisted events', () => {
   eq(evts.length, 1, 'all resisted merge to one');
   eq(evts[0].intensity, 10, 'intensities summed');
   eq(evts[0].trigger, 'mixed', 'different triggers become mixed');
-  ok(evts[0].consolidated);
+  eq(evts[0].consolidated, 3, 'consolidated count = 3');
 });
 
 test('merges water habits with count', () => {
@@ -1701,7 +1703,7 @@ test('merges water habits with count', () => {
   eq(evts.length, 1, 'water merged to one');
   eq(evts[0].count, 3, 'count = 3');
   eq(evts[0].minutes, undefined, 'no minutes for water');
-  ok(evts[0].consolidated);
+  eq(evts[0].consolidated, 3, 'consolidated count = 3');
 });
 
 test('merges exercise habits with summed minutes', () => {
@@ -1716,7 +1718,7 @@ test('merges exercise habits with summed minutes', () => {
   const evts = DB.forDate(day);
   eq(evts.length, 1);
   eq(evts[0].minutes, 50, 'minutes summed');
-  ok(evts[0].consolidated);
+  eq(evts[0].consolidated, 2, 'consolidated count = 2');
 });
 
 test('exercise with no minutes uses 5-min default', () => {
@@ -1742,7 +1744,7 @@ test('single event still gets consolidated flag', () => {
   const evts = DB.forDate(day);
   eq(evts.length, 1);
   eq(evts[0].amount, 2, 'amount unchanged');
-  ok(evts[0].consolidated);
+  eq(evts[0].consolidated, 1, 'single event consolidated count = 1');
 });
 
 test('no-op if all events already consolidated', () => {
@@ -1750,7 +1752,7 @@ test('no-op if all events already consolidated', () => {
   setSettings({ addictionProfile: 'cannabis' });
   const day = '2025-10-15';
   const e = makeUsedEvent(makeTs(day, 10), 'thc', 5);
-  e.consolidated = true;
+  e.consolidated = 1;
   addEvents([e]);
   const changed = consolidateDay(day);
   ok(!changed, 'should report no changes');
@@ -1793,7 +1795,7 @@ test('discards strays when keeper already consolidated', () => {
   const stray1 = makeUsedEvent(makeTs(day, 10), 'thc', 1);
   const stray2 = makeUsedEvent(makeTs(day, 14), 'thc', 1);
   const keeper = makeUsedEvent(makeTs(day, 20), 'thc', 3);
-  keeper.consolidated = true;
+  keeper.consolidated = 3;
   addEvents([stray1, stray2, keeper]);
   const changed = consolidateDay(day);
   ok(changed, 'strays removed');
@@ -1801,6 +1803,7 @@ test('discards strays when keeper already consolidated', () => {
   eq(evts.length, 1, 'only keeper remains');
   eq(evts[0].id, keeper.id, 'keeper preserved');
   eq(evts[0].amount, 3, 'amount NOT re-summed — strays discarded');
+  eq(evts[0].consolidated, 3, 'consolidated count unchanged');
 });
 
 test('no tombstones created during consolidation', () => {
@@ -1859,7 +1862,7 @@ test('consolidates days older than cutoff only', () => {
   const oldEvts = DB.forDate(oldDay);
   eq(oldEvts.length, 1, 'old day merged');
   eq(oldEvts[0].amount, 5, 'old day amounts summed');
-  ok(oldEvts[0].consolidated);
+  eq(oldEvts[0].consolidated, 2, 'consolidated count = 2');
   // Recent day should be untouched
   const recentEvts = DB.forDate(recentDay);
   eq(recentEvts.length, 2, 'recent day not merged');
@@ -1871,7 +1874,7 @@ test('skips already-consolidated days', () => {
   setSettings({ addictionProfile: 'cannabis' });
   const oldDay = daysAgoKey(90);
   const e = makeUsedEvent(makeTs(oldDay, 10), 'thc', 5);
-  e.consolidated = true;
+  e.consolidated = 1;
   addEvents([e]);
   // Should not trigger a save (no changes)
   consolidateOldEvents();
