@@ -2457,6 +2457,25 @@ function buildCategoryGraph(title, keys, totals, max, color, tooltip) {
   return `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${title}</div>${wrapBarsWithGrid(inner, max)}</div>`;
 }
 
+/** Heatmap color level: 0 = none, 1 = light, 2 = medium, 3 = dark */
+function heatmapLevel(count) {
+  if (count <= 0) return 0;
+  if (count < 2) return 1;
+  if (count < 5) return 2;
+  return 3;
+}
+
+function heatmapLegendHTML() {
+  return '<div class="hm-legend">'
+    + '<span class="hm-legend-heatmap-label">Less</span>'
+    + '<div class="hm-cell hm-swatch hm-lvl-0"></div>'
+    + '<div class="hm-cell hm-swatch hm-lvl-1"></div>'
+    + '<div class="hm-cell hm-swatch hm-lvl-2"></div>'
+    + '<div class="hm-cell hm-swatch hm-lvl-3"></div>'
+    + '<span class="hm-legend-heatmap-label">More</span>'
+    + '</div>';
+}
+
 function buildHeatmapHTML(days) {
   const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -2476,14 +2495,6 @@ function buildHeatmapHTML(days) {
   const hasAnyUse = grid.some(row => row.some(c => c > 0));
   if (!hasAnyUse) return '';
 
-  // Color level: 0 = none, 1 = light, 2 = medium, 3 = dark
-  function level(count) {
-    if (count <= 0) return 0;
-    if (count < 2) return 1;
-    if (count < 5) return 2;
-    return 3;
-  }
-
   let html = '<div class="graph-container" data-tooltip="Usage heatmap by day of week and hour. Darker blue means more total usage. Helps identify which days and times you use the most.">';
   html += '<div class="graph-title">☑️ Usage Heatmap</div>';
   html += '<div class="heatmap">';
@@ -2491,8 +2502,7 @@ function buildHeatmapHTML(days) {
   // Hour labels row
   html += '<div class="hm-row hm-header"><div class="hm-label"></div>';
   for (let h = 0; h < 24; h++) {
-    const show = h % 3 === 0;
-    const txt = show ? (h === 0 ? '12a' : h < 12 ? h + 'a' : h === 12 ? '12p' : (h - 12) + 'p') : '';
+    const txt = h % 3 === 0 ? formatHourLabel(h) : '';
     html += `<div class="hm-cell hm-hour-label">${txt}</div>`;
   }
   html += '</div>';
@@ -2502,23 +2512,14 @@ function buildHeatmapHTML(days) {
     html += `<div class="hm-row"><div class="hm-label">${DAY_NAMES[dow]}</div>`;
     for (let h = 0; h < 24; h++) {
       const count = grid[dow][h];
-      const lvl = level(count);
+      const lvl = heatmapLevel(count);
       const display = count > 0 ? (Number.isInteger(count) ? count : count.toFixed(1)) : '0';
       html += `<div class="hm-cell hm-lvl-${lvl}" title="${DAY_NAMES[dow]} ${h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : (h - 12) + 'pm'}: ${display}"></div>`;
     }
     html += '</div>';
   }
 
-  // Legend
-  html += '<div class="hm-legend">';
-  html += '<span class="hm-legend-heatmap-label">Less</span>';
-  html += '<div class="hm-cell hm-swatch hm-lvl-0"></div>';
-  html += '<div class="hm-cell hm-swatch hm-lvl-1"></div>';
-  html += '<div class="hm-cell hm-swatch hm-lvl-2"></div>';
-  html += '<div class="hm-cell hm-swatch hm-lvl-3"></div>';
-  html += '<span class="hm-legend-heatmap-label">More</span>';
-  html += '</div>';
-
+  html += heatmapLegendHTML();
   html += '</div></div>';
   return html;
 }
@@ -2557,13 +2558,7 @@ function buildYearlyHeatmapHTML() {
   // For current month, grey out future days
   const todayDay = now.getDate(); // 1-based
 
-  // Same level scale as the existing heatmap
-  function level(count) {
-    if (count <= 0) return 0;
-    if (count < 2) return 1;
-    if (count < 5) return 2;
-    return 3;
-  }
+
 
   let html = '<div class="graph-container" data-tooltip="Usage heatmap by month and day for the past year. Darker blue means more usage that day. Shows yearly patterns at a glance.">';
   html += '<div class="graph-title">🏛️ Yearly Usage Heatmap</div>';
@@ -2589,7 +2584,7 @@ function buildYearlyHeatmapHTML() {
           html += '<div class="hm-cell yhm-empty"></div>';
         } else {
           const count = grid[mi][d - 1];
-          const lvl = level(count);
+          const lvl = heatmapLevel(count);
           const display = count > 0 ? (Number.isInteger(count) ? count : count.toFixed(1)) : '0';
           html += `<div class="hm-cell hm-lvl-${lvl}" title="${mo.label} ${d}: ${display}"></div>`;
         }
@@ -2601,16 +2596,7 @@ function buildYearlyHeatmapHTML() {
     html += '</div>';
   }
 
-  // Legend (same as existing heatmap)
-  html += '<div class="hm-legend">';
-  html += '<span class="hm-legend-heatmap-label">Less</span>';
-  html += '<div class="hm-cell hm-swatch hm-lvl-0"></div>';
-  html += '<div class="hm-cell hm-swatch hm-lvl-1"></div>';
-  html += '<div class="hm-cell hm-swatch hm-lvl-2"></div>';
-  html += '<div class="hm-cell hm-swatch hm-lvl-3"></div>';
-  html += '<span class="hm-legend-heatmap-label">More</span>';
-  html += '</div>';
-
+  html += heatmapLegendHTML();
   html += '</div></div>';
   return html;
 }
