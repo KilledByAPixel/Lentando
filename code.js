@@ -175,6 +175,7 @@ const TBREAK_MILESTONES = [1, 7, 14, 21, 30, 365];
 const APP_STREAK_MILESTONES = [2, 7, 30, 365];
 const EARLY_HOUR = 6;
 const MAX_STREAK_DAYS = 60;
+const CONSOLIDATION_DAYS = 60;
 
 const COACHING_MESSAGES = [
   '🌬️ Take 10 slow breaths',
@@ -628,14 +629,14 @@ const DB = {
     try {
       const raw = this._readTombstoneMap();
       const entries = Object.entries(raw);
-      const ninetyDaysAgo = now() - (90 * 24 * 60 * 60 * 1000);
+      const cutoff = now() - (90 * 24 * 60 * 60 * 1000);
       const cleaned = {};
       for (const [id, deletedAt] of entries) {
-        if (deletedAt > ninetyDaysAgo) cleaned[id] = deletedAt;
+        if (deletedAt > cutoff) cleaned[id] = deletedAt;
       }
       if (Object.keys(cleaned).length < entries.length) {
         safeSetItem(STORAGE_DELETED_IDS, JSON.stringify(cleaned));
-        console.log(`[Tombstone] Cleaned ${entries.length - Object.keys(cleaned).length} old tombstones`);
+        if (debugMode) console.log(`[Tombstone] Cleaned ${entries.length - Object.keys(cleaned).length} old tombstones`);
       }
     } catch (e) {
       console.error('Failed to clean tombstones:', e);
@@ -763,6 +764,128 @@ function createHabitEvent(habit, minutes) {
   const evt = { id: uid(), type: 'habit', ts: now(), habit };
   if (minutes) evt.minutes = minutes;
   return evt;
+}
+
+// ========== EVENT CONSOLIDATION ==========
+
+/**
+ * Consolidate all events for a single day into one event per type-group.
+ * Groups: used→by substance, resisted→one per day, habit→by habit type.
+ * Keeps the most recent event per group, merges data into it, removes the rest.
+ * Returns true if any events were removed.
+ */
+function consolidateDay(dayKey) {
+  DB.loadEvents();
+  const allEvents = DB._events;
+  // Partition events for this day vs everything else
+  const dayEvents = [];
+  const otherEvents = [];
+  for (const e of allEvents) {
+    if (dateKey(e.ts) === dayKey) dayEvents.push(e);
+    else otherEvents.push(e);
+  }
+  if (dayEvents.length === 0) return false;
+
+  // Group by consolidation key
+  const groups = new Map();
+  for (const e of dayEvents) {
+    let key;
+    if (e.type === 'used') key = 'used:' + (e.substance || 'unknown');
+    else if (e.type === 'resisted') key = 'resisted';
+    else if (e.type === 'habit') key = 'habit:' + (e.habit || 'unknown');
+    else key = 'other:' + e.id; // unknown type, keep as-is
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(e);
+  }
+
+  // Merge each group
+  const kept = [];
+  let changed = false;
+  for (const [, group] of groups) {
+    // Sort by ts descending — keep the most recent
+    group.sort((a, b) => b.ts - a.ts);
+    const keeper = group[0];
+
+    if (group.length > 1 || !keeper.consolidated) {
+      changed = true;
+      keeper.consolidated = true;
+      keeper.modifiedAt = now();
+
+      if (group.length > 1) {
+        if (keeper.type === 'used') {
+          // Sum amounts
+          keeper.amount = group.reduce((s, e) => s + (e.amount ?? 1), 0);
+          // Method: keep if uniform, 'mixed' if different
+          const methods = [...new Set(group.map(e => e.method).filter(Boolean))];
+          if (methods.length > 1) keeper.method = 'mixed';
+          else if (methods.length === 1) keeper.method = methods[0];
+          // Reason: keep if uniform, 'mixed' if different
+          const reasons = [...new Set(group.map(e => e.reason).filter(Boolean))];
+          if (reasons.length > 1) keeper.reason = 'mixed';
+          else if (reasons.length === 1) keeper.reason = reasons[0];
+
+        } else if (keeper.type === 'resisted') {
+          // Sum intensity
+          keeper.intensity = group.reduce((s, e) => s + (e.intensity || 1), 0);
+          // Trigger: keep if uniform, 'mixed' if different
+          const triggers = [...new Set(group.map(e => e.trigger).filter(Boolean))];
+          if (triggers.length > 1) keeper.trigger = 'mixed';
+          else if (triggers.length === 1) keeper.trigger = triggers[0];
+
+        } else if (keeper.type === 'habit') {
+          if (keeper.habit === 'water') {
+            // Water: just count, no minutes
+            keeper.count = group.reduce((s, e) => s + (e.count || 1), 0);
+            delete keeper.minutes;
+          } else {
+            // Other habits: sum minutes (5-min rule for untimed)
+            keeper.minutes = group.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0);
+          }
+        }
+      }
+    }
+    kept.push(keeper);
+  }
+
+  if (!changed) return false;
+
+  // Tombstone removed events so cross-device sync doesn't resurrect them
+  for (const [, group] of groups) {
+    for (let i = 1; i < group.length; i++) {
+      DB._addTombstone(group[i].id);
+    }
+  }
+
+  DB._events = otherEvents.concat(kept);
+  DB._dateIndex = null;
+  return true;
+}
+
+/**
+ * Auto-consolidate events older than CONSOLIDATION_DAYS.
+ * Also cleans old tombstones. Called once on app start.
+ */
+function consolidateOldEvents() {
+  DB.loadEvents();
+  const cutoffKey = daysAgoKey(CONSOLIDATION_DAYS);
+  const allDayKeys = DB.getAllDayKeys(); // sorted reverse (newest first)
+  let anyChanged = false;
+
+  for (const dk of allDayKeys) {
+    if (dk >= cutoffKey) continue; // skip recent days
+    // Skip days where all events are already consolidated
+    const dayEvts = DB.forDate(dk);
+    if (dayEvts.length > 0 && dayEvts.every(e => e.consolidated)) continue;
+    if (consolidateDay(dk)) anyChanged = true;
+  }
+
+  if (anyChanged) {
+    DB.saveEvents();
+    if (debugMode) console.log('[Consolidation] Consolidated old events');
+  }
+
+  // Also clean old tombstones using same cutoff
+  DB._cleanOldTombstones();
 }
 
 // ========== BADGE CALCULATION HELPERS ==========
@@ -993,7 +1116,7 @@ const Badges = {
     }
 
     // --- Habit-based badges ---
-    const waterCount = getHabits(todayEvents, 'water').length;
+    const waterCount = getHabits(todayEvents, 'water').reduce((s, e) => s + (e.count || 1), 0);
     addBadge(waterCount >= 1, 'drank-water');
     addBadge(waterCount >= 5, 'hydrated');
     
@@ -1300,10 +1423,16 @@ function getResistedEventDetail(evt) {
 }
 
 function getHabitEventDetail(evt) {
+  let detail = '';
+  if (evt.habit === 'water' && evt.count > 1) {
+    detail = '×' + evt.count;
+  } else if (evt.minutes && evt.minutes > 0) {
+    detail = evt.minutes + ' min';
+  }
   return {
     icon: HABIT_ICONS[evt.habit] || '✅',
     title: HABIT_LABELS[evt.habit] || evt.habit,
-    detail: (evt.minutes && evt.minutes > 0) ? evt.minutes + ' min' : ''
+    detail
   };
 }
 
@@ -1318,15 +1447,17 @@ function eventRowHTML(e) {
   const time = formatTime(e.ts);
   const { icon, title, detail } = EVENT_DETAIL_BUILDERS[e.type]?.(e) || { icon: '', title: '', detail: '' };
   const safeId = escapeHTML(e.id);
+  const combinedLabel = e.consolidated ? ' (combined)' : '';
+  const actions = e.consolidated
+    ? `<button class="tl-act-btn" onclick="App.deleteEvent('${safeId}')" title="Delete" aria-label="Delete event">🗑️</button>`
+    : `<button class="tl-act-btn" onclick="App.editEvent('${safeId}')" title="Edit" aria-label="Edit event">✏️</button>
+          <button class="tl-act-btn" onclick="App.deleteEvent('${safeId}')" title="Delete" aria-label="Delete event">🗑️</button>`;
 
   return `<li class="timeline-item" data-id="${safeId}">
     <span class="tl-time">${time}</span>
     <span class="tl-icon">${escapeHTML(icon)}</span>
-    <div class="tl-body"><div class="tl-title">${escapeHTML(title)}</div><div class="tl-detail">${escapeHTML(detail)}</div></div>
-    <div class="tl-actions">
-          <button class="tl-act-btn" onclick="App.editEvent('${safeId}')" title="Edit" aria-label="Edit event">✏️</button>
-          <button class="tl-act-btn" onclick="App.deleteEvent('${safeId}')" title="Delete" aria-label="Delete event">🗑️</button>
-        </div>
+    <div class="tl-body"><div class="tl-title">${escapeHTML(title + combinedLabel)}</div><div class="tl-detail">${escapeHTML(detail)}</div></div>
+    <div class="tl-actions">${actions}</div>
   </li>`;
 }
 
@@ -1914,7 +2045,7 @@ function renderDayHistory() {
     // All 5 habits — show Five Star Day icon
     summaryParts.push('🌟');
   } else if (doneHabits.length > 0) {
-    const waterCount = getHabits(events, 'water').length;
+    const waterCount = getHabits(events, 'water').reduce((s, e) => s + (e.count || 1), 0);
     const actIcons = doneHabits.map(act => {
       if (act === 'water' && waterCount >= 5) return '🌊'; // Hydrated
       return HABIT_ICONS[act] || '✅';
@@ -1987,7 +2118,7 @@ function navigateDay(offset) {
 const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: '#f39c12',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
   { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').reduce((sum, e) => sum + (e.intensity || 1), 0), activity: false, tooltip: 'Total urge intensity resisted each day. Higher bars mean stronger urges resisted.' },
-  { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').length, activity: true, tooltip: 'Number of water uses logged each day. Staying hydrated supports recovery.' },
+  { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').reduce((s, e) => s + (e.count || 1), 0), activity: true, tooltip: 'Number of water uses logged each day. Staying hydrated supports recovery.' },
   { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Exercise minutes each day. Physical activity helps manage cravings. Untimed activities rounded up to 5 minutes each.' },
   { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Mindfulness or breathing minutes each day. Helps with stress and urges. Untimed activities rounded up to 5 minutes each.' },
   { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Cleaning or tidying minutes each day. Keeping busy is a great distraction. Untimed activities rounded up to 5 minutes each.' },
@@ -2100,7 +2231,7 @@ function buildStackedHourGraphBars(events, startHour) {
   // Build per-substance per-hour counts
   // hourData[hour] = { sub1: amount, sub2: amount, ... }
   const hourData = {};
-  events.forEach(evt => {
+  events.filter(e => !e.consolidated).forEach(evt => {
     const hour = getHour(evt.ts);
     if (!hourData[hour]) hourData[hour] = {};
     const sub = evt.substance || subs[0];
@@ -2180,7 +2311,7 @@ function buildStackedAvgHourBars(days) {
   const usedSubs = new Set();
 
   days.forEach(dayKey => {
-    const dayUsed = filterProfileUsed(DB.forDate(dayKey));
+    const dayUsed = filterProfileUsed(DB.forDate(dayKey)).filter(e => !e.consolidated);
     if (dayUsed.length === 0) return;
     daysWithUse++;
     dayUsed.forEach(evt => {
@@ -2337,7 +2468,7 @@ function buildHeatmapHTML(days) {
   const grid = Array.from({ length: 7 }, () => new Array(24).fill(0));
   for (const dayKey of days) {
     const dow = new Date(dayKey + 'T12:00:00').getDay();
-    const used = filterProfileUsed(DB.forDate(dayKey));
+    const used = filterProfileUsed(DB.forDate(dayKey)).filter(e => !e.consolidated);
     used.forEach(e => {
       const h = new Date(e.ts).getHours();
       grid[dow][h] += (e.amount ?? 1);
@@ -2766,6 +2897,7 @@ function switchTab(tabName) {
     if (el) {
       el.innerHTML =
         `💾 Storage used: ${getStorageUsageDisplay()}<br>` +
+        `📦 Events older than ${CONSOLIDATION_DAYS} days are automatically combined to save space.<br>` +
         `🔒 Your data stays on your device unless you sign in to sync. No ads, no data selling. Export or delete anytime.<br>` +
         `<a href="./privacy.html" target="_blank" rel="noopener noreferrer" class="link">Privacy Policy</a> · ` +
         `<a href="./terms.html" target="_blank" rel="noopener noreferrer" class="link">Terms of Use</a>`;
@@ -3357,6 +3489,12 @@ function saveCreateModal() {
   }
 
   DB.addEvent(evt);
+  // Auto-consolidate if the event is in a day older than CONSOLIDATION_DAYS
+  const evtDayKey = dateKey(evt.ts);
+  if (evtDayKey < daysAgoKey(CONSOLIDATION_DAYS)) {
+    consolidateDay(evtDayKey);
+    DB.saveEvents();
+  }
   calculateAndUpdateBadges();
   render();
   showToast(toastMsg);
@@ -3620,6 +3758,7 @@ function continueToApp() {
     DB.saveSettings();
     showOnboarding();
   } else {
+    consolidateOldEvents();
     calculateAndUpdateBadges();
     bindEvents();
     render();

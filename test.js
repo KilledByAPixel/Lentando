@@ -177,6 +177,9 @@ const exposePatch = `
   _w.avgDailyAmount = avgDailyAmount;
   _w.DB = DB;
   _w.STORAGE_VERSION = STORAGE_VERSION;
+  _w.CONSOLIDATION_DAYS = CONSOLIDATION_DAYS;
+  _w.consolidateDay = consolidateDay;
+  _w.consolidateOldEvents = consolidateOldEvents;
 })();
 `;
 
@@ -211,7 +214,9 @@ const {
   // Constants
   EARLY_HOUR, FIFTEEN_MINUTES_MS, GAP_MILESTONES, TBREAK_MILESTONES,
   APP_STREAK_MILESTONES, STORAGE_EVENTS, STORAGE_SETTINGS, STORAGE_BADGES,
-  STORAGE_DELETED_IDS, STORAGE_VERSION,
+  STORAGE_DELETED_IDS, STORAGE_VERSION, CONSOLIDATION_DAYS,
+  // Consolidation
+  consolidateDay, consolidateOldEvents,
 } = sandbox;
 
 // ========== TEST FRAMEWORK ==========
@@ -1663,6 +1668,202 @@ test('returns 0 when no gaps exist', () => {
   const today = todayKey();
   addEvents([makeUsedEvent(makeTs(today, 10), 'thc', 1)]); // single event = no gap
   eq(avgWithinDayGapMs([today], filterUsed), 0);
+});
+
+// ========== TESTS: CONSOLIDATION ==========
+
+group('consolidateDay');
+
+test('merges multiple used events for same substance', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  addEvents([
+    makeUsedEvent(makeTs(day, 10), 'thc', 2, { method: 'vape', reason: 'stress' }),
+    makeUsedEvent(makeTs(day, 14), 'thc', 3, { method: 'vape', reason: 'stress' }),
+    makeUsedEvent(makeTs(day, 20), 'thc', 1, { method: 'edible', reason: 'fun' }),
+  ]);
+  const changed = consolidateDay(day);
+  ok(changed, 'should report changes');
+  const evts = DB.forDate(day);
+  eq(evts.length, 1, 'should merge to one event');
+  eq(evts[0].amount, 6, 'should sum amounts');
+  eq(evts[0].method, 'mixed', 'mixed methods');
+  eq(evts[0].reason, 'mixed', 'mixed reasons');
+  ok(evts[0].consolidated, 'should have consolidated flag');
+});
+
+test('keeps separate groups for different substances', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  addEvents([
+    makeUsedEvent(makeTs(day, 10), 'thc', 2),
+    makeUsedEvent(makeTs(day, 14), 'cbd', 1),
+    makeUsedEvent(makeTs(day, 18), 'thc', 3),
+  ]);
+  consolidateDay(day);
+  const evts = DB.forDate(day);
+  eq(evts.length, 2, 'should have two groups');
+  const thc = evts.find(e => e.substance === 'thc');
+  const cbd = evts.find(e => e.substance === 'cbd');
+  eq(thc.amount, 5, 'thc summed');
+  eq(cbd.amount, 1, 'cbd unchanged');
+});
+
+test('merges resisted events', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  addEvents([
+    makeResistEvent(makeTs(day, 10), { intensity: 3, trigger: 'boredom' }),
+    makeResistEvent(makeTs(day, 15), { intensity: 5, trigger: 'boredom' }),
+    makeResistEvent(makeTs(day, 20), { intensity: 2, trigger: 'stress' }),
+  ]);
+  consolidateDay(day);
+  const evts = DB.forDate(day);
+  eq(evts.length, 1, 'all resisted merge to one');
+  eq(evts[0].intensity, 10, 'intensities summed');
+  eq(evts[0].trigger, 'mixed', 'different triggers become mixed');
+  ok(evts[0].consolidated);
+});
+
+test('merges water habits with count', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  addEvents([
+    makeHabitEvent(makeTs(day, 8), 'water'),
+    makeHabitEvent(makeTs(day, 12), 'water'),
+    makeHabitEvent(makeTs(day, 18), 'water'),
+  ]);
+  consolidateDay(day);
+  const evts = DB.forDate(day);
+  eq(evts.length, 1, 'water merged to one');
+  eq(evts[0].count, 3, 'count = 3');
+  eq(evts[0].minutes, undefined, 'no minutes for water');
+  ok(evts[0].consolidated);
+});
+
+test('merges exercise habits with summed minutes', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  addEvents([
+    makeHabitEvent(makeTs(day, 8), 'exercise', { minutes: 30 }),
+    makeHabitEvent(makeTs(day, 17), 'exercise', { minutes: 20 }),
+  ]);
+  consolidateDay(day);
+  const evts = DB.forDate(day);
+  eq(evts.length, 1);
+  eq(evts[0].minutes, 50, 'minutes summed');
+  ok(evts[0].consolidated);
+});
+
+test('exercise with no minutes uses 5-min default', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  addEvents([
+    makeHabitEvent(makeTs(day, 8), 'exercise', { minutes: 30 }),
+    makeHabitEvent(makeTs(day, 17), 'exercise'), // no minutes
+  ]);
+  consolidateDay(day);
+  const evts = DB.forDate(day);
+  eq(evts[0].minutes, 35, '30 + 5 default');
+});
+
+test('single event still gets consolidated flag', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  addEvents([makeUsedEvent(makeTs(day, 10), 'thc', 2)]);
+  const changed = consolidateDay(day);
+  ok(changed, 'marks single event as consolidated');
+  const evts = DB.forDate(day);
+  eq(evts.length, 1);
+  eq(evts[0].amount, 2, 'amount unchanged');
+  ok(evts[0].consolidated);
+});
+
+test('no-op if all events already consolidated', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  const e = makeUsedEvent(makeTs(day, 10), 'thc', 5);
+  e.consolidated = true;
+  addEvents([e]);
+  const changed = consolidateDay(day);
+  ok(!changed, 'should report no changes');
+});
+
+test('does not touch events on other days', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day1 = '2025-10-15';
+  const day2 = '2025-10-16';
+  addEvents([
+    makeUsedEvent(makeTs(day1, 10), 'thc', 2),
+    makeUsedEvent(makeTs(day1, 14), 'thc', 3),
+    makeUsedEvent(makeTs(day2, 10), 'thc', 7),
+  ]);
+  consolidateDay(day1);
+  const evtsDay2 = DB.forDate(day2);
+  eq(evtsDay2.length, 1, 'day2 untouched');
+  eq(evtsDay2[0].amount, 7, 'day2 amount untouched');
+  ok(!evtsDay2[0].consolidated, 'day2 not consolidated');
+});
+
+test('keeps most recent event as keeper', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  const e1 = makeUsedEvent(makeTs(day, 10), 'thc', 1);
+  const e2 = makeUsedEvent(makeTs(day, 20), 'thc', 1);
+  addEvents([e1, e2]);
+  consolidateDay(day);
+  const evts = DB.forDate(day);
+  eq(evts[0].id, e2.id, 'most recent event kept');
+});
+
+group('consolidateOldEvents');
+
+test('consolidates days older than cutoff only', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  // Create events: one old day (90 days ago) and one recent day (today)
+  const oldDay = daysAgoKey(90);
+  const recentDay = todayKey();
+  addEvents([
+    makeUsedEvent(makeTs(oldDay, 10), 'thc', 2),
+    makeUsedEvent(makeTs(oldDay, 14), 'thc', 3),
+    makeUsedEvent(makeTs(recentDay, 10), 'thc', 7),
+    makeUsedEvent(makeTs(recentDay, 14), 'thc', 8),
+  ]);
+  consolidateOldEvents();
+  // Old day should be consolidated
+  const oldEvts = DB.forDate(oldDay);
+  eq(oldEvts.length, 1, 'old day merged');
+  eq(oldEvts[0].amount, 5, 'old day amounts summed');
+  ok(oldEvts[0].consolidated);
+  // Recent day should be untouched
+  const recentEvts = DB.forDate(recentDay);
+  eq(recentEvts.length, 2, 'recent day not merged');
+  ok(!recentEvts[0].consolidated, 'recent not flagged');
+});
+
+test('skips already-consolidated days', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const oldDay = daysAgoKey(90);
+  const e = makeUsedEvent(makeTs(oldDay, 10), 'thc', 5);
+  e.consolidated = true;
+  addEvents([e]);
+  // Should not trigger a save (no changes)
+  consolidateOldEvents();
+  const evts = DB.forDate(oldDay);
+  eq(evts.length, 1);
+  eq(evts[0].amount, 5, 'amount unchanged');
 });
 
 // ========== REPORT RESULTS ==========
