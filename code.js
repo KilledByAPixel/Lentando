@@ -806,55 +806,49 @@ function consolidateDay(dayKey) {
     group.sort((a, b) => b.ts - a.ts);
     const keeper = group[0];
 
-    if (group.length > 1 || !keeper.consolidated) {
+    if (group.length > 1) {
       changed = true;
-      keeper.consolidated = true;
-      keeper.modifiedAt = now();
 
-      if (group.length > 1) {
+      if (!keeper.consolidated) {
+        // First-time merge: combine ALL events into the keeper
+        keeper.consolidated = true;
+        keeper.modifiedAt = now();
+
         if (keeper.type === 'used') {
-          // Sum amounts
           keeper.amount = group.reduce((s, e) => s + (e.amount ?? 1), 0);
-          // Method: keep if uniform, 'mixed' if different
           const methods = [...new Set(group.map(e => e.method).filter(Boolean))];
           if (methods.length > 1) keeper.method = 'mixed';
           else if (methods.length === 1) keeper.method = methods[0];
-          // Reason: keep if uniform, 'mixed' if different
           const reasons = [...new Set(group.map(e => e.reason).filter(Boolean))];
           if (reasons.length > 1) keeper.reason = 'mixed';
           else if (reasons.length === 1) keeper.reason = reasons[0];
-
         } else if (keeper.type === 'resisted') {
-          // Sum intensity
           keeper.intensity = group.reduce((s, e) => s + (e.intensity || 1), 0);
-          // Trigger: keep if uniform, 'mixed' if different
           const triggers = [...new Set(group.map(e => e.trigger).filter(Boolean))];
           if (triggers.length > 1) keeper.trigger = 'mixed';
           else if (triggers.length === 1) keeper.trigger = triggers[0];
-
         } else if (keeper.type === 'habit') {
           if (keeper.habit === 'water') {
-            // Water: just count, no minutes
             keeper.count = group.reduce((s, e) => s + (e.count || 1), 0);
             delete keeper.minutes;
           } else {
-            // Other habits: sum minutes (5-min rule for untimed)
             keeper.minutes = group.reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0);
           }
         }
       }
+      // If keeper IS already consolidated: extras are stale sync strays.
+      // Discard them silently — they were already counted in the original merge.
+      // New past events are absorbed at the call site (saveCreateModal) instead.
+    } else if (!keeper.consolidated) {
+      // Single event not yet flagged
+      changed = true;
+      keeper.consolidated = true;
+      keeper.modifiedAt = now();
     }
     kept.push(keeper);
   }
 
   if (!changed) return false;
-
-  // Tombstone removed events so cross-device sync doesn't resurrect them
-  for (const [, group] of groups) {
-    for (let i = 1; i < group.length; i++) {
-      DB._addTombstone(group[i].id);
-    }
-  }
 
   DB._events = otherEvents.concat(kept);
   DB._dateIndex = null;
@@ -3488,12 +3482,54 @@ function saveCreateModal() {
     toastMsg = `☑️ Logged ${sessionLabel}`;
   }
 
-  DB.addEvent(evt);
-  // Auto-consolidate if the event is in a day older than CONSOLIDATION_DAYS
+  // If the event falls on an already-consolidated day, absorb it directly
+  // into the existing keeper instead of adding a separate event.
   const evtDayKey = dateKey(evt.ts);
   if (evtDayKey < daysAgoKey(CONSOLIDATION_DAYS)) {
-    consolidateDay(evtDayKey);
-    DB.saveEvents();
+    const dayEvts = DB.forDate(evtDayKey);
+    // Find consolidated keeper matching this event's group
+    let groupKey;
+    if (evt.type === 'used') groupKey = 'used:' + (evt.substance || 'unknown');
+    else if (evt.type === 'resisted') groupKey = 'resisted';
+    else if (evt.type === 'habit') groupKey = 'habit:' + (evt.habit || 'unknown');
+    const keeper = dayEvts.find(e => {
+      if (!e.consolidated) return false;
+      let k;
+      if (e.type === 'used') k = 'used:' + (e.substance || 'unknown');
+      else if (e.type === 'resisted') k = 'resisted';
+      else if (e.type === 'habit') k = 'habit:' + (e.habit || 'unknown');
+      return k === groupKey;
+    });
+
+    if (keeper) {
+      // Absorb new event into existing keeper
+      if (keeper.type === 'used') {
+        keeper.amount = (keeper.amount ?? 1) + (evt.amount ?? 1);
+        if (evt.method && keeper.method && evt.method !== keeper.method) keeper.method = 'mixed';
+        else if (evt.method && !keeper.method) keeper.method = evt.method;
+        if (evt.reason && keeper.reason && evt.reason !== keeper.reason) keeper.reason = 'mixed';
+        else if (evt.reason && !keeper.reason) keeper.reason = evt.reason;
+      } else if (keeper.type === 'resisted') {
+        keeper.intensity = (keeper.intensity || 1) + (evt.intensity || 1);
+        if (evt.trigger && keeper.trigger && evt.trigger !== keeper.trigger) keeper.trigger = 'mixed';
+        else if (evt.trigger && !keeper.trigger) keeper.trigger = evt.trigger;
+      } else if (keeper.type === 'habit') {
+        if (keeper.habit === 'water') {
+          keeper.count = (keeper.count || 1) + (evt.count || 1);
+        } else {
+          keeper.minutes = (keeper.minutes || 5) + ((evt.minutes > 0) ? evt.minutes : 5);
+        }
+      }
+      keeper.modifiedAt = now();
+      DB.saveEvents();
+    } else {
+      // No keeper yet for this group — add normally, then consolidate the day
+      DB.addEvent(evt);
+      consolidateDay(evtDayKey);
+      DB.saveEvents();
+    }
+  } else {
+    DB.addEvent(evt);
   }
   calculateAndUpdateBadges();
   render();

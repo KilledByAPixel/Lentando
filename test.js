@@ -1826,6 +1826,37 @@ test('keeps most recent event as keeper', () => {
   eq(evts[0].id, e2.id, 'most recent event kept');
 });
 
+test('discards strays when keeper already consolidated', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  // Simulate sync strays landing on an already-consolidated day
+  const stray1 = makeUsedEvent(makeTs(day, 10), 'thc', 1);
+  const stray2 = makeUsedEvent(makeTs(day, 14), 'thc', 1);
+  const keeper = makeUsedEvent(makeTs(day, 20), 'thc', 3);
+  keeper.consolidated = true;
+  addEvents([stray1, stray2, keeper]);
+  const changed = consolidateDay(day);
+  ok(changed, 'strays removed');
+  const evts = DB.forDate(day);
+  eq(evts.length, 1, 'only keeper remains');
+  eq(evts[0].id, keeper.id, 'keeper preserved');
+  eq(evts[0].amount, 3, 'amount NOT re-summed — strays discarded');
+});
+
+test('no tombstones created during consolidation', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  const e1 = makeUsedEvent(makeTs(day, 10), 'thc', 1);
+  const e2 = makeUsedEvent(makeTs(day, 14), 'thc', 1);
+  const e3 = makeUsedEvent(makeTs(day, 20), 'thc', 1);
+  addEvents([e1, e2, e3]);
+  consolidateDay(day);
+  const tombstones = JSON.parse(localStorage.getItem(STORAGE_DELETED_IDS) || '{}');
+  eq(Object.keys(tombstones).length, 0, 'no tombstones created');
+});
+
 group('consolidateOldEvents');
 
 test('consolidates days older than cutoff only', () => {
