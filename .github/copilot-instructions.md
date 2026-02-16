@@ -39,7 +39,7 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 
 ### Event Consolidation
 Events older than 60 days (`CONSOLIDATION_DAYS`) are automatically merged to save localStorage space. Runs once on app start via `consolidateOldEvents()`. A shared `consolidationGroupKey(e)` function produces the grouping key for both initial consolidation and past-event absorption. Group rules:
-- **Used events**: grouped by substance + method + reason — amounts summed, method/reason preserved per group
+- **Used events**: grouped by substance + reason — amounts summed, method becomes `'mixed'` if varied, reason preserved per group
 - **Resisted events**: grouped by trigger — intensity summed, trigger preserved per group
 - **Habit events**: grouped by habit type — water uses `count` field (no minutes), other habits sum minutes (5-min default for untimed)
 

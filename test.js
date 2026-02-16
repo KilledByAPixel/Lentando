@@ -1687,19 +1687,20 @@ test('merges multiple used events for same substance', () => {
   const day = '2025-10-15';
   addEvents([
     makeUsedEvent(makeTs(day, 10), 'thc', 2, { method: 'vape', reason: 'stress' }),
-    makeUsedEvent(makeTs(day, 14), 'thc', 3, { method: 'vape', reason: 'stress' }),
+    makeUsedEvent(makeTs(day, 14), 'thc', 3, { method: 'edible', reason: 'stress' }),
     makeUsedEvent(makeTs(day, 20), 'thc', 1, { method: 'edible', reason: 'fun' }),
   ]);
   const changed = consolidateDay(day);
   ok(changed, 'should report changes');
   const evts = DB.forDate(day);
-  eq(evts.length, 2, 'different method+reason = separate groups');
-  const vapeStress = evts.find(e => e.method === 'vape' && e.reason === 'stress');
-  const edibleFun = evts.find(e => e.method === 'edible' && e.reason === 'fun');
-  eq(vapeStress.amount, 5, 'vape+stress amounts summed');
-  eq(vapeStress.consolidated, 2, 'vape+stress consolidated count = 2');
-  eq(edibleFun.amount, 1, 'edible+fun amount unchanged');
-  eq(edibleFun.consolidated, 1, 'edible+fun consolidated count = 1');
+  eq(evts.length, 2, 'different reason = separate groups');
+  const stress = evts.find(e => e.reason === 'stress');
+  const fun = evts.find(e => e.reason === 'fun');
+  eq(stress.amount, 5, 'stress amounts summed');
+  eq(stress.method, 'mixed', 'different methods become mixed');
+  eq(stress.consolidated, 2, 'stress consolidated count = 2');
+  eq(fun.amount, 1, 'fun amount unchanged');
+  eq(fun.consolidated, 1, 'fun consolidated count = 1');
 });
 
 test('keeps separate groups for different substances', () => {

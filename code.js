@@ -785,7 +785,7 @@ function stripNulls(obj) {
  */
 /** Consolidation group key — same logic used for merging and absorbing past events */
 function consolidationGroupKey(e) {
-  if (e.type === 'used') return 'used:' + (e.substance || 'unknown') + ':' + (e.method || '') + ':' + (e.reason || '');
+  if (e.type === 'used') return 'used:' + (e.substance || 'unknown') + ':' + (e.reason || '');
   if (e.type === 'resisted') return 'resisted:' + (e.trigger || '');
   if (e.type === 'habit') return 'habit:' + (e.habit || 'unknown');
   return 'other:' + e.id;
@@ -829,7 +829,10 @@ function consolidateDay(dayKey) {
 
         if (keeper.type === 'used') {
           keeper.amount = group.reduce((s, e) => s + (e.amount ?? 1), 0);
-          // method & reason are identical within the group (grouped by them)
+          // reason is identical within the group; method may vary → 'mixed'
+          const methods = [...new Set(group.map(e => e.method).filter(Boolean))];
+          if (methods.length > 1) keeper.method = 'mixed';
+          else if (methods.length === 1) keeper.method = methods[0];
         } else if (keeper.type === 'resisted') {
           keeper.intensity = group.reduce((s, e) => s + (e.intensity || 1), 0);
           // trigger is identical within the group (grouped by it)
@@ -1432,8 +1435,9 @@ function getUsedEventDetail(evt) {
     icon,
     title,
     detail: [
-      // Only show method if it's still in the profile's active methods list
-      matchedProfile.methods && evt.method && matchedProfile.methods.includes(evt.method)
+      // Show method if it's in the profile's active methods list, or 'mixed' for consolidated events
+      evt.method === 'mixed' ? 'mixed'
+        : matchedProfile.methods && evt.method && matchedProfile.methods.includes(evt.method)
         ? (matchedProfile.methodDisplay ? (matchedProfile.methodDisplay[evt.method] || evt.method) : evt.method)
         : null,
       evt.amount != null && `${evt.amount} ${unit}`,
@@ -3594,7 +3598,9 @@ function saveCreateModal() {
       // Absorb new event into existing keeper
       if (keeper.type === 'used') {
         keeper.amount = (keeper.amount ?? 1) + (evt.amount ?? 1);
-        // method & reason match the keeper (same group key)
+        // reason matches the keeper (same group key); method may vary → 'mixed'
+        if (evt.method && keeper.method && evt.method !== keeper.method) keeper.method = 'mixed';
+        else if (evt.method && !keeper.method) keeper.method = evt.method;
       } else if (keeper.type === 'resisted') {
         keeper.intensity = (keeper.intensity || 1) + (evt.intensity || 1);
         // trigger matches the keeper (same group key)
