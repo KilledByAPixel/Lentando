@@ -559,6 +559,8 @@ window.addEventListener('focus', async () => {
     if (currentUser && Date.now() - _lastFocusPull > 30000) {
       _lastFocusPull = Date.now();
       try {
+        // Wait for any in-flight flush (from visibilitychange hidden) to complete first
+        if (_flushPromise) await _flushPromise;
         // Flush any pending local changes before pulling to avoid cloud overwriting them
         // (e.g., confirm() dialogs trigger blur/focus, and the debounced push hasn't fired yet)
         if (_syncTimer) {
@@ -666,6 +668,7 @@ function escapeHTMLSync(str) {
 // ========== DEBOUNCED SYNC ==========
 
 let _syncTimer = null;
+let _flushPromise = null;
 let _manualSyncInFlight = false;
 
 function debouncedSync() {
@@ -682,7 +685,9 @@ function flushPendingSync() {
   if (!_syncTimer || !currentUser) return;
   clearTimeout(_syncTimer);
   _syncTimer = null;
-  pushToCloud(currentUser.uid).catch(err => console.error('[Sync] Flush on close failed:', err));
+  _flushPromise = pushToCloud(currentUser.uid)
+    .catch(err => console.error('[Sync] Flush on close failed:', err))
+    .finally(() => { _flushPromise = null; });
 }
 
 // Flush pending writes when the user hides or closes the tab
