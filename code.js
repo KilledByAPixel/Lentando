@@ -2525,12 +2525,12 @@ function buildHeatmapHTML(days) {
 
   // Legend
   html += '<div class="hm-legend">';
-  html += '<span class="hm-legend-label">Less</span>';
+  html += '<span class="hm-legend-heatmap-label">Less</span>';
   html += '<div class="hm-cell hm-swatch hm-lvl-0"></div>';
   html += '<div class="hm-cell hm-swatch hm-lvl-1"></div>';
   html += '<div class="hm-cell hm-swatch hm-lvl-2"></div>';
   html += '<div class="hm-cell hm-swatch hm-lvl-3"></div>';
-  html += '<span class="hm-legend-label">More</span>';
+  html += '<span class="hm-legend-heatmap-label">More</span>';
   html += '</div>';
 
   html += '</div></div>';
@@ -2617,12 +2617,12 @@ function buildYearlyHeatmapHTML() {
 
   // Legend (same as existing heatmap)
   html += '<div class="hm-legend">';
-  html += '<span class="hm-legend-label">Less</span>';
+  html += '<span class="hm-legend-heatmap-label">Less</span>';
   html += '<div class="hm-cell hm-swatch hm-lvl-0"></div>';
   html += '<div class="hm-cell hm-swatch hm-lvl-1"></div>';
   html += '<div class="hm-cell hm-swatch hm-lvl-2"></div>';
   html += '<div class="hm-cell hm-swatch hm-lvl-3"></div>';
-  html += '<span class="hm-legend-label">More</span>';
+  html += '<span class="hm-legend-heatmap-label">More</span>';
   html += '</div>';
 
   html += '</div></div>';
