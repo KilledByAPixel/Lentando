@@ -1797,11 +1797,16 @@ function calculateAndUpdateBadges() {
   // Derive app start timestamp/date from current events only.
   // Always revalidated — never carried over from storage — so deleted events
   // can't leave a stale anchor that inflates t-break badges.
+  // EXCEPT: if there are NO events at all, preserve existing appStartDate so users
+  // with zero use events can still earn tbreak badges based on when they started the app.
   let appStartTs;
   const allEvents = DB.loadEvents();
   if (allEvents.length > 0) {
     appStartTs = allEvents[0].ts;
     for (let i = 1; i < allEvents.length; i++) if (allEvents[i].ts < appStartTs) appStartTs = allEvents[i].ts;
+  } else if (badgeData.appStartDate && badgeData.appStartTs) {
+    // No events but have saved start date — preserve it for tbreak badges
+    appStartTs = badgeData.appStartTs;
   } else {
     appStartTs = now();
   }
