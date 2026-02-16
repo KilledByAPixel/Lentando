@@ -52,16 +52,7 @@ function preBuildChecks() {
   
   let hasErrors = false;
   
-  // Check 1: Verify debugMode is false
-  const codeContent = fs.readFileSync('code.js', 'utf8');
-  if (codeContent.match(/const debugMode = true/)) {
-    console.error('  ❌ ERROR: debugMode is enabled in code.js!');
-    hasErrors = true;
-  } else {
-    console.log('  ✓ debugMode is disabled in code.js');
-  }
-  
-  // Check 2: Verify SW_DEBUG is false
+  // Check 1: Verify SW_DEBUG is false
   const swContent = fs.readFileSync('sw.js', 'utf8');
   if (swContent.match(/const SW_DEBUG = true/)) {
     console.error('  ❌ ERROR: SW_DEBUG is enabled in sw.js!');
@@ -126,7 +117,13 @@ function runTests() {
 
   for (const file of JS_FILES) {
     if (fs.existsSync(file)) {
-      const original = fs.readFileSync(file, 'utf8');
+      let original = fs.readFileSync(file, 'utf8');
+      
+      // Automatically disable debug mode in production builds
+      if (file === 'code.js') {
+        original = original.replace(/const debugMode = true;/, 'const debugMode = false;');
+      }
+      
       const originalKB = (Buffer.byteLength(original) / 1024).toFixed(1);
       const isModule = file === 'firebase-sync.js' || file === 'zzfx.js';
       const result = await minify(original, {
