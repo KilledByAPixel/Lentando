@@ -4252,6 +4252,9 @@ function bindEvents() {
     const SWIPE_MAX_Y = 80;
     let touchStartX = 0, touchStartY = 0;
 
+    const isZoomed = () =>
+      window.visualViewport ? window.visualViewport.scale > 1.01 : false;
+
     const isModalOpen = () =>
       ['modal-overlay', 'login-overlay', 'onboarding-overlay',
        'onboarding-flow-overlay', 'custom-config-overlay', 'reminder-overlay', 'landing-page'
@@ -4263,13 +4266,13 @@ function bindEvents() {
     };
 
     document.addEventListener('touchstart', e => {
-      if (isModalOpen()) return;
+      if (isModalOpen() || isZoomed() || e.touches.length > 1) return;
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
     }, { passive: true });
 
     document.addEventListener('touchend', e => {
-      if (isModalOpen()) return;
+      if (isModalOpen() || isZoomed()) return;
       const dx = e.changedTouches[0].clientX - touchStartX;
       const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
       if (dy > SWIPE_MAX_Y || Math.abs(dx) < SWIPE_THRESHOLD) return;
