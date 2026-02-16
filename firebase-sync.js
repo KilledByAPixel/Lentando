@@ -335,6 +335,10 @@ async function pullFromCloud(uid) {
     }
   }
   const merged = Array.from(eventMap.values()).sort((a, b) => a.ts - b.ts);
+  // Strip null-valued keys from events (ghost fields from old app versions)
+  for (const e of merged) {
+    for (const k of Object.keys(e)) { if (e[k] === null) delete e[k]; }
+  }
   (window.safeSetItem || localStorage.setItem.bind(localStorage))(STORAGE_KEYS.events, JSON.stringify(merged));
 
   // Check if local contributed events cloud didn't have, if cloud events were filtered

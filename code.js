@@ -766,6 +766,15 @@ function createHabitEvent(habit, minutes) {
   return evt;
 }
 
+/** Remove null-valued keys from an object in-place. Returns true if any were removed. */
+function stripNulls(obj) {
+  let stripped = false;
+  for (const k of Object.keys(obj)) {
+    if (obj[k] === null) { delete obj[k]; stripped = true; }
+  }
+  return stripped;
+}
+
 // ========== EVENT CONSOLIDATION ==========
 
 /**
@@ -871,6 +880,11 @@ function consolidateOldEvents() {
     const dayEvts = DB.forDate(dk);
     if (dayEvts.length > 0 && dayEvts.every(e => e.consolidated)) continue;
     if (consolidateDay(dk)) anyChanged = true;
+  }
+
+  // Strip null-valued keys from all events (cleans ghost fields from old versions / Firebase)
+  for (const e of DB._events) {
+    if (stripNulls(e)) anyChanged = true;
   }
 
   if (anyChanged) {

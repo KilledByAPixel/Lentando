@@ -175,7 +175,7 @@ const {
   APP_STREAK_MILESTONES, STORAGE_EVENTS, STORAGE_SETTINGS, STORAGE_BADGES,
   STORAGE_DELETED_IDS, STORAGE_VERSION, CONSOLIDATION_DAYS,
   // Consolidation
-  consolidateDay, consolidateOldEvents,
+  consolidateDay, consolidateOldEvents, stripNulls,
 } = sandbox;
 
 // ========== TEST FRAMEWORK ==========
@@ -1629,6 +1629,38 @@ test('returns 0 when no gaps exist', () => {
   eq(avgWithinDayGapMs([today], filterUsed), 0);
 });
 
+// ========== TESTS: STRIP NULLS ==========
+
+group('stripNulls');
+
+test('removes null-valued keys', () => {
+  const obj = { id: '123', type: 'used', note: null, reason: null, amount: 1 };
+  const changed = stripNulls(obj);
+  ok(changed, 'should report changes');
+  eq(obj.note, undefined, 'note removed');
+  eq(obj.reason, undefined, 'reason removed');
+  eq(obj.id, '123', 'id preserved');
+  eq(obj.amount, 1, 'amount preserved');
+});
+
+test('returns false when no nulls', () => {
+  const obj = { id: '123', type: 'used', amount: 1 };
+  const changed = stripNulls(obj);
+  ok(!changed, 'no changes');
+  eq(Object.keys(obj).length, 3, 'all keys preserved');
+});
+
+test('preserves falsy non-null values', () => {
+  const obj = { a: 0, b: false, c: '', d: undefined, e: null };
+  stripNulls(obj);
+  eq(obj.a, 0, 'zero preserved');
+  eq(obj.b, false, 'false preserved');
+  eq(obj.c, '', 'empty string preserved');
+  eq(obj.d, undefined, 'undefined preserved (not a key issue)');
+  eq(obj.e, undefined, 'null removed');
+  ok(!('e' in obj), 'null key deleted');
+});
+
 // ========== TESTS: CONSOLIDATION ==========
 
 group('consolidateDay');
@@ -1881,6 +1913,26 @@ test('skips already-consolidated days', () => {
   const evts = DB.forDate(oldDay);
   eq(evts.length, 1);
   eq(evts[0].amount, 5, 'amount unchanged');
+});
+
+test('strips null values from all events', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const recentDay = todayKey();
+  const e1 = makeUsedEvent(makeTs(recentDay, 10), 'thc', 2);
+  e1.note = null;
+  e1.didInstead = null;
+  e1.reason = null;
+  const e2 = makeHabitEvent(makeTs(recentDay, 12), 'water');
+  e2.minutes = null;
+  addEvents([e1, e2]);
+  consolidateOldEvents();
+  const evts = DB.forDate(recentDay);
+  // Even recent events should have nulls stripped
+  ok(!('note' in evts.find(e => e.type === 'used')), 'note null removed');
+  ok(!('didInstead' in evts.find(e => e.type === 'used')), 'didInstead null removed');
+  ok(!('reason' in evts.find(e => e.type === 'used')), 'reason null removed');
+  ok(!('minutes' in evts.find(e => e.type === 'habit')), 'minutes null removed');
 });
 
 // ========== REPORT RESULTS ==========
