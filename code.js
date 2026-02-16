@@ -2341,7 +2341,7 @@ function buildStackedHourGraphBars(events, startHour) {
     buckets.push({
       subAmounts: hourData[hour] || {},
       label: formatHourLabel(hour),
-      showLabel: i % 3 === 0,
+      showLabel: hour % 3 === 0,
       extraClass: hour === 0 ? 'graph-midnight-marker' : undefined
     });
   }
