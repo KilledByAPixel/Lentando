@@ -1000,7 +1000,7 @@ const Badges = {
 
     const badges = [];
     const addBadge = (condition, id) => {
-      if (condition) badges.push(id);
+      if (condition && !badges.includes(id)) badges.push(id);
     };
 
     const used     = filterUsed(todayEvents);
