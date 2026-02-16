@@ -1504,6 +1504,7 @@ function renderDate() {
   const settings = DB.loadSettings();
   setSoundButton(settings.soundEnabled);
   setUseButtonVisibility(settings.useButtonHidden);
+  setCoachingButton(settings.showCoaching);
 }
 
 function sumHabitCounts(events, habitTypes) {
@@ -1977,7 +1978,9 @@ function hasRecentWater() {
 function renderWaterReminder() {
   const reminderEl = $('water-reminder');
   if (!reminderEl) return;
-  reminderEl.classList.toggle('hidden', hasRecentWater());
+  const settings = DB.loadSettings();
+  // Hide if coaching disabled OR if user has recent water
+  reminderEl.classList.toggle('hidden', !settings.showCoaching || hasRecentWater());
 }
 
 // ========== HISTORY ==========
@@ -4953,6 +4956,18 @@ function setSoundButton(soundEnabled) {
   }
 }
 
+function setCoachingButton(coachingEnabled) {
+  const icon = $('coaching-icon-settings');
+  const text = $('coaching-text-settings');
+  if (coachingEnabled) {
+    if (icon) icon.textContent = '💬';
+    if (text) text.textContent = 'Coaching Messages Enabled';
+  } else {
+    if (icon) icon.textContent = '🤐';
+    if (text) text.textContent = 'Coaching Messages Disabled';
+  }
+}
+
 function setUseButtonVisibility(hidden) {
   const icon = $('use-btn-icon-settings');
   const text = $('use-btn-text-settings');
@@ -5094,6 +5109,13 @@ window.App = {
     settings.soundEnabled = !settings.soundEnabled;
     DB.saveSettings();
     setSoundButton(settings.soundEnabled);
+  },
+  toggleCoaching() {
+    const settings = DB.loadSettings();
+    settings.showCoaching = !settings.showCoaching;
+    DB.saveSettings();
+    setCoachingButton(settings.showCoaching);
+    renderWaterReminder();
   },
   toggleUseButton() {
     const settings = DB.loadSettings();
