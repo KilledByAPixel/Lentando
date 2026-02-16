@@ -1857,6 +1857,30 @@ test('no tombstones created during consolidation', () => {
   eq(Object.keys(tombstones).length, 0, 'no tombstones created');
 });
 
+test('consolidated events get modifiedAt timestamp', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  addEvents([
+    makeUsedEvent(makeTs(day, 10), 'thc', 2),
+    makeUsedEvent(makeTs(day, 14), 'thc', 3),
+  ]);
+  const before = Date.now();
+  consolidateDay(day);
+  const evts = DB.forDate(day);
+  eq(evts.length, 1);
+  ok(evts[0].modifiedAt >= before, 'modifiedAt set on merged keeper');
+
+  // Also verify a single-event consolidation gets modifiedAt
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day2 = '2025-10-16';
+  addEvents([makeHabitEvent(makeTs(day2, 8), 'water')]);
+  consolidateDay(day2);
+  const evts2 = DB.forDate(day2);
+  ok(evts2[0].modifiedAt >= before, 'modifiedAt set on single-event consolidation');
+});
+
 group('consolidateOldEvents');
 
 test('consolidates days older than cutoff only', () => {
