@@ -2497,7 +2497,7 @@ function buildHeatmapHTML(days) {
   if (!hasAnyUse) return '';
 
   let html = '<div class="graph-container" data-tooltip="Usage heatmap by day of week and hour. Darker blue means more total usage. Helps identify which days and times you use the most.">';
-  html += '<div class="graph-title">☑️ Usage Heatmap</div>';
+  html += '<div class="graph-title">☑️ Hourly Usage Heatmap</div>';
   html += '<div class="heatmap">';
 
   // Hour labels row
@@ -2759,17 +2759,6 @@ function renderGraphs() {
   let dayHtml = '';
   const isYearView = graphDays === 365;
 
-  // Usage heatmap by day-of-week
-  dayHtml += buildHeatmapHTML(days);
-
-  // Render average usage by hour — stacked by substance
-  const avgHourResult = buildStackedAvgHourBars(days);
-  dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Average usage by hour of day" data-tooltip="Your average hourly usage across days you used, broken down by type. Reveals your habitual usage patterns."><div class="graph-title">⏳ Average Usage by Hour</div>`;
-  dayHtml += avgHourResult
-    ? avgHourResult
-    : emptyStateHTML('No data yet', 'compact');
-  dayHtml += `</div>`;
-
   // Yearly usage heatmap — only shown in 1 year view, right after avg usage by hour
   if (isYearView) {
     // Amount Used / Month — stacked bar chart
@@ -2819,6 +2808,17 @@ function renderGraphs() {
       dayHtml += `</div>`;
     }
   }
+
+  // Usage heatmap by day-of-week
+  dayHtml += buildHeatmapHTML(days);
+
+  // Render average usage by hour — stacked by substance
+  const avgHourResult = buildStackedAvgHourBars(days);
+  dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Average usage by hour of day" data-tooltip="Your average hourly usage across days you used, broken down by type. Reveals your habitual usage patterns."><div class="graph-title">⏳ Average Usage by Hour</div>`;
+  dayHtml += avgHourResult
+    ? avgHourResult
+    : emptyStateHTML('No data yet', 'compact');
+  dayHtml += `</div>`;
 
   // Use by Reason graph — horizontal bars per reason, value = sum of amounts
   const reasonTotals = {};
