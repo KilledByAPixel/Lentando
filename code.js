@@ -62,6 +62,7 @@ const STORAGE_VERSION = 'ht_data_version';
 const STORAGE_DELETED_IDS = 'ht_deleted_ids';
 const STORAGE_DELETED_TODO_IDS = 'ht_deleted_todo_ids';
 const STORAGE_CLEARED_AT = 'ht_cleared_at';
+const STORAGE_CONSOLIDATED_AT = 'ht_consolidated_at';
 const DATA_VERSION = 3;
 
 const ADDICTION_PROFILES = {
@@ -455,6 +456,7 @@ function clearAllStorage() {
   localStorage.removeItem(STORAGE_DELETED_IDS);
   localStorage.removeItem(STORAGE_DELETED_TODO_IDS);
   localStorage.removeItem(STORAGE_CLEARED_AT);
+  localStorage.removeItem(STORAGE_CONSOLIDATED_AT);
   localStorage.removeItem('ht_last_updated');
   DB._events = null;
   DB._settings = null;
@@ -874,8 +876,12 @@ function consolidateOldEvents() {
   const allDayKeys = DB.getAllDayKeys(); // sorted reverse (newest first)
   let anyChanged = false;
 
+  // Skip days already consolidated in a previous run (cleared after sync pulls new data)
+  const consolidatedAt = localStorage.getItem(STORAGE_CONSOLIDATED_AT) || '';
+
   for (const dk of allDayKeys) {
     if (dk >= cutoffKey) continue; // skip recent days
+    if (dk <= consolidatedAt) break; // already consolidated in a previous run (sorted newest-first)
     // Skip days where all events are already consolidated
     const dayEvts = DB.forDate(dk);
     if (dayEvts.length > 0 && dayEvts.every(e => e.consolidated)) continue;
@@ -891,6 +897,10 @@ function consolidateOldEvents() {
     DB.saveEvents();
     if (debugMode) console.log('[Consolidation] Consolidated old events');
   }
+
+  // Record the cutoff so future runs can skip days already consolidated
+  // (cleared after sync pulls to ensure new synced old events get re-checked)
+  safeSetItem(STORAGE_CONSOLIDATED_AT, cutoffKey);
 
   // Also clean old tombstones using same cutoff
   DB._cleanOldTombstones();

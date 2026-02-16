@@ -480,6 +480,9 @@ async function pullFromCloud(uid) {
   // This ensures continueToApp() will read fresh data
   invalidateDBCaches();
 
+  // Clear consolidation cutoff so new synced old events get consolidated on next app start
+  localStorage.removeItem('ht_consolidated_at');
+
   // Only push merged state back if the merge produced changes cloud doesn't have
   if (needsPushBack) {
     await pushToCloud(uid);
