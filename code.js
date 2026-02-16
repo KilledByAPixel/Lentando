@@ -2798,11 +2798,11 @@ function renderGraphs() {
         continue;
       }
 
-      let vals = days.map(dk => def.valueFn(DB.forDate(dk)));
-      let max  = Math.max(...vals, 1);
-      let hasData = vals.some(v => v > 0);
-      let label = def.label;
-      let tooltip = def.tooltip;
+      const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
+      const max  = Math.max(...vals, 1);
+      const hasData = vals.some(v => v > 0);
+      const label = def.label;
+      const tooltip = def.tooltip;
 
       // For activity graphs, skip rendering if no data at all
       if (def.activity && !hasData) continue;
@@ -5291,7 +5291,6 @@ if (debugMode) {
     generateTestBadges();
     calculateAndUpdateBadges();
     render();
-    if (App.currentView === 'graphs') renderCharts();
     console.log('✅ All test data generated!');
   }
 
@@ -5462,7 +5461,6 @@ if (debugMode) {
   }
 
   function generateUseEvent(daysAgo) {
-    const settings = DB.loadSettings();
     const profile = getProfile();
     
     // Parse input
@@ -5499,7 +5497,6 @@ if (debugMode) {
     DB.addEvent(evt);
     calculateAndUpdateBadges();
     render();
-    if (App.currentView === 'graphs') renderCharts();
     
     console.log(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago:`, evt);
     showToast(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago`);

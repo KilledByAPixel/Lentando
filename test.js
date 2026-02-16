@@ -1693,11 +1693,13 @@ test('merges multiple used events for same substance', () => {
   const changed = consolidateDay(day);
   ok(changed, 'should report changes');
   const evts = DB.forDate(day);
-  eq(evts.length, 1, 'should merge to one event');
-  eq(evts[0].amount, 6, 'should sum amounts');
-  eq(evts[0].method, 'mixed', 'mixed methods');
-  eq(evts[0].reason, 'mixed', 'mixed reasons');
-  eq(evts[0].consolidated, 3, 'consolidated count = 3 events');
+  eq(evts.length, 2, 'different method+reason = separate groups');
+  const vapeStress = evts.find(e => e.method === 'vape' && e.reason === 'stress');
+  const edibleFun = evts.find(e => e.method === 'edible' && e.reason === 'fun');
+  eq(vapeStress.amount, 5, 'vape+stress amounts summed');
+  eq(vapeStress.consolidated, 2, 'vape+stress consolidated count = 2');
+  eq(edibleFun.amount, 1, 'edible+fun amount unchanged');
+  eq(edibleFun.consolidated, 1, 'edible+fun consolidated count = 1');
 });
 
 test('keeps separate groups for different substances', () => {
@@ -1731,10 +1733,13 @@ test('merges resisted events', () => {
   ]);
   consolidateDay(day);
   const evts = DB.forDate(day);
-  eq(evts.length, 1, 'all resisted merge to one');
-  eq(evts[0].intensity, 10, 'intensities summed');
-  eq(evts[0].trigger, 'mixed', 'different triggers become mixed');
-  eq(evts[0].consolidated, 3, 'consolidated count = 3');
+  eq(evts.length, 2, 'different triggers = separate groups');
+  const boredom = evts.find(e => e.trigger === 'boredom');
+  const stress = evts.find(e => e.trigger === 'stress');
+  eq(boredom.intensity, 8, 'boredom intensities summed');
+  eq(boredom.consolidated, 2, 'boredom consolidated count = 2');
+  eq(stress.intensity, 2, 'stress intensity unchanged');
+  eq(stress.consolidated, 1, 'stress consolidated count = 1');
 });
 
 test('merges water habits with count', () => {
