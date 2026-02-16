@@ -122,64 +122,16 @@ sandbox.globalThis = sandbox;
 
 vm.createContext(sandbox);
 
-// Patch: expose const/let declarations by assigning them to window (=sandbox) at the end
+// Auto-expose top-level const/let/function declarations to the sandbox's window object.
+// VM contexts isolate block-scoped vars, so we parse code.js for declaration names and
+// append a patch assigning each to window (which is the sandbox). New functions are
+// picked up automatically.
+const declRegex = /^(?:const|let|function)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/gm;
+const exposedNames = [...codeSource.matchAll(declRegex)].map(m => m[1]);
 const exposePatch = `
 ;(function(){
   var _w = typeof window !== 'undefined' ? window : this;
-  _w.escapeHTML = escapeHTML;
-  _w.dateKey = dateKey;
-  _w.formatDuration = formatDuration;
-  _w.getUidTimestamp = getUidTimestamp;
-  _w.validatePassword = validatePassword;
-  _w.uid = uid;
-  _w.now = now;
-  _w.currentDate = currentDate;
-  _w.todayKey = todayKey;
-  _w.daysAgoKey = daysAgoKey;
-  _w.gapCrosses6am = gapCrosses6am;
-  _w.getGapsMs = getGapsMs;
-  _w.countUrgeSurfed = countUrgeSurfed;
-  _w.countSwapCompleted = countSwapCompleted;
-  _w.getMilestoneBadges = getMilestoneBadges;
-  _w.validateImportData = validateImportData;
-  _w.filterByType = filterByType;
-  _w.filterUsed = filterUsed;
-  _w.filterProfileUsed = filterProfileUsed;
-  _w.filterTHC = filterTHC;
-  _w.filterCBD = filterCBD;
-  _w.filterDaytime = filterDaytime;
-  _w.sumAmount = sumAmount;
-  _w.getHabits = getHabits;
-  _w.getProfile = getProfile;
-  _w.sortedByTime = sortedByTime;
-  _w.Badges = Badges;
-  _w.calculateAndUpdateBadges = calculateAndUpdateBadges;
-  _w.loadBadgeData = loadBadgeData;
-  _w.saveBadgeData = saveBadgeData;
-  _w.BADGE_DEFINITIONS = BADGE_DEFINITIONS;
-  _w.DEFAULT_SETTINGS = DEFAULT_SETTINGS;
-  _w.ADDICTION_PROFILES = ADDICTION_PROFILES;
-  _w.EARLY_HOUR = EARLY_HOUR;
-  _w.FIFTEEN_MINUTES_MS = FIFTEEN_MINUTES_MS;
-  _w.GAP_MILESTONES = GAP_MILESTONES;
-  _w.TBREAK_MILESTONES = TBREAK_MILESTONES;
-  _w.APP_STREAK_MILESTONES = APP_STREAK_MILESTONES;
-  _w.STORAGE_EVENTS = STORAGE_EVENTS;
-  _w.STORAGE_SETTINGS = STORAGE_SETTINGS;
-  _w.STORAGE_BADGES = STORAGE_BADGES;
-  _w.STORAGE_DELETED_IDS = STORAGE_DELETED_IDS;
-  _w.createUsedEvent = createUsedEvent;
-  _w.createResistedEvent = createResistedEvent;
-  _w.createHabitEvent = createHabitEvent;
-  _w.getBadgeDef = getBadgeDef;
-  _w.getLastNDays = getLastNDays;
-  _w.avgWithinDayGapMs = avgWithinDayGapMs;
-  _w.avgDailyAmount = avgDailyAmount;
-  _w.DB = DB;
-  _w.STORAGE_VERSION = STORAGE_VERSION;
-  _w.CONSOLIDATION_DAYS = CONSOLIDATION_DAYS;
-  _w.consolidateDay = consolidateDay;
-  _w.consolidateOldEvents = consolidateOldEvents;
+  ${exposedNames.map(n => `if (typeof ${n} !== 'undefined') _w.${n} = ${n};`).join('\n  ')}
 })();
 `;
 
@@ -191,7 +143,7 @@ try {
   process.exit(1);
 }
 
-// Pull all needed symbols from the sandbox into our scope
+// Pull needed symbols from the sandbox (all auto-exposed above)
 const {
   // Utility functions
   escapeHTML, dateKey, formatDuration, getUidTimestamp, validatePassword,
