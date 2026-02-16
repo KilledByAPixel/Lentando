@@ -1096,6 +1096,20 @@ header .date {
 .graph-bar-label-sm {
   transform: translateX(-50%) scaleX(0.6);
 }
+.graph-midnight-marker {
+  position: relative;
+}
+.graph-midnight-marker::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  bottom: 0;
+  height: 96px;
+  border-left: 2px dashed var(--muted);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 2;
+}
 .graph-range {
   display: flex;
   gap: 6px;

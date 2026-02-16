@@ -2310,7 +2310,8 @@ function buildStackedHourGraphBars(events, startHour) {
       segments += `<div class="graph-bar-seg" style="height:${segH}px;background:${colorMap[sub]}"></div>`;
     }
 
-    inner += `<div class="graph-bar-col">
+    const midnightCls = hour === 0 ? ' graph-midnight-marker' : '';
+    inner += `<div class="graph-bar-col${midnightCls}">
       <div class="graph-bar graph-bar-stacked" style="height:${totalH}px;${total > 0 ? 'min-height:2px' : ''}">${segments}</div>
       <div class="graph-bar-label" style="${labelStyle}">${hourLabel}</div>
     </div>`;
