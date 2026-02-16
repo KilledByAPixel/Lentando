@@ -2537,6 +2537,98 @@ function buildHeatmapHTML(days) {
   return html;
 }
 
+function buildYearlyHeatmapHTML() {
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // Build 12 months: current month at top (index 0), oldest at bottom (index 11)
+  const now = currentDate();
+  const months = []; // [{year, month, label, daysInMonth}]
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const label = MONTH_NAMES[m] + ' \'' + String(y).slice(2);
+    months.push({ year: y, month: m, label, daysInMonth });
+  }
+
+  // Aggregate usage amount per day-key
+  // grid[monthIndex][dayOfMonth-1] = total amount
+  const grid = months.map(mo => new Array(mo.daysInMonth).fill(0));
+  for (let mi = 0; mi < months.length; mi++) {
+    const mo = months[mi];
+    for (let day = 1; day <= mo.daysInMonth; day++) {
+      const dk = `${mo.year}-${String(mo.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const used = filterProfileUsed(DB.forDate(dk)).filter(e => !e.consolidated);
+      grid[mi][day - 1] = used.reduce((s, e) => s + (e.amount ?? 1), 0);
+    }
+  }
+
+  // Hide if no usage in the entire year
+  const hasAnyUse = grid.some(row => row.some(c => c > 0));
+  if (!hasAnyUse) return '';
+
+  // For current month, grey out future days
+  const todayDay = now.getDate(); // 1-based
+
+  // Same level scale as the existing heatmap
+  function level(count) {
+    if (count <= 0) return 0;
+    if (count < 2) return 1;
+    if (count < 5) return 2;
+    return 3;
+  }
+
+  let html = '<div class="graph-container" data-tooltip="Usage heatmap by month and day for the past year. Darker blue means more usage that day. Shows yearly patterns at a glance.">';
+  html += '<div class="graph-title">🏛️ Yearly Usage Heatmap</div>';
+  html += '<div class="heatmap yearly-heatmap">';
+
+  // Day-of-month header row
+  html += '<div class="hm-row yhm-row"><div class="hm-label"></div>';
+  for (let d = 1; d <= 31; d++) {
+    const show = d === 1 || d % 5 === 0;
+    html += `<div class="hm-cell hm-hour-label">${show ? d : ''}</div>`;
+  }
+  html += '</div>';
+
+  // Month rows
+  for (let mi = 0; mi < months.length; mi++) {
+    const mo = months[mi];
+    html += `<div class="hm-row yhm-row"><div class="hm-label">${mo.label}</div>`;
+    for (let d = 1; d <= 31; d++) {
+      if (d <= mo.daysInMonth) {
+        // For current month, future days are blank
+        const isFuture = mi === 0 && d > todayDay;
+        if (isFuture) {
+          html += '<div class="hm-cell yhm-empty"></div>';
+        } else {
+          const count = grid[mi][d - 1];
+          const lvl = level(count);
+          const display = count > 0 ? (Number.isInteger(count) ? count : count.toFixed(1)) : '0';
+          html += `<div class="hm-cell hm-lvl-${lvl}" title="${mo.label} ${d}: ${display}"></div>`;
+        }
+      } else {
+        // Day doesn't exist in this month
+        html += '<div class="hm-cell yhm-empty"></div>';
+      }
+    }
+    html += '</div>';
+  }
+
+  // Legend (same as existing heatmap)
+  html += '<div class="hm-legend">';
+  html += '<span class="hm-legend-label">Less</span>';
+  html += '<div class="hm-cell hm-swatch hm-lvl-0"></div>';
+  html += '<div class="hm-cell hm-swatch hm-lvl-1"></div>';
+  html += '<div class="hm-cell hm-swatch hm-lvl-2"></div>';
+  html += '<div class="hm-cell hm-swatch hm-lvl-3"></div>';
+  html += '<span class="hm-legend-label">More</span>';
+  html += '</div>';
+
+  html += '</div></div>';
+  return html;
+}
+
 function buildWeekSummaryHTML() {
   const days = getLastNDays(7);
   const profile = getProfile();
@@ -2767,6 +2859,9 @@ function renderGraphs() {
     dayHtml += buildCategoryGraph('🛡️ Resists by Trigger', triggerKeys, triggerTotals, triggerMax, 'var(--resist)',
       'Total urge intensity resisted broken down by trigger. Shows which situations you resist the most.');
   }
+
+  // Yearly usage heatmap (always 12 months, independent of day selector)
+  dayHtml += buildYearlyHeatmapHTML();
 
   dayContainer.innerHTML = dayHtml;
 }
