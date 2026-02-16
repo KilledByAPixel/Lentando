@@ -2481,6 +2481,85 @@ function buildStackedDayBars(days) {
   return wrapBarsWithGrid(inner, maxTotal) + legend;
 }
 
+/** Stacked amount-used-per-month bars — 12 months, most recent on the right */
+function buildStackedMonthBars() {
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const profile = getProfile();
+  const subs = profile.substances;
+  const icons = profile.icons || {};
+  const colorMap = {};
+  subs.forEach((sub, i) => { colorMap[sub] = SUBSTANCE_COLORS[i % SUBSTANCE_COLORS.length]; });
+
+  const today = currentDate();
+  const usedSubs = new Set();
+  const monthData = []; // [{label, subAmounts}] oldest→newest (left→right)
+  let maxTotal = 0;
+
+  // Build 12 months: oldest first (left) → current month last (right)
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const label = MONTH_NAMES[m];
+    const subAmounts = {};
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dk = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      // Skip future days in the current month
+      if (i === 0 && day > today.getDate()) break;
+      const used = filterProfileUsed(DB.forDate(dk));
+      used.forEach(e => {
+        const sub = e.substance || subs[0];
+        subAmounts[sub] = (subAmounts[sub] || 0) + (e.amount ?? 1);
+        usedSubs.add(sub);
+      });
+    }
+
+    let total = 0;
+    for (const sub of subs) total += (subAmounts[sub] || 0);
+    if (total > maxTotal) maxTotal = total;
+    monthData.push({ label, subAmounts });
+  }
+
+  if (maxTotal <= 0) return null;
+
+  const effectiveMax = calcGridScale(maxTotal).gridMax;
+  let inner = '';
+  for (let i = 0; i < monthData.length; i++) {
+    const mo = monthData[i];
+    let total = 0;
+    for (const sub of subs) total += (mo.subAmounts[sub] || 0);
+    const totalH = effectiveMax > 0 ? Math.round((total / effectiveMax) * 96) : 0;
+
+    let segments = '';
+    for (const sub of subs) {
+      const val = mo.subAmounts[sub] || 0;
+      if (val <= 0) continue;
+      const segH = effectiveMax > 0 ? Math.max(Math.round((val / effectiveMax) * 96), 2) : 0;
+      segments += `<div class="graph-bar-seg" style="height:${segH}px;background:${colorMap[sub]}"></div>`;
+    }
+
+    inner += `<div class="graph-bar-col">
+      <div class="graph-bar graph-bar-stacked" style="height:${totalH}px;${total > 0 ? 'min-height:2px' : ''}">${segments}</div>
+      <div class="graph-bar-label">${mo.label}</div>
+    </div>`;
+  }
+
+  const activeSubs = subs.filter(s => usedSubs.has(s));
+  let legend = '';
+  if (activeSubs.length > 1) {
+    legend = '<div class="hm-legend">';
+    for (const sub of activeSubs) {
+      legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
+      legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
+    }
+    legend += '</div>';
+  }
+
+  return wrapBarsWithGrid(inner, maxTotal) + legend;
+}
+
 /** Build a category graph (one bar per category key, e.g. reason/trigger) */
 function buildCategoryGraph(title, keys, totals, max, color, tooltip) {
   const effectiveMax = max > 0 ? calcGridScale(max).gridMax : 0;
@@ -2823,6 +2902,14 @@ function renderGraphs() {
 
   // Yearly usage heatmap — only shown in 1 year view, right after avg usage by hour
   if (isYearView) {
+    // Amount Used / Month — stacked bar chart
+    const monthResult = buildStackedMonthBars();
+    dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Amount used per month" data-tooltip="Total amount used each month over the past year. Stacked by substance type. Shows long-term usage trends."><div class="graph-title">⚡ Amount Used / Month</div>`;
+    dayHtml += monthResult
+      ? monthResult
+      : emptyStateHTML('No data yet', 'compact');
+    dayHtml += `</div>`;
+
     dayHtml += buildYearlyHeatmapHTML();
   }
 
