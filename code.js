@@ -2150,7 +2150,7 @@ function buildStackedHourGraphBars(events, startHour) {
   let legend = '';
   const activeSubs = subs.filter(s => usedSubs.has(s));
   if (activeSubs.length > 1) {
-    legend = '<div class="hm-legend" style="margin-top:4px">';
+    legend = '<div class="hm-legend">';
     for (const sub of activeSubs) {
       const icon = icons[sub] || '';
       legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
@@ -2227,7 +2227,7 @@ function buildStackedAvgHourBars(days) {
   const activeSubs = subs.filter(s => usedSubs.has(s));
   let legend = '';
   if (activeSubs.length > 1) {
-    legend = '<div class="hm-legend" style="margin-top:4px">';
+    legend = '<div class="hm-legend">';
     for (const sub of activeSubs) {
       legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
       legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
@@ -2300,7 +2300,7 @@ function buildStackedDayBars(days) {
   const activeSubs = subs.filter(s => usedSubs.has(s));
   let legend = '';
   if (activeSubs.length > 1) {
-    legend = '<div class="hm-legend" style="margin-top:4px">';
+    legend = '<div class="hm-legend">';
     for (const sub of activeSubs) {
       legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
       legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
