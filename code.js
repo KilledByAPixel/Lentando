@@ -1295,15 +1295,14 @@ const Badges = {
     {
       let tbreakDays = 0;
       if (profileUsed.length === 0) {
-        tbreakDays = this._countDaysSinceLastUse(evaluationDate, refTs, appStartDate);
+        tbreakDays = this._countDaysSinceLastUse(evaluationDate, refTs, appStartTs);
       } else {
         const earliestUseToday = sortedByTime(profileUsed)[0];
         const lastUseBefore = this._getLastUseBeforeDate(evaluationDate);
         if (lastUseBefore) {
           tbreakDays = Math.floor((earliestUseToday.ts - lastUseBefore.ts) / (1000 * 60 * 60 * 24));
-        } else if (appStartDate && appStartDate < evaluationDate) {
-          const startTs = new Date(appStartDate + 'T12:00:00').getTime();
-          tbreakDays = Math.floor((earliestUseToday.ts - startTs) / (1000 * 60 * 60 * 24));
+        } else if (appStartTs && appStartDate < evaluationDate) {
+          tbreakDays = Math.floor((earliestUseToday.ts - appStartTs) / (1000 * 60 * 60 * 24));
         }
       }
       if (tbreakDays >= 1) {
@@ -1369,7 +1368,7 @@ const Badges = {
     return null;
   },
 
-  _countDaysSinceLastUse(refDateKey, refTs, fallbackAppStartDate) {
+  _countDaysSinceLastUse(refDateKey, refTs, fallbackAppStartTs) {
     const keys = DB.getAllDayKeys(); // sorted reverse (most recent first)
     const effectiveNow = refTs || now();
 
@@ -1381,17 +1380,8 @@ const Badges = {
         return Math.floor((effectiveNow - dayUsed[dayUsed.length - 1].ts) / (1000 * 60 * 60 * 24));
       }
     }
-    // No use events ever — measure from appStartDate if available
-    let startTs;
-    if (fallbackAppStartDate) {
-      startTs = new Date(fallbackAppStartDate + 'T12:00:00').getTime();
-    } else {
-      const badgeData = loadBadgeData();
-      if (badgeData.appStartDate) {
-        startTs = new Date(badgeData.appStartDate + 'T12:00:00').getTime();
-      }
-    }
-
+    // No use events ever — measure from appStartTs if available
+    const startTs = fallbackAppStartTs || loadBadgeData().appStartTs;
     if (startTs) {
       return Math.floor((effectiveNow - startTs) / (1000 * 60 * 60 * 24));
     }
@@ -1804,8 +1794,8 @@ function calculateAndUpdateBadges() {
   if (allEvents.length > 0) {
     appStartTs = allEvents[0].ts;
     for (let i = 1; i < allEvents.length; i++) if (allEvents[i].ts < appStartTs) appStartTs = allEvents[i].ts;
-  } else if (badgeData.appStartDate && badgeData.appStartTs) {
-    // No events but have saved start date — preserve it for tbreak badges
+  } else if (badgeData.appStartTs) {
+    // No events but have saved start timestamp — preserve it for tbreak badges
     appStartTs = badgeData.appStartTs;
   } else {
     appStartTs = now();
@@ -1906,7 +1896,6 @@ function calculateAndUpdateBadges() {
     yesterdayBadges: yesterdayBadges,
     lifetimeBadges: updatedLifetimeBadges,
     todayUndoCount: undoCount,
-    appStartDate,
     appStartTs
   };
   
@@ -3077,7 +3066,6 @@ function exportJSON() {
     settings: DB.loadSettings(), 
     todos: loadTodos(),
     lifetimeBadges: badgeData.lifetimeBadges,
-    appStartDate: badgeData.appStartDate,
     appStartTs: badgeData.appStartTs,
     theme: theme || undefined,
     clearedAt: clearedAt || undefined,
@@ -3225,7 +3213,6 @@ function importJSON(inputEl) {
         todayBadges: [],
         yesterdayBadges: [],
         todayUndoCount: 0,
-        appStartDate: data.appStartDate || null,
         appStartTs: data.appStartTs || null,
         lifetimeBadges: Array.isArray(data.lifetimeBadges) ? data.lifetimeBadges : []
       };

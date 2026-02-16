@@ -372,11 +372,6 @@ async function pullFromCloud(uid) {
     const mergedBadgeData = preferCloud
       ? { ...localBadges, ...cloudBadges, lifetimeBadges: mergedLifetime }
       : { ...cloudBadges, ...localBadges, lifetimeBadges: mergedLifetime };
-    // Keep the earliest appStartDate from either source
-    if (localBadges.appStartDate && cloudBadges.appStartDate) {
-      mergedBadgeData.appStartDate = localBadges.appStartDate < cloudBadges.appStartDate
-        ? localBadges.appStartDate : cloudBadges.appStartDate;
-    }
     // Keep the earliest appStartTs from either source
     if (localBadges.appStartTs && cloudBadges.appStartTs) {
       mergedBadgeData.appStartTs = Math.min(localBadges.appStartTs, cloudBadges.appStartTs);
