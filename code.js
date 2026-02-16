@@ -783,6 +783,14 @@ function stripNulls(obj) {
  * Keeps the most recent event per group, merges data into it, removes the rest.
  * Returns true if any events were removed.
  */
+/** Consolidation group key — same logic used for merging and absorbing past events */
+function consolidationGroupKey(e) {
+  if (e.type === 'used') return 'used:' + (e.substance || 'unknown') + ':' + (e.method || '') + ':' + (e.reason || '');
+  if (e.type === 'resisted') return 'resisted:' + (e.trigger || '');
+  if (e.type === 'habit') return 'habit:' + (e.habit || 'unknown');
+  return 'other:' + e.id;
+}
+
 function consolidateDay(dayKey) {
   DB.loadEvents();
   const allEvents = DB._events;
@@ -795,14 +803,10 @@ function consolidateDay(dayKey) {
   }
   if (dayEvents.length === 0) return false;
 
-  // Group by consolidation key
+  // Group by consolidation key (preserves method/reason/trigger per group)
   const groups = new Map();
   for (const e of dayEvents) {
-    let key;
-    if (e.type === 'used') key = 'used:' + (e.substance || 'unknown');
-    else if (e.type === 'resisted') key = 'resisted';
-    else if (e.type === 'habit') key = 'habit:' + (e.habit || 'unknown');
-    else key = 'other:' + e.id; // unknown type, keep as-is
+    const key = consolidationGroupKey(e);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(e);
   }
@@ -825,17 +829,10 @@ function consolidateDay(dayKey) {
 
         if (keeper.type === 'used') {
           keeper.amount = group.reduce((s, e) => s + (e.amount ?? 1), 0);
-          const methods = [...new Set(group.map(e => e.method).filter(Boolean))];
-          if (methods.length > 1) keeper.method = 'mixed';
-          else if (methods.length === 1) keeper.method = methods[0];
-          const reasons = [...new Set(group.map(e => e.reason).filter(Boolean))];
-          if (reasons.length > 1) keeper.reason = 'mixed';
-          else if (reasons.length === 1) keeper.reason = reasons[0];
+          // method & reason are identical within the group (grouped by them)
         } else if (keeper.type === 'resisted') {
           keeper.intensity = group.reduce((s, e) => s + (e.intensity || 1), 0);
-          const triggers = [...new Set(group.map(e => e.trigger).filter(Boolean))];
-          if (triggers.length > 1) keeper.trigger = 'mixed';
-          else if (triggers.length === 1) keeper.trigger = triggers[0];
+          // trigger is identical within the group (grouped by it)
         } else if (keeper.type === 'habit') {
           if (keeper.habit === 'water') {
             keeper.count = group.reduce((s, e) => s + (e.count || 1), 0);
@@ -3587,31 +3584,20 @@ function saveCreateModal() {
   if (evtDayKey < daysAgoKey(CONSOLIDATION_DAYS)) {
     const dayEvts = DB.forDate(evtDayKey);
     // Find consolidated keeper matching this event's group
-    let groupKey;
-    if (evt.type === 'used') groupKey = 'used:' + (evt.substance || 'unknown');
-    else if (evt.type === 'resisted') groupKey = 'resisted';
-    else if (evt.type === 'habit') groupKey = 'habit:' + (evt.habit || 'unknown');
+    const groupKey = consolidationGroupKey(evt);
     const keeper = dayEvts.find(e => {
       if (!e.consolidated) return false;
-      let k;
-      if (e.type === 'used') k = 'used:' + (e.substance || 'unknown');
-      else if (e.type === 'resisted') k = 'resisted';
-      else if (e.type === 'habit') k = 'habit:' + (e.habit || 'unknown');
-      return k === groupKey;
+      return consolidationGroupKey(e) === groupKey;
     });
 
     if (keeper) {
       // Absorb new event into existing keeper
       if (keeper.type === 'used') {
         keeper.amount = (keeper.amount ?? 1) + (evt.amount ?? 1);
-        if (evt.method && keeper.method && evt.method !== keeper.method) keeper.method = 'mixed';
-        else if (evt.method && !keeper.method) keeper.method = evt.method;
-        if (evt.reason && keeper.reason && evt.reason !== keeper.reason) keeper.reason = 'mixed';
-        else if (evt.reason && !keeper.reason) keeper.reason = evt.reason;
+        // method & reason match the keeper (same group key)
       } else if (keeper.type === 'resisted') {
         keeper.intensity = (keeper.intensity || 1) + (evt.intensity || 1);
-        if (evt.trigger && keeper.trigger && evt.trigger !== keeper.trigger) keeper.trigger = 'mixed';
-        else if (evt.trigger && !keeper.trigger) keeper.trigger = evt.trigger;
+        // trigger matches the keeper (same group key)
       } else if (keeper.type === 'habit') {
         if (keeper.habit === 'water') {
           keeper.count = (keeper.count || 1) + (evt.count || 1);

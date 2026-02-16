@@ -38,9 +38,9 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 - **Skip badges:** Eligible once past start time
 
 ### Event Consolidation
-Events older than 60 days (`CONSOLIDATION_DAYS`) are automatically merged to save localStorage space. Runs once on app start via `consolidateOldEvents()`. Group rules:
-- **Used events**: grouped by substance, amounts summed, method/reason become `'mixed'` if varied
-- **Resisted events**: one group per day, intensity summed, trigger becomes `'mixed'` if varied
+Events older than 60 days (`CONSOLIDATION_DAYS`) are automatically merged to save localStorage space. Runs once on app start via `consolidateOldEvents()`. A shared `consolidationGroupKey(e)` function produces the grouping key for both initial consolidation and past-event absorption. Group rules:
+- **Used events**: grouped by substance + method + reason — amounts summed, method/reason preserved per group
+- **Resisted events**: grouped by trigger — intensity summed, trigger preserved per group
 - **Habit events**: grouped by habit type — water uses `count` field (no minutes), other habits sum minutes (5-min default for untimed)
 
 Merged events get `consolidated: N` (integer count of how many original events were merged) + `modifiedAt` timestamp. Single consolidated events have `consolidated: 1`; multi-event merges have the total count. Absorbing a new past event into a keeper increments the count. Any truthy `consolidated` value means the event has been consolidated. The most recent event in each group becomes the keeper. If strays reappear from sync (keeper already consolidated), they're silently discarded. Add-past-event to consolidated days: absorbed directly into keeper at call site (`saveCreateModal`) instead of creating a separate event — increments count and sets `modifiedAt` so the absorb survives a sync pull before the push fires.
