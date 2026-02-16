@@ -1455,7 +1455,7 @@ function eventRowHTML(e) {
   const time = formatTime(e.ts);
   const { icon, title, detail } = EVENT_DETAIL_BUILDERS[e.type]?.(e) || { icon: '', title: '', detail: '' };
   const safeId = escapeHTML(e.id);
-  const combinedLabel = e.consolidated ? ' (combined)' : '';
+  const combinedLabel = e.consolidated ? ` (combined x${e.consolidated})` : '';
   const actions = e.consolidated
     ? `<button class="tl-act-btn" onclick="App.deleteEvent('${safeId}')" title="Delete" aria-label="Delete event">🗑️</button>`
     : `<button class="tl-act-btn" onclick="App.editEvent('${safeId}')" title="Edit" aria-label="Edit event">✏️</button>
@@ -5410,9 +5410,8 @@ if (debugMode) {
     const randomMs = Math.floor(Math.random() * msPerDay); // Random time within the day
     const targetTimestamp = targetDate.getTime() + randomMs;
     
-    // Create event with last substance, random method and amount
-    const substance = (settings.lastSubstance && profile.substances.includes(settings.lastSubstance))
-      ? settings.lastSubstance : profile.substances[0];
+    // Create event with random substance, method and amount
+    const substance = profile.substances[Math.floor(Math.random() * profile.substances.length)];
     const method = profile.methods
       ? profile.methods[Math.floor(Math.random() * profile.methods.length)]
       : null;
