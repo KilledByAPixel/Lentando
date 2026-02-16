@@ -121,8 +121,11 @@
   --danger-light: #ffebee;
   --warn-light: #fff8e1;
   --warn: #f57f17;
+  --undo: #e6a817;
+  --undo-active: #d49a0e;
   --brandColor1: #0079ca;
   --brandColor2: #97ffa0;
+  --hm-rgb: 92, 107, 192;
   --radius: 12px;
   --radius-sm: 8px;
 }
@@ -149,8 +152,11 @@
   --danger-light: #3a1f1f;
   --warn-light: #3a3120;
   --warn: #ffb74d;
+  --undo: #e6a817;
+  --undo-active: #d49a0e;
   --brandColor1: #0079ca;
   --brandColor2: #97ffa0;
+  --hm-rgb: 121, 134, 203;
 }
 
 * { 
@@ -235,7 +241,7 @@ header .date {
 .used-row .btn-used { flex: 2; }
 .btn-undo {
   flex: 1;
-  background: #e6a817;
+  background: var(--undo);
   color: #fff;
   font-size: 20px;
   font-weight: 600;
@@ -243,7 +249,7 @@ header .date {
   display: none;
 }
 .used-row.has-undo .btn-undo { display: block; }
-.btn-undo:active { background: #c98f0e; color: #fff; }
+.btn-undo:active { background: var(--undo-active); color: #fff; }
 
 /* ===== FORM INPUTS (shared base) ===== */
 .form-input,
@@ -591,8 +597,8 @@ header .date {
   opacity: 0.4;
 }
 .badge-item.unearned .badge-card {
-  background: rgba(255, 59, 48, 0.15);
-  color: #ff3b30;
+  background: var(--danger-light);
+  color: var(--danger);
 }
 
 /* ===== BADGE TOOLTIP (MOBILE) ===== */
@@ -787,7 +793,7 @@ header .date {
 .icon-option:hover { transform: scale(1.1); }
 .icon-option.active {
   border-color: var(--primary);
-  background: var(--primary-light, rgba(99,102,241,0.15));
+  background: var(--primary-light);
   transform: scale(1.1);
 }
 
@@ -1134,9 +1140,9 @@ header .date {
   line-height: 18px;
 }
 .hm-lvl-0 { background: var(--chip-bg); }
-.hm-lvl-1 { background: rgba(89, 130, 246, 0.30); }
-.hm-lvl-2 { background: rgba(89, 130, 246, 0.58); }
-.hm-lvl-3 { background: rgba(89, 130, 246, 0.88); }
+.hm-lvl-1 { background: rgba(var(--hm-rgb), 0.30); }
+.hm-lvl-2 { background: rgba(var(--hm-rgb), 0.55); }
+.hm-lvl-3 { background: rgba(var(--hm-rgb), 0.85); }
 .hm-legend {
   display: flex;
   align-items: center;

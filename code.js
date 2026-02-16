@@ -2086,7 +2086,7 @@ function buildGraphBars(vals, days, max, def) {
 }
 
 // Fixed palette for substance stacked bars (up to 3 substances per profile)
-const SUBSTANCE_COLORS = ['#5c6bc0', '#e6a23c', '#66bb6a'];
+const SUBSTANCE_COLORS = ['var(--primary)', '#e6a23c', 'var(--resist)'];
 
 function buildStackedHourGraphBars(events, startHour) {
   const profile = getProfile();
@@ -2603,7 +2603,7 @@ function renderGraphs() {
   const reasonKeys = REASONS.filter(r => reasonTotals[r]);
   if (reasonKeys.length > 0) {
     const reasonMax = Math.max(...reasonKeys.map(r => reasonTotals[r]), 1);
-    dayHtml += buildCategoryGraph('🧠 Use by Reason', reasonKeys, reasonTotals, reasonMax, '#ef5350',
+    dayHtml += buildCategoryGraph('🧠 Use by Reason', reasonKeys, reasonTotals, reasonMax, 'var(--danger)',
       'Total amount used broken down by reason. Shows which triggers drive the most usage.');
   }
 
