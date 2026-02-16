@@ -135,6 +135,10 @@ const exposePatch = `
 })();
 `;
 
+// Silence console during code.js loading to suppress debug mode banner
+const _realConsole = console;
+sandbox.console = { log() {}, warn() {}, error() {}, info() {}, debug() {} };
+
 try {
   vm.runInContext(patchedSource + exposePatch, sandbox, { filename: 'code.js' });
 } catch (e) {
@@ -142,6 +146,9 @@ try {
   console.error(e.stack?.split('\n').slice(0, 5).join('\n'));
   process.exit(1);
 }
+
+// Restore real console for test output
+sandbox.console = _realConsole;
 
 // Pull needed symbols from the sandbox (all auto-exposed above)
 const {
