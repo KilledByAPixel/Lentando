@@ -1021,7 +1021,7 @@ header .date {
 .gy-label {
   position: absolute;
   right: 2px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   line-height: 1;
   transform: translateY(50%);
@@ -1085,18 +1085,16 @@ header .date {
 .graph-bar-label {
   position: absolute;
   top: 100%;
-  left: 0;
-  right: 0;
-  font-size: 14px;
+  left: 50%;
+  font-size: 16px;
   color: var(--muted);
   margin-top: 2px;
   text-align: center;
   white-space: nowrap;
-  transform: scaleX(0.9);
-  transform-origin: center;
+  transform: translateX(-50%) scaleX(0.8);
 }
 .graph-bar-label-sm {
-  transform: scaleX(0.6);
+  transform: translateX(-50%) scaleX(0.6);
 }
 .graph-range {
   display: flex;
@@ -1146,7 +1144,7 @@ header .date {
 .hm-legend {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   margin-top: 8px;
   justify-content: flex-end;
 }
