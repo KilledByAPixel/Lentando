@@ -2444,6 +2444,46 @@ function buildStackedMonthBars() {
   return renderStackedBars(buckets, ctx);
 }
 
+function buildResistMonthBars() {
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const today = currentDate();
+  const monthTotals = [];
+  const monthLabels = [];
+
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    let total = 0;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dk = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      if (i === 0 && day > today.getDate()) break;
+      filterByType(DB.forDate(dk), 'resisted').forEach(e => {
+        total += (e.intensity || 1);
+      });
+    }
+
+    monthTotals.push(total);
+    monthLabels.push(MONTH_NAMES[m]);
+  }
+
+  const max = Math.max(...monthTotals, 1);
+  const hasData = monthTotals.some(v => v > 0);
+  if (!hasData) return null;
+
+  const effectiveMax = calcGridScale(max).gridMax;
+  let inner = '';
+  for (let i = 0; i < monthTotals.length; i++) {
+    const val = monthTotals[i];
+    const h = effectiveMax > 0 ? Math.round((val / effectiveMax) * 96) : 0;
+    inner += graphBarCol(val, h, { color: 'var(--resist)', text: monthLabels[i] }, true, 'graph-bar-label-sm');
+  }
+
+  return wrapBarsWithGrid(inner, max);
+}
+
 /** Build a category graph (one bar per category key, e.g. reason/trigger) */
 function buildCategoryGraph(title, keys, totals, max, color, tooltip) {
   const effectiveMax = max > 0 ? calcGridScale(max).gridMax : 0;
@@ -2768,6 +2808,14 @@ function renderGraphs() {
       ? monthResult
       : emptyStateHTML('No data yet', 'compact');
     dayHtml += `</div>`;
+
+    // Resists / Month — simple bar chart
+    const resistMonthResult = buildResistMonthBars();
+    if (resistMonthResult) {
+      dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Resists per month" data-tooltip="Total urge intensity resisted each month over the past year. Shows long-term resistance trends."><div class="graph-title">💪 Resists / Month</div>`;
+      dayHtml += resistMonthResult;
+      dayHtml += `</div>`;
+    }
 
     dayHtml += buildYearlyHeatmapHTML();
   }
