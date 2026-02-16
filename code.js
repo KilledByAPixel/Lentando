@@ -3102,6 +3102,7 @@ function importJSON(inputEl) {
 
       showStatus(`✅ Imported ${validation.events.length} events.`, 'success');
 
+      consolidateOldEvents();
       calculateAndUpdateBadges();
       render();
     } catch (err) {
