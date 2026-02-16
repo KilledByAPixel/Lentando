@@ -1076,7 +1076,7 @@ const Badges = {
       addBadge(cbdUsed.length > 0 && thcUsed.length === 0, 'cbd-only');
       // Half CBD Day: THC (via calcBadAmount, mix counts 50%) is at most half of total
       const thcAmt = calcBadAmount(profileUsed, 'cannabis', null);
-      addBadge(profileUsed.length > 0 && profileAmt > 0 && thcAmt * 2 <= profileAmt, 'half-cbd-day');
+      addBadge(profileUsed.length > 0 && profileAmt > 0 && thcAmt > 0 && thcAmt * 2 <= profileAmt, 'half-cbd-day');
       addBadge(profileUsed.length > 0 && profileUsed.every(e => e.method === 'edible'), 'edibles-only');
     }
 
