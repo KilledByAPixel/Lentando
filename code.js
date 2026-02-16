@@ -3,7 +3,7 @@
 
 'use strict';
 
-const debugMode = false; // Set to true to enable debug logging and debug time system messages
+const debugMode = 1; // Set to true to enable debug logging and debug time system messages
 
 // ========== DEBUG TIME SYSTEM ==========
 // Allows advancing time for testing badges, day boundaries, etc.
