@@ -435,7 +435,11 @@ function getStorageUsageDisplay() {
     }
   }
   const kb = total / 1024;
-  return kb > 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.round(kb)} KB`;
+  const maxKB = 5 * 1024; // ~5 MB
+  const pct = Math.min(100, (kb / maxKB) * 100);
+  const pctStr = pct < 1 ? '<1' : Math.round(pct).toString();
+  const sizeStr = kb > 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.round(kb)} KB`;
+  return `${pctStr}% (${sizeStr} of ~5 MB)`;
 }
 
 /** Clear all app localStorage keys and invalidate DB caches */
@@ -2759,7 +2763,13 @@ function switchTab(tabName) {
 
   if (tabName === 'settings') {
     const el = $('storage-usage');
-    if (el) el.textContent = `💾 Storage used: ${getStorageUsageDisplay()} of ~5 MB`;
+    if (el) {
+      el.innerHTML =
+        `💾 Storage used: ${getStorageUsageDisplay()}<br>` +
+        `🔒 Your data stays on your device unless you sign in to sync. No ads, no data selling. Export or delete anytime.<br>` +
+        `<a href="./privacy.html" target="_blank" rel="noopener noreferrer" class="link">Privacy Policy</a> · ` +
+        `<a href="./terms.html" target="_blank" rel="noopener noreferrer" class="link">Terms of Use</a>`;
+    }
   }
   
   if (tabName === 'badges') renderBadges();
