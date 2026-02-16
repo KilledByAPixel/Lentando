@@ -1290,11 +1290,24 @@ const Badges = {
     }
     
     // Break milestones (time since last use)
-    if (profileUsed.length === 0) {
-      const daysSinceLastUse = this._countDaysSinceLastUse(evaluationDate, refTs, appStartDate);
-      if (daysSinceLastUse >= 1) {
-        // Award only the highest T-break milestone achieved
-        const milestones = getMilestoneBadges(daysSinceLastUse, TBREAK_MILESTONES);
+    // If used today: gap = earliest use today − last use before today
+    // If not used today: gap = now − most recent use
+    {
+      let tbreakDays = 0;
+      if (profileUsed.length === 0) {
+        tbreakDays = this._countDaysSinceLastUse(evaluationDate, refTs, appStartDate);
+      } else {
+        const earliestUseToday = sortedByTime(profileUsed)[0];
+        const lastUseBefore = this._getLastUseBeforeDate(evaluationDate);
+        if (lastUseBefore) {
+          tbreakDays = Math.floor((earliestUseToday.ts - lastUseBefore.ts) / (1000 * 60 * 60 * 24));
+        } else if (appStartDate && appStartDate < evaluationDate) {
+          const startTs = new Date(appStartDate + 'T12:00:00').getTime();
+          tbreakDays = Math.floor((earliestUseToday.ts - startTs) / (1000 * 60 * 60 * 24));
+        }
+      }
+      if (tbreakDays >= 1) {
+        const milestones = getMilestoneBadges(tbreakDays, TBREAK_MILESTONES);
         if (milestones.length > 0) {
           const highestMilestone = milestones[0];
           addBadge(true, `tbreak-${highestMilestone}d`);
@@ -1343,6 +1356,19 @@ const Badges = {
     return MAX_APP_STREAK;
   },
   
+  /** Find the most recent profile-use event strictly before the given date key. */
+  _getLastUseBeforeDate(dateKey) {
+    const keys = DB.getAllDayKeys(); // sorted reverse (most recent first)
+    for (const key of keys) {
+      if (key >= dateKey) continue;
+      const dayUsed = filterProfileUsed(DB.forDate(key));
+      if (dayUsed.length > 0) {
+        return sortedByTime(dayUsed)[dayUsed.length - 1]; // last (most recent) use of that day
+      }
+    }
+    return null;
+  },
+
   _countDaysSinceLastUse(refDateKey, refTs, fallbackAppStartDate) {
     const keys = DB.getAllDayKeys(); // sorted reverse (most recent first)
     const effectiveNow = refTs || now();

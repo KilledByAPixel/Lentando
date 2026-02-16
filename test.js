@@ -1220,6 +1220,22 @@ test('awards tbreak-1d after 1 day with no use and prior use exists', () => {
   includes(badges, 'tbreak-1d');
 });
 
+test('awards tbreak-1d when used today but 24h+ gap from yesterday', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const today = todayKey();
+  const yesterday = daysAgoKey(1);
+  
+  // Yesterday 1:00 PM use, today 1:15 PM use = 24h 15min gap
+  const yesterdayEvents = [makeUsedEvent(makeTs(yesterday, 13, 0), 'thc', 1)];
+  const todayEvents = [makeUsedEvent(makeTs(today, 13, 15), 'thc', 1)];
+  addEvents([...yesterdayEvents, ...todayEvents]);
+  
+  const badges = Badges.calculate(todayEvents, yesterdayEvents, { appStartDate: daysAgoKey(5) });
+  includes(badges, 'tbreak-1d'); // Gap is over 24 hours
+  notIncludes(badges, 'zero-use'); // Used today
+});
+
 group('Badges.calculate - smoking profile');
 
 test('awards vape-only for smoking profile when substance is vape', () => {
