@@ -35,6 +35,7 @@ Whether you're working toward abstinence, harm reduction, or just understanding 
 - **Works offline** - Data stays in your browser by default
 - **Optional cloud sync** - Sign in to sync across devices
 - **No ads, no data selling** - Your data stays yours
+- **Long-term storage** - Auto-consolidation enables 10+ years of daily tracking in browser storage
 
 ### 📱 **Modern & Mobile-Friendly**
 - **Cross-platform** - Works on phone, tablet, and desktop

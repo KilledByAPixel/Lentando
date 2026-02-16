@@ -37,6 +37,14 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 - **Gap calculations:** All gap metrics (longest gap, average gap, hour gaps) exclude gaps crossing 6am to filter out overnight sleep
 - **Skip badges:** Eligible once past start time
 
+### Event Consolidation
+Events older than 60 days (`CONSOLIDATION_DAYS`) are automatically merged to save localStorage space. Runs once on app start via `consolidateOldEvents()`. Group rules:
+- **Used events**: grouped by substance, amounts summed, method/reason become `'mixed'` if varied
+- **Resisted events**: one group per day, intensity summed, trigger becomes `'mixed'` if varied
+- **Habit events**: grouped by habit type — water uses `count` field (no minutes), other habits sum minutes (5-min default for untimed)
+
+Merged events get `consolidated: true` flag + `modifiedAt` timestamp. The most recent event in each group becomes the keeper. If strays reappear from sync (keeper already consolidated), they're silently discarded. Add-past-event to consolidated days: absorbed directly into keeper at call site (`saveCreateModal`) instead of creating a separate event.
+
 ### Deletion Model
 Soft-delete via tombstones (`ht_deleted_ids` / `ht_deleted_todo_ids`): maps of `{id: deletedAtTimestamp}`, cleaned after 90 days. Bulk clear uses `ht_cleared_at` timestamp — events with uid created before that timestamp are discarded.
 
