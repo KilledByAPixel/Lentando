@@ -2244,8 +2244,6 @@ function buildGraphBars(vals, days, max, def) {
     let showLabel;
     if (graphDays <= 7) {
       showLabel = true; // Show all labels for 7 days
-    } else if (graphDays <= 14) {
-      showLabel = i % 2 === 0; // Show every 2nd label for 14 days
     } else if (graphDays <= 30) {
       showLabel = i % 4 === 0; // Show every 4th label (8 labels for 30 days)
     } else {
@@ -2450,7 +2448,6 @@ function buildStackedDayBars(days) {
 
     let showLabel;
     if (graphDays <= 7) showLabel = true;
-    else if (graphDays <= 14) showLabel = i % 2 === 0;
     else if (graphDays <= 30) showLabel = i % 4 === 0;
     else showLabel = i % 10 === 0;
     const labelStyle = showLabel ? '' : 'visibility:hidden';
@@ -2593,14 +2590,6 @@ function buildYearlyHeatmapHTML() {
   // Hide if no usage in the entire year
   const hasAnyUse = grid.some(row => row.some(c => c > 0));
   if (!hasAnyUse) return '';
-
-  // Only show if user has 30+ days of history (first stored event)
-  const allEvents = DB.loadEvents();
-  if (allEvents.length > 0) {
-    const earliest = Math.min(...allEvents.map(e => e.ts));
-    const daysSinceFirst = (now.getTime() - earliest) / (1000 * 60 * 60 * 24);
-    if (daysSinceFirst < 30) return '';
-  }
 
   // For current month, grey out future days
   const todayDay = now.getDate(); // 1-based
@@ -2816,10 +2805,11 @@ function renderGraphs() {
   
   hourContainer.innerHTML = hourHtml;
   
-  // Day-based graphs (affected by 7/14/30 day selector)
+  // Day-based graphs (affected by 7/14/30/60/365 day selector)
   let dayHtml = '';
+  const isYearView = graphDays === 365;
 
-  // Usage heatmap by day-of-week (affected by day selector)
+  // Usage heatmap by day-of-week
   dayHtml += buildHeatmapHTML(days);
 
   // Render average usage by hour — stacked by substance
@@ -2829,39 +2819,47 @@ function renderGraphs() {
     ? avgHourResult
     : emptyStateHTML('No data yet', 'compact');
   dayHtml += `</div>`;
-  
-  // Render all GRAPH_DEFS graphs
-  for (let gi = 0; gi < GRAPH_DEFS.length; gi++) {
-    const def = GRAPH_DEFS[gi];
 
-    // Amount Used / Day — use stacked bars
-    if (gi === 0) {
-      const stackedResult = buildStackedDayBars(days);
-      const tipAttr = def.tooltip ? ` data-tooltip="${escapeHTML(def.tooltip + ' Stacked by substance type.')}"` : '';
-      const ariaLabel = `Bar chart: ${def.label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
-      dayHtml += `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${def.label}</div>`;
-      dayHtml += stackedResult
-        ? stackedResult
+  // Yearly usage heatmap — only shown in 1 year view, right after avg usage by hour
+  if (isYearView) {
+    dayHtml += buildYearlyHeatmapHTML();
+  }
+
+  // Per-day bar charts — skip when viewing 1 year (too many bars)
+  if (!isYearView) {
+    // Render all GRAPH_DEFS graphs
+    for (let gi = 0; gi < GRAPH_DEFS.length; gi++) {
+      const def = GRAPH_DEFS[gi];
+
+      // Amount Used / Day — use stacked bars
+      if (gi === 0) {
+        const stackedResult = buildStackedDayBars(days);
+        const tipAttr = def.tooltip ? ` data-tooltip="${escapeHTML(def.tooltip + ' Stacked by substance type.')}"` : '';
+        const ariaLabel = `Bar chart: ${def.label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
+        dayHtml += `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${def.label}</div>`;
+        dayHtml += stackedResult
+          ? stackedResult
+          : emptyStateHTML('No data yet', 'compact');
+        dayHtml += `</div>`;
+        continue;
+      }
+
+      let vals = days.map(dk => def.valueFn(DB.forDate(dk)));
+      let max  = Math.max(...vals, 1);
+      let hasData = vals.some(v => v > 0);
+      let label = def.label;
+      let tooltip = def.tooltip;
+
+      // For activity graphs, skip rendering if no data at all
+      if (def.activity && !hasData) continue;
+      const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
+      const ariaLabel = `Bar chart: ${label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
+      dayHtml += `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${label}</div>`;
+      dayHtml += hasData 
+        ? buildGraphBars(vals, days, max, def)
         : emptyStateHTML('No data yet', 'compact');
       dayHtml += `</div>`;
-      continue;
     }
-
-    let vals = days.map(dk => def.valueFn(DB.forDate(dk)));
-    let max  = Math.max(...vals, 1);
-    let hasData = vals.some(v => v > 0);
-    let label = def.label;
-    let tooltip = def.tooltip;
-
-    // For activity graphs, skip rendering if no data at all
-    if (def.activity && !hasData) continue;
-    const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
-    const ariaLabel = `Bar chart: ${label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
-    dayHtml += `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${label}</div>`;
-    dayHtml += hasData 
-      ? buildGraphBars(vals, days, max, def)
-      : emptyStateHTML('No data yet', 'compact');
-    dayHtml += `</div>`;
   }
 
   // Use by Reason graph — horizontal bars per reason, value = sum of amounts
@@ -2893,9 +2891,6 @@ function renderGraphs() {
     dayHtml += buildCategoryGraph('🛡️ Resists by Trigger', triggerKeys, triggerTotals, triggerMax, 'var(--resist)',
       'Total urge intensity resisted broken down by trigger. Shows which situations you resist the most.');
   }
-
-  // Yearly usage heatmap (always 12 months, independent of day selector)
-  dayHtml += buildYearlyHeatmapHTML();
 
   dayContainer.innerHTML = dayHtml;
 }
@@ -5567,11 +5562,95 @@ if (debugMode) {
     showToast(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago`);
   }
 
+  function generateYearTestData() {
+    console.log('📅 Generating 1 year of realistic test data...');
+    const profile = getProfile();
+    const nowTs = now();
+    const yearAgo = nowTs - (365 * 24 * 60 * 60 * 1000);
+    DB.loadEvents();
+
+    // --- Usage events: ~2-4 uses per day, some clean days ---
+    const msPerDay = 24 * 60 * 60 * 1000;
+    let usageCount = 0;
+    for (let day = 0; day < 365; day++) {
+      const dayStart = yearAgo + day * msPerDay;
+      // ~20% chance of a clean day (no usage)
+      if (Math.random() < 0.2) continue;
+      // 1-5 uses per active day, weighted toward 2-3
+      const numUses = Math.max(1, Math.min(5, Math.round(2.5 + (Math.random() - 0.5) * 3)));
+      for (let u = 0; u < numUses; u++) {
+        // Random time between 8am and 11pm
+        const hour = 8 + Math.floor(Math.random() * 15);
+        const minute = Math.floor(Math.random() * 60);
+        const ts = dayStart + hour * 3600000 + minute * 60000;
+        if (ts > nowTs) continue;
+        const substance = profile.substances[Math.floor(Math.random() * profile.substances.length)];
+        const method = profile.methods ? profile.methods[Math.floor(Math.random() * profile.methods.length)] : null;
+        const amount = profile.amounts[Math.floor(Math.random() * profile.amounts.length)];
+        const reason = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
+        DB._events.push({ id: uid(), type: 'used', ts, substance, method, amount, reason });
+        usageCount++;
+      }
+    }
+
+    // --- Resist events: ~0-2 per day, ~60% of days ---
+    let resistCount = 0;
+    for (let day = 0; day < 365; day++) {
+      if (Math.random() < 0.4) continue; // 40% no resists
+      const dayStart = yearAgo + day * msPerDay;
+      const numResists = Math.ceil(Math.random() * 2);
+      for (let r = 0; r < numResists; r++) {
+        const hour = 9 + Math.floor(Math.random() * 14);
+        const ts = dayStart + hour * 3600000 + Math.floor(Math.random() * 3600000);
+        if (ts > nowTs) continue;
+        const intensity = INTENSITIES[Math.floor(Math.random() * INTENSITIES.length)];
+        const trigger = Math.random() > 0.3 ? REASONS[Math.floor(Math.random() * REASONS.length)] : null;
+        DB._events.push({ id: uid(), type: 'resisted', ts, intensity, trigger });
+        resistCount++;
+      }
+    }
+
+    // --- Habit events: water ~3/day, others ~0-1/day ---
+    const habitTypes = Object.keys(HABIT_LABELS);
+    let habitCount = 0;
+    for (let day = 0; day < 365; day++) {
+      const dayStart = yearAgo + day * msPerDay;
+      for (const habit of habitTypes) {
+        let freq;
+        if (habit === 'water') freq = Math.floor(Math.random() * 5) + 1; // 1-5 waters
+        else freq = Math.random() < 0.35 ? 1 : 0; // 35% chance per other habit
+        for (let h = 0; h < freq; h++) {
+          const hour = 7 + Math.floor(Math.random() * 15);
+          const ts = dayStart + hour * 3600000 + Math.floor(Math.random() * 3600000);
+          if (ts > nowTs) continue;
+          const minutes = HABIT_SHOW_CHIPS[habit]
+            ? HABIT_DURATIONS[Math.floor(Math.random() * HABIT_DURATIONS.length)]
+            : null;
+          const evt = { id: uid(), type: 'habit', ts, habit };
+          if (habit === 'water') evt.count = 1;
+          else if (minutes != null) evt.minutes = minutes;
+          DB._events.push(evt);
+          habitCount++;
+        }
+      }
+    }
+
+    DB._events.sort(sortByTime);
+    DB.saveEvents();
+    generateTestBadges();
+    calculateAndUpdateBadges();
+    render();
+    if (App.currentView === 'graphs') renderGraphs();
+    console.log(`✅ Generated year of data: ${usageCount} uses, ${resistCount} resists, ${habitCount} habits`);
+    showToast(`✅ Year of test data generated`);
+  }
+
   window.generateAllTestData = generateAllTestData;
   window.generateTestData = generateTestData;
   window.generateTestHabits = generateTestHabits;
   window.generateTestResists = generateTestResists;
   window.generateUseEvent = generateUseEvent;
+  window.generateYearTestData = generateYearTestData;
 
   console.log('%c🛠️ Debug Mode Active', 'color: #4a9eff; font-weight: bold; font-size: 14px');
   console.log('%cTime Commands:', 'font-weight: bold');
@@ -5585,6 +5664,7 @@ if (debugMode) {
   console.log('  generateTestHabits(20)     - 20 events per habit type');
   console.log('  generateTestResists(50)    - 50 random resist events');
   console.log('  generateUseEvent(7)        - Single use event N days ago');
+  console.log('  generateYearTestData()     - Realistic year of usage data');
 } // end if (debugMode)
 
 // ========== INIT ==========
