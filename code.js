@@ -5222,7 +5222,10 @@ if (debugMode) {
     generateTestHabits(15);
     generateTestResists(40);
     generateTestBadges();
-    console.log('✅ All test data generated! Reload the page to see results.');
+    calculateAndUpdateBadges();
+    render();
+    if (App.currentView === 'graphs') renderCharts();
+    console.log('✅ All test data generated!');
   }
 
   function generateTestData(numEvents = 100) {
@@ -5260,7 +5263,7 @@ if (debugMode) {
     DB._events.sort(sortByTime);
     DB.saveEvents();
     
-    console.log(`✅ Added ${numEvents} usage events. Reload the page to see updated data.`);
+    console.log(`✅ Added ${numEvents} usage events.`);
   }
 
   function generateTestHabits(numPerHabit = 20) {
@@ -5294,7 +5297,7 @@ if (debugMode) {
     DB._events.sort(sortByTime);
     DB.saveEvents();
     
-    console.log(`✅ Added ${numPerHabit * habitTypes.length} habit events. Reload the page to see updated data.`);
+    console.log(`✅ Added ${numPerHabit * habitTypes.length} habit events.`);
   }
 
   function generateTestResists(numEvents = 50) {
@@ -5324,7 +5327,7 @@ if (debugMode) {
     DB._events.sort(sortByTime);
     DB.saveEvents();
     
-    console.log(`✅ Added ${numEvents} resist events. Reload the page to see updated data.`);
+    console.log(`✅ Added ${numEvents} resist events.`);
   }
 
   function generateTestBadges() {
@@ -5429,6 +5432,7 @@ if (debugMode) {
     DB.addEvent(evt);
     calculateAndUpdateBadges();
     render();
+    if (App.currentView === 'graphs') renderCharts();
     
     console.log(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago:`, evt);
     showToast(`✅ Added ${profile.sessionLabel} event ${days} day(s) ago`);
