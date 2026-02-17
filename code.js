@@ -267,7 +267,7 @@ const BADGE_DEFINITIONS = {
   'edibles-only': { label: 'Edibles Only Day', icon: '🍪', desc: 'Only used edibles' },
   'no-liquor': { label: 'No Liquor Day', icon: '🥛', desc: 'Did not drink liquor (alcohol tracking only)' },
   'one-session': { label: 'One Session', icon: '☝️', desc: 'Limited use to a single session' },
-  'microdose-day': { label: 'Small Amount', icon: '🤏', desc: 'Total amount used of 2 or less' },
+  'microdose-day': { label: 'Small Amount', icon: '🤏', desc: 'Total amount used of 3 or less' },
   'first-later': { label: 'Held Off', icon: '⏰', desc: 'First session later than yesterday (after 6am)' },
   'lower-amount': { label: 'Scaling Back', icon: '📉', desc: 'Used a smaller total amount than yesterday' },
   'taper': { label: 'Tapering', icon: '📐', desc: 'Gradually reduced usage over 3 or more consecutive days' },
@@ -1121,8 +1121,8 @@ const Badges = {
     addBadge(profileUsed.length > 0 && avg7DayAmount > 0 && profileAmt < (avg7DayAmount / 2), 'low-day');
     addBadge(profileUsed.length === 0, 'zero-use');
 
-    // Microdose Day: total amount of 2 or less (must have used something)
-    addBadge(profileUsed.length > 0 && profileAmt > 0 && profileAmt <= 2, 'microdose-day');
+    // Microdose Day: total amount of 3 or less (must have used something)
+    addBadge(profileUsed.length > 0 && profileAmt > 0 && profileAmt <= 3, 'microdose-day');
 
     // One Session: exactly one use event today
     addBadge(profileUsed.length === 1, 'one-session');
