@@ -2510,15 +2510,21 @@ function heatmapLevel(count) {
   return 3;
 }
 
-function heatmapLegendHTML() {
-  return '<div class="hm-legend">'
+function heatmapLegendHTML(includeNoActivity = false) {
+  let html = '<div class="hm-legend">'
     + '<span class="hm-legend-heatmap-label">Less</span>'
     + '<div class="hm-cell hm-swatch hm-lvl-0"></div>'
     + '<div class="hm-cell hm-swatch hm-lvl-1"></div>'
     + '<div class="hm-cell hm-swatch hm-lvl-2"></div>'
     + '<div class="hm-cell hm-swatch hm-lvl-3"></div>'
-    + '<span class="hm-legend-heatmap-label">More</span>'
-    + '</div>';
+    + '<span class="hm-legend-heatmap-label">More</span>';
+  
+  if (includeNoActivity) {
+    html += '<span class="hm-legend-heatmap-label" style="margin-left:12px;">No activity</span>'
+      + '<div class="hm-cell hm-swatch yhm-no-events"></div>';
+  }
+  
+  return html + '</div>';
 }
 
 function buildHeatmapHTML(days) {
@@ -2596,9 +2602,15 @@ function buildYearlyHeatmapHTML() {
     }
   }
 
-  // Hide if no usage in the entire year
-  const hasAnyUse = grid.some(row => row.some(c => c > 0));
-  if (!hasAnyUse) return '';
+  // Hide if no events at all in the entire year (check if user has ever used the app)
+  const hasAnyActivity = months.some(mo => {
+    for (let day = 1; day <= mo.daysInMonth; day++) {
+      const dk = `${mo.year}-${String(mo.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      if (DB.forDate(dk).length > 0) return true;
+    }
+    return false;
+  });
+  if (!hasAnyActivity) return '';
 
   // For current month, grey out future days
   const todayDay = now.getDate(); // 1-based
@@ -2628,10 +2640,18 @@ function buildYearlyHeatmapHTML() {
         if (isFuture) {
           html += '<div class="hm-cell yhm-empty"></div>';
         } else {
+          const dk = `${mo.year}-${String(mo.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const allEvents = DB.forDate(dk);
           const count = grid[mi][d - 1];
-          const lvl = heatmapLevel(count);
-          const display = count > 0 ? (Number.isInteger(count) ? count : count.toFixed(1)) : '0';
-          html += `<div class="hm-cell hm-lvl-${lvl}" title="${mo.label} ${d}: ${display}"></div>`;
+          
+          // If no events at all, use special "no app activity" color
+          if (allEvents.length === 0) {
+            html += `<div class="hm-cell yhm-no-events" title="${mo.label} ${d}: No app activity"></div>`;
+          } else {
+            const lvl = heatmapLevel(count);
+            const display = count > 0 ? (Number.isInteger(count) ? count : count.toFixed(1)) : '0';
+            html += `<div class="hm-cell hm-lvl-${lvl}" title="${mo.label} ${d}: ${display}"></div>`;
+          }
         }
       } else {
         // Day doesn't exist in this month
@@ -2641,7 +2661,7 @@ function buildYearlyHeatmapHTML() {
     html += '</div>';
   }
 
-  html += heatmapLegendHTML();
+  html += heatmapLegendHTML(true);
   html += '</div></div>';
   return html;
 }
