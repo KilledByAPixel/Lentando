@@ -1127,10 +1127,10 @@ const Badges = {
     // One Session: exactly one use event today
     addBadge(profileUsed.length === 1, 'one-session');
 
-    // No Liquor Day: alcohol profile and no liquor uses (including zero-use days)
+    // No Liquor Day: alcohol profile, used today, but no liquor
     const isAlcohol = settings.addictionProfile === 'alcohol';
     if (isAlcohol) {
-      addBadge(!profileUsed.some(e => e.substance === 'liquor'), 'no-liquor');
+      addBadge(profileUsed.length > 0 && !profileUsed.some(e => e.substance === 'liquor'), 'no-liquor');
     }
 
     // --- Habit-based badges ---
@@ -1222,7 +1222,8 @@ const Badges = {
     ];
     for (const { start, end, id } of skipBadges) {
       const eligible = isEligibleForSkipBadge(end);
-      addBadge(eligible && currentHour >= start && noUseInRange(start, end), id);
+      // Only award skip badges if there's been use today — clear day badge already covers zero use
+      addBadge(profileUsed.length > 0 && eligible && currentHour >= start && noUseInRange(start, end), id);
     }
     
     // Good Night — overnight break crossing 6am boundary
