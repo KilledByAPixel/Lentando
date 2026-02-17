@@ -3043,7 +3043,7 @@ function switchTab(tabName) {
       el.innerHTML =
         `💾 Storage used: ${getStorageUsageDisplay()}<br>` +
         `📦 Events older than ${CONSOLIDATION_DAYS} days are automatically combined to save space.<br>` +
-        `🔒 Your data stays on your device unless you sign in to sync. No ads, no data selling. Export or delete anytime.<br>` +
+        `🔒 Your data stays on your device unless you sign in to sync. Export or delete anytime.<br>` +
         `<a href="./privacy.html" target="_blank" rel="noopener noreferrer" class="link">Privacy Policy</a> · ` +
         `<a href="./terms.html" target="_blank" rel="noopener noreferrer" class="link">Terms of Use</a>`;
     }
