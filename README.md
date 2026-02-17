@@ -74,7 +74,7 @@ Lentando recognizes progress in many forms:
 - **🔐 Privacy Matters** - Your recovery is personal and private
 - **⭐ Small Wins Add Up** - Every moment of awareness counts
 
-### ♿ **Accessible**
+## ♿ **Accessible**
 - **ARIA labels** - Buttons, modals, charts, and inputs have descriptive labels and roles
 - **System theme support** - Automatically matches light/dark mode preference
 - **Screen reader friendly** - Live regions for toasts, labeled inputs, and descriptive chart summaries
