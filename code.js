@@ -3450,7 +3450,6 @@ function getProfileForSubstance(substance) {
 function openCreateEventModal() {
   hideUsedChips();
   hideResistedChips();
-  hideUndo();
 
   const s = DB.loadSettings();
   const profileKey = s.addictionProfile || 'cannabis';
@@ -3682,7 +3681,6 @@ function saveCreateModal() {
 function openEditModal(eventId) {
   hideUsedChips();
   hideResistedChips();
-  hideUndo();
   const evt = DB.loadEvents().find(e => e.id === eventId);
   if (!evt) return;
 
@@ -5164,6 +5162,10 @@ window.App = {
   deleteEvent(id) {
     if (!confirm('Delete this event?')) return false;
     DB.deleteEvent(id);
+    // Hide undo button if the deleted event is the one it applies to
+    if (lastUndoEventId === id) {
+      hideUndo();
+    }
     calculateAndUpdateBadges();
     render();
     // Flush to cloud immediately so focus-triggered pull doesn't restore the deleted event
