@@ -259,6 +259,8 @@ const BADGE_DEFINITIONS = {
   'gap-8h': { label: 'Gap 8h', icon: '🕗', desc: 'Maintained an 8+ hour gap between sessions (excludes gaps crossing 6am)' },
   'gap-12h': { label: 'Gap 12h', icon: '🕛', desc: 'Maintained a 12+ hour gap between sessions (excludes gaps crossing 6am)' },
   'night-gap': { label: 'Good Night', icon: '🛏️', desc: 'Maintained a 12+ hour gap that crosses 6am' },
+  'cbd-night': { label: 'CBD Night', icon: '🌌', desc: 'Maintained a 12+ hour overnight gap excluding CBD use (cannabis tracking only)' },
+  'no-back-to-back': { label: 'No Chain', icon: '🚦', desc: 'All sessions spaced at least 15 minutes apart' },
   'dose-half': { label: 'Reduced Dose', icon: '⚖️', desc: 'Used less than a full dose' },
   'harm-reduction-vape': { label: 'Safer Choice', icon: '✨', desc: 'Chose vape over smoke' },
   'vape-only': { label: 'Vape Only Day', icon: '💨', desc: 'Only used vape or edibles' },
@@ -266,6 +268,7 @@ const BADGE_DEFINITIONS = {
   'half-cbd-day': { label: 'Half CBD Day', icon: '🍂', desc: 'At least 50% of usage was CBD' },
   'edibles-only': { label: 'Edibles Only Day', icon: '🍪', desc: 'Only used edibles' },
   'no-liquor': { label: 'No Liquor Day', icon: '🥛', desc: 'Did not drink liquor (alcohol tracking only)' },
+  'no-cigarette': { label: 'No Cigarette Day', icon: '🧯', desc: 'Did not smoke cigarettes (smoking tracking only)' },
   'one-session': { label: 'One Session', icon: '☝️', desc: 'Limited use to a single session' },
   'microdose-day': { label: 'Small Amount', icon: '🤏', desc: 'Total amount used of 3 or less' },
   'first-later': { label: 'Held Off', icon: '⏰', desc: 'First session later than yesterday (after 6am)' },
@@ -273,7 +276,7 @@ const BADGE_DEFINITIONS = {
   'taper': { label: 'Tapering', icon: '📐', desc: 'Gradually reduced usage over 3 or more consecutive days' },
   'gap-above-avg': { label: 'Beat Your Average', icon: '⏳', desc: 'Average gap exceeded trailing 7-day average (excludes gaps crossing 6am)' },
   'low-day': { label: 'Light Day', icon: '🎈', desc: 'Used less than half your trailing 7-day average' },
-  'night-skip': { label: 'No Night Use', icon: '☄️', desc: 'No use between midnight and 6am' },
+  'night-skip': { label: 'No Night Use', icon: '🌠', desc: 'No use between midnight and 6am' },
   'morning-skip': { label: 'No Morning Use', icon: '🌅', desc: 'No use between 6am and noon' },
   'day-skip': { label: 'No Day Use', icon: '☀️', desc: 'No use between noon and 6pm' },
   'evening-skip': { label: 'No Evening Use', icon: '🌙', desc: 'No use between 6pm and midnight' },
@@ -1132,6 +1135,11 @@ const Badges = {
     if (isAlcohol) {
       addBadge(profileUsed.length > 0 && !profileUsed.some(e => e.substance === 'liquor'), 'no-liquor');
     }
+    
+    // No Cigarette Day: smoking profile, used today, but no cigarettes
+    if (isNicotine) {
+      addBadge(profileUsed.length > 0 && profileUsed.every(e => e.substance !== 'cigarette'), 'no-cigarette');
+    }
 
     // --- Habit-based badges ---
     const waterCount = getHabits(todayEvents, 'water').reduce((s, e) => s + (e.count || 1), 0);
@@ -1180,6 +1188,12 @@ const Badges = {
       if (avgGap7Days > 0 && todayGapsMs.length > 0) {
         const todayAvgGap = todayGapsMs.reduce((s, g) => s + g, 0) / todayGapsMs.length;
         addBadge(todayAvgGap > avgGap7Days, 'gap-above-avg');
+      }
+      
+      // No Back-to-Back: all gaps between sessions are at least 15 minutes
+      if (todayGapsMs.length > 0) {
+        const minGapMinutes = Math.min(...todayGapsMs) / 60000;
+        addBadge(minGapMinutes >= 15, 'no-back-to-back');
       }
     }
 
@@ -1254,7 +1268,33 @@ const Badges = {
         hasNightGap = true;
       }
     }
-    addBadge(hasNightGap, 'night-gap');
+    // CBD Night — overnight break crossing 6am, but allows CBD use (cannabis only)
+    let hasCbdNightGap = false;
+    if (isCannabis) {
+      // Filter out CBD from the overnight check
+      const yesterdayThc = filterTHC(yesterdayProfileUsed);
+      const todayThc = filterTHC(profileUsed);
+      const allRecentThc = sortedByTime([...yesterdayThc, ...todayThc]);
+      
+      // Find last THC use between 6pm yesterday and 6am today
+      const lastOvernightThc = allRecentThc.filter(e => e.ts >= yesterday6pm && e.ts < today6am).pop();
+      // Find earliest THC use after 6am today
+      const firstThcAfter6am = allRecentThc.find(e => e.ts >= today6am);
+      
+      if (completedDay || currentHour >= EARLY_HOUR) {
+        if (!lastOvernightThc) {
+          // No THC use between 6pm–6am = automatic 12h+ gap overnight
+          hasCbdNightGap = !isFirstDay;
+        } else if (firstThcAfter6am) {
+          // THC use after 6am — gap from overnight THC must be 12h+
+          hasCbdNightGap = (firstThcAfter6am.ts - lastOvernightThc.ts) / 3600000 >= 12;
+        } else {
+          // Overnight THC use but no THC after 6am — award it (gap is growing)
+          hasCbdNightGap = true;
+        }
+      }
+    }
+    // Night gap badges are added after t-break badges (see below)
 
     // --- Comparison badges ---
     if (profileUsed.length > 0 && yesterdayProfileUsed.length > 0) {
@@ -1322,6 +1362,17 @@ const Badges = {
           const highestMilestone = milestones[0];
           addBadge(true, `tbreak-${highestMilestone}d`);
         }
+      }
+    }
+
+    // --- Night gap badges (deferred) ---
+    // Don't show Good Night or CBD Night if a t-break badge is already earned (24h+ gap makes overnight redundant)
+    const hasTbreak = badges.some(id => id.startsWith('tbreak-'));
+    if (!hasTbreak) {
+      addBadge(hasNightGap, 'night-gap');
+      // Only award CBD Night if Good Night wasn't earned (Good Night encompasses CBD Night)
+      if (!hasNightGap) {
+        addBadge(hasCbdNightGap, 'cbd-night');
       }
     }
 

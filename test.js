@@ -816,13 +816,13 @@ test('does not award one-session for 2 uses', () => {
   notIncludes(badges, 'one-session');
 });
 
-test('awards microdose-day for total amount <= 2', () => {
+test('awards microdose-day for total amount <= 3', () => {
   resetState();
   setSettings({ addictionProfile: 'cannabis' });
   const today = todayKey();
   const events = [
     makeUsedEvent(makeTs(today, 10), 'thc', 1),
-    makeUsedEvent(makeTs(today, 14), 'thc', 0.5),
+    makeUsedEvent(makeTs(today, 14), 'cbd', 1.5),
   ];
   addEvents(events);
   
@@ -830,13 +830,13 @@ test('awards microdose-day for total amount <= 2', () => {
   includes(badges, 'microdose-day');
 });
 
-test('does not award microdose-day for total amount > 2', () => {
+test('does not award microdose-day for total amount > 3', () => {
   resetState();
   setSettings({ addictionProfile: 'cannabis' });
   const today = todayKey();
   const events = [
     makeUsedEvent(makeTs(today, 10), 'thc', 2),
-    makeUsedEvent(makeTs(today, 14), 'thc', 1),
+    makeUsedEvent(makeTs(today, 14), 'thc', 2),
   ];
   addEvents(events);
   
@@ -1048,7 +1048,7 @@ test('does not award night-skip when use at 3am', () => {
   notIncludes(badges, 'night-skip');
 });
 
-test('awards all 4 skip badges on zero-use completed day', () => {
+test('does not award skip badges on zero-use day (clear day covers it)', () => {
   resetState();
   setSettings({ addictionProfile: 'cannabis' });
   const today = todayKey();
@@ -1056,10 +1056,11 @@ test('awards all 4 skip badges on zero-use completed day', () => {
   addEvents(events);
   
   const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, appStartDate: daysAgoKey(5) });
-  includes(badges, 'night-skip');
-  includes(badges, 'morning-skip');
-  includes(badges, 'day-skip');
-  includes(badges, 'evening-skip');
+  includes(badges, 'zero-use');
+  notIncludes(badges, 'night-skip');
+  notIncludes(badges, 'morning-skip');
+  notIncludes(badges, 'day-skip');
+  notIncludes(badges, 'evening-skip');
 });
 
 group('Badges.calculate - comparison');
