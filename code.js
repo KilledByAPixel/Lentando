@@ -1028,27 +1028,13 @@ const Badges = {
     const yesterdayProfileUsed = yesterdayEvents ? filterProfileUsed(yesterdayEvents) : [];
     const profileAmt = sumAmount(profileUsed);
 
-    // Check if this is the user's first day using the app
-    // Use badgeAnchorDate if available (reliable across zero-event days), else fall back to event check
+    // Check if this is the user's first day using the app (used by night gap badges)
     let isFirstDay;
-    let hasHistoricalProfileUse = false; // Track if they have any past use events
     if (badgeAnchorDate) {
       isFirstDay = evaluationDate === badgeAnchorDate;
-      // Check for historical profile use events before today
-      if (isFirstDay) {
-        hasHistoricalProfileUse = allKeys.some(key => {
-          if (key >= evaluationDate) return false;
-          return filterProfileUsed(DB.forDate(key)).length > 0;
-        });
-      }
     } else {
       const hasEventsBeforeToday = allKeys.some(key => key < evaluationDate && DB.forDate(key).length > 0);
       isFirstDay = !hasEventsBeforeToday;
-      // While we have the keys, also check for profile-specific use events in previous days
-      hasHistoricalProfileUse = allKeys.some(key => {
-        if (key >= evaluationDate) return false;
-        return filterProfileUsed(DB.forDate(key)).length > 0;
-      });
     }
 
     // --- Daily Check-in badge ---
@@ -1206,15 +1192,12 @@ const Badges = {
       return h >= start && h < end;
     });
 
-    // On first day only: user must have started before the badge period to be eligible
+    // On the badge anchor day, user must have been active before the period end to be eligible.
+    // After the anchor day, always eligible. If user adds a backdated event, badgeAnchorDate
+    // shifts earlier so today is no longer the first day — no extra check needed.
     const isEligibleForSkipBadge = (end) => {
-      if (!isFirstDay) return true; // After first day, always eligible
-      
-      // If they have historical use events, they're eligible for all skip badges
-      if (hasHistoricalProfileUse) return true;
-      
-      // Otherwise, check if they started before the period end (original logic)
-      // Use earliest of: badge anchor time (same day) or first event on that day (whichever is earlier)
+      if (!isFirstDay) return true;
+      // First day: check if user started before the period end
       const sameDayStartTs = (badgeAnchorDate === evaluationDate) ? badgeAnchorTs : null;
       let earliestTs = null;
       if (todayEvents.length > 0) {
@@ -1223,9 +1206,8 @@ const Badges = {
       if (sameDayStartTs != null && (earliestTs == null || sameDayStartTs < earliestTs)) {
         earliestTs = sameDayStartTs;
       }
-      if (earliestTs == null) return false; // Shouldn't happen, but stay safe
-      const firstHour = getHour(earliestTs);
-      return firstHour < end; // Must have started before the period end
+      if (earliestTs == null) return false;
+      return getHour(earliestTs) < end;
     };
 
     const skipBadges = [
