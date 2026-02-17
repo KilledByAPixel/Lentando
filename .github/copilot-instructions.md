@@ -19,7 +19,7 @@ Zero-friction substance use & habit tracker. PWA, vanilla JS (no frameworks), mo
 
 **Data model:**
 - **Events** — `{id, type, ts, ...}` where type is `used`, `resisted`, or `habit`
-- **Badges** — `{todayDate, todayBadges, yesterdayBadges, lifetimeBadges, todayUndoCount, appStartDate, appStartTs}`. Merge strategy: max count per badge ID.
+- **Badges** — `{todayDate, todayBadges, yesterdayBadges, lifetimeBadges, todayUndoCount, appStartTs, earliestEventTs}`. `appStartTs` is write-once (first app open). `earliestEventTs` is recalculated from events (null if none). Badge anchor = `min(earliestEventTs, appStartTs)`. Merge strategy: max count per badge ID.
 
 ### Cache Invalidation (Critical)
 `firebase-sync.js` uses `invalidateDBCaches()` after cloud merges — this nulls `DB._events`, `DB._settings`, `DB._dateIndex`. Must happen **inside** the function that writes to localStorage, not after it returns.

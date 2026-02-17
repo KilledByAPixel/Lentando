@@ -996,7 +996,7 @@ function saveBadgeData(data) {
 // ========== BADGES ENGINE ==========
 const Badges = {
   calculate(todayEvents, yesterdayEvents, options = {}) {
-    const { completedDay = false, forDate = null, appStartDate = null, appStartTs = null, installDate = null } = options;
+    const { completedDay = false, forDate = null, badgeAnchorDate = null, badgeAnchorTs = null, installDate = null } = options;
     // forDate: the date key being evaluated (defaults to todayKey())
     const evaluationDate = forDate || todayKey();
 
@@ -1029,11 +1029,11 @@ const Badges = {
     const profileAmt = sumAmount(profileUsed);
 
     // Check if this is the user's first day using the app
-    // Use appStartDate if available (reliable across zero-event days), else fall back to event check
+    // Use badgeAnchorDate if available (reliable across zero-event days), else fall back to event check
     let isFirstDay;
     let hasHistoricalProfileUse = false; // Track if they have any past use events
-    if (appStartDate) {
-      isFirstDay = evaluationDate === appStartDate;
+    if (badgeAnchorDate) {
+      isFirstDay = evaluationDate === badgeAnchorDate;
       // Check for historical profile use events before today
       if (isFirstDay) {
         hasHistoricalProfileUse = allKeys.some(key => {
@@ -1058,7 +1058,7 @@ const Badges = {
     // Use event timestamps (stable) so the badge is consistent across renders.
     // Don't look at days before installDate (uid-based) — backdated onboarding
     // events have old ts but were created today, so they aren't real previous activity.
-    const welcomeBackBound = installDate || appStartDate;
+    const welcomeBackBound = installDate || badgeAnchorDate;
     if (todayEvents.length > 0) {
       for (const key of allKeys) {
         if (key >= evaluationDate) continue; // skip the day being evaluated
@@ -1214,8 +1214,8 @@ const Badges = {
       if (hasHistoricalProfileUse) return true;
       
       // Otherwise, check if they started before the period end (original logic)
-      // Use earliest of: app start time (same day) or first event on that day (whichever is earlier)
-      const sameDayStartTs = (appStartDate === evaluationDate) ? appStartTs : null;
+      // Use earliest of: badge anchor time (same day) or first event on that day (whichever is earlier)
+      const sameDayStartTs = (badgeAnchorDate === evaluationDate) ? badgeAnchorTs : null;
       let earliestTs = null;
       if (todayEvents.length > 0) {
         earliestTs = Math.min(...todayEvents.map(e => e.ts));
@@ -1346,14 +1346,14 @@ const Badges = {
     {
       let tbreakDays = 0;
       if (profileUsed.length === 0) {
-        tbreakDays = this._countDaysSinceLastUse(evaluationDate, refTs, appStartTs);
+        tbreakDays = this._countDaysSinceLastUse(evaluationDate, refTs, badgeAnchorTs);
       } else {
         const earliestUseToday = sortedByTime(profileUsed)[0];
         const lastUseBefore = this._getLastUseBeforeDate(evaluationDate);
         if (lastUseBefore) {
           tbreakDays = Math.floor((earliestUseToday.ts - lastUseBefore.ts) / (1000 * 60 * 60 * 24));
-        } else if (appStartTs && appStartDate < evaluationDate) {
-          tbreakDays = Math.floor((earliestUseToday.ts - appStartTs) / (1000 * 60 * 60 * 24));
+        } else if (badgeAnchorTs && badgeAnchorDate < evaluationDate) {
+          tbreakDays = Math.floor((earliestUseToday.ts - badgeAnchorTs) / (1000 * 60 * 60 * 24));
         }
       }
       if (tbreakDays >= 1) {
@@ -1430,7 +1430,7 @@ const Badges = {
     return null;
   },
 
-  _countDaysSinceLastUse(refDateKey, refTs, fallbackAppStartTs) {
+  _countDaysSinceLastUse(refDateKey, refTs, fallbackAnchorTs) {
     const keys = DB.getAllDayKeys(); // sorted reverse (most recent first)
     const effectiveNow = refTs || now();
 
@@ -1442,8 +1442,8 @@ const Badges = {
         return Math.floor((effectiveNow - dayUsed[dayUsed.length - 1].ts) / (1000 * 60 * 60 * 24));
       }
     }
-    // No use events ever — measure from appStartTs if available
-    const startTs = fallbackAppStartTs || loadBadgeData().appStartTs;
+    // No use events ever — measure from badge anchor if available
+    const startTs = fallbackAnchorTs || loadBadgeData().appStartTs;
     if (startTs) {
       return Math.floor((effectiveNow - startTs) / (1000 * 60 * 60 * 24));
     }
@@ -1846,23 +1846,25 @@ function calculateAndUpdateBadges() {
   const today = todayKey();
   const isSameDay = badgeData.todayDate === today;
 
-  // Derive app start timestamp/date from current events only.
-  // Always revalidated — never carried over from storage — so deleted events
-  // can't leave a stale anchor that inflates t-break badges.
-  // EXCEPT: if there are NO events at all, preserve existing appStartDate so users
-  // with zero use events can still earn tbreak badges based on when they started the app.
-  let appStartTs;
+  // appStartTs: write-once timestamp of when the user first opened the app.
+  // Set on first badge calculation, never changes thereafter.
+  const appStartTs = badgeData.appStartTs || now();
+
+  // earliestEventTs: derived from current events only. Recalculated on every badge
+  // update so deleted events can't leave a stale anchor.
   const allEvents = DB.loadEvents();
+  let earliestEventTs = null;
   if (allEvents.length > 0) {
-    appStartTs = allEvents[0].ts;
-    for (let i = 1; i < allEvents.length; i++) if (allEvents[i].ts < appStartTs) appStartTs = allEvents[i].ts;
-  } else if (badgeData.appStartTs) {
-    // No events but have saved start timestamp — preserve it for tbreak badges
-    appStartTs = badgeData.appStartTs;
-  } else {
-    appStartTs = now();
+    earliestEventTs = allEvents[0].ts;
+    for (let i = 1; i < allEvents.length; i++) {
+      if (allEvents[i].ts < earliestEventTs) earliestEventTs = allEvents[i].ts;
+    }
   }
-  const appStartDate = dateKey(appStartTs);
+
+  // For badge calculations: use the earlier of earliestEventTs and appStartTs.
+  // If user installed before their first event, clean days from install count.
+  const badgeAnchorTs = earliestEventTs !== null ? Math.min(earliestEventTs, appStartTs) : appStartTs;
+  const badgeAnchorDate = dateKey(badgeAnchorTs);
 
   // Real install date: based on when events were *created* (uid timestamp),
   // not their event timestamp (which can be backdated during onboarding).
@@ -1895,8 +1897,8 @@ function calculateAndUpdateBadges() {
     const recalcIds = Badges.calculate(prevDayEvents, dayBeforePrevEvents, {
       completedDay: true,
       forDate: badgeData.todayDate,
-      appStartDate,
-      appStartTs,
+      badgeAnchorDate,
+      badgeAnchorTs,
       installDate
     });
     // Carry over undo-driven badge for the prior day
@@ -1929,8 +1931,8 @@ function calculateAndUpdateBadges() {
   const todayEvents = DB.forDate(today);
   const yesterdayEvents = DB.forDate(daysAgoKey(1));
   const freshTodayIds = Badges.calculate(todayEvents, yesterdayEvents, {
-    appStartDate,
-    appStartTs,
+    badgeAnchorDate,
+    badgeAnchorTs,
     installDate
   });
   
@@ -1958,7 +1960,8 @@ function calculateAndUpdateBadges() {
     yesterdayBadges: yesterdayBadges,
     lifetimeBadges: updatedLifetimeBadges,
     todayUndoCount: undoCount,
-    appStartTs
+    appStartTs,
+    earliestEventTs
   };
   
   saveBadgeData(updatedBadgeData);
@@ -2723,6 +2726,13 @@ function buildWeekSummaryHTML() {
   const profile = getProfile();
   const _weekdayFmt = new Intl.DateTimeFormat([], { weekday: 'short' });
 
+  // Medal eligibility: use the earlier of earliest event or app start time
+  const badgeData = loadBadgeData();
+  const anchorTs = badgeData.earliestEventTs != null
+    ? Math.min(badgeData.earliestEventTs, badgeData.appStartTs || Infinity)
+    : badgeData.appStartTs;
+  const eligibilityDateKey = anchorTs ? dateKey(new Date(anchorTs)) : null;
+
   // Pre-compute per-day data
   const dayData = days.map(dayKey => {
     const d = new Date(dayKey + 'T12:00:00');
@@ -2750,12 +2760,14 @@ function buildWeekSummaryHTML() {
         actTotals[act] = `${actEvents.length}`;
       }
     }
+    const hasUse = used.length > 0;
     return {
       dayKey,
       dayLabel: dayKey === todayKey() ? 'Today' : _weekdayFmt.format(d),
       dayNum: d.getDate(),
       bySubstance,
-      hasUse: used.length > 0,
+      hasUse,
+      medalEligible: !hasUse && eligibilityDateKey && dayKey >= eligibilityDateKey,
       resistTotal,
       actTotals
     };
@@ -2778,13 +2790,12 @@ function buildWeekSummaryHTML() {
   let dataRowIdx = 0;
 
   // Star row: 🏅 for clean days (no usage at all) — shown first
-  const hasAnyCleanDay = dayData.some(dd => !dd.hasUse);
-  if (hasAnyCleanDay) {
+  if (dayData.some(dd => dd.medalEligible)) {
     html += `<div class="week-row week-data-row ${dataRowIdx++ % 2 ? '' : 'week-row-alt'}"><div class="week-row-label"></div>`;
     for (const dd of dayData) {
-      html += dd.hasUse
-        ? '<div class="week-cell"></div>'
-        : '<div class="week-cell week-star">🏅</div>';
+      html += dd.medalEligible
+        ? '<div class="week-cell week-star">🏅</div>'
+        : '<div class="week-cell"></div>';
     }
     html += '</div>';
   }

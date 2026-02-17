@@ -670,7 +670,7 @@ test('awards daily-checkin when events exist', () => {
   const events = [makeUsedEvent(makeTs(today, 10), 'thc', 1)];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5), appStartTs: makeTs(daysAgoKey(5), 10) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5), badgeAnchorTs: makeTs(daysAgoKey(5), 10) });
   includes(badges, 'daily-checkin');
 });
 
@@ -688,7 +688,7 @@ test('awards resist badge when resisted events exist', () => {
   const events = [makeResistEvent(makeTs(today, 10))];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'resist');
 });
 
@@ -699,7 +699,7 @@ test('awards zero-use when no used events', () => {
   const events = [makeHabitEvent(makeTs(today, 10), 'water')];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'zero-use');
   // A habit IS an event, so daily-checkin is also awarded
   includes(badges, 'daily-checkin');
@@ -714,7 +714,7 @@ test('awards drank-water badge', () => {
   const events = [makeHabitEvent(makeTs(today, 10), 'water')];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'drank-water');
   notIncludes(badges, 'hydrated'); // need 5+
 });
@@ -729,7 +729,7 @@ test('awards hydrated with 5+ water events', () => {
   }
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'drank-water');
   includes(badges, 'hydrated');
 });
@@ -747,7 +747,7 @@ test('awards five-star-day for all 5 habit types', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'five-star-day');
 });
 
@@ -763,7 +763,7 @@ test('does not award five-star-day with 4 habits', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'five-star-day');
 });
 
@@ -776,7 +776,7 @@ test('awards dose-half for amount < 1', () => {
   const events = [makeUsedEvent(makeTs(today, 10), 'thc', 0.5)];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'dose-half');
 });
 
@@ -787,7 +787,7 @@ test('awards mindful when reason is logged', () => {
   const events = [makeUsedEvent(makeTs(today, 10), 'thc', 1, { reason: 'stress' })];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'mindful');
 });
 
@@ -798,7 +798,7 @@ test('awards one-session for exactly 1 profile use', () => {
   const events = [makeUsedEvent(makeTs(today, 10), 'thc', 1)];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'one-session');
 });
 
@@ -812,7 +812,7 @@ test('does not award one-session for 2 uses', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'one-session');
 });
 
@@ -826,7 +826,7 @@ test('awards microdose-day for total amount <= 3', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'microdose-day');
 });
 
@@ -840,7 +840,7 @@ test('does not award microdose-day for total amount > 3', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'microdose-day');
 });
 
@@ -853,7 +853,7 @@ test('awards cbd-only when only CBD used', () => {
   const events = [makeUsedEvent(makeTs(today, 10), 'cbd', 1)];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'cbd-only');
 });
 
@@ -867,7 +867,7 @@ test('does not award cbd-only when THC also used', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'cbd-only');
 });
 
@@ -878,7 +878,7 @@ test('awards edibles-only when all edibles', () => {
   const events = [makeUsedEvent(makeTs(today, 10), 'thc', 1, { method: 'edible' })];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'edibles-only');
 });
 
@@ -892,7 +892,7 @@ test('awards vape-only for cannabis when method is vape (ignoring edibles)', () 
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'vape-only');
 });
 
@@ -905,7 +905,7 @@ test('awards no-liquor for alcohol profile with no liquor', () => {
   const events = [makeUsedEvent(makeTs(today, 18), 'beer', 2)];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'no-liquor');
 });
 
@@ -916,7 +916,7 @@ test('does not award no-liquor when liquor was consumed', () => {
   const events = [makeUsedEvent(makeTs(today, 18), 'liquor', 1)];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'no-liquor');
 });
 
@@ -929,7 +929,7 @@ test('awards intensity-logged for resisted with intensity', () => {
   const events = [makeResistEvent(makeTs(today, 10), { intensity: 3 })];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'intensity-logged');
 });
 
@@ -940,7 +940,7 @@ test('awards tough-resist for intensity 4+', () => {
   const events = [makeResistEvent(makeTs(today, 10), { intensity: 4 })];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'tough-resist');
 });
 
@@ -951,7 +951,7 @@ test('awards full-report for intensity + trigger', () => {
   const events = [makeResistEvent(makeTs(today, 10), { intensity: 3, trigger: 'stress' })];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'full-report');
 });
 
@@ -966,7 +966,7 @@ test('awards resist-majority when more resists than uses', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'resist-majority');
 });
 
@@ -980,7 +980,7 @@ test('does not award resist-majority when equal resists and uses', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'resist-majority');
 });
 
@@ -1000,7 +1000,7 @@ test('awards gap-1h for 1+ hour gap (same day, not crossing 6am)', () => {
   const yesterdayEvents = [makeUsedEvent(makeTs(yesterday, 20), 'thc', 1)];
   addEvents([...yesterdayEvents, ...events]);
   
-  const badges = Badges.calculate(events, yesterdayEvents, { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, yesterdayEvents, { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'gap-2h'); // 2h gap between 10 and 12
 });
 
@@ -1014,7 +1014,7 @@ test('awards only highest gap milestone', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'gap-8h');
   notIncludes(badges, 'gap-1h');
   notIncludes(badges, 'gap-2h');
@@ -1030,7 +1030,7 @@ test('awards night-skip when no use between 0-6am (completed day)', () => {
   const events = [makeUsedEvent(makeTs(today, 10), 'thc', 1)]; // use at 10am only
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'night-skip');
 });
 
@@ -1044,7 +1044,7 @@ test('does not award night-skip when use at 3am', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'night-skip');
 });
 
@@ -1055,7 +1055,7 @@ test('does not award skip badges on zero-use day (clear day covers it)', () => {
   const events = [makeHabitEvent(makeTs(today, 10), 'water')]; // habit only, no use
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'zero-use');
   notIncludes(badges, 'night-skip');
   notIncludes(badges, 'morning-skip');
@@ -1075,7 +1075,7 @@ test('awards lower-amount when today < yesterday', () => {
   const yesterdayEvents = [makeUsedEvent(makeTs(yesterday, 10), 'thc', 3)];
   addEvents([...todayEvents, ...yesterdayEvents]);
   
-  const badges = Badges.calculate(todayEvents, yesterdayEvents, { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(todayEvents, yesterdayEvents, { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'lower-amount');
 });
 
@@ -1089,7 +1089,7 @@ test('does not award lower-amount when today > yesterday', () => {
   const yesterdayEvents = [makeUsedEvent(makeTs(yesterday, 10), 'thc', 1)];
   addEvents([...todayEvents, ...yesterdayEvents]);
   
-  const badges = Badges.calculate(todayEvents, yesterdayEvents, { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(todayEvents, yesterdayEvents, { badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'lower-amount');
 });
 
@@ -1105,7 +1105,7 @@ test('awards good-start when first daytime event is habit', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'good-start');
 });
 
@@ -1119,7 +1119,7 @@ test('awards good-start when first daytime event is resist', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'good-start');
 });
 
@@ -1133,7 +1133,7 @@ test('does not award good-start when first daytime event is use', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { completedDay: true, forDate: today, badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'good-start');
 });
 
@@ -1149,7 +1149,7 @@ test('awards resist-streak for 2+ consecutive days of resists', () => {
   const yesterdayEvents = [makeResistEvent(makeTs(yesterday, 10))];
   addEvents([...todayEvents, ...yesterdayEvents]);
   
-  const badges = Badges.calculate(todayEvents, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(todayEvents, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'resist-streak');
 });
 
@@ -1165,7 +1165,7 @@ test('awards habit-streak for 3+ consecutive days of habits', () => {
   const day2Events = [makeHabitEvent(makeTs(day2, 10), 'water')];
   addEvents([...todayEvents, ...day1Events, ...day2Events]);
   
-  const badges = Badges.calculate(todayEvents, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(todayEvents, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'habit-streak');
 });
 
@@ -1179,7 +1179,7 @@ test('does not award habit-streak for only 2 days', () => {
   const day1Events = [makeHabitEvent(makeTs(day1, 10), 'water')];
   addEvents([...todayEvents, ...day1Events]);
   
-  const badges = Badges.calculate(todayEvents, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(todayEvents, [], { badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'habit-streak');
 });
 
@@ -1198,7 +1198,7 @@ test('awards taper for 3+ consecutive days of decreasing use', () => {
   const day2Events = [makeUsedEvent(makeTs(day2, 10), 'thc', 5)];
   addEvents([...todayEvents, ...day1Events, ...day2Events]);
   
-  const badges = Badges.calculate(todayEvents, day1Events, { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(todayEvents, day1Events, { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'taper');
 });
 
@@ -1215,7 +1215,7 @@ test('awards tbreak-1d after 1 day with no use and prior use exists', () => {
   const todayEvents = [makeHabitEvent(makeTs(today, 10), 'water')]; // habit only
   addEvents([...oldEvents, ...todayEvents]);
   
-  const badges = Badges.calculate(todayEvents, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(todayEvents, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'zero-use');
   // tbreak-1d requires daysSinceLastUse >= 1
   includes(badges, 'tbreak-1d');
@@ -1232,7 +1232,7 @@ test('awards tbreak-1d when used today but 24h+ gap from yesterday', () => {
   const todayEvents = [makeUsedEvent(makeTs(today, 13, 15), 'thc', 1)];
   addEvents([...yesterdayEvents, ...todayEvents]);
   
-  const badges = Badges.calculate(todayEvents, yesterdayEvents, { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(todayEvents, yesterdayEvents, { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'tbreak-1d'); // Gap is over 24 hours
   notIncludes(badges, 'zero-use'); // Used today
 });
@@ -1246,7 +1246,7 @@ test('awards vape-only for smoking profile when substance is vape', () => {
   const events = [makeUsedEvent(makeTs(today, 10), 'vape', 2)];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   includes(badges, 'vape-only');
   includes(badges, 'harm-reduction-vape');
 });
@@ -1261,7 +1261,7 @@ test('does not award vape-only for smoking profile with cigarette', () => {
   ];
   addEvents(events);
   
-  const badges = Badges.calculate(events, [], { appStartDate: daysAgoKey(5) });
+  const badges = Badges.calculate(events, [], { badgeAnchorDate: daysAgoKey(5) });
   notIncludes(badges, 'vape-only');
 });
 
@@ -1278,7 +1278,7 @@ test('awards welcome-back after 24h+ absence', () => {
   addEvents([...oldEvents, ...todayEvents]);
   
   const badges = Badges.calculate(todayEvents, [], { 
-    appStartDate: daysAgoKey(5),
+    badgeAnchorDate: daysAgoKey(5),
     installDate: daysAgoKey(5)
   });
   includes(badges, 'welcome-back');
