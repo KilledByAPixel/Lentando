@@ -8,6 +8,3 @@ dist
 # dev stuff
 local
 .vscode
-
-# firebase
-firebase-sync.js
