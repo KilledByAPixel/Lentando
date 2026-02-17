@@ -2108,6 +2108,11 @@ function renderDayHistory() {
       summaryParts.push(`${icon}${displayAmt}`);
     }
   }
+  // Edible indicator — show cookie after substance icons if any edible was consumed
+  // Uses all used events (not just profile-filtered) so it shows regardless of active substance profile
+  if (filterUsed(events).some(e => e.method === 'edible')) {
+    summaryParts.push('🍪');
+  }
   // Resists
   if (resisted.length > 0) {
     const resistTotal = resisted.reduce((sum, e) => sum + (e.intensity || 1), 0);
@@ -2133,7 +2138,7 @@ function renderDayHistory() {
   }
   
   const summary = summaryParts.length > 0 
-    ? `<div class="history-summary">${summaryParts.join(' &nbsp;')}</div>`
+    ? `<div class="history-summary">${summaryParts.join(' ')}</div>`
     : '';
 
   // Build HTML in reverse order, limited to historyShowCount
