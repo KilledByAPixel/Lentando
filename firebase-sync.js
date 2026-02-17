@@ -24,8 +24,7 @@ const firebaseConfig = {
   projectId: "lentando-571ad",
   storageBucket: "lentando-571ad.firebasestorage.app",
   messagingSenderId: "578652158358",
-  appId: "1:578652158358:web:10936f6ce9556fb7bb45b7",
-  measurementId: "G-3KYH9VBGXX"
+  appId: "1:578652158358:web:10936f6ce9556fb7bb45b7"
 };
 
 
