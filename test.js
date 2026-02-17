@@ -173,7 +173,7 @@ const {
   // Constants
   EARLY_HOUR, FIFTEEN_MINUTES_MS, GAP_MILESTONES, TBREAK_MILESTONES,
   APP_STREAK_MILESTONES, STORAGE_EVENTS, STORAGE_SETTINGS, STORAGE_BADGES,
-  STORAGE_DELETED_IDS, STORAGE_VERSION, CONSOLIDATION_DAYS,
+  STORAGE_DELETED_IDS, STORAGE_VERSION, CONSOLIDATION_DAYS, STORAGE_CONSOLIDATED_AT,
   // Consolidation
   consolidateDay, consolidateOldEvents, stripNulls,
 } = sandbox;
@@ -1955,6 +1955,102 @@ test('strips null values from all events', () => {
   ok(!('didInstead' in evts.find(e => e.type === 'used')), 'didInstead null removed');
   ok(!('reason' in evts.find(e => e.type === 'used')), 'reason null removed');
   ok(!('minutes' in evts.find(e => e.type === 'habit')), 'minutes null removed');
+});
+
+test('consolidatedAt timestamp skips already-processed days', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const oldDay1 = daysAgoKey(100);
+  const oldDay2 = daysAgoKey(90);
+  addEvents([
+    makeUsedEvent(makeTs(oldDay1, 10), 'thc', 1),
+    makeUsedEvent(makeTs(oldDay1, 14), 'thc', 2),
+    makeUsedEvent(makeTs(oldDay2, 10), 'thc', 3),
+    makeUsedEvent(makeTs(oldDay2, 14), 'thc', 4),
+  ]);
+  // First run consolidates both old days and stores cutoff
+  consolidateOldEvents();
+  eq(DB.forDate(oldDay1).length, 1, 'day1 consolidated');
+  eq(DB.forDate(oldDay2).length, 1, 'day2 consolidated');
+  const storedCutoff = localStorage.getItem(STORAGE_CONSOLIDATED_AT);
+  ok(storedCutoff, 'consolidatedAt stored');
+
+  // Add new unconsolidated events on an already-processed day (simulates sync stray)
+  const evts = DB.loadEvents();
+  evts.push(makeUsedEvent(makeTs(oldDay1, 16), 'thc', 9));
+  localStorage.setItem(STORAGE_EVENTS, JSON.stringify(evts));
+  DB._events = null;
+  DB._dateIndex = null;
+
+  // Second run skips because cutoff says we already processed these days
+  consolidateOldEvents();
+  // The stray should still be there (the break skipped oldDay1)
+  eq(DB.forDate(oldDay1).length, 2, 'stray not re-processed due to cutoff');
+
+  // After clearing consolidatedAt (simulates sync pull reset), it re-processes
+  localStorage.removeItem(STORAGE_CONSOLIDATED_AT);
+  consolidateOldEvents();
+  eq(DB.forDate(oldDay1).length, 1, 'stray absorbed after cutoff cleared');
+});
+
+group('consolidateDay - edge cases');
+
+test('mixed event types on the same day', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  addEvents([
+    makeUsedEvent(makeTs(day, 9), 'thc', 2),
+    makeUsedEvent(makeTs(day, 14), 'thc', 3),
+    makeResistEvent(makeTs(day, 11), { intensity: 3, trigger: 'stress' }),
+    makeResistEvent(makeTs(day, 16), { intensity: 5, trigger: 'stress' }),
+    makeHabitEvent(makeTs(day, 8), 'water'),
+    makeHabitEvent(makeTs(day, 12), 'water'),
+    makeHabitEvent(makeTs(day, 17), 'exercise', { minutes: 20 }),
+  ]);
+  consolidateDay(day);
+  const evts = DB.forDate(day);
+  // Should produce: 1 thc used, 1 resist (stress), 1 water habit, 1 exercise habit = 4 groups
+  eq(evts.length, 4, 'four groups from mixed types');
+  const thc = evts.find(e => e.type === 'used' && e.substance === 'thc');
+  eq(thc.amount, 5, 'used amounts summed');
+  eq(thc.consolidated, 2);
+  const resist = evts.find(e => e.type === 'resisted');
+  eq(resist.intensity, 8, 'resist intensities summed');
+  eq(resist.consolidated, 2);
+  const water = evts.find(e => e.habit === 'water');
+  eq(water.count, 2, 'water count summed');
+  const exercise = evts.find(e => e.habit === 'exercise');
+  eq(exercise.minutes, 20, 'exercise minutes preserved');
+  eq(exercise.consolidated, 1);
+});
+
+test('empty day returns false', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  addEvents([]);
+  const changed = consolidateDay('2025-10-15');
+  ok(!changed, 'empty day = no changes');
+});
+
+test('resisted events without trigger merge into one group', () => {
+  resetState();
+  setSettings({ addictionProfile: 'cannabis' });
+  const day = '2025-10-15';
+  addEvents([
+    makeResistEvent(makeTs(day, 10), { intensity: 2 }),
+    makeResistEvent(makeTs(day, 14), { intensity: 4 }),
+    makeResistEvent(makeTs(day, 18), { intensity: 1, trigger: 'boredom' }),
+  ]);
+  consolidateDay(day);
+  const evts = DB.forDate(day);
+  eq(evts.length, 2, 'triggerless = one group, boredom = another');
+  const noTrigger = evts.find(e => !e.trigger);
+  const boredom = evts.find(e => e.trigger === 'boredom');
+  eq(noTrigger.intensity, 6, 'triggerless intensities summed');
+  eq(noTrigger.consolidated, 2);
+  eq(boredom.intensity, 1, 'boredom intensity preserved');
+  eq(boredom.consolidated, 1);
 });
 
 // ========== REPORT RESULTS ==========
