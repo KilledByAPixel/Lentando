@@ -3005,9 +3005,6 @@ window.addEventListener('popstate', () => {
 
 // ========== TAB SWITCHING ==========
 function switchTab(tabName) {
-  // Preserve scroll position before switching
-  const scrollY = window.scrollY;
-  
   // When switching away, just visually hide the undo button (don't clear the event ID)
   // When switching back to today during cooldown, restore it
   if (tabName === 'today') {
@@ -3065,11 +3062,6 @@ function switchTab(tabName) {
       renderDayHistory();
     });
   }
-  
-  // Restore scroll position after tab switch to prevent jump-to-top
-  requestAnimationFrame(() => {
-    window.scrollTo(0, scrollY);
-  });
 }
 
 // ========== EXPORT ==========
