@@ -185,7 +185,7 @@ button, .chip, .tab-btn, .habit-btn, .big-btn, .tl-act-btn, .action-btn, input[t
 
 /* ===== HEADER ===== */
 header {
-  padding: 20px 0 12px;
+  padding: 8px 0 4px;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -916,27 +916,34 @@ header .date {
 .tab-bar {
   display: flex;
   margin-bottom: 16px;
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border-bottom: 1px solid var(--card-border);
   overflow: hidden;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  margin-left: -16px;
+  margin-right: -16px;
+  padding: 2px 16px 0;
+  border-radius: 0;
 }
 .tab-btn {
   flex: 1;
-  padding: 10px 4px;
+  padding: 8px 4px 8px;
   border: none;
   background: none;
   font-size: 16px;
   font-weight: 600;
   color: var(--muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: color 0.15s;
+  border-bottom: 3px solid transparent;
 }
 .tab-btn.active {
-  background: var(--primary);
-  color: #fff;
+  color: var(--primary);
+  border-bottom-color: var(--primary);
 }
-.tab-btn:not(.active):active { background: var(--chip-bg); }
+.tab-btn:not(.active):active { color: var(--text); }
 
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
