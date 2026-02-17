@@ -1461,7 +1461,7 @@ function getUsedEventDetail(evt) {
   // Find the profile that owns this substance (may differ from current profile for historical events)
   const { profile: matchedProfile } = getProfileForSubstance(evt.substance);
   
-  const icon = matchedProfile.icons[evt.substance] || '⚡';
+  const icon = evt.method === 'edible' ? '🍪' : (matchedProfile.icons[evt.substance] || '⚡');
   const title = matchedProfile.substanceDisplay[evt.substance] || (evt.substance ? evt.substance.toUpperCase() : 'Unknown');
   const unit = matchedProfile.amountUnit;
   
