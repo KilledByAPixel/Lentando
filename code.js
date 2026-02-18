@@ -4650,7 +4650,9 @@ function bindEvents() {
     const TAB_ORDER = ['today', 'history', 'graph', 'badges', 'settings'];
     const SWIPE_THRESHOLD = 50;
     const SWIPE_MAX_Y = 80;
+    const PINCH_COOLDOWN = 500; // ms to ignore swipes after a pinch/zoom gesture
     let touchStartX = 0, touchStartY = 0;
+    let lastPinchEndTs = 0;
 
     const isZoomed = () =>
       window.visualViewport ? window.visualViewport.scale > 1.01 : false;
@@ -4666,13 +4668,27 @@ function bindEvents() {
     };
 
     document.addEventListener('touchstart', e => {
-      if (isModalOpen() || isZoomed() || e.touches.length > 1) return;
+      if (e.touches.length > 1) {
+        // Multi-finger touch — mark as a potential pinch
+        touchStartX = 0;
+        touchStartY = 0;
+        return;
+      }
+      if (isModalOpen() || isZoomed()) return;
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
     }, { passive: true });
 
     document.addEventListener('touchend', e => {
+      // If this was a multi-finger gesture (pinch/zoom), record the cooldown time
+      if (e.touches.length > 0 || e.changedTouches.length > 1) {
+        lastPinchEndTs = Date.now();
+        return;
+      }
       if (isModalOpen() || isZoomed()) return;
+      // Ignore swipes shortly after a pinch/zoom gesture ends
+      if (Date.now() - lastPinchEndTs < PINCH_COOLDOWN) return;
+      if (!touchStartX && !touchStartY) return;
       const dx = e.changedTouches[0].clientX - touchStartX;
       const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
       if (dy > SWIPE_MAX_Y || Math.abs(dx) < SWIPE_THRESHOLD) return;
@@ -4681,6 +4697,13 @@ function bindEvents() {
       const next = dx < 0 ? cur + 1 : cur - 1;
       if (next >= 0 && next < TAB_ORDER.length) switchTab(TAB_ORDER[next]);
     }, { passive: true });
+
+    // Also reset the pinch timestamp when the viewport scale returns to normal
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('scale', () => {
+        if (window.visualViewport.scale <= 1.01) lastPinchEndTs = Date.now();
+      });
+    }
   }
 
   $('graph-range').addEventListener('click', e => {
