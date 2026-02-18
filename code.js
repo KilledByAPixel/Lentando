@@ -3163,6 +3163,12 @@ async function clearDatabase() {
     : '⚠️ This will permanently delete ALL events and reset settings. This cannot be undone.\n\nAre you sure?';
   if (!confirm(msg)) return;
 
+  // Warn logged-in users who are offline — local data will be wiped now but cloud
+  // data still exists and will be cleared the next time this device syncs
+  if (isLoggedIn && !navigator.onLine) {
+    if (!confirm('📡 You appear to be offline.\n\nYour data still exists in the cloud and will be cleared when this device reconnects and syncs.\n\nContinue anyway?')) return;
+  }
+
   // Record the clear timestamp BEFORE wiping — this single timestamp replaces
   // per-event tombstones. During merge, any event whose uid was created at or
   // before this timestamp gets discarded. O(1) storage vs O(n) tombstones.
