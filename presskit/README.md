@@ -13,6 +13,8 @@
 
 ## Download at [lentando.3d2k.com](https://lentando.3d2k.com/)
 
+## [Launch Press Release](https://github.com/KilledByAPixel/Lentando/blob/main/presskit/PRESS_RELEASE.md)
+
 ## Logos
 
 <span>
