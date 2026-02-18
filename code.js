@@ -1246,8 +1246,8 @@ const Badges = {
         // Use after 6am — gap from overnight use must be 12h+
         hasNightGap = (firstAfter6am.ts - lastOvernightUse.ts) / 3600000 >= 12;
       } else {
-        // Overnight use but no use after 6am — award it (gap is growing)
-        hasNightGap = true;
+        // Overnight use but no use after 6am — only award once gap has crossed 12h
+        hasNightGap = (refTs - lastOvernightUse.ts) / 3600000 >= 12;
       }
     }
     // CBD Night — overnight break crossing 6am, but allows CBD use (cannabis only)
@@ -1271,8 +1271,8 @@ const Badges = {
           // THC use after 6am — gap from overnight THC must be 12h+
           hasCbdNightGap = (firstThcAfter6am.ts - lastOvernightThc.ts) / 3600000 >= 12;
         } else {
-          // Overnight THC use but no THC after 6am — award it (gap is growing)
-          hasCbdNightGap = true;
+          // Overnight THC use but no THC after 6am — only award once gap has crossed 12h
+          hasCbdNightGap = (refTs - lastOvernightThc.ts) / 3600000 >= 12;
         }
       }
     }
