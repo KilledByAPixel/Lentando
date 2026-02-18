@@ -15,15 +15,19 @@
 
 ## Logos
 
+<span>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/logo.png" width="200"/>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/logo2.png" width="200"/>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/logo3.png" width="200"/>
+</span>
 
 ## Screenshots
 
+<span>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/screenshot1.png" width="200"/>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/screenshot2.png" width="200"/>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/screenshot3.png" width="200"/>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/screenshot4.png" width="200"/>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/screenshot5.png" width="200"/>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/screenshot6.png" width="200"/>
+</span>
