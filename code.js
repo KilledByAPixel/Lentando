@@ -2109,8 +2109,7 @@ function renderDayHistory() {
     }
   }
   // Edible indicator — show cookie after substance icons if any edible was consumed
-  // Uses all used events (not just profile-filtered) so it shows regardless of active substance profile
-  if (filterUsed(events).some(e => e.method === 'edible')) {
+  if (used.some(e => e.method === 'edible')) {
     summaryParts.push('🍪');
   }
   // Resists
