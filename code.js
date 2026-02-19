@@ -2144,7 +2144,7 @@ function renderDayHistory() {
   const dayUsedForGraph = filterProfileUsed(events);
   const hourResult = dayUsedForGraph.length > 0 ? buildStackedHourGraphBars(dayUsedForGraph, 0) : null;
   const hourGraphHtml = hourResult
-    ? `<div class="graph-container" role="img" aria-label="Bar chart: Hourly usage for ${escapeHTML(friendlyDate(currentHistoryDay))}" data-tooltip="Hourly breakdown of usage for this day, from midnight to midnight."><div class="graph-title">🕒 Hourly Usage</div>${hourResult}</div>`
+    ? `<div class="graph-container" role="img" aria-label="Bar chart: Hourly usage for ${escapeHTML(friendlyDate(currentHistoryDay))}" data-tooltip="Hourly breakdown of usage for this day, from midnight to midnight.">${hourResult}</div>`
     : '';
 
   // Build HTML in reverse order, limited to historyShowCount
@@ -2367,15 +2367,12 @@ function renderStackedBars(buckets, { subs, icons, colorMap }) {
   }
 
   const activeSubs = subs.filter(s => usedSubs.has(s));
-  let legend = '';
-  if (activeSubs.length > 1) {
-    legend = '<div class="hm-legend">';
-    for (const sub of activeSubs) {
-      legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
-      legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
-    }
-    legend += '</div>';
+  let legend = '<div class="hm-legend">';
+  for (const sub of activeSubs) {
+    legend += `<div class="hm-swatch" style="background:${colorMap[sub]}"></div>`;
+    legend += `<span class="hm-legend-label">${icons[sub] || ''}</span>`;
   }
+  legend += '</div>';
 
   return wrapBarsWithGrid(inner, maxTotal) + legend;
 }
