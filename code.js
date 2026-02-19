@@ -2142,7 +2142,9 @@ function renderDayHistory() {
 
   // Build hourly usage graph for this day (midnight to midnight) — only if there's usage
   const dayUsedForGraph = filterProfileUsed(events);
-  const hourResult = dayUsedForGraph.length > 0 ? buildStackedHourGraphBars(dayUsedForGraph, 0) : null;
+  const isToday = currentHistoryDay === todayKey();
+  const nowHour = isToday ? new Date(now()).getHours() : -1;
+  const hourResult = dayUsedForGraph.length > 0 ? buildStackedHourGraphBars(dayUsedForGraph, 0, nowHour) : null;
   const hourGraphHtml = hourResult
     ? `<div class="graph-container" role="img" aria-label="Bar chart: Hourly usage for ${escapeHTML(friendlyDate(currentHistoryDay))}" data-tooltip="Hourly breakdown of usage for this day, from midnight to midnight.">${hourResult}</div>`
     : '';
@@ -2377,7 +2379,7 @@ function renderStackedBars(buckets, { subs, icons, colorMap }) {
   return wrapBarsWithGrid(inner, maxTotal) + legend;
 }
 
-function buildStackedHourGraphBars(events, startHour) {
+function buildStackedHourGraphBars(events, startHour, nowHour = -1) {
   const ctx = stackedBarSetup();
   const { subs } = ctx;
 
@@ -2397,7 +2399,7 @@ function buildStackedHourGraphBars(events, startHour) {
       subAmounts: hourData[hour] || {},
       label: formatHourLabel(hour),
       showLabel: hour % 3 === 0,
-      extraClass: hour === 0 && i !== 0 ? 'graph-midnight-marker' : undefined
+      extraClass: hour === nowHour ? 'graph-midnight-marker' : undefined
     });
   }
 
