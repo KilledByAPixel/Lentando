@@ -2400,7 +2400,7 @@ function buildStackedHourGraphBars(events, startHour) {
       subAmounts: hourData[hour] || {},
       label: formatHourLabel(hour),
       showLabel: hour % 3 === 0,
-      extraClass: hour === 0 ? 'graph-midnight-marker' : undefined
+      extraClass: hour === 0 && i !== 0 ? 'graph-midnight-marker' : undefined
     });
   }
 
