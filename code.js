@@ -2847,16 +2847,13 @@ function buildWeekSummaryHTML() {
 
 function renderGraphs() {
   const days = getLastNDays(graphDays);
-  const hourContainer = $('hour-graphs');
+  const weekSummaryContainer = $('week-summary-container');
   const dayContainer = $('graph-content');
 
-  // Hour graphs (not affected by day selector)
-  let hourHtml = '';
-
-  // Add 7-day summary grid
-  hourHtml += buildWeekSummaryHTML();
-  
-  hourContainer.innerHTML = hourHtml;
+  // 7-day summary grid — only shown when 7 days is selected
+  if (weekSummaryContainer) {
+    weekSummaryContainer.innerHTML = graphDays === 7 ? buildWeekSummaryHTML() : '';
+  }
   
   // Day-based graphs (affected by 7/14/30/60/365 day selector)
   let dayHtml = '';
