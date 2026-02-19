@@ -2859,8 +2859,10 @@ function renderGraphs() {
   let dayHtml = '';
   const isYearView = graphDays === 365;
 
-  // Yearly usage heatmap — only shown in 1 year view, right after avg usage by hour
+  // Year view — yearly heatmap first, then monthly bar charts
   if (isYearView) {
+    dayHtml += buildYearlyHeatmapHTML();
+
     // Amount Used / Month — stacked bar chart
     const monthResult = buildStackedMonthBars();
     dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Amount used per month" data-tooltip="Total amount used each month over the past year. Stacked by substance type. Shows long-term usage trends."><div class="graph-title">⚡ Amount Used / Month</div>`;
@@ -2876,8 +2878,6 @@ function renderGraphs() {
       dayHtml += resistMonthResult;
       dayHtml += `</div>`;
     }
-
-    dayHtml += buildYearlyHeatmapHTML();
   }
 
   // Per-day bar charts — skip when viewing 1 year (too many bars)
