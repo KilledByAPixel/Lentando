@@ -2891,14 +2891,14 @@ function renderGraphs() {
     dayHtml += stackedResult ? stackedResult : emptyStateHTML('No data yet', 'compact');
     dayHtml += `</div>`;
 
-    // Usage heatmap by day-of-week — right after amount used/day
-    dayHtml += buildHeatmapHTML(days);
-
     // Average usage by hour — stacked by substance
     const avgHourResult = buildStackedAvgHourBars(days);
     dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Average usage by hour of day" data-tooltip="Your average hourly usage across days you used, broken down by type. Reveals your habitual usage patterns."><div class="graph-title">⏳ Average Usage by Hour</div>`;
     dayHtml += avgHourResult ? avgHourResult : emptyStateHTML('No data yet', 'compact');
     dayHtml += `</div>`;
+
+    // Usage heatmap by day-of-week
+    dayHtml += buildHeatmapHTML(days);
 
     // Remaining GRAPH_DEFS (Resists/Day, activity graphs, etc.)
     for (let gi = 1; gi < GRAPH_DEFS.length; gi++) {
