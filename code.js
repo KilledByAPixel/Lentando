@@ -2140,10 +2140,17 @@ function renderDayHistory() {
     ? `<div class="history-summary">${summaryParts.join(' ')}</div>`
     : '';
 
+  // Build hourly usage graph for this day (midnight to midnight) — only if there's usage
+  const dayUsedForGraph = filterProfileUsed(events);
+  const hourResult = dayUsedForGraph.length > 0 ? buildStackedHourGraphBars(dayUsedForGraph, 0) : null;
+  const hourGraphHtml = hourResult
+    ? `<div class="graph-container" role="img" aria-label="Bar chart: Hourly usage for ${escapeHTML(friendlyDate(currentHistoryDay))}" data-tooltip="Hourly breakdown of usage for this day, from midnight to midnight."><div class="graph-title">🕒 Hourly Usage</div>${hourResult}</div>`
+    : '';
+
   // Build HTML in reverse order, limited to historyShowCount
   const len = events.length;
   const start = Math.max(0, len - historyShowCount);
-  let html = summary;
+  let html = summary + hourGraphHtml;
   for (let i = len - 1; i >= start; i--) {
     html += eventRowHTML(events[i]);
   }
@@ -2845,23 +2852,6 @@ function renderGraphs() {
 
   // Hour graphs (not affected by day selector)
   let hourHtml = '';
-
-  // Add past 24 hours usage by hour graph
-  // Align window to clock-hour boundaries so each clock hour maps to exactly one bar
-  const nowMs = now();
-  const currentHour = new Date(nowMs).getHours();
-  const startOfCurrentHour = new Date(nowMs);
-  startOfCurrentHour.setMinutes(0, 0, 0);
-  const past24Hours = startOfCurrentHour.getTime() - (23 * 60 * 60 * 1000);
-  const allEvents = DB.loadEvents();
-  const past24Used = filterProfileUsed(allEvents.filter(evt => evt.ts >= past24Hours && evt.ts <= nowMs));
-  const graphStartHour = (currentHour + 1) % 24;
-  const hourResult = past24Used.length > 0 ? buildStackedHourGraphBars(past24Used, graphStartHour) : null;
-  hourHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Usage over past 24 hours by hour" data-tooltip="Shows your use over the past 24 hours, broken down by hour and type. Helps identify your peak usage times."><div class="graph-title">🕒 Usage Over Past 24 Hours</div>`;
-  hourHtml += hourResult
-    ? hourResult
-    : emptyStateHTML('No data yet', 'compact');
-  hourHtml += `</div>`;
 
   // Add 7-day summary grid
   hourHtml += buildWeekSummaryHTML();
