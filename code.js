@@ -2399,7 +2399,7 @@ function buildStackedHourGraphBars(events, startHour, nowHour = -1) {
       subAmounts: hourData[hour] || {},
       label: formatHourLabel(hour),
       showLabel: hour % 3 === 0,
-      extraClass: hour === nowHour ? 'graph-midnight-marker' : undefined
+      extraClass: hour === nowHour ? 'graph-now-marker' : undefined
     });
   }
 
