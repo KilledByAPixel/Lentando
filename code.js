@@ -105,7 +105,7 @@ const ADDICTION_PROFILES = {
     methods: ['method1', 'method2', 'method3'],
     amounts: [0.5, 1, 1.5, 2, 3, 4, 5, 10],
     amountUnit: 'units',
-    icons: { type1: '⚡', type2: '✨', type3: '🔥' }
+    icons: { type1: '⚡', type2: '⚡', type3: '⚡' }
   }
 };
 
