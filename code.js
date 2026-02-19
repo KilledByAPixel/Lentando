@@ -2882,23 +2882,27 @@ function renderGraphs() {
 
   // Per-day bar charts — skip when viewing 1 year (too many bars)
   if (!isYearView) {
-    // Render all GRAPH_DEFS graphs
-    for (let gi = 0; gi < GRAPH_DEFS.length; gi++) {
+    // Amount Used / Day — use stacked bars (always first)
+    const def0 = GRAPH_DEFS[0];
+    const stackedResult = buildStackedDayBars(days);
+    const tipAttr0 = def0.tooltip ? ` data-tooltip="${escapeHTML(def0.tooltip + ' Stacked by substance type.')}"` : '';
+    const ariaLabel0 = `Bar chart: ${def0.label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
+    dayHtml += `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel0)}"${tipAttr0}><div class="graph-title">${def0.label}</div>`;
+    dayHtml += stackedResult ? stackedResult : emptyStateHTML('No data yet', 'compact');
+    dayHtml += `</div>`;
+
+    // Usage heatmap by day-of-week — right after amount used/day
+    dayHtml += buildHeatmapHTML(days);
+
+    // Average usage by hour — stacked by substance
+    const avgHourResult = buildStackedAvgHourBars(days);
+    dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Average usage by hour of day" data-tooltip="Your average hourly usage across days you used, broken down by type. Reveals your habitual usage patterns."><div class="graph-title">⏳ Average Usage by Hour</div>`;
+    dayHtml += avgHourResult ? avgHourResult : emptyStateHTML('No data yet', 'compact');
+    dayHtml += `</div>`;
+
+    // Remaining GRAPH_DEFS (Resists/Day, activity graphs, etc.)
+    for (let gi = 1; gi < GRAPH_DEFS.length; gi++) {
       const def = GRAPH_DEFS[gi];
-
-      // Amount Used / Day — use stacked bars
-      if (gi === 0) {
-        const stackedResult = buildStackedDayBars(days);
-        const tipAttr = def.tooltip ? ` data-tooltip="${escapeHTML(def.tooltip + ' Stacked by substance type.')}"` : '';
-        const ariaLabel = `Bar chart: ${def.label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
-        dayHtml += `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${def.label}</div>`;
-        dayHtml += stackedResult
-          ? stackedResult
-          : emptyStateHTML('No data yet', 'compact');
-        dayHtml += `</div>`;
-        continue;
-      }
-
       const vals = days.map(dk => def.valueFn(DB.forDate(dk)));
       const max  = Math.max(...vals, 1);
       const hasData = vals.some(v => v > 0);
@@ -2910,23 +2914,12 @@ function renderGraphs() {
       const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
       const ariaLabel = `Bar chart: ${label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
       dayHtml += `<div class="graph-container" role="img" aria-label="${escapeHTML(ariaLabel)}"${tipAttr}><div class="graph-title">${label}</div>`;
-      dayHtml += hasData 
+      dayHtml += hasData
         ? buildGraphBars(vals, days, max, def)
         : emptyStateHTML('No data yet', 'compact');
       dayHtml += `</div>`;
     }
   }
-
-  // Usage heatmap by day-of-week
-  dayHtml += buildHeatmapHTML(days);
-
-  // Render average usage by hour — stacked by substance
-  const avgHourResult = buildStackedAvgHourBars(days);
-  dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Average usage by hour of day" data-tooltip="Your average hourly usage across days you used, broken down by type. Reveals your habitual usage patterns."><div class="graph-title">⏳ Average Usage by Hour</div>`;
-  dayHtml += avgHourResult
-    ? avgHourResult
-    : emptyStateHTML('No data yet', 'compact');
-  dayHtml += `</div>`;
 
   // Use by Reason graph — horizontal bars per reason, value = sum of amounts
   const reasonTotals = {};
