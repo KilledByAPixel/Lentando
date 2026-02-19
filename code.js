@@ -2536,6 +2536,44 @@ function buildResistMonthBars() {
   return wrapBarsWithGrid(inner, max);
 }
 
+/** Per-month bar chart for a habit type. valueFn receives day events and returns a number. */
+function buildHabitMonthBars(valueFn) {
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const today = currentDate();
+  const monthTotals = [];
+  const monthLabels = [];
+
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    let total = 0;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      if (i === 0 && day > today.getDate()) break;
+      const dk = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      total += valueFn(DB.forDate(dk));
+    }
+
+    monthTotals.push(total);
+    monthLabels.push(MONTH_NAMES[m]);
+  }
+
+  const max = Math.max(...monthTotals, 1);
+  if (!monthTotals.some(v => v > 0)) return null;
+
+  const effectiveMax = calcGridScale(max).gridMax;
+  let inner = '';
+  for (let i = 0; i < monthTotals.length; i++) {
+    const val = monthTotals[i];
+    const h = effectiveMax > 0 ? Math.round((val / effectiveMax) * 96) : 0;
+    inner += graphBarCol(val, h, { color: 'var(--primary)', text: monthLabels[i] }, true, 'graph-bar-label-sm');
+  }
+
+  return wrapBarsWithGrid(inner, max);
+}
+
 /** Build a category graph (one bar per category key, e.g. reason/trigger) */
 function buildCategoryGraph(title, keys, totals, max, color, tooltip) {
   const effectiveMax = max > 0 ? calcGridScale(max).gridMax : 0;
@@ -2877,6 +2915,23 @@ function renderGraphs() {
       dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: Resists per month" data-tooltip="Total urge intensity resisted each month over the past year. Shows long-term resistance trends."><div class="graph-title">💪 Resists / Month</div>`;
       dayHtml += resistMonthResult;
       dayHtml += `</div>`;
+    }
+
+    // Activity graphs per month — only shown if data exists
+    const activityMonthDefs = [
+      { label: '💧 Water / Month', valueFn: evs => getHabits(evs, 'water').reduce((s, e) => s + (e.count || 1), 0), tooltip: 'Water logged each month.' },
+      { label: '🏃 Exercise Minutes / Month', valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), tooltip: 'Exercise minutes each month. Untimed activities rounded up to 5 minutes each.' },
+      { label: '🌬️ Mindfulness Minutes / Month', valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), tooltip: 'Mindfulness or breathing minutes each month. Untimed activities rounded up to 5 minutes each.' },
+      { label: '🧹 Cleaning Minutes / Month', valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), tooltip: 'Cleaning or tidying minutes each month. Untimed activities rounded up to 5 minutes each.' },
+      { label: '🌳 Outside Minutes / Month', valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), tooltip: 'Time spent outside each month.' },
+    ];
+    for (const def of activityMonthDefs) {
+      const result = buildHabitMonthBars(def.valueFn);
+      if (result) {
+        dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: ${escapeHTML(def.label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, ''))}" data-tooltip="${escapeHTML(def.tooltip)}"><div class="graph-title">${def.label}</div>`;
+        dayHtml += result;
+        dayHtml += `</div>`;
+      }
     }
   }
 
