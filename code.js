@@ -4533,6 +4533,8 @@ function showUndo(eventId) {
   }
   const row = $('used-row');
   if (row) row.classList.add('has-undo');
+  // Auto-hide after 60 seconds
+  undoHideTimeout = setTimeout(() => { hideUndo(); }, 60000);
 }
 
 function hideUndo() {
