@@ -68,6 +68,7 @@ const DATA_VERSION = 3;
 const ADDICTION_PROFILES = {
   cannabis: {
     sessionLabel: 'Use',
+    usedButtonLabel: 'Used',
     substanceLabel: 'Type',
     methodLabel: 'Method',
     substances: ['thc', 'cbd', 'mix'],
@@ -79,6 +80,7 @@ const ADDICTION_PROFILES = {
   },
   alcohol: {
     sessionLabel: 'Drink',
+    usedButtonLabel: 'Drank',
     substanceLabel: 'Type',
     substances: ['beer', 'wine', 'liquor'],
     substanceDisplay: { beer: 'Beer', wine: 'Wine', liquor: 'Liquor' },
@@ -88,6 +90,7 @@ const ADDICTION_PROFILES = {
   },
   smoking: {
     sessionLabel: 'Smoke',
+    usedButtonLabel: 'Smoked',
     substanceLabel: 'Type',
     substances: ['cigarette', 'vape', 'other'],
     substanceDisplay: { cigarette: 'Cigarette', vape: 'Vape', other: 'Other' },
@@ -98,11 +101,11 @@ const ADDICTION_PROFILES = {
   },
   custom: {
     sessionLabel: 'Use',
+    usedButtonLabel: 'Used',
     substanceLabel: 'Type',
     methodLabel: 'Method',
     substances: ['type1', 'type2', 'type3'],
     substanceDisplay: { type1: 'Type 1', type2: 'Type 2', type3: 'Type 3' },
-    methods: ['method1', 'method2', 'method3'],
     amounts: [0.5, 1, 1.5, 2, 3, 4, 5, 10],
     amountUnit: 'units',
     icons: { type1: '⚡', type2: '⚡', type3: '⚡' }
@@ -1573,7 +1576,8 @@ function renderDate() {
   $('header-date').textContent = _dateFormatter.format(currentDate());
   
   const usedLabel = $('used-label');
-  if (usedLabel) usedLabel.textContent = getProfile().sessionLabel || 'Use';
+  const profile = getProfile();
+  if (usedLabel) usedLabel.textContent = profile.usedButtonLabel || profile.sessionLabel || 'Used';
   
   // Update sound/use-button toggles to reflect current settings
   const settings = DB.loadSettings();
@@ -4361,7 +4365,7 @@ function installAppOnboarding() {
 /** Step 3: Welcome guide */
 function renderFlowStepWelcomeGuide(container) {
   const profile = getProfile();
-  const sessionLabel = (profile.sessionLabel || 'Use').toLowerCase();
+  const sessionLabel = (profile.usedButtonLabel || profile.sessionLabel || 'Used').toLowerCase();
 
   const useButtonText = escapeHTML(sessionLabel.charAt(0).toUpperCase() + sessionLabel.slice(1));
   container.innerHTML = `
@@ -5241,10 +5245,10 @@ function setUseButtonVisibility(hidden) {
   const text = $('use-btn-text-settings');
   if (hidden) {
     if (icon) icon.textContent = '🚫';
-    if (text) text.textContent = 'Use Button Hidden';
+    if (text) text.textContent = 'Used Button Hidden';
   } else {
     if (icon) icon.textContent = '👁️';
-    if (text) text.textContent = 'Use Button Shown';
+    if (text) text.textContent = 'Used Button Shown';
   }
   // Hide/show the actual use button row
   const usedRow = $('used-row');
