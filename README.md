@@ -91,9 +91,11 @@ Lentando is licensed under the GNU General Public License v3.0.
 
 This means you're free to use, study, modify, and distribute this software. If you build on it, your version must also remain open source under the same license. See the GPL v3 full text for details.
 
+<span>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/screenshot1.png" width="200"/>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/screenshot2.png" width="200"/>
 <img src="https://github.com/KilledByAPixel/Lentando/blob/main/presskit/screenshot3.png" width="200"/>
+</span>
 
 **Made with ❤️ for recovery and harm reduction**
 
