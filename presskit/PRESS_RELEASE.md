@@ -1,4 +1,4 @@
-# Lentando Launches: A Private, Judgment-Free Habit and Substance Use Tracker Built for Real Life
+# Lentando Launches: A Private Habit and Substance Use Tracker Built for Real Life
 ## New open-source web app puts harm reduction first. No accounts, no ads, no shame.
 
 **AUSTIN, TX** — Lentando, a new habit and substance use tracker built around harm reduction, is now available as a free installable web app at lentando.3d2k.com. Lentando helps people log use, track urges resisted, and recognize healthy actions in a calm, practical way, without judgment.
