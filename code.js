@@ -5247,10 +5247,10 @@ function setUseButtonVisibility(hidden) {
   const text = $('use-btn-text-settings');
   if (hidden) {
     if (icon) icon.textContent = '🚫';
-    if (text) text.textContent = 'Used Button Hidden';
+    if (text) text.textContent = 'Use Button Hidden';
   } else {
     if (icon) icon.textContent = '👁️';
-    if (text) text.textContent = 'Used Button Shown';
+    if (text) text.textContent = 'Use Button Shown';
   }
   // Hide/show the actual use button row
   const usedRow = $('used-row');
