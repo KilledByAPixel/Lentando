@@ -2940,6 +2940,22 @@ function renderGraphs() {
 
   // Per-day bar charts — skip when viewing 1 year (too many bars)
   if (!isYearView) {
+    // THC / Day — cannabis profile only, shown first
+    const profileKey = DB.loadSettings().addictionProfile || 'cannabis';
+    if (profileKey === 'cannabis') {
+      const thcVals = days.map(dk => filterProfileUsed(DB.forDate(dk)).reduce((sum, e) => {
+        if (e.substance === 'thc') return sum + (e.amount || 0);
+        if (e.substance === 'mix') return sum + (e.amount || 0) * 0.5;
+        return sum;
+      }, 0));
+      const thcMax = Math.max(...thcVals, 1);
+      const thcDef = { color: '#4caf50', minStep: 0, tooltip: 'THC-equivalent hits per day. THC counts full, Mix counts as half. Shows your daily THC exposure.' };
+      const hasThcData = thcVals.some(v => v > 0);
+      dayHtml += `<div class="graph-container" role="img" aria-label="Bar chart: THC per day" data-tooltip="${escapeHTML(thcDef.tooltip)}"><div class="graph-title">🌿 THC Used / Day</div>`;
+      dayHtml += hasThcData ? buildGraphBars(thcVals, days, thcMax, thcDef) : emptyStateHTML('No data yet', 'compact');
+      dayHtml += `</div>`;
+    }
+
     // Amount Used / Day — use stacked bars (always first)
     const def0 = GRAPH_DEFS[0];
     const stackedResult = buildStackedDayBars(days);
