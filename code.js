@@ -345,13 +345,13 @@ const DEFAULT_SETTINGS = {
   reminderEnabled: false,
   reminderHour: 18, // 24h format, default 6 PM
   reminderMinute: 0,
-  selectedActivities: DEFAULT_ACTIVITIES,
+  selectedActivities: [...DEFAULT_ACTIVITIES],
 };
 
 function getSelectedActivities() {
   const settings = DB.loadSettings();
   const sel = settings.selectedActivities;
-  if (Array.isArray(sel) && sel.length > 0) return sel;
+  if (Array.isArray(sel) && sel.length > 0) return [...sel];
   return [...DEFAULT_ACTIVITIES];
 }
 
@@ -2297,7 +2297,7 @@ const GRAPH_DEFS = [
   { label: '👥 Hang Out Minutes / Day',         color: '#ff8a65',  habitKey: 'hangout',    valueFn: evs => getHabits(evs, 'hangout').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Hangout minutes each day. Untimed activities rounded up to 5 minutes each.' },
   { label: '🤝 Help Someone / Day',             color: '#4fc3f7',  habitKey: 'help',       valueFn: evs => getHabits(evs, 'help').length, activity: true, tooltip: 'Number of times helping someone was logged each day.' },
   // Regulation
-  { label: '⏸️ Pause Minutes / Day',             color: '#b0bec5',  habitKey: 'pause',      valueFn: evs => getHabits(evs, 'pause').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Pause/pause minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '⏸️ Pause Minutes / Day',             color: '#b0bec5',  habitKey: 'pause',      valueFn: evs => getHabits(evs, 'pause').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Pause minutes each day. Untimed activities rounded up to 5 minutes each.' },
   { label: '🌿 Calm Down Minutes / Day',        color: '#a5d6a7',  habitKey: 'calm',       valueFn: evs => getHabits(evs, 'calm').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Calm-down minutes each day. Untimed activities rounded up to 5 minutes each.' },
   { label: '🕯️ Relax Minutes / Day',             color: '#ce93d8',  habitKey: 'relax',      valueFn: evs => getHabits(evs, 'relax').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Relaxation minutes each day. Untimed activities rounded up to 5 minutes each.' },
   { label: '🙏 Gratitude / Day',                color: '#ffa726',  habitKey: 'gratitude',  valueFn: evs => getHabits(evs, 'gratitude').length, activity: true, tooltip: 'Number of gratitude sessions logged each day.' },
@@ -4282,7 +4282,8 @@ function finishOnboardingFlow() {
   DB.saveSettings();
 
   _onboardingFlowSteps = [];
-  document.documentElement.style.overflow = ''; // restore body scroll (in case opened from settings)
+  _pendingSelectedActivities = null; // clear any stale selection from settings-opened selector
+  document.body.style.overflow = ''; // restore body scroll (in case opened from settings)
   $('onboarding-flow-overlay').classList.add('hidden');
   calculateAndUpdateBadges();
   bindEvents();
@@ -4301,7 +4302,7 @@ let _pendingSelectedActivities = null;
 function renderFlowStepSelectActivities(container, mode = 'onboarding') {
   const settings = DB.loadSettings();
   const initial = (Array.isArray(settings.selectedActivities) && settings.selectedActivities.length > 0)
-    ? [...settings.selectedActivities]
+    ? settings.selectedActivities.slice(0, 5)
     : [...DEFAULT_ACTIVITIES];
   _pendingSelectedActivities = initial;
 
@@ -4393,7 +4394,7 @@ function openActivitySelector() {
   const content = $('onboarding-flow-content');
   if (!overlay || !content) return;
   renderFlowStepSelectActivities(content, 'settings');
-  document.documentElement.style.overflow = 'hidden'; // prevent double scrollbar behind overlay
+  document.body.style.overflow = 'hidden'; // prevent double scrollbar behind overlay
   overlay.classList.remove('hidden');
 }
 
@@ -4408,7 +4409,7 @@ function saveAndCloseActivitySelector() {
     renderHabitButtons();
     render();
   }
-  document.documentElement.style.overflow = ''; // restore body scroll
+  document.body.style.overflow = ''; // restore body scroll
   $('onboarding-flow-overlay').classList.add('hidden');
 }
 
