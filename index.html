@@ -480,14 +480,14 @@ header .date {
 .habit-btn:active { background: var(--habit-bg); }
 
 /* Activity selector */
-.act-selector-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 20px; }
+.act-selector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; margin: 12px 0 20px; }
 .act-option {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 3px;
-  width: 76px;
+  width: 100%;
   min-height: 68px;
   padding: 6px 4px;
   border-radius: var(--radius-sm);

@@ -218,7 +218,7 @@ const ALL_ACTIVITIES = [
   { key: 'breaths',  emoji: '🌬️', label: 'Breathe',  hasMinutes: true,  hasCount: false, category: 'Quick Wins' },
   { key: 'ice',      emoji: '🧊', label: 'Ice',      hasMinutes: false, hasCount: false, category: 'Quick Wins' },
   { key: 'bed',      emoji: '🛏️', label: 'Bed',      hasMinutes: false, hasCount: false, category: 'Quick Wins' },
-  { key: 'teeth',    emoji: '🪥', label: 'Teeth',    hasMinutes: false, hasCount: false, category: 'Quick Wins' },
+  { key: 'teeth',    emoji: '🦷', label: 'Teeth',    hasMinutes: false, hasCount: false, category: 'Quick Wins' },
   // Body
   { key: 'outside',  emoji: '🌳', label: 'Outside',  hasMinutes: true,  hasCount: false, category: 'Body' },
   { key: 'exercise', emoji: '🏃', label: 'Exercise', hasMinutes: true,  hasCount: false, category: 'Body' },
