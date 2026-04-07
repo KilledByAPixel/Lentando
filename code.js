@@ -370,7 +370,8 @@ function getSelectedActivities() {
   const validKeys = new Set(ALL_ACTIVITIES.map(a => a.key));
   const settings = DB.loadSettings();
   const sel = settings.selectedActivities;
-  if (Array.isArray(sel) && sel.length > 0) {
+  if (Array.isArray(sel)) {
+    if (sel.length === 0) return []; // user explicitly chose no activities
     const filtered = sel.filter(k => validKeys.has(k));
     if (filtered.length > 0) return filtered;
   }
@@ -1623,6 +1624,7 @@ function renderHabitButtons() {
   const row = $('habit-row');
   if (!row) return;
   const selected = getSelectedActivities();
+  row.style.display = selected.length === 0 ? 'none' : '';
   row.innerHTML = selected.map(key => {
     const emoji = HABIT_ICONS[key] || '✅';
     const label = HABIT_LABELS[key] || key;
@@ -4344,7 +4346,7 @@ function renderFlowStepSelectActivities(container, mode = 'onboarding') {
   const nextBtn = container.querySelector('#act-selector-next');
 
   function updateNextBtn() {
-    if (nextBtn) nextBtn.disabled = (_pendingSelectedActivities.length === 0);
+    if (nextBtn) nextBtn.disabled = false; // zero activities is allowed
   }
   updateNextBtn();
 
@@ -4374,7 +4376,7 @@ function renderFlowStepSelectActivities(container, mode = 'onboarding') {
 }
 
 function finishSelectActivities() {
-  if (!_pendingSelectedActivities || _pendingSelectedActivities.length === 0) return;
+  if (!_pendingSelectedActivities) return;
   const settings = DB.loadSettings();
   settings.selectedActivities = _pendingSelectedActivities;
   DB._settings = settings;
@@ -4395,7 +4397,7 @@ function openActivitySelector() {
 
 /** Save selection and close (called from settings mode of activity selector) */
 function saveAndCloseActivitySelector() {
-  if (_pendingSelectedActivities && _pendingSelectedActivities.length > 0) {
+  if (_pendingSelectedActivities !== null) {
     const settings = DB.loadSettings();
     settings.selectedActivities = _pendingSelectedActivities;
     DB._settings = settings;
