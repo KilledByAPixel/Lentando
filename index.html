@@ -479,6 +479,47 @@ header .date {
 .habit-btn .icon { font-size: 22px; display: block; margin-bottom: 2px; }
 .habit-btn:active { background: var(--habit-bg); }
 
+/* Activity selector */
+.act-selector-sheet { max-height: 90vh; overflow-y: auto; }
+.act-selector-grid { display: flex; flex-direction: column; gap: 12px; margin: 12px 0 20px; text-align: left; }
+.act-cat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.act-options-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.act-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 76px;
+  min-height: 68px;
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--card-border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.2;
+  transition: border-color 0.12s, background 0.12s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.act-option .act-emoji { font-size: 24px; line-height: 1; }
+.act-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  transform: scale(1.05);
+}
+.act-option.disabled { opacity: 0.35; pointer-events: none; }
+.act-option:active:not(.disabled) { transform: scale(0.95); }
+
 .habit-chips {
   display: flex;
   gap: 6px;
@@ -868,7 +909,8 @@ header .date {
 #login-overlay,
 #onboarding-overlay,
 #onboarding-flow-overlay,
-#custom-config-overlay {
+#custom-config-overlay,
+#activity-selector-overlay {
   background: var(--bg);
   align-items: flex-start;
   overflow-y: auto;
@@ -1722,11 +1764,7 @@ header .date {
 
   <!-- QUICK HABITS -->
   <div class="habit-row" id="habit-row">
-    <button class="habit-btn" data-habit="water"><span class="icon">💧</span>Water</button>
-    <button class="habit-btn" data-habit="exercise"><span class="icon">🏃</span>Exercise</button>
-    <button class="habit-btn" data-habit="breaths"><span class="icon">🌬️</span>Breaths</button>
-    <button class="habit-btn" data-habit="clean"><span class="icon">🧹</span>Tidy</button>
-    <button class="habit-btn" data-habit="outside"><span class="icon">🌳</span>Outside</button>
+    <!-- Habit buttons are injected dynamically by renderHabitButtons() -->
   </div>
   <div class="habit-chips hidden" id="habit-chips">
     <span class="chip" data-min="5">5 min</span>
@@ -1826,6 +1864,9 @@ header .date {
   <div class="action-bar">
     <button class="action-btn" id="btn-change-addiction" onclick="App.changeAddiction()">🔄 Change Tracked Substance</button>
   </div>
+  <div class="action-bar">
+    <button class="action-btn" onclick="App.openActivitySelector()">🎯 Edit Activities</button>
+  </div>
   <div class="action-bar hidden" id="install-app-bar">
     <button class="action-btn" id="btn-install-app" onclick="App.installApp()">📲 Install App</button>
   </div>
@@ -1863,6 +1904,15 @@ header .date {
     <p class="text-sm">Lentando is a self-help tool, not a replacement for professional care. SAMHSA National Helpline is available 24/7: <a href="tel:1-800-662-4357" class="link-bold">1-800-662-HELP</a></p>
     <p><a href="https://github.com/KilledByAPixel/Lentando" target="_blank" rel="noopener noreferrer" class="link-bold">View source on GitHub →</a></p>
     <p class="text-sm">Lentando © 2026 Frank Force</p>
+  </div>
+</div>
+
+<!-- ===== ACTIVITY SELECTOR OVERLAY ===== -->
+<div class="modal-overlay hidden" id="activity-selector-overlay" role="dialog" aria-modal="true" aria-label="Edit Activities">
+  <div class="onboarding-sheet act-selector-sheet">
+    <div class="onboarding-content" id="activity-selector-content">
+      <!-- Injected by renderFlowStepSelectActivities() -->
+    </div>
   </div>
 </div>
 

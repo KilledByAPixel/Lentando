@@ -736,7 +736,7 @@ test('awards hydrated with 5+ water events', () => {
 
 test('awards five-star-day for all 5 habit types', () => {
   resetState();
-  setSettings({ addictionProfile: 'cannabis' });
+  setSettings({ addictionProfile: 'cannabis', selectedActivities: ['water', 'exercise', 'breaths', 'clean', 'outside'] });
   const today = todayKey();
   const events = [
     makeHabitEvent(makeTs(today, 8), 'water'),
@@ -753,7 +753,8 @@ test('awards five-star-day for all 5 habit types', () => {
 
 test('does not award five-star-day with 4 habits', () => {
   resetState();
-  setSettings({ addictionProfile: 'cannabis' });
+  // All 5 original activities selected, but only 4 logged — missing 'outside'
+  setSettings({ addictionProfile: 'cannabis', selectedActivities: ['water', 'exercise', 'breaths', 'clean', 'outside'] });
   const today = todayKey();
   const events = [
     makeHabitEvent(makeTs(today, 8), 'water'),

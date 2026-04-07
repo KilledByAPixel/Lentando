@@ -211,25 +211,52 @@ const COACHING_MESSAGES = [
   '🌱 Do something small for future you',
 ];
 
-const HABIT_ICONS = { water: '💧', breaths: '🌬️', clean: '🧹', exercise: '🏃', outside: '🌳' };
-const HABIT_LABELS = {
-  water: 'Water',
-  breaths: 'Breaths',
-  clean: 'Tidy',
-  exercise: 'Exercise',
-  outside: 'Outside'
-};
-// Canonical display order matching main screen buttons
-const HABIT_ORDER = ['water', 'exercise', 'breaths', 'clean', 'outside'];
+// Full activity catalog — add new activities here
+const ALL_ACTIVITIES = [
+  // Essentials
+  { key: 'water',      emoji: '💧', label: 'Drink',       hasMinutes: false, hasCount: true,  category: 'Essentials' },
+  { key: 'exercise',   emoji: '🏃', label: 'Exercise',    hasMinutes: true,  hasCount: false, category: 'Essentials' },
+  { key: 'breaths',    emoji: '🌬️', label: 'Breathe',     hasMinutes: true,  hasCount: false, category: 'Essentials' },
+  { key: 'clean',      emoji: '🧹', label: 'Tidy',        hasMinutes: true,  hasCount: false, category: 'Essentials' },
+  { key: 'outside',    emoji: '🌳', label: 'Outside',     hasMinutes: true,  hasCount: false, category: 'Essentials' },
+  // Body
+  { key: 'walk',       emoji: '🚶', label: 'Walk',        hasMinutes: true,  hasCount: false, category: 'Body' },
+  { key: 'stretch',    emoji: '🧘', label: 'Stretch',     hasMinutes: true,  hasCount: false, category: 'Body' },
+  { key: 'shower',     emoji: '🛁', label: 'Shower',      hasMinutes: false, hasCount: false, category: 'Body' },
+  { key: 'sleep',      emoji: '😴', label: 'Sleep',       hasMinutes: false, hasCount: false, category: 'Body' },
+  { key: 'eat',        emoji: '🍎', label: 'Eat healthy', hasMinutes: false, hasCount: false, category: 'Body' },
+  // Mind
+  { key: 'read',       emoji: '📖', label: 'Read',        hasMinutes: true,  hasCount: false, category: 'Mind' },
+  { key: 'journal',    emoji: '✍️', label: 'Journal',     hasMinutes: true,  hasCount: false, category: 'Mind' },
+  { key: 'focus',      emoji: '🎯', label: 'Focus',       hasMinutes: true,  hasCount: false, category: 'Mind' },
+  { key: 'reflect',    emoji: '🧠', label: 'Reflect',     hasMinutes: true,  hasCount: false, category: 'Mind' },
+  { key: 'puzzle',     emoji: '🧩', label: 'Puzzle',      hasMinutes: true,  hasCount: false, category: 'Mind' },
+  // Creative
+  { key: 'music',      emoji: '🎵', label: 'Music',       hasMinutes: true,  hasCount: false, category: 'Creative' },
+  { key: 'art',        emoji: '🎨', label: 'Make art',    hasMinutes: true,  hasCount: false, category: 'Creative' },
+  { key: 'build',      emoji: '🛠️', label: 'Build',       hasMinutes: true,  hasCount: false, category: 'Creative' },
+  { key: 'photo',      emoji: '📷', label: 'Take photo',  hasMinutes: false, hasCount: false, category: 'Creative' },
+  // Social
+  { key: 'call',       emoji: '📞', label: 'Call someone',hasMinutes: true,  hasCount: false, category: 'Social' },
+  { key: 'text',       emoji: '💬', label: 'Text someone',hasMinutes: false, hasCount: false, category: 'Social' },
+  { key: 'hangout',    emoji: '👥', label: 'Hang out',    hasMinutes: true,  hasCount: false, category: 'Social' },
+  { key: 'help',       emoji: '🤝', label: 'Help someone',hasMinutes: false, hasCount: false, category: 'Social' },
+  // Regulation
+  { key: 'pause',      emoji: '⏸️', label: 'Pause',       hasMinutes: true,  hasCount: false, category: 'Regulation' },
+  { key: 'calm',       emoji: '🌿', label: 'Calm down',   hasMinutes: true,  hasCount: false, category: 'Regulation' },
+  { key: 'relax',      emoji: '🕯️', label: 'Relax',       hasMinutes: true,  hasCount: false, category: 'Regulation' },
+  { key: 'gratitude',  emoji: '🙏', label: 'Gratitude',   hasMinutes: false, hasCount: false, category: 'Regulation' },
+  { key: 'urgesurf',   emoji: '💭', label: 'Urge surf',   hasMinutes: true,  hasCount: false, category: 'Regulation' },
+  // Environment
+  { key: 'sunlight',   emoji: '🌞', label: 'Sunlight',    hasMinutes: true,  hasCount: false, category: 'Environment' },
+  { key: 'garden',     emoji: '🌷', label: 'Plants',      hasMinutes: true,  hasCount: false, category: 'Environment' },
+  { key: 'cleanspace', emoji: '🧼', label: 'Clean space', hasMinutes: true,  hasCount: false, category: 'Environment' },
+];
 
-// Habits that show duration chips (time tracking) - set to true to enable
-const HABIT_SHOW_CHIPS = {
-  water: false,
-  exercise: true,
-  breaths: true,
-  clean: true,
-  outside: true
-};
+// Computed lookups from ALL_ACTIVITIES catalog
+const HABIT_ICONS      = Object.fromEntries(ALL_ACTIVITIES.map(a => [a.key, a.emoji]));
+const HABIT_LABELS     = Object.fromEntries(ALL_ACTIVITIES.map(a => [a.key, a.label]));
+const HABIT_SHOW_CHIPS = Object.fromEntries(ALL_ACTIVITIES.map(a => [a.key, a.hasMinutes]));
 
 // Badge definitions — maps badge IDs to their display properties
 // Order determines the sort order of badges in the UI
@@ -255,7 +282,7 @@ const BADGE_DEFINITIONS = {
   'cleaned': { label: 'Tidied Up', icon: '🧹', desc: 'Tidied up or cleaned something' },
   'went-outside': { label: 'Went Outside', icon: '🌳', desc: 'Spent time outside or got some fresh air' },
   'habit-streak': { label: 'Habit Streak', icon: '🐢', desc: 'Logged healthy habits for consecutive days' },
-  'five-star-day': { label: 'Five Star Day', icon: '🌟', desc: 'Logged all 5 healthy habits in one day' },
+  'five-star-day': { label: 'All Routines Done', icon: '🌟', desc: 'Completed all of your selected healthy activities in one day' },
   'gap-1h': { label: 'Gap 1h', icon: '🕐', desc: 'Maintained a 1+ hour gap between sessions (excludes gaps crossing 6am)' },
   'gap-2h': { label: 'Gap 2h', icon: '🕑', desc: 'Maintained a 2+ hour gap between sessions (excludes gaps crossing 6am)' },
   'gap-4h': { label: 'Gap 4h', icon: '🕓', desc: 'Maintained a 4+ hour gap between sessions (excludes gaps crossing 6am)' },
@@ -304,6 +331,8 @@ function getBadgeDef(id) {
   return BADGE_DEFINITIONS[id] || { label: 'Unknown Badge', icon: '❓', desc: '' };
 }
 
+const DEFAULT_ACTIVITIES = ['water', 'exercise', 'breaths'];
+
 const DEFAULT_SETTINGS = {
   addictionProfile: null, // Set on first launch
   lastSubstance: 'thc',
@@ -315,8 +344,16 @@ const DEFAULT_SETTINGS = {
   customProfile: { name: '', types: ['', '', ''], icons: ['⚡', '⚡', '⚡'] },
   reminderEnabled: false,
   reminderHour: 18, // 24h format, default 6 PM
-  reminderMinute: 0
+  reminderMinute: 0,
+  selectedActivities: DEFAULT_ACTIVITIES,
 };
+
+function getSelectedActivities() {
+  const settings = DB.loadSettings();
+  const sel = settings.selectedActivities;
+  if (Array.isArray(sel) && sel.length > 0) return sel;
+  return [...DEFAULT_ACTIVITIES];
+}
 
 // ========== SOUND SYSTEM ==========
 let ZZFXSound = null;
@@ -1149,7 +1186,8 @@ const Badges = {
     addBadge(hasOutside, 'went-outside');
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
-    addBadge(uniqueHabits.size === 5, 'five-star-day');
+    const selectedActs = getSelectedActivities();
+    addBadge(selectedActs.length > 0 && selectedActs.every(k => uniqueHabits.has(k)), 'five-star-day');
 
     // --- Timing-based badges ---
     // Gap badges — include all sessions but skip gaps that cross the 6am boundary (sleep gap)
@@ -1559,7 +1597,19 @@ const HISTORY_PAGE_SIZE = 100;
 let historyShowCount = HISTORY_PAGE_SIZE;
 let eventsAreBound = false;
 
+function renderHabitButtons() {
+  const row = $('habit-row');
+  if (!row) return;
+  const selected = getSelectedActivities();
+  row.innerHTML = selected.map(key => {
+    const emoji = HABIT_ICONS[key] || '✅';
+    const label = HABIT_LABELS[key] || key;
+    return `<button class="habit-btn" data-habit="${escapeHTML(key)}"><span class="icon">${emoji}</span>${escapeHTML(label)}</button>`;
+  }).join('');
+}
+
 function render() {
+  renderHabitButtons();
   renderDate();
   renderMetrics();
   renderProgress();
@@ -2065,8 +2115,9 @@ function renderWaterReminder() {
   const reminderEl = $('water-reminder');
   if (!reminderEl) return;
   const settings = DB.loadSettings();
-  // Hide if coaching disabled OR if user has recent water
-  reminderEl.classList.toggle('hidden', !settings.showCoaching || hasRecentWater());
+  // Hide if coaching disabled, user has recent water, or water isn't a selected activity
+  const waterSelected = getSelectedActivities().includes('water');
+  reminderEl.classList.toggle('hidden', !settings.showCoaching || !waterSelected || hasRecentWater());
 }
 
 // ========== HISTORY ==========
@@ -2127,9 +2178,12 @@ function renderDayHistory() {
     }
   }
   // Activities — emoji only if done that day, grouped together
-  const doneHabits = HABIT_ORDER.filter(act => habits.some(e => e.habit === act));
-  if (doneHabits.length === 5) {
-    // All 5 habits — show Five Star Day icon
+  // Show all activities present in this day's events (regardless of current selection)
+  const doneKeys = new Set(habits.map(e => e.habit));
+  const doneHabits = ALL_ACTIVITIES.map(a => a.key).filter(k => doneKeys.has(k));
+  const selectedNow = getSelectedActivities();
+  if (selectedNow.length > 0 && selectedNow.every(k => doneKeys.has(k))) {
+    // All currently-selected activities done — show Five Star Day icon
     summaryParts.push('🌟');
   } else if (doneHabits.length > 0) {
     const waterCount = getHabits(events, 'water').reduce((s, e) => s + (e.count || 1), 0);
@@ -2214,11 +2268,44 @@ function navigateDay(offset) {
 const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: '#f39c12',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
   { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').reduce((sum, e) => sum + (e.intensity || 1), 0), activity: false, tooltip: 'Total urge intensity resisted each day. Higher bars mean stronger urges resisted.' },
-  { label: '💧 Water / Day', color: '#9c6fd4',  valueFn: evs => getHabits(evs, 'water').reduce((s, e) => s + (e.count || 1), 0), activity: true, tooltip: 'Number of water uses logged each day. Staying hydrated supports recovery.' },
-  { label: '🏃 Exercise Minutes / Day', color: '#e6cc22',  valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Exercise minutes each day. Physical activity helps manage cravings. Untimed activities rounded up to 5 minutes each.' },
-  { label: '🌬️ Mindfulness Minutes / Day', color: '#5a9fd4',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Mindfulness or breathing minutes each day. Helps with stress and urges. Untimed activities rounded up to 5 minutes each.' },
-  { label: '🧹 Cleaning Minutes / Day', color: '#8d6e63',  valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Cleaning or tidying minutes each day. Keeping busy is a great distraction. Untimed activities rounded up to 5 minutes each.' },
-  { label: '🌳 Outside Minutes / Day', color: '#43a047',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Time spent outside each day. Fresh air and nature can help reset your mood. Untimed activities rounded up to 5 minutes each.' },
+  // Essentials
+  { label: '💧 Drink / Day',                   color: '#9c6fd4',  habitKey: 'water',      valueFn: evs => getHabits(evs, 'water').reduce((s, e) => s + (e.count || 1), 0), activity: true, tooltip: 'Number of water uses logged each day. Staying hydrated supports recovery.' },
+  { label: '🏃 Exercise Minutes / Day',         color: '#e6cc22',  habitKey: 'exercise',   valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Exercise minutes each day. Physical activity helps manage cravings. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🌬️ Breathe Minutes / Day',          color: '#5a9fd4',  habitKey: 'breaths',    valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Mindfulness or breathing minutes each day. Helps with stress and urges. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🧹 Tidy Minutes / Day',             color: '#8d6e63',  habitKey: 'clean',      valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Cleaning or tidying minutes each day. Keeping busy is a great distraction. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🌳 Outside Minutes / Day',          color: '#43a047',  habitKey: 'outside',    valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Time spent outside each day. Fresh air and nature can help reset your mood. Untimed activities rounded up to 5 minutes each.' },
+  // Body
+  { label: '🚶 Walk Minutes / Day',             color: '#ff8f00',  habitKey: 'walk',       valueFn: evs => getHabits(evs, 'walk').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Walk minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🧘 Stretch Minutes / Day',          color: '#e040fb',  habitKey: 'stretch',    valueFn: evs => getHabits(evs, 'stretch').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Stretch minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🛁 Shower / Day',                   color: '#00acc1',  habitKey: 'shower',     valueFn: evs => getHabits(evs, 'shower').length, activity: true, tooltip: 'Number of showers logged each day.' },
+  { label: '😴 Sleep / Day',                    color: '#5e35b1',  habitKey: 'sleep',      valueFn: evs => getHabits(evs, 'sleep').length, activity: true, tooltip: 'Number of times sleep was logged each day.' },
+  { label: '🍎 Eat Healthy / Day',              color: '#7cb342',  habitKey: 'eat',        valueFn: evs => getHabits(evs, 'eat').length, activity: true, tooltip: 'Number of healthy meals logged each day.' },
+  // Mind
+  { label: '📖 Read Minutes / Day',             color: '#f4511e',  habitKey: 'read',       valueFn: evs => getHabits(evs, 'read').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Reading minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '✍️ Journal Minutes / Day',           color: '#039be5',  habitKey: 'journal',    valueFn: evs => getHabits(evs, 'journal').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Journaling minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🎯 Focus Minutes / Day',            color: '#8e24aa',  habitKey: 'focus',      valueFn: evs => getHabits(evs, 'focus').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Focus session minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🧠 Reflect Minutes / Day',          color: '#546e7a',  habitKey: 'reflect',    valueFn: evs => getHabits(evs, 'reflect').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Reflection minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🧩 Puzzle Minutes / Day',           color: '#00897b',  habitKey: 'puzzle',     valueFn: evs => getHabits(evs, 'puzzle').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Puzzle minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  // Creative
+  { label: '🎵 Music Minutes / Day',            color: '#f06292',  habitKey: 'music',      valueFn: evs => getHabits(evs, 'music').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Music listening minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🎨 Make Art Minutes / Day',         color: '#ff7043',  habitKey: 'art',        valueFn: evs => getHabits(evs, 'art').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Art-making minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🛠️ Build Minutes / Day',             color: '#78909c',  habitKey: 'build',      valueFn: evs => getHabits(evs, 'build').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Build/make minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '📷 Take Photo / Day',               color: '#ffd54f',  habitKey: 'photo',      valueFn: evs => getHabits(evs, 'photo').length, activity: true, tooltip: 'Number of photo sessions logged each day.' },
+  // Social
+  { label: '📞 Call Someone Minutes / Day',     color: '#4db6ac',  habitKey: 'call',       valueFn: evs => getHabits(evs, 'call').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Call minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '💬 Text Someone / Day',             color: '#81c784',  habitKey: 'text',       valueFn: evs => getHabits(evs, 'text').length, activity: true, tooltip: 'Number of times texting someone was logged each day.' },
+  { label: '👥 Hang Out Minutes / Day',         color: '#ff8a65',  habitKey: 'hangout',    valueFn: evs => getHabits(evs, 'hangout').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Hangout minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🤝 Help Someone / Day',             color: '#4fc3f7',  habitKey: 'help',       valueFn: evs => getHabits(evs, 'help').length, activity: true, tooltip: 'Number of times helping someone was logged each day.' },
+  // Regulation
+  { label: '⏸️ Pause Minutes / Day',             color: '#b0bec5',  habitKey: 'pause',      valueFn: evs => getHabits(evs, 'pause').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Pause/pause minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🌿 Calm Down Minutes / Day',        color: '#a5d6a7',  habitKey: 'calm',       valueFn: evs => getHabits(evs, 'calm').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Calm-down minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🕯️ Relax Minutes / Day',             color: '#ce93d8',  habitKey: 'relax',      valueFn: evs => getHabits(evs, 'relax').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Relaxation minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🙏 Gratitude / Day',                color: '#ffa726',  habitKey: 'gratitude',  valueFn: evs => getHabits(evs, 'gratitude').length, activity: true, tooltip: 'Number of gratitude sessions logged each day.' },
+  { label: '💭 Urge Surf Minutes / Day',        color: '#4dd0e1',  habitKey: 'urgesurf',   valueFn: evs => getHabits(evs, 'urgesurf').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Urge surfing minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  // Environment
+  { label: '🌞 Sunlight Minutes / Day',         color: '#ffca28',  habitKey: 'sunlight',   valueFn: evs => getHabits(evs, 'sunlight').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Sunlight minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🌷 Plants / Garden Minutes / Day',  color: '#aed581',  habitKey: 'garden',     valueFn: evs => getHabits(evs, 'garden').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Garden/plant care minutes each day. Untimed activities rounded up to 5 minutes each.' },
+  { label: '🧼 Clean Space Minutes / Day',      color: '#b0bec5',  habitKey: 'cleanspace', valueFn: evs => getHabits(evs, 'cleanspace').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Clean space minutes each day. Untimed activities rounded up to 5 minutes each.' },
 ];
 
 function formatGraphValue(val) {
@@ -2784,7 +2871,7 @@ function buildWeekSummaryHTML() {
     const resistTotal = resisted.reduce((sum, e) => sum + (e.intensity || 1), 0);
     // Activity totals - minutes for timed habits, count for water
     const actTotals = {};
-    for (const act of Object.keys(HABIT_LABELS)) {
+    for (const act of ALL_ACTIVITIES.map(a => a.key)) {
       const actEvents = habits.filter(e => e.habit === act);
       if (actEvents.length === 0) continue;
       if (HABIT_SHOW_CHIPS[act]) {
@@ -2867,8 +2954,8 @@ function buildWeekSummaryHTML() {
     html += '</div>';
   }
 
-  // Activity rows — one per type, only if any day has it (ordered to match main screen)
-  for (const act of HABIT_ORDER) {
+  // Activity rows — one per type with data, in ALL_ACTIVITIES order
+  for (const act of ALL_ACTIVITIES.map(a => a.key)) {
     const hasAny = dayData.some(dd => dd.actTotals[act]);
     if (!hasAny) continue;
     const icon = HABIT_ICONS[act] || '✅';
@@ -2920,14 +3007,16 @@ function renderGraphs() {
       dayHtml += `</div>`;
     }
 
-    // Activity graphs per month — only shown if data exists
-    const activityMonthDefs = [
-      { label: '💧 Water / Month', valueFn: evs => getHabits(evs, 'water').reduce((s, e) => s + (e.count || 1), 0), tooltip: 'Water logged each month.' },
-      { label: '🏃 Exercise Minutes / Month', valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), tooltip: 'Exercise minutes each month. Untimed activities rounded up to 5 minutes each.' },
-      { label: '🌬️ Mindfulness Minutes / Month', valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), tooltip: 'Mindfulness or breathing minutes each month. Untimed activities rounded up to 5 minutes each.' },
-      { label: '🧹 Cleaning Minutes / Month', valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), tooltip: 'Cleaning or tidying minutes each month. Untimed activities rounded up to 5 minutes each.' },
-      { label: '🌳 Outside Minutes / Month', valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), tooltip: 'Time spent outside each month.' },
-    ];
+    // Activity graphs per month — filtered by user's selected activities
+    const selectedActs = getSelectedActivities();
+    const activityMonthDefs = GRAPH_DEFS
+      .filter(d => d.activity && d.habitKey && selectedActs.includes(d.habitKey))
+      .map(d => ({
+        label: d.label.replace('/ Day', '/ Month'),
+        habitKey: d.habitKey,
+        valueFn: d.valueFn,
+        tooltip: (d.tooltip || '').replace('each day', 'each month'),
+      }));
     for (const def of activityMonthDefs) {
       const result = buildHabitMonthBars(def.valueFn);
       if (result) {
@@ -2983,7 +3072,8 @@ function renderGraphs() {
       const label = def.label;
       const tooltip = def.tooltip;
 
-      // For activity graphs, skip rendering if no data at all
+      // For activity graphs, skip rendering if not in user's selected activities or has no data
+      if (def.activity && def.habitKey && !getSelectedActivities().includes(def.habitKey)) continue;
       if (def.activity && !hasData) continue;
       const tipAttr = tooltip ? ` data-tooltip="${escapeHTML(tooltip)}"` : '';
       const ariaLabel = `Bar chart: ${label.replace(/<[^>]*>/g, '').replace(/^\S+\s/, '')}`;
@@ -4145,7 +4235,7 @@ let _onboardingFlowSteps = [];
 
 function startOnboardingFlow() {
   _onboardingFlowStep = 0;
-  _onboardingFlowSteps = ['recent-use', 'daily-reminder', 'welcome-guide'];
+  _onboardingFlowSteps = ['select-activities', 'recent-use', 'daily-reminder', 'welcome-guide'];
   // PWA install is always last — prompt won't be consumed before it's shown
   if (_deferredInstallPrompt) _onboardingFlowSteps.push('install-app');
   showOnboardingFlowStep();
@@ -4171,6 +4261,7 @@ function showOnboardingFlowStep() {
 
   const step = steps[_onboardingFlowStep];
   switch (step) {
+    case 'select-activities': renderFlowStepSelectActivities(content, 'onboarding'); break;
     case 'recent-use': renderFlowStepRecentUse(content); break;
     case 'daily-reminder': renderFlowStepDailyReminder(content); break;
     case 'install-app': renderFlowStepInstallApp(content); break;
@@ -4199,6 +4290,124 @@ function finishOnboardingFlow() {
   timerInterval = setInterval(() => renderMetrics(), METRICS_REFRESH_MS);
   setReminderButton();
   scheduleReminder();
+}
+
+// ========== ACTIVITY SELECTOR ==========
+let _pendingSelectedActivities = null;
+
+/** Renders the activity picker grid into `container`.
+ *  mode: 'onboarding' (shows "Next →") | 'settings' (shows "Done") */
+function renderFlowStepSelectActivities(container, mode = 'onboarding') {
+  const settings = DB.loadSettings();
+  const initial = (Array.isArray(settings.selectedActivities) && settings.selectedActivities.length > 0)
+    ? [...settings.selectedActivities]
+    : [...DEFAULT_ACTIVITIES];
+  _pendingSelectedActivities = initial;
+
+  // Group by category preserving ALL_ACTIVITIES order
+  const categories = [];
+  const catMap = {};
+  for (const act of ALL_ACTIVITIES) {
+    if (!catMap[act.category]) { catMap[act.category] = []; categories.push(act.category); }
+    catMap[act.category].push(act);
+  }
+
+  function buildGrid(selected) {
+    let html = '';
+    for (const cat of categories) {
+      html += `<div class="act-cat-label">${escapeHTML(cat)}</div><div class="act-options-row">`;
+      for (const act of catMap[cat]) {
+        const isSel = selected.has(act.key);
+        const isDis = !isSel && selected.size >= 5;
+        const cls = 'act-option' + (isSel ? ' selected' : '') + (isDis ? ' disabled' : '');
+        html += `<button type="button" class="${cls}" data-key="${escapeHTML(act.key)}" aria-pressed="${isSel}">
+          <span class="act-emoji">${act.emoji}</span>
+          <span class="act-label">${escapeHTML(act.label)}</span>
+        </button>`;
+      }
+      html += '</div>';
+    }
+    return html;
+  }
+
+  const btnLabel = mode === 'settings' ? 'Done' : 'Next →';
+  const btnFn   = mode === 'settings' ? 'App.saveAndCloseActivitySelector()' : 'App.finishSelectActivities()';
+
+  container.innerHTML = `
+    <h2>Choose Your Activities</h2>
+    <p class="ob-flow-subtitle">Pick up to 5 healthy habits to track. You can change these anytime in Settings.</p>
+    <div class="act-selector-grid" id="act-selector-grid">
+      ${buildGrid(new Set(initial))}
+    </div>
+    <div class="ob-flow-actions">
+      <button class="action-btn" id="act-selector-next" onclick="${btnFn}">${btnLabel}</button>
+    </div>`;
+
+  const grid = container.querySelector('#act-selector-grid');
+  const nextBtn = container.querySelector('#act-selector-next');
+
+  function updateNextBtn() {
+    if (nextBtn) nextBtn.disabled = (_pendingSelectedActivities.length === 0);
+  }
+  updateNextBtn();
+
+  grid.addEventListener('click', e => {
+    const btn = e.target.closest('.act-option');
+    if (!btn || btn.classList.contains('disabled')) return;
+    const key = btn.dataset.key;
+    const selSet = new Set(_pendingSelectedActivities);
+    if (selSet.has(key)) {
+      selSet.delete(key);
+    } else {
+      if (selSet.size >= 5) return;
+      selSet.add(key);
+    }
+    _pendingSelectedActivities = [...selSet];
+    // Update button states in-place (no full re-render to preserve scroll)
+    grid.querySelectorAll('.act-option').forEach(b => {
+      const k = b.dataset.key;
+      const sel = selSet.has(k);
+      const dis = !sel && selSet.size >= 5;
+      b.classList.toggle('selected', sel);
+      b.classList.toggle('disabled', dis);
+      b.setAttribute('aria-pressed', String(sel));
+    });
+    updateNextBtn();
+  });
+}
+
+function finishSelectActivities() {
+  if (!_pendingSelectedActivities || _pendingSelectedActivities.length === 0) return;
+  const settings = DB.loadSettings();
+  settings.selectedActivities = _pendingSelectedActivities;
+  DB._settings = settings;
+  DB.saveSettings();
+  _pendingSelectedActivities = null;
+  advanceOnboardingFlow();
+}
+
+/** Open activity selector from settings */
+function openActivitySelector() {
+  const overlay = $('activity-selector-overlay');
+  const content = $('activity-selector-content');
+  if (!overlay || !content) return;
+  renderFlowStepSelectActivities(content, 'settings');
+  overlay.classList.remove('hidden');
+}
+
+/** Save selection and close activity selector overlay */
+function saveAndCloseActivitySelector() {
+  if (_pendingSelectedActivities && _pendingSelectedActivities.length > 0) {
+    const settings = DB.loadSettings();
+    settings.selectedActivities = _pendingSelectedActivities;
+    DB._settings = settings;
+    DB.saveSettings();
+    _pendingSelectedActivities = null;
+    renderHabitButtons();
+    render();
+  }
+  const overlay = $('activity-selector-overlay');
+  if (overlay) overlay.classList.add('hidden');
 }
 
 /** Step 1: Log most recent use */
@@ -4391,7 +4600,7 @@ function renderFlowStepWelcomeGuide(container) {
       <li>🙈 You can <strong>hide the ${useButtonText} button</strong> in Settings if you don't need it.</li>
       <li>💪 Tap <strong>Resist</strong> when you feel the urge but choose not to.</li>
       <li>📝 Use <strong>Add Past Session</strong> in History to log earlier events.</li>
-      <li>🐢 Track healthy <strong>actions</strong>: Water, Exercise, Breaths, Tidy, Outside.</li>
+      <li>🐢 Track healthy <strong>activities</strong> using the quick buttons. Customize them anytime in Settings → Edit Activities.</li>
       <li>🏆 Earn <strong>badges</strong> that update throughout the day based on your activity.</li>
       <li>🔄 You can <strong>change what you're tracking</strong> anytime in Settings.</li>
     </ul>
@@ -4715,7 +4924,8 @@ function bindEvents() {
 
     const isModalOpen = () =>
       ['modal-overlay', 'login-overlay', 'onboarding-overlay',
-       'onboarding-flow-overlay', 'custom-config-overlay', 'reminder-overlay', 'landing-page'
+       'onboarding-flow-overlay', 'custom-config-overlay', 'reminder-overlay', 'landing-page',
+       'activity-selector-overlay'
       ].some(id => { const el = $(id); return el && !el.classList.contains('hidden'); });
 
     const getActiveTab = () => {
@@ -4778,6 +4988,7 @@ function bindEvents() {
   $('modal-sheet').addEventListener('click', e => handleModalChipClick(e));
   $('modal-overlay').addEventListener('click', e => { if (e.target === $('modal-overlay')) closeModal(); });
   $('reminder-overlay').addEventListener('click', e => { if (e.target === $('reminder-overlay')) closeReminderModal(); });
+  $('activity-selector-overlay').addEventListener('click', e => { if (e.target === $('activity-selector-overlay')) $('activity-selector-overlay').classList.add('hidden'); });
 
   $('habit-row').addEventListener('click', e => {
     const btn = e.target.closest('.habit-btn');
@@ -5390,6 +5601,9 @@ window.App = {
   installAppOnboarding,
   skipOnboardingStep,
   showHowToUse,
+  openActivitySelector,
+  saveAndCloseActivitySelector,
+  finishSelectActivities,
   togglePasswordVisibility(btn) {
     const input = btn.parentElement.querySelector('input');
     if (!input) return;
