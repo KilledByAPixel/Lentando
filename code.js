@@ -214,61 +214,61 @@ const COACHING_MESSAGES = [
 // Full activity catalog — add new activities here
 const ALL_ACTIVITIES = [
   // Quick Wins
-  { key: 'water',    emoji: '💧', label: 'Water',    hasMinutes: false, hasCount: true,  category: 'Quick Wins' },
-  { key: 'breaths',  emoji: '🌬️', label: 'Breathe',  hasMinutes: true,  hasCount: false, category: 'Quick Wins' },
-  { key: 'ice',      emoji: '🧊', label: 'Ice',      hasMinutes: false, hasCount: false, category: 'Quick Wins' },
-  { key: 'bed',      emoji: '🛏️', label: 'Bed',      hasMinutes: false, hasCount: false, category: 'Quick Wins' },
-  { key: 'vitamins', emoji: '💊', label: 'Vitamins', hasMinutes: false, hasCount: false, category: 'Quick Wins' },
+  { key: 'water',    emoji: '💧', label: 'Water',      hasMinutes: false, hasCount: true,  category: 'Quick Wins', color: '#9c6fd4' },
+  { key: 'breaths',  emoji: '🌬️', label: 'Breathe',    hasMinutes: true,  hasCount: false, category: 'Quick Wins', color: '#5a9fd4' },
+  { key: 'ice',      emoji: '🧊', label: 'Ice',        hasMinutes: false, hasCount: false, category: 'Quick Wins', color: '#80deea' },
+  { key: 'bed',      emoji: '🛏️', label: 'Bed',        hasMinutes: false, hasCount: false, category: 'Quick Wins', color: '#7986cb' },
+  { key: 'vitamins', emoji: '💊', label: 'Vitamins',   hasMinutes: false, hasCount: false, category: 'Quick Wins', color: '#aed581' },
   // Body
-  { key: 'outside',  emoji: '🌳', label: 'Outside',  hasMinutes: true,  hasCount: false, category: 'Body' },
-  { key: 'exercise', emoji: '🏃', label: 'Exercise', hasMinutes: true,  hasCount: false, category: 'Body' },
-  { key: 'sports',   emoji: '⚽', label: 'Sports',   hasMinutes: true,  hasCount: false, category: 'Body' },
-  { key: 'walk',     emoji: '🚶', label: 'Walk',     hasMinutes: true,  hasCount: false, category: 'Body' },
-  { key: 'yoga',     emoji: '🧘', label: 'Yoga',     hasMinutes: true,  hasCount: false, category: 'Body' },
-  { key: 'bike',     emoji: '🚴', label: 'Bike',     hasMinutes: true,  hasCount: false, category: 'Body' },
-  { key: 'swim',     emoji: '🏊', label: 'Swim',     hasMinutes: true,  hasCount: false, category: 'Body' },
-  { key: 'lift',     emoji: '🏋️', label: 'Lift',     hasMinutes: true,  hasCount: false, category: 'Body' },
-  { key: 'shower',   emoji: '🛁', label: 'Shower',   hasMinutes: false, hasCount: false, category: 'Body' },
-  { key: 'sleep',    emoji: '😴', label: 'Sleep',    hasMinutes: false, hasCount: false, category: 'Body' },
-  { key: 'eat',      emoji: '🍎', label: 'Meal',      hasMinutes: false, hasCount: false, category: 'Body' },
+  { key: 'outside',  emoji: '🌳', label: 'Outside',    hasMinutes: true,  hasCount: false, category: 'Body',       color: '#43a047' },
+  { key: 'exercise', emoji: '🏃', label: 'Exercise',   hasMinutes: true,  hasCount: false, category: 'Body',       color: '#e6cc22' },
+  { key: 'sports',   emoji: '⚽', label: 'Sports',     hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ffb74d' },
+  { key: 'walk',     emoji: '🚶', label: 'Walk',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ff8f00' },
+  { key: 'yoga',     emoji: '🧘', label: 'Yoga',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ab47bc' },
+  { key: 'bike',     emoji: '🚴', label: 'Bike',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#66bb6a' },
+  { key: 'swim',     emoji: '🏊', label: 'Swim',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#26c6da' },
+  { key: 'lift',     emoji: '🏋️', label: 'Lift',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ef5350' },
+  { key: 'shower',   emoji: '🛁', label: 'Shower',     hasMinutes: false, hasCount: false, category: 'Body',       color: '#00acc1' },
+  { key: 'sleep',    emoji: '😴', label: 'Sleep',      hasMinutes: false, hasCount: false, category: 'Body',       color: '#5e35b1' },
+  { key: 'eat',      emoji: '🍎', label: 'Meal',       hasMinutes: false, hasCount: false, category: 'Body',       color: '#7cb342' },
   // Mind
-  { key: 'read',     emoji: '📖', label: 'Read',     hasMinutes: true,  hasCount: false, category: 'Mind' },
-  { key: 'journal',  emoji: '✍️', label: 'Journal',  hasMinutes: true,  hasCount: false, category: 'Mind' },
-  { key: 'study',    emoji: '📚', label: 'Study',    hasMinutes: true,  hasCount: false, category: 'Mind' },
-  { key: 'homework', emoji: '📝', label: 'Homework', hasMinutes: true,  hasCount: false, category: 'Mind' },
-  { key: 'focus',    emoji: '🎯', label: 'Focus',    hasMinutes: true,  hasCount: false, category: 'Mind' },
-  { key: 'puzzle',   emoji: '🧩', label: 'Puzzle',   hasMinutes: true,  hasCount: false, category: 'Mind' },
-  { key: 'listen',   emoji: '🎧', label: 'Listen',   hasMinutes: true,  hasCount: false, category: 'Mind' },
-  { key: 'meditate', emoji: '🧠', label: 'Meditate', hasMinutes: true,  hasCount: false, category: 'Mind' },
+  { key: 'read',     emoji: '📖', label: 'Read',       hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#f4511e' },
+  { key: 'journal',  emoji: '✍️', label: 'Journal',    hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#039be5' },
+  { key: 'study',    emoji: '📚', label: 'Study',      hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#42a5f5' },
+  { key: 'homework', emoji: '📝', label: 'Homework',   hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#ffa726' },
+  { key: 'focus',    emoji: '🎯', label: 'Focus',      hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#8e24aa' },
+  { key: 'puzzle',   emoji: '🧩', label: 'Puzzle',     hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#00897b' },
+  { key: 'listen',   emoji: '🎧', label: 'Listen',     hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#26a69a' },
+  { key: 'meditate', emoji: '🧠', label: 'Meditate',   hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#5c6bc0' },
   // Create
-  { key: 'music',    emoji: '🎵', label: 'Music',    hasMinutes: true,  hasCount: false, category: 'Create' },
-  { key: 'art',      emoji: '🎨', label: 'Art',      hasMinutes: true,  hasCount: false, category: 'Create' },
-  { key: 'photo',    emoji: '📷', label: 'Photo',    hasMinutes: false, hasCount: false, category: 'Create' },
-  { key: 'build',    emoji: '🛠️', label: 'Build',    hasMinutes: true,  hasCount: false, category: 'Create' },
-  { key: 'cook',     emoji: '🍳', label: 'Cook',     hasMinutes: true,  hasCount: false, category: 'Create' },
-  { key: 'craft',    emoji: '✂️', label: 'Craft',    hasMinutes: true,  hasCount: false, category: 'Create' },
-  { key: 'code',     emoji: '💻', label: 'Code',     hasMinutes: true,  hasCount: false, category: 'Create' },
+  { key: 'music',    emoji: '🎵', label: 'Music',      hasMinutes: true,  hasCount: false, category: 'Create',     color: '#f06292' },
+  { key: 'art',      emoji: '🎨', label: 'Art',        hasMinutes: true,  hasCount: false, category: 'Create',     color: '#ff7043' },
+  { key: 'photo',    emoji: '📷', label: 'Photo',      hasMinutes: false, hasCount: false, category: 'Create',     color: '#ffd54f' },
+  { key: 'build',    emoji: '🛠️', label: 'Build',      hasMinutes: true,  hasCount: false, category: 'Create',     color: '#78909c' },
+  { key: 'cook',     emoji: '🍳', label: 'Cook',       hasMinutes: true,  hasCount: false, category: 'Create',     color: '#ef6c00' },
+  { key: 'craft',    emoji: '✂️', label: 'Craft',      hasMinutes: true,  hasCount: false, category: 'Create',     color: '#a1887f' },
+  { key: 'code',     emoji: '💻', label: 'Code',       hasMinutes: true,  hasCount: false, category: 'Create',     color: '#546e7a' },
   // Connect
-  { key: 'call',     emoji: '📞', label: 'Call',     hasMinutes: true,  hasCount: false, category: 'Connect' },
-  { key: 'text',     emoji: '💬', label: 'Text',     hasMinutes: false, hasCount: false, category: 'Connect' },
-  { key: 'hangout',  emoji: '👥', label: 'Socialize',hasMinutes: true,  hasCount: false, category: 'Connect' },
-  { key: 'pet',      emoji: '🐾', label: 'Pet',      hasMinutes: false, hasCount: false, category: 'Connect' },
-  { key: 'help',     emoji: '🤝', label: 'Help',     hasMinutes: false, hasCount: false, category: 'Connect' },
-  { key: 'family',   emoji: '👨‍👩‍👧', label: 'Family',   hasMinutes: true,  hasCount: false, category: 'Connect' },
-  { key: 'play',     emoji: '🎮', label: 'Play',     hasMinutes: true,  hasCount: false, category: 'Connect' },
+  { key: 'call',     emoji: '📞', label: 'Call',       hasMinutes: true,  hasCount: false, category: 'Connect',    color: '#4db6ac' },
+  { key: 'text',     emoji: '💬', label: 'Text',       hasMinutes: false, hasCount: false, category: 'Connect',    color: '#81c784' },
+  { key: 'hangout',  emoji: '👥', label: 'Socialize',  hasMinutes: true,  hasCount: false, category: 'Connect',    color: '#ff8a65' },
+  { key: 'pet',      emoji: '🐾', label: 'Pet',        hasMinutes: false, hasCount: false, category: 'Connect',    color: '#f48fb1' },
+  { key: 'help',     emoji: '🤝', label: 'Help',       hasMinutes: false, hasCount: false, category: 'Connect',    color: '#4fc3f7' },
+  { key: 'family',   emoji: '👨‍👩‍👧', label: 'Family',     hasMinutes: true,  hasCount: false, category: 'Connect',    color: '#ffcc80' },
+  { key: 'play',     emoji: '🎮', label: 'Play',       hasMinutes: true,  hasCount: false, category: 'Connect',    color: '#80cbc4' },
   // Skills
-  { key: 'practice', emoji: '🎸', label: 'Instrument', hasMinutes: true,  hasCount: false, category: 'Skills' },
-  { key: 'language', emoji: '🌍', label: 'Language', hasMinutes: true,  hasCount: false, category: 'Skills' },
-  { key: 'learn',    emoji: '📖', label: 'Learn',    hasMinutes: true,  hasCount: false, category: 'Skills' },
-  { key: 'train',    emoji: '🎯', label: 'Train',    hasMinutes: true,  hasCount: false, category: 'Skills' },
+  { key: 'practice', emoji: '🎸', label: 'Instrument', hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#7c4dff' },
+  { key: 'language', emoji: '🌍', label: 'Language',   hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#00bcd4' },
+  { key: 'learn',    emoji: '📖', label: 'Learn',      hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#00796b' },
+  { key: 'train',    emoji: '🎯', label: 'Train',      hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#ff6f00' },
   // Ground
-  { key: 'relax',    emoji: '🕯️', label: 'Comfort',  hasMinutes: true,  hasCount: false, category: 'Ground' },
-  { key: 'calm',     emoji: '🌿', label: 'Nature',   hasMinutes: true,  hasCount: false, category: 'Ground' },
-  { key: 'sunlight', emoji: '🌞', label: 'Sunlight', hasMinutes: true,  hasCount: false, category: 'Life' },
+  { key: 'relax',    emoji: '🕯️', label: 'Comfort',    hasMinutes: true,  hasCount: false, category: 'Ground',     color: '#ce93d8' },
+  { key: 'calm',     emoji: '🌿', label: 'Nature',     hasMinutes: true,  hasCount: false, category: 'Ground',     color: '#a5d6a7' },
+  { key: 'sunlight', emoji: '🌞', label: 'Sunlight',   hasMinutes: true,  hasCount: false, category: 'Ground',     color: '#ffca28' },
   // Life
-  { key: 'clean',    emoji: '🧹', label: 'Clean',     hasMinutes: true,  hasCount: false, category: 'Life' },
-  { key: 'laundry',  emoji: '🧺', label: 'Laundry',  hasMinutes: false, hasCount: false, category: 'Life' },
-  { key: 'errands',  emoji: '🛒', label: 'Errands',  hasMinutes: false, hasCount: false, category: 'Life' },
+  { key: 'clean',    emoji: '🧹', label: 'Clean',      hasMinutes: true,  hasCount: false, category: 'Life',       color: '#8d6e63' },
+  { key: 'laundry',  emoji: '🧺', label: 'Laundry',    hasMinutes: false, hasCount: false, category: 'Life',       color: '#00838f' },
+  { key: 'errands',  emoji: '🛒', label: 'Errands',    hasMinutes: false, hasCount: false, category: 'Life',       color: '#6d4c41' },
 ];
 
 // Computed lookups from ALL_ACTIVITIES catalog
@@ -2290,68 +2290,28 @@ function navigateDay(offset) {
 const GRAPH_DEFS = [
   { label: '⚡ Amount Used / Day',    color: '#f39c12',  valueFn: evs => sumAmount(filterProfileUsed(evs)), activity: false, tooltip: 'Total amount used each day. Lower bars mean less usage.' },
   { label: '💪 Resists / Day',    color: 'var(--resist)',  valueFn: evs => filterByType(evs, 'resisted').reduce((sum, e) => sum + (e.intensity || 1), 0), activity: false, tooltip: 'Total urge intensity resisted each day. Higher bars mean stronger urges resisted.' },
-  // Quick Wins
-  { label: '💧 Water / Day',                    color: '#9c6fd4',  habitKey: 'water',    valueFn: evs => getHabits(evs, 'water').reduce((s, e) => s + (e.count || 1), 0), activity: true, tooltip: 'Number of water drinks logged each day.' },
-  { label: '🌬️ Breathe Minutes / Day',           color: '#5a9fd4',  habitKey: 'breaths',  valueFn: evs => getHabits(evs, 'breaths').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Breathe minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🧊 Ice / Day',                       color: '#80deea',  habitKey: 'ice',      valueFn: evs => getHabits(evs, 'ice').length, activity: true, tooltip: 'Number of ice uses logged each day.' },
-  { label: '🛏️ Bed / Day',                       color: '#7986cb',  habitKey: 'bed',      valueFn: evs => getHabits(evs, 'bed').length, activity: true, tooltip: 'Number of times bed was logged each day.' },
-  { label: '🪥 Teeth / Day',                     color: '#80cbc4',  habitKey: 'teeth',    valueFn: evs => getHabits(evs, 'teeth').length, activity: true, tooltip: 'Number of times teeth brushing was logged each day.' },
-  // Body
-  { label: '🌳 Outside Minutes / Day',           color: '#43a047',  habitKey: 'outside',  valueFn: evs => getHabits(evs, 'outside').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Time outside each day. Untimed rounded up to 5 min each.' },
-  { label: '🏃 Exercise Minutes / Day',          color: '#e6cc22',  habitKey: 'exercise', valueFn: evs => getHabits(evs, 'exercise').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Exercise minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '⚽ Sports Minutes / Day',            color: '#ffb74d',  habitKey: 'sports',   valueFn: evs => getHabits(evs, 'sports').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Sports minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🚶 Walk Minutes / Day',              color: '#ff8f00',  habitKey: 'walk',     valueFn: evs => getHabits(evs, 'walk').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Walk minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🧘 Yoga Minutes / Day',              color: '#ab47bc',  habitKey: 'yoga',     valueFn: evs => getHabits(evs, 'yoga').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Yoga minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🚴 Bike Minutes / Day',              color: '#66bb6a',  habitKey: 'bike',     valueFn: evs => getHabits(evs, 'bike').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Bike minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🏊 Swim Minutes / Day',              color: '#26c6da',  habitKey: 'swim',     valueFn: evs => getHabits(evs, 'swim').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Swim minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🏋️ Lift Minutes / Day',              color: '#ef5350',  habitKey: 'lift',     valueFn: evs => getHabits(evs, 'lift').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Lift minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🛁 Shower / Day',                    color: '#00acc1',  habitKey: 'shower',   valueFn: evs => getHabits(evs, 'shower').length, activity: true, tooltip: 'Number of showers logged each day.' },
-  { label: '😴 Sleep / Day',                     color: '#5e35b1',  habitKey: 'sleep',    valueFn: evs => getHabits(evs, 'sleep').length, activity: true, tooltip: 'Number of times sleep was logged each day.' },
-  { label: '🍎 Eat / Day',                       color: '#7cb342',  habitKey: 'eat',      valueFn: evs => getHabits(evs, 'eat').length, activity: true, tooltip: 'Number of healthy meals logged each day.' },
-  // Mind
-  { label: '📖 Read Minutes / Day',              color: '#f4511e',  habitKey: 'read',     valueFn: evs => getHabits(evs, 'read').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Reading minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '✍️ Journal Minutes / Day',            color: '#039be5',  habitKey: 'journal',  valueFn: evs => getHabits(evs, 'journal').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Journal minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '📚 Study Minutes / Day',             color: '#42a5f5',  habitKey: 'study',    valueFn: evs => getHabits(evs, 'study').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Study minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '📝 Homework Minutes / Day',          color: '#ffa726',  habitKey: 'homework', valueFn: evs => getHabits(evs, 'homework').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Homework minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🎯 Focus Minutes / Day',             color: '#8e24aa',  habitKey: 'focus',    valueFn: evs => getHabits(evs, 'focus').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Focus session minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🧩 Puzzle Minutes / Day',            color: '#00897b',  habitKey: 'puzzle',   valueFn: evs => getHabits(evs, 'puzzle').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Puzzle minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🎧 Listen Minutes / Day',            color: '#26a69a',  habitKey: 'listen',   valueFn: evs => getHabits(evs, 'listen').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Listen minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🧠 Meditate Minutes / Day',          color: '#5c6bc0',  habitKey: 'meditate', valueFn: evs => getHabits(evs, 'meditate').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Meditation minutes each day. Untimed rounded up to 5 min each.' },
-  // Create
-  { label: '🎵 Music Minutes / Day',             color: '#f06292',  habitKey: 'music',    valueFn: evs => getHabits(evs, 'music').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Music minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🎨 Art Minutes / Day',               color: '#ff7043',  habitKey: 'art',      valueFn: evs => getHabits(evs, 'art').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Art minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '📷 Photo / Day',                     color: '#ffd54f',  habitKey: 'photo',    valueFn: evs => getHabits(evs, 'photo').length, activity: true, tooltip: 'Number of photo sessions logged each day.' },
-  { label: '🛠️ Build Minutes / Day',              color: '#78909c',  habitKey: 'build',    valueFn: evs => getHabits(evs, 'build').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Build minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🍳 Cook Minutes / Day',              color: '#ef6c00',  habitKey: 'cook',     valueFn: evs => getHabits(evs, 'cook').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Cook minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '✂️ Craft Minutes / Day',              color: '#a1887f',  habitKey: 'craft',    valueFn: evs => getHabits(evs, 'craft').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Craft minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '💻 Code Minutes / Day',              color: '#546e7a',  habitKey: 'code',     valueFn: evs => getHabits(evs, 'code').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Code minutes each day. Untimed rounded up to 5 min each.' },
-  // Connect
-  { label: '📞 Call Minutes / Day',              color: '#4db6ac',  habitKey: 'call',     valueFn: evs => getHabits(evs, 'call').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Call minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '💬 Text / Day',                      color: '#81c784',  habitKey: 'text',     valueFn: evs => getHabits(evs, 'text').length, activity: true, tooltip: 'Number of times texting was logged each day.' },
-  { label: '👥 Socialize Minutes / Day',         color: '#ff8a65',  habitKey: 'hangout',  valueFn: evs => getHabits(evs, 'hangout').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Socialize minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🐾 Pet / Day',                       color: '#f48fb1',  habitKey: 'pet',      valueFn: evs => getHabits(evs, 'pet').length, activity: true, tooltip: 'Number of times petting an animal was logged each day.' },
-  { label: '🤝 Help / Day',                      color: '#4fc3f7',  habitKey: 'help',     valueFn: evs => getHabits(evs, 'help').length, activity: true, tooltip: 'Number of times helping someone was logged each day.' },
-  { label: '👨‍👩‍👧 Family Minutes / Day',             color: '#ffcc80',  habitKey: 'family',   valueFn: evs => getHabits(evs, 'family').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Family time minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🎮 Play Minutes / Day',              color: '#80cbc4',  habitKey: 'play',     valueFn: evs => getHabits(evs, 'play').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Play minutes each day. Untimed rounded up to 5 min each.' },
-  // Skills
-  { label: '🎸 Practice Minutes / Day',          color: '#7c4dff',  habitKey: 'practice', valueFn: evs => getHabits(evs, 'practice').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Practice minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🌍 Language Minutes / Day',          color: '#00e5ff',  habitKey: 'language', valueFn: evs => getHabits(evs, 'language').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Language study minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '📖 Learn Minutes / Day',             color: '#00796b',  habitKey: 'learn',    valueFn: evs => getHabits(evs, 'learn').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Learning minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🎯 Train Minutes / Day',             color: '#ff6f00',  habitKey: 'train',    valueFn: evs => getHabits(evs, 'train').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Training minutes each day. Untimed rounded up to 5 min each.' },
-  // Ground
-  { label: '⏸️ Pause Minutes / Day',              color: '#b0bec5',  habitKey: 'pause',    valueFn: evs => getHabits(evs, 'pause').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Pause minutes each day. Untimed activities rounded up to 5 minutes each.' },
-  { label: '🕯️ Comfort Minutes / Day',            color: '#ce93d8',  habitKey: 'relax',    valueFn: evs => getHabits(evs, 'relax').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Comfort minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🙏 Pray / Day',                      color: '#ffb300',  habitKey: 'pray',     valueFn: evs => getHabits(evs, 'pray').length, activity: true, tooltip: 'Number of prayer sessions logged each day.' },
-  { label: '💭 Delay Minutes / Day',             color: '#4dd0e1',  habitKey: 'urgesurf', valueFn: evs => getHabits(evs, 'urgesurf').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Delay/urge surf minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🌿 Nature Minutes / Day',            color: '#a5d6a7',  habitKey: 'calm',     valueFn: evs => getHabits(evs, 'calm').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Nature/calm minutes each day. Untimed rounded up to 5 min each.' },
-  // Life
-  { label: '🧹 Tidy Minutes / Day',              color: '#8d6e63',  habitKey: 'clean',    valueFn: evs => getHabits(evs, 'clean').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Tidy minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🌞 Sunlight Minutes / Day',          color: '#ffca28',  habitKey: 'sunlight', valueFn: evs => getHabits(evs, 'sunlight').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Sunlight minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🪴 Plants Minutes / Day',             color: '#aed581',  habitKey: 'garden',   valueFn: evs => getHabits(evs, 'garden').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Plant care minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '💰 Budget / Day',                    color: '#607d8b',  habitKey: 'budget',   valueFn: evs => getHabits(evs, 'budget').length, activity: true, tooltip: 'Number of budget sessions logged each day.' },
-  { label: '📅 Plan Minutes / Day',              color: '#0288d1',  habitKey: 'plan',     valueFn: evs => getHabits(evs, 'plan').reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0), activity: true, minStep: 5, tooltip: 'Planning minutes each day. Untimed rounded up to 5 min each.' },
-  { label: '🧺 Laundry / Day',                   color: '#00838f',  habitKey: 'laundry',  valueFn: evs => getHabits(evs, 'laundry').length, activity: true, tooltip: 'Number of laundry sessions logged each day.' },
-  { label: '🛒 Errands / Day',                   color: '#6d4c41',  habitKey: 'errands',  valueFn: evs => getHabits(evs, 'errands').length, activity: true, tooltip: 'Number of errand sessions logged each day.' },
+  ...ALL_ACTIVITIES.map(a => {
+    const def = {
+      label: a.hasMinutes ? `${a.emoji} ${a.label} Min / Day` : `${a.emoji} ${a.label} / Day`,
+      color: a.color,
+      habitKey: a.key,
+      activity: true,
+      tooltip: a.hasMinutes
+        ? `${a.label} minutes each day. Untimed sessions counted as 5 min each.`
+        : a.hasCount
+          ? `${a.label} count logged each day.`
+          : `${a.label} sessions logged each day.`,
+    };
+    if (a.hasMinutes) {
+      def.valueFn = evs => getHabits(evs, a.key).reduce((s, e) => s + ((e.minutes > 0) ? e.minutes : 5), 0);
+      def.minStep = 5;
+    } else if (a.hasCount) {
+      def.valueFn = evs => getHabits(evs, a.key).reduce((s, e) => s + (e.count || 1), 0);
+    } else {
+      def.valueFn = evs => getHabits(evs, a.key).length;
+    }
+    return def;
+  }),
 ];
 
 function formatGraphValue(val) {
