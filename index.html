@@ -480,7 +480,6 @@ header .date {
 .habit-btn:active { background: var(--habit-bg); }
 
 /* Activity selector */
-.act-selector-sheet { max-height: 90vh; overflow-y: auto; }
 .act-selector-grid { display: flex; flex-direction: column; gap: 12px; margin: 12px 0 20px; text-align: left; }
 .act-cat-label {
   font-size: 11px;
@@ -909,8 +908,7 @@ header .date {
 #login-overlay,
 #onboarding-overlay,
 #onboarding-flow-overlay,
-#custom-config-overlay,
-#activity-selector-overlay {
+#custom-config-overlay {
   background: var(--bg);
   align-items: flex-start;
   overflow-y: auto;
@@ -1904,15 +1902,6 @@ header .date {
     <p class="text-sm">Lentando is a self-help tool, not a replacement for professional care. SAMHSA National Helpline is available 24/7: <a href="tel:1-800-662-4357" class="link-bold">1-800-662-HELP</a></p>
     <p><a href="https://github.com/KilledByAPixel/Lentando" target="_blank" rel="noopener noreferrer" class="link-bold">View source on GitHub →</a></p>
     <p class="text-sm">Lentando © 2026 Frank Force</p>
-  </div>
-</div>
-
-<!-- ===== ACTIVITY SELECTOR OVERLAY ===== -->
-<div class="modal-overlay hidden" id="activity-selector-overlay" role="dialog" aria-modal="true" aria-label="Edit Activities">
-  <div class="onboarding-sheet act-selector-sheet">
-    <div class="onboarding-content" id="activity-selector-content">
-      <!-- Injected by renderFlowStepSelectActivities() -->
-    </div>
   </div>
 </div>
 

@@ -4282,6 +4282,7 @@ function finishOnboardingFlow() {
   DB.saveSettings();
 
   _onboardingFlowSteps = [];
+  document.documentElement.style.overflow = ''; // restore body scroll (in case opened from settings)
   $('onboarding-flow-overlay').classList.add('hidden');
   calculateAndUpdateBadges();
   bindEvents();
@@ -4386,16 +4387,17 @@ function finishSelectActivities() {
   advanceOnboardingFlow();
 }
 
-/** Open activity selector from settings */
+/** Open activity selector from settings — reuses the onboarding-flow-overlay */
 function openActivitySelector() {
-  const overlay = $('activity-selector-overlay');
-  const content = $('activity-selector-content');
+  const overlay = $('onboarding-flow-overlay');
+  const content = $('onboarding-flow-content');
   if (!overlay || !content) return;
   renderFlowStepSelectActivities(content, 'settings');
+  document.documentElement.style.overflow = 'hidden'; // prevent double scrollbar behind overlay
   overlay.classList.remove('hidden');
 }
 
-/** Save selection and close activity selector overlay */
+/** Save selection and close (called from settings mode of activity selector) */
 function saveAndCloseActivitySelector() {
   if (_pendingSelectedActivities && _pendingSelectedActivities.length > 0) {
     const settings = DB.loadSettings();
@@ -4406,8 +4408,8 @@ function saveAndCloseActivitySelector() {
     renderHabitButtons();
     render();
   }
-  const overlay = $('activity-selector-overlay');
-  if (overlay) overlay.classList.add('hidden');
+  document.documentElement.style.overflow = ''; // restore body scroll
+  $('onboarding-flow-overlay').classList.add('hidden');
 }
 
 /** Step 1: Log most recent use */
@@ -4924,8 +4926,7 @@ function bindEvents() {
 
     const isModalOpen = () =>
       ['modal-overlay', 'login-overlay', 'onboarding-overlay',
-       'onboarding-flow-overlay', 'custom-config-overlay', 'reminder-overlay', 'landing-page',
-       'activity-selector-overlay'
+       'onboarding-flow-overlay', 'custom-config-overlay', 'reminder-overlay', 'landing-page'
       ].some(id => { const el = $(id); return el && !el.classList.contains('hidden'); });
 
     const getActiveTab = () => {
@@ -4988,7 +4989,6 @@ function bindEvents() {
   $('modal-sheet').addEventListener('click', e => handleModalChipClick(e));
   $('modal-overlay').addEventListener('click', e => { if (e.target === $('modal-overlay')) closeModal(); });
   $('reminder-overlay').addEventListener('click', e => { if (e.target === $('reminder-overlay')) closeReminderModal(); });
-  $('activity-selector-overlay').addEventListener('click', e => { if (e.target === $('activity-selector-overlay')) $('activity-selector-overlay').classList.add('hidden'); });
 
   $('habit-row').addEventListener('click', e => {
     const btn = e.target.closest('.habit-btn');
