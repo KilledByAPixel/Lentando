@@ -218,7 +218,7 @@ const ALL_ACTIVITIES = [
   { key: 'breaths',  emoji: '🌬️', label: 'Breathe',  hasMinutes: true,  hasCount: false, category: 'Quick Wins' },
   { key: 'ice',      emoji: '🧊', label: 'Ice',      hasMinutes: false, hasCount: false, category: 'Quick Wins' },
   { key: 'bed',      emoji: '🛏️', label: 'Bed',      hasMinutes: false, hasCount: false, category: 'Quick Wins' },
-  { key: 'teeth',    emoji: '🦷', label: 'Teeth',    hasMinutes: false, hasCount: false, category: 'Quick Wins' },
+  { key: 'vitamins', emoji: '💊', label: 'Vitamins', hasMinutes: false, hasCount: false, category: 'Quick Wins' },
   // Body
   { key: 'outside',  emoji: '🌳', label: 'Outside',  hasMinutes: true,  hasCount: false, category: 'Body' },
   { key: 'exercise', emoji: '🏃', label: 'Exercise', hasMinutes: true,  hasCount: false, category: 'Body' },
@@ -230,7 +230,7 @@ const ALL_ACTIVITIES = [
   { key: 'lift',     emoji: '🏋️', label: 'Lift',     hasMinutes: true,  hasCount: false, category: 'Body' },
   { key: 'shower',   emoji: '🛁', label: 'Shower',   hasMinutes: false, hasCount: false, category: 'Body' },
   { key: 'sleep',    emoji: '😴', label: 'Sleep',    hasMinutes: false, hasCount: false, category: 'Body' },
-  { key: 'eat',      emoji: '🍎', label: 'Eat',      hasMinutes: false, hasCount: false, category: 'Body' },
+  { key: 'eat',      emoji: '🍎', label: 'Meal',      hasMinutes: false, hasCount: false, category: 'Body' },
   // Mind
   { key: 'read',     emoji: '📖', label: 'Read',     hasMinutes: true,  hasCount: false, category: 'Mind' },
   { key: 'journal',  emoji: '✍️', label: 'Journal',  hasMinutes: true,  hasCount: false, category: 'Mind' },
@@ -257,22 +257,16 @@ const ALL_ACTIVITIES = [
   { key: 'family',   emoji: '👨‍👩‍👧', label: 'Family',   hasMinutes: true,  hasCount: false, category: 'Connect' },
   { key: 'play',     emoji: '🎮', label: 'Play',     hasMinutes: true,  hasCount: false, category: 'Connect' },
   // Skills
-  { key: 'practice', emoji: '🎸', label: 'Practice', hasMinutes: true,  hasCount: false, category: 'Skills' },
+  { key: 'practice', emoji: '🎸', label: 'Instrument', hasMinutes: true,  hasCount: false, category: 'Skills' },
   { key: 'language', emoji: '🌍', label: 'Language', hasMinutes: true,  hasCount: false, category: 'Skills' },
   { key: 'learn',    emoji: '📖', label: 'Learn',    hasMinutes: true,  hasCount: false, category: 'Skills' },
   { key: 'train',    emoji: '🎯', label: 'Train',    hasMinutes: true,  hasCount: false, category: 'Skills' },
   // Ground
-  { key: 'pause',    emoji: '⏸️', label: 'Pause',    hasMinutes: true,  hasCount: false, category: 'Ground' },
   { key: 'relax',    emoji: '🕯️', label: 'Comfort',  hasMinutes: true,  hasCount: false, category: 'Ground' },
-  { key: 'pray',     emoji: '🙏', label: 'Pray',     hasMinutes: false, hasCount: false, category: 'Ground' },
-  { key: 'urgesurf', emoji: '💭', label: 'Delay',    hasMinutes: true,  hasCount: false, category: 'Ground' },
   { key: 'calm',     emoji: '🌿', label: 'Nature',   hasMinutes: true,  hasCount: false, category: 'Ground' },
-  // Life
-  { key: 'clean',    emoji: '🧹', label: 'Tidy',     hasMinutes: true,  hasCount: false, category: 'Life' },
   { key: 'sunlight', emoji: '🌞', label: 'Sunlight', hasMinutes: true,  hasCount: false, category: 'Life' },
-  { key: 'garden',   emoji: '🪴', label: 'Plants',   hasMinutes: true,  hasCount: false, category: 'Life' },
-  { key: 'budget',   emoji: '💰', label: 'Budget',   hasMinutes: false, hasCount: false, category: 'Life' },
-  { key: 'plan',     emoji: '📅', label: 'Plan',     hasMinutes: true,  hasCount: false, category: 'Life' },
+  // Life
+  { key: 'clean',    emoji: '🧹', label: 'Clean',     hasMinutes: true,  hasCount: false, category: 'Life' },
   { key: 'laundry',  emoji: '🧺', label: 'Laundry',  hasMinutes: false, hasCount: false, category: 'Life' },
   { key: 'errands',  emoji: '🛒', label: 'Errands',  hasMinutes: false, hasCount: false, category: 'Life' },
 ];
