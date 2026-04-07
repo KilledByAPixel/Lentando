@@ -349,7 +349,7 @@ function getBadgeDef(id) {
   return BADGE_DEFINITIONS[id] || { label: 'Unknown Badge', icon: '❓', desc: '' };
 }
 
-const DEFAULT_ACTIVITIES = ['water', 'exercise', 'breaths'];
+const DEFAULT_ACTIVITIES = ['water', 'exercise', 'breaths', 'clean', 'outside'];
 
 const DEFAULT_SETTINGS = {
   addictionProfile: null, // Set on first launch
@@ -4307,8 +4307,9 @@ let _pendingSelectedActivities = null;
  *  mode: 'onboarding' (shows "Next →") | 'settings' (shows "Done") */
 function renderFlowStepSelectActivities(container, mode = 'onboarding') {
   const settings = DB.loadSettings();
+  const validKeys = new Set(ALL_ACTIVITIES.map(a => a.key));
   const initial = (Array.isArray(settings.selectedActivities) && settings.selectedActivities.length > 0)
-    ? settings.selectedActivities.slice(0, 5)
+    ? settings.selectedActivities.filter(k => validKeys.has(k)).slice(0, 5)
     : [...DEFAULT_ACTIVITIES];
   _pendingSelectedActivities = initial;
 
