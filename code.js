@@ -214,7 +214,7 @@ const COACHING_MESSAGES = [
 // Full activity catalog — add new activities here
 const ALL_ACTIVITIES = [
   // Quick Wins
-  { key: 'water',    emoji: '💧', label: 'Water',      hasMinutes: false, hasCount: true,  category: 'Quick Wins', color: '#9c6fd4' },
+  { key: 'water',    emoji: '💧', label: 'Water',      hasMinutes: false, hasCount: true,  category: 'Quick Wins', color: '#29b6f6' },
   { key: 'breaths',  emoji: '🌬️', label: 'Breathe',    hasMinutes: true,  hasCount: false, category: 'Quick Wins', color: '#5a9fd4' },
   { key: 'exercise', emoji: '🏃', label: 'Exercise',   hasMinutes: true,  hasCount: false, category: 'Body',       color: '#e6cc22' },
   { key: 'outside',  emoji: '🌳', label: 'Outside',    hasMinutes: true,  hasCount: false, category: 'Body',       color: '#43a047' },
@@ -224,22 +224,22 @@ const ALL_ACTIVITIES = [
   { key: 'sports',   emoji: '⚽', label: 'Sports',     hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ffb74d' },
   { key: 'walk',     emoji: '🚶', label: 'Walk',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ff8f00' },
   { key: 'yoga',     emoji: '🧘', label: 'Yoga',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ab47bc' },
-  { key: 'bike',     emoji: '🚴', label: 'Bike',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#66bb6a' },
+  { key: 'bike',     emoji: '🚴', label: 'Bike',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#00acc1' },
   { key: 'swim',     emoji: '🏊', label: 'Swim',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#26c6da' },
   { key: 'lift',     emoji: '🏋️', label: 'Lift',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ef5350' },
-  { key: 'shower',   emoji: '🛁', label: 'Shower',     hasMinutes: false, hasCount: false, category: 'Body',       color: '#00acc1' },
-  { key: 'ice',      emoji: '🧊', label: 'Ice',        hasMinutes: false, hasCount: false, category: 'Quick Wins', color: '#80deea' },
-  { key: 'sleep',    emoji: '😴', label: 'Sleep',      hasMinutes: false, hasCount: false, category: 'Body',       color: '#5e35b1' },
+  { key: 'shower',   emoji: '🛁', label: 'Shower',     hasMinutes: false, hasCount: false, category: 'Body',       color: '#80deea' },
+  { key: 'ice',      emoji: '🧊', label: 'Ice',        hasMinutes: true,  hasCount: false, category: 'Quick Wins', color: '#b3e5fc' },
+  { key: 'sleep',    emoji: '😴', label: 'Sleep',      hasMinutes: true,  hasCount: false, category: 'Body',       color: '#5e35b1' },
   { key: 'eat',      emoji: '🍎', label: 'Meal',       hasMinutes: false, hasCount: false, category: 'Body',       color: '#7cb342' },
   // Mind
   { key: 'read',     emoji: '📖', label: 'Read',       hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#f4511e' },
   { key: 'journal',  emoji: '✍️', label: 'Journal',    hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#039be5' },
-  { key: 'study',    emoji: '📚', label: 'Study',      hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#42a5f5' },
+  { key: 'study',    emoji: '📚', label: 'Study',      hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#7e57c2' },
   { key: 'focus',    emoji: '🎯', label: 'Focus',      hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#8e24aa' },
   { key: 'puzzle',   emoji: '🧩', label: 'Puzzle',     hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#00897b' },
-  { key: 'listen',   emoji: '🎧', label: 'Listen',     hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#26a69a' },
+  { key: 'listen',   emoji: '🎧', label: 'Listen',     hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#ff7043' },
   { key: 'meditate', emoji: '🧠', label: 'Meditate',   hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#5c6bc0' },
-  { key: 'pray', emoji: '🙏', label: 'Pray',   hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#ffa726' },
+  { key: 'pray',     emoji: '🙏', label: 'Pray',       hasMinutes: true,  hasCount: false, category: 'Mind',       color: '#ffa726' },
   // Create
   { key: 'music',    emoji: '🎵', label: 'Music',      hasMinutes: true,  hasCount: false, category: 'Create',     color: '#f06292' },
   { key: 'art',      emoji: '🎨', label: 'Art',        hasMinutes: true,  hasCount: false, category: 'Create',     color: '#ff7043' },
