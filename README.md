@@ -22,6 +22,7 @@ Whether you're working toward abstinence, harm reduction, or just understanding 
 ### 📊 **Track Your Way**
 - **Choose what to track** - Pick from smoking, alcohol, cannabis, or other
 - **One-tap logging** - Quickly log sessions, resists, or healthy habits
+- **40+ healthy activities** - Choose up to 5 from categories like Body, Mind, Create, Connect, and more
 - **Visual analytics** - Graphs for sessions, amounts, and hourly use
 - **Day-by-day history** - Browse and edit previous days with full details
 
