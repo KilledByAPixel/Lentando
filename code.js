@@ -3269,6 +3269,8 @@ function switchTab(tabName) {
   
   if (tabName === 'badges') renderBadges();
   else if (tabName === 'graph') {
+    graphDays = 7;
+    $('graph-range').querySelectorAll('.chip').forEach(c => c.classList.toggle('active', +c.dataset.days === 7));
     requestAnimationFrame(() => {
       renderGraphs();
     });
