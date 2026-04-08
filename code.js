@@ -216,12 +216,11 @@ const ALL_ACTIVITIES = [
   // Quick Wins
   { key: 'water',    emoji: '💧', label: 'Water',      hasMinutes: false, hasCount: true,  category: 'Quick Wins', color: '#9c6fd4' },
   { key: 'breaths',  emoji: '🌬️', label: 'Breathe',    hasMinutes: true,  hasCount: false, category: 'Quick Wins', color: '#5a9fd4' },
-  { key: 'ice',      emoji: '🧊', label: 'Ice',        hasMinutes: false, hasCount: false, category: 'Quick Wins', color: '#80deea' },
+  { key: 'exercise', emoji: '🏃', label: 'Exercise',   hasMinutes: true,  hasCount: false, category: 'Body',       color: '#e6cc22' },
+  { key: 'outside',  emoji: '🌳', label: 'Outside',    hasMinutes: true,  hasCount: false, category: 'Body',       color: '#43a047' },
   { key: 'bed',      emoji: '🛏️', label: 'Bed',        hasMinutes: false, hasCount: false, category: 'Quick Wins', color: '#7986cb' },
   { key: 'vitamins', emoji: '💊', label: 'Vitamins',   hasMinutes: false, hasCount: false, category: 'Quick Wins', color: '#aed581' },
   // Body
-  { key: 'outside',  emoji: '🌳', label: 'Outside',    hasMinutes: true,  hasCount: false, category: 'Body',       color: '#43a047' },
-  { key: 'exercise', emoji: '🏃', label: 'Exercise',   hasMinutes: true,  hasCount: false, category: 'Body',       color: '#e6cc22' },
   { key: 'sports',   emoji: '⚽', label: 'Sports',     hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ffb74d' },
   { key: 'walk',     emoji: '🚶', label: 'Walk',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ff8f00' },
   { key: 'yoga',     emoji: '🧘', label: 'Yoga',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ab47bc' },
@@ -229,6 +228,7 @@ const ALL_ACTIVITIES = [
   { key: 'swim',     emoji: '🏊', label: 'Swim',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#26c6da' },
   { key: 'lift',     emoji: '🏋️', label: 'Lift',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ef5350' },
   { key: 'shower',   emoji: '🛁', label: 'Shower',     hasMinutes: false, hasCount: false, category: 'Body',       color: '#00acc1' },
+  { key: 'ice',      emoji: '🧊', label: 'Ice',        hasMinutes: false, hasCount: false, category: 'Quick Wins', color: '#80deea' },
   { key: 'sleep',    emoji: '😴', label: 'Sleep',      hasMinutes: false, hasCount: false, category: 'Body',       color: '#5e35b1' },
   { key: 'eat',      emoji: '🍎', label: 'Meal',       hasMinutes: false, hasCount: false, category: 'Body',       color: '#7cb342' },
   // Mind
@@ -259,8 +259,8 @@ const ALL_ACTIVITIES = [
   // Skills
   { key: 'practice', emoji: '🎸', label: 'Instrument', hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#7c4dff' },
   { key: 'language', emoji: '🌍', label: 'Language',   hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#00bcd4' },
-  { key: 'learn',    emoji: '📖', label: 'Learn',      hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#00796b' },
-  { key: 'train',    emoji: '🎯', label: 'Train',      hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#ff6f00' },
+  { key: 'learn',    emoji: '🔍', label: 'Learn',      hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#00796b' },
+  { key: 'train',    emoji: '🏆', label: 'Train',      hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#ff6f00' },
   // Ground
   { key: 'relax',    emoji: '🕯️', label: 'Comfort',    hasMinutes: true,  hasCount: false, category: 'Ground',     color: '#ce93d8' },
   { key: 'calm',     emoji: '🌿', label: 'Nature',     hasMinutes: true,  hasCount: false, category: 'Ground',     color: '#a5d6a7' },
@@ -349,7 +349,7 @@ function getBadgeDef(id) {
   return BADGE_DEFINITIONS[id] || { label: 'Unknown Badge', icon: '❓', desc: '' };
 }
 
-const DEFAULT_ACTIVITIES = ['water', 'exercise', 'breaths', 'clean', 'outside'];
+const DEFAULT_ACTIVITIES = ['water', 'exercise', 'breaths'];
 
 const DEFAULT_SETTINGS = {
   addictionProfile: null, // Set on first launch
@@ -1196,16 +1196,19 @@ const Badges = {
     addBadge(waterCount >= 5, 'hydrated');
     
     // Individual habit badges
-    const hasExercise = habits.some(e => e.habit === 'exercise');
+    const EXERCISE_KEYS = new Set(['exercise', 'lift', 'sports', 'walk', 'bike', 'swim']);
+    const hasExercise = habits.some(e => EXERCISE_KEYS.has(e.habit));
     addBadge(hasExercise, 'exercised');
     
-    const hasBreaths = habits.some(e => e.habit === 'breaths');
+    const BREATHWORK_KEYS = new Set(['breaths', 'yoga', 'meditate']);
+    const hasBreaths = habits.some(e => BREATHWORK_KEYS.has(e.habit));
     addBadge(hasBreaths, 'breathwork');
     
     const hasClean = habits.some(e => e.habit === 'clean');
     addBadge(hasClean, 'cleaned');
     
-    const hasOutside = habits.some(e => e.habit === 'outside');
+    const OUTSIDE_KEYS = new Set(['outside', 'walk', 'sunlight', 'calm']);
+    const hasOutside = habits.some(e => OUTSIDE_KEYS.has(e.habit));
     addBadge(hasOutside, 'went-outside');
     
     const uniqueHabits = new Set(habits.map(e => e.habit));
@@ -4243,7 +4246,7 @@ let _onboardingFlowSteps = [];
 
 function startOnboardingFlow() {
   _onboardingFlowStep = 0;
-  _onboardingFlowSteps = ['select-activities', 'recent-use', 'daily-reminder', 'welcome-guide'];
+  _onboardingFlowSteps = ['recent-use', 'select-activities', 'daily-reminder', 'welcome-guide'];
   // PWA install is always last — prompt won't be consumed before it's shown
   if (_deferredInstallPrompt) _onboardingFlowSteps.push('install-app');
   showOnboardingFlowStep();
