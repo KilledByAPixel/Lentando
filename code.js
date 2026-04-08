@@ -257,12 +257,10 @@ const ALL_ACTIVITIES = [
   { key: 'practice', emoji: '🎸', label: 'Instrument', hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#7c4dff' },
   { key: 'language', emoji: '🌍', label: 'Language',   hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#00bcd4' },
   // Ground
-  { key: 'relax',    emoji: '🕯️', label: 'Comfort',    hasMinutes: true,  hasCount: false, category: 'Ground',     color: '#ce93d8' },
-  { key: 'calm',     emoji: '🌿', label: 'Nature',     hasMinutes: true,  hasCount: false, category: 'Ground',     color: '#a5d6a7' },
+  { key: 'garden',     emoji: '🌼', label: 'Garden',     hasMinutes: true,  hasCount: false, category: 'Ground',     color: '#a5d6a7' },
   { key: 'sunlight', emoji: '🌞', label: 'Sunlight',   hasMinutes: true,  hasCount: false, category: 'Ground',     color: '#ffca28' },
   // Life
   { key: 'clean',    emoji: '🧹', label: 'Clean',      hasMinutes: true,  hasCount: false, category: 'Life',       color: '#8d6e63' },
-  { key: 'errands',  emoji: '🛒', label: 'Errands',    hasMinutes: false, hasCount: false, category: 'Life',       color: '#6d4c41' },
 ];
 
 // Computed lookups from ALL_ACTIVITIES catalog
