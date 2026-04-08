@@ -248,11 +248,11 @@ const ALL_ACTIVITIES = [
   { key: 'game',     emoji: '🎮', label: 'Game',       hasMinutes: true,  hasCount: false, category: 'Create',    color: '#80cbc4' },
   { key: 'instrument', emoji: '🎸', label: 'Instrument', hasMinutes: true,  hasCount: false, category: 'Create',     color: '#7c4dff' },
   // Connect
-  { key: 'volunteer',    emoji: '🤝', label: 'Volunteer',      hasMinutes: true,  hasCount: false, category: 'Connect',     color: '#a1887f' },
-  { key: 'call',     emoji: '📞', label: 'Call',       hasMinutes: true,  hasCount: false, category: 'Connect',    color: '#4db6ac' },
   { key: 'socialize',  emoji: '👥', label: 'Socialize',  hasMinutes: true,  hasCount: false, category: 'Connect',    color: '#ff8a65' },
+  { key: 'call',     emoji: '📞', label: 'Call',       hasMinutes: true,  hasCount: false, category: 'Connect',    color: '#4db6ac' },
   { key: 'pet',      emoji: '🐾', label: 'Pet',        hasMinutes: false, hasCount: false, category: 'Connect',    color: '#f48fb1' },
   { key: 'family',   emoji: '👨‍👩‍👧', label: 'Family',     hasMinutes: true,  hasCount: false, category: 'Connect',    color: '#ffcc80' },
+  { key: 'volunteer',    emoji: '🤝', label: 'Volunteer',      hasMinutes: true,  hasCount: false, category: 'Connect',     color: '#a1887f' },
   // Skills
   { key: 'language', emoji: '🌍', label: 'Language',   hasMinutes: true,  hasCount: false, category: 'Skills',     color: '#00bcd4' },
   // Ground
