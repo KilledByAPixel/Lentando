@@ -267,6 +267,7 @@ const ALL_ACTIVITIES = [
 const HABIT_ICONS      = Object.fromEntries(ALL_ACTIVITIES.map(a => [a.key, a.emoji]));
 const HABIT_LABELS     = Object.fromEntries(ALL_ACTIVITIES.map(a => [a.key, a.label]));
 const HABIT_SHOW_CHIPS = Object.fromEntries(ALL_ACTIVITIES.map(a => [a.key, a.hasMinutes]));
+const ACTIVITY_ORDER   = Object.fromEntries(ALL_ACTIVITIES.map((a, i) => [a.key, i]));
 
 // Badge definitions — maps badge IDs to their display properties
 // Order determines the sort order of badges in the UI
@@ -4357,7 +4358,7 @@ function renderFlowStepSelectActivities(container, mode = 'onboarding') {
       if (selSet.size >= 5) return;
       selSet.add(key);
     }
-    _pendingSelectedActivities = [...selSet];
+    _pendingSelectedActivities = [...selSet].sort((a, b) => (ACTIVITY_ORDER[a] ?? 99) - (ACTIVITY_ORDER[b] ?? 99));
     // Update button states in-place (no full re-render to preserve scroll)
     grid.querySelectorAll('.act-option').forEach(b => {
       const k = b.dataset.key;
