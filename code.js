@@ -218,7 +218,7 @@ const ALL_ACTIVITIES = [
   { key: 'breaths',  emoji: '🌬️', label: 'Breathe',    hasMinutes: true,  hasCount: false, category: 'Quick Wins', color: '#5a9fd4' },
   { key: 'exercise', emoji: '🏃', label: 'Exercise',   hasMinutes: true,  hasCount: false, category: 'Body',       color: '#e6cc22' },
   { key: 'outside',  emoji: '🌳', label: 'Outside',    hasMinutes: true,  hasCount: false, category: 'Body',       color: '#43a047' },
-  { key: 'sleep',      emoji: '🛏️', label: 'Sleep',        hasMinutes: false, hasCount: false, category: 'Quick Wins', color: '#7986cb' },
+  { key: 'sleep',      emoji: '🛏️', label: 'Sleep',        hasMinutes: false, hasCount: false, category: 'Body',       color: '#7986cb' },
   // Body
   { key: 'walk',     emoji: '🚶', label: 'Walk',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ff8f00' },
   { key: 'yoga',     emoji: '🤸‍♂️', label: 'Yoga',       hasMinutes: true,  hasCount: false, category: 'Body',       color: '#ab47bc' },
@@ -260,7 +260,7 @@ const ALL_ACTIVITIES = [
   { key: 'garden',     emoji: '🌼', label: 'Garden',     hasMinutes: true,  hasCount: false, category: 'Ground',     color: '#a5d6a7' },
   // Life
   { key: 'clean',    emoji: '🧹', label: 'Clean',      hasMinutes: true,  hasCount: false, category: 'Life',       color: '#8d6e63' },
-  { key: 'errands',    emoji: '🛒', label: 'Errands',      hasMinutes: true,  hasCount: false, category: 'Body',       color: '#5e35b1' },
+  { key: 'errands',    emoji: '🛒', label: 'Errands',      hasMinutes: true,  hasCount: false, category: 'Life',       color: '#5e35b1' },
 ];
 
 // Computed lookups from ALL_ACTIVITIES catalog
