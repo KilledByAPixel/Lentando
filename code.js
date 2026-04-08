@@ -1736,17 +1736,14 @@ function buildTodayRatioTile(used) {
   const badAmount = calcBadAmount(used, settings.addictionProfile, config.badFilter);
   const ratio = totalAmount > 0 ? ((badAmount / totalAmount) * 100).toFixed(0) + '%' : '—';
 
-  // Find time since last use of bad substance
-  let sinceLastBadSub = '';
-  const allUsed = filterUsed(DB.loadEvents());
-  const badUsed = allUsed.filter(config.badFilter).sort(sortByTime);
-  if (badUsed.length > 0) {
-    const lastBadTs = badUsed[badUsed.length - 1].ts;
-    const elapsedMs = now() - lastBadTs;
-    sinceLastBadSub = `${formatDuration(elapsedMs)} Since Last ${config.substanceName}`;
+  // Show amount of primary substance used today as subtitle
+  let amountSub = '';
+  if (badAmount > 0) {
+    const displayAmt = Number.isInteger(badAmount) ? badAmount : +badAmount.toFixed(1);
+    amountSub = `${displayAmt} ${profile.amountUnit} ${config.substanceName}`;
   }
 
-  return tileHTML(ratio, config.ratioLabel, sinceLastBadSub, `Ratio of primary substance today and time since last use`);
+  return tileHTML(ratio, config.ratioLabel, amountSub, `Ratio of primary substance today and amount used`);
 }
 
 function renderMetrics() {
