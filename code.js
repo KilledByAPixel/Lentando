@@ -1199,7 +1199,7 @@ const Badges = {
     const hasClean = habits.some(e => e.habit === 'clean');
     addBadge(hasClean, 'cleaned');
     
-    const OUTSIDE_KEYS = new Set(['outside', 'walk', 'sunlight', 'calm']);
+    const OUTSIDE_KEYS = new Set(['outside', 'walk', 'sunlight', 'garden']);
     const hasOutside = habits.some(e => OUTSIDE_KEYS.has(e.habit));
     addBadge(hasOutside, 'went-outside');
     
@@ -1554,8 +1554,10 @@ function getHabitEventDetail(evt) {
   let detail = '';
   if (evt.habit === 'water' && evt.count > 1) {
     detail = '×' + evt.count;
-  } else if (evt.minutes && evt.minutes > 0) {
+  } else if (HABIT_SHOW_CHIPS[evt.habit] && evt.minutes && evt.minutes > 0) {
     detail = evt.minutes + ' min';
+  } else if (evt.consolidated > 1) {
+    detail = '×' + evt.consolidated;
   }
   return {
     icon: HABIT_ICONS[evt.habit] || '✅',
@@ -2302,7 +2304,7 @@ const GRAPH_DEFS = [
     } else if (a.hasCount) {
       def.valueFn = evs => getHabits(evs, a.key).reduce((s, e) => s + (e.count || 1), 0);
     } else {
-      def.valueFn = evs => getHabits(evs, a.key).length;
+      def.valueFn = evs => getHabits(evs, a.key).reduce((s, e) => s + (e.consolidated || 1), 0);
     }
     return def;
   }),
