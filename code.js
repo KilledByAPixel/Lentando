@@ -3683,9 +3683,9 @@ function openCreateEventModal() {
   // Build substance/method/amount fields for the current profile (default to "used" type)
   const fieldsHTML = buildCreateModalFields(profileKey);
 
-  // Default to now (use currentDate() so debug time offset is respected)
+  // Default date to the currently browsed history day, time to now
   const nowDate = currentDate();
-  const dateValue = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}-${String(nowDate.getDate()).padStart(2, '0')}`;
+  const dateValue = currentHistoryDay || `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}-${String(nowDate.getDate()).padStart(2, '0')}`;
   const timeValue = `${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`;
 
   $('modal-sheet').innerHTML = `
