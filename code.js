@@ -3688,13 +3688,18 @@ function openCreateEventModal() {
   const dateValue = currentHistoryDay || `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}-${String(nowDate.getDate()).padStart(2, '0')}`;
   const timeValue = `${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`;
 
+  const hasActiveHabits = getSelectedActivities().length > 0;
+  const habitChip = hasActiveHabits
+    ? `<button class="chip" data-val="habit" onclick="App.switchCreateEventType('habit')">Habit</button>`
+    : '';
+
   $('modal-sheet').innerHTML = `
     <div class="modal-header"><h2>Add Past Event</h2><button class="modal-close" onclick="App.closeModal()" aria-label="Close">✕</button></div>
     <div class="modal-field"><label>Type</label>
       <div class="chip-group" data-field="create-type">
         <button class="chip active" data-val="used" onclick="App.switchCreateEventType('used')">${escapeHTML(sessionLabel)}</button>
         <button class="chip" data-val="resisted" onclick="App.switchCreateEventType('resisted')">Resist</button>
-        <button class="chip" data-val="habit" onclick="App.switchCreateEventType('habit')">Habit</button>
+        ${habitChip}
       </div>
     </div>
     <div id="create-modal-fields">${fieldsHTML}</div>
@@ -3748,7 +3753,8 @@ function buildCreateResistedFields() {
 
 /** Build fields for a habit event in create mode */
 function buildCreateHabitFields() {
-  const habitKeys = Object.keys(HABIT_LABELS);
+  const habitKeys = getSelectedActivities();
+  if (habitKeys.length === 0) return '';
   const defaultHabit = habitKeys[0];
   const showMinutes = HABIT_SHOW_CHIPS[defaultHabit];
   const fields = [
