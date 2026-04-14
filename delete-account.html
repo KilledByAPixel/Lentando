@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Delete Your Account - Lentando</title>
+  <title>Delete Your Data or Account - Lentando</title>
   <style>
     :root {
       --bg: #0a0a0a;
@@ -96,47 +96,67 @@
 </head>
 <body>
   <div class="container">
-    <h1>Delete Your Account &amp; Data</h1>
+    <h1>Delete Your Data or Account</h1>
     <p class="updated"><strong>Last updated:</strong> April 14, 2026</p>
 
-    <p>This page explains how to permanently delete your <strong>Lentando</strong> account and all associated data. You can delete directly inside the app, or request deletion by email if you no longer have access to the app.</p>
+    <p>This page explains how to delete your <strong>Lentando</strong> data. You can delete <em>specific items</em>, <em>all of your data</em> (while keeping your account), or <em>your entire account</em>. You can also request deletion by email if you no longer have access to the app.</p>
 
-    <h2>1. Delete from inside the app (recommended)</h2>
+    <h2>1. Delete individual items (in the app)</h2>
+    <p>You can remove a single tracked event at any time without affecting anything else:</p>
+    <ol>
+      <li>Open <a href="https://lentando.3d2k.com" target="_blank">Lentando</a>.</li>
+      <li>Find the event in your timeline.</li>
+      <li>Tap the 🗑️ icon on that event, or tap the event and choose <strong>Delete</strong>.</li>
+    </ol>
+    <p>The event is removed immediately from your device, and (if you are signed in) the deletion is synced to the cloud the next time the app is online.</p>
+
+    <h2>2. Delete all of your data without deleting your account (in the app)</h2>
+    <p>If you want to wipe your tracked data and start fresh while keeping your account, use <strong>Clear Database</strong>:</p>
+    <ol>
+      <li>Open <a href="https://lentando.3d2k.com" target="_blank">Lentando</a>.</li>
+      <li>Go to the <strong>Settings</strong> tab.</li>
+      <li>Scroll down and tap <strong>🗑️ Clear Database</strong>.</li>
+      <li>Confirm when prompted.</li>
+    </ol>
+    <p>This permanently deletes all events, to-dos, badges, and settings on the device, and (if you are signed in) clears the same data from the cloud. Your sign-in account remains so you can continue using the app.</p>
+
+    <h2>3. Delete your entire account (in the app)</h2>
     <p>If you can sign in to Lentando, this is the fastest and most complete option:</p>
     <ol>
       <li>Open <a href="https://lentando.3d2k.com" target="_blank">Lentando</a> and make sure you are signed in.</li>
       <li>Go to the <strong>Settings</strong> tab.</li>
-      <li>Scroll down and tap <strong>Delete Account</strong>.</li>
+      <li>Scroll down and tap <strong>❌ Delete Account</strong>.</li>
       <li>Confirm when prompted.</li>
     </ol>
     <p>This immediately deletes your cloud data, your sign-in account, and clears local data on that device. The action is permanent and cannot be undone.</p>
 
-    <h2>2. Request deletion by email</h2>
+    <h2>4. Request deletion by email</h2>
     <p>If you can no longer access the app (for example, you uninstalled it or lost access to your sign-in), email us to request deletion:</p>
     <ul>
-      <li><strong>Send to:</strong> <a href="mailto:frankforcegames@gmail.com?subject=Delete%20my%20Lentando%20account">frankforcegames@gmail.com</a></li>
-      <li><strong>Subject:</strong> Delete my Lentando account</li>
-      <li><strong>Include:</strong> the email address you used to sign in to Lentando, so we can locate the account.</li>
+      <li><strong>Send to:</strong> <a href="mailto:frankforcegames@gmail.com?subject=Delete%20my%20Lentando%20data">frankforcegames@gmail.com</a></li>
+      <li><strong>Subject:</strong> Delete my Lentando data (or: Delete my Lentando account)</li>
+      <li><strong>Include:</strong> the email address you used to sign in to Lentando, and whether you want us to delete <em>all of your data</em> (keeping the account) or <em>your entire account</em>.</li>
     </ul>
     <p>Requests are processed manually, typically within a few days and no later than 30 days from receipt. There is no recovery period once deletion is complete.</p>
 
-    <h2>3. What gets deleted</h2>
+    <h2>5. What gets deleted</h2>
     <ul>
-      <li><strong>Firebase Authentication account</strong> — your sign-in credentials and unique user ID.</li>
-      <li><strong>Cloud Firestore data</strong> — the document stored under your user ID, containing all events, settings, to-dos, badges, and sync metadata.</li>
-      <li><strong>Local browser storage</strong> — cleared automatically when you use the in-app flow on that device. If you use the email method, any data still stored in your browser on your own devices can be removed by opening the app and choosing <em>Clear Database</em>, or by clearing your browser's site data.</li>
+      <li><strong>Individual event:</strong> just that one event.</li>
+      <li><strong>Clear Database:</strong> all events, to-dos, badges, and settings — on the device and (if signed in) in your cloud document. Your account itself is kept.</li>
+      <li><strong>Delete Account:</strong> everything under <em>Clear Database</em>, plus your Firebase Authentication account (sign-in credentials and unique user ID) and the entire Cloud Firestore document stored under your user ID.</li>
     </ul>
+    <p>Local browser storage is cleared automatically when you use the in-app Clear Database or Delete Account flows. If you use the email method instead, any data still stored in your browser on your own devices can be removed by opening the app and choosing <em>Clear Database</em>, or by clearing your browser's site data.</p>
 
-    <h2>4. What is retained</h2>
+    <h2>6. What is retained</h2>
     <p>Nothing user-identifying is retained after deletion. We may keep minimal records only where required by law or for legitimate security or fraud-prevention purposes; such records do not include your tracked events, notes, or app content.</p>
 
-    <h2>5. Timing</h2>
+    <h2>7. Timing</h2>
     <ul>
-      <li><strong>In-app deletion:</strong> immediate and permanent.</li>
+      <li><strong>In-app deletion (any type):</strong> immediate and permanent.</li>
       <li><strong>Email request:</strong> processed manually, typically within a few days and no later than 30 days.</li>
     </ul>
 
-    <h2>6. Questions</h2>
+    <h2>8. Questions</h2>
     <p>If you have any questions about deletion or our privacy practices, see our <a href="./privacy.html">Privacy Policy</a> or contact <a href="mailto:frankforcegames@gmail.com">frankforcegames@gmail.com</a>.</p>
 
     <a href="./" class="back-link">← Back to Lentando</a>
