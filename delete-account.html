@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delete Your Account - Lentando</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #151515;
+      --text: #e0e0e0;
+      --muted: #888;
+      --primary: #4a9eff;
+      --border: #2a2a2a;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f5f5f5;
+        --card: #ffffff;
+        --text: #1a1a1a;
+        --muted: #666;
+        --primary: #0066cc;
+        --border: #e0e0e0;
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .updated {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+    h2 {
+      font-size: 20px;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+    h3 {
+      font-size: 16px;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    p, li {
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 16px;
+    }
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 48px;
+      padding: 10px 20px;
+      background: var(--primary);
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      opacity: 0.9;
+      text-decoration: none;
+    }
+    strong {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Delete Your Account &amp; Data</h1>
+    <p class="updated"><strong>Last updated:</strong> April 14, 2026</p>
+
+    <p>This page explains how to permanently delete your <strong>Lentando</strong> account and all associated data. You can delete directly inside the app, or request deletion by email if you no longer have access to the app.</p>
+
+    <h2>1. Delete from inside the app (recommended)</h2>
+    <p>If you can sign in to Lentando, this is the fastest and most complete option:</p>
+    <ol>
+      <li>Open <a href="https://lentando.3d2k.com" target="_blank">Lentando</a> and make sure you are signed in.</li>
+      <li>Go to the <strong>Settings</strong> tab.</li>
+      <li>Scroll down and tap <strong>Delete Account</strong>.</li>
+      <li>Confirm when prompted.</li>
+    </ol>
+    <p>This immediately deletes your cloud data, your sign-in account, and clears local data on that device. The action is permanent and cannot be undone.</p>
+
+    <h2>2. Request deletion by email</h2>
+    <p>If you can no longer access the app (for example, you uninstalled it or lost access to your sign-in), email us to request deletion:</p>
+    <ul>
+      <li><strong>Send to:</strong> <a href="mailto:frankforce@gmail.com?subject=Delete%20my%20Lentando%20account">frankforce@gmail.com</a></li>
+      <li><strong>Subject:</strong> Delete my Lentando account</li>
+      <li><strong>Include:</strong> the email address you used to sign in to Lentando, so we can locate the account.</li>
+    </ul>
+    <p>Requests are processed manually, typically within a few days and no later than 30 days from receipt. There is no recovery period once deletion is complete.</p>
+
+    <h2>3. What gets deleted</h2>
+    <ul>
+      <li><strong>Firebase Authentication account</strong> — your sign-in credentials and unique user ID.</li>
+      <li><strong>Cloud Firestore data</strong> — the document stored under your user ID, containing all events, settings, to-dos, badges, and sync metadata.</li>
+      <li><strong>Local browser storage</strong> — cleared automatically when you use the in-app flow on that device. If you use the email method, any data still stored in your browser on your own devices can be removed by opening the app and choosing <em>Clear Database</em>, or by clearing your browser's site data.</li>
+    </ul>
+
+    <h2>4. What is retained</h2>
+    <p>Nothing user-identifying is retained after deletion. We may keep minimal records only where required by law or for legitimate security or fraud-prevention purposes; such records do not include your tracked events, notes, or app content.</p>
+
+    <h2>5. Timing</h2>
+    <ul>
+      <li><strong>In-app deletion:</strong> immediate and permanent.</li>
+      <li><strong>Email request:</strong> processed manually, typically within a few days and no later than 30 days.</li>
+    </ul>
+
+    <h2>6. Questions</h2>
+    <p>If you have any questions about deletion or our privacy practices, see our <a href="./privacy.html">Privacy Policy</a> or contact <a href="mailto:frankforce@gmail.com">frankforce@gmail.com</a>.</p>
+
+    <a href="./" class="back-link">← Back to Lentando</a>
+  </div>
+</body>
+</html>
