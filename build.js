@@ -14,6 +14,7 @@ const STATIC_FILES = [
   'manifest.json',
   'privacy.html',
   'terms.html',
+  'delete-account.html',
   'favicon.png',
   'icon-192.png',
   'icon-512.png',

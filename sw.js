@@ -3,7 +3,7 @@
 
 // Service Worker for Lentando PWA
 const SW_DEBUG = false; // Set to true to enable console logging
-const CACHE_NAME = 'lentando-v459'; // Update this to force cache refresh
+const CACHE_NAME = 'lentando-v461'; // Update this to force cache refresh
 const urlsToCache = [
   './index.html',
   './code.js',
@@ -14,7 +14,8 @@ const urlsToCache = [
   './icon-192.png',
   './icon-512.png',
   './privacy.html',
-  './terms.html'
+  './terms.html',
+  './delete-account.html'
 ];
 
 // Install service worker and cache core files (bypass HTTP cache)
