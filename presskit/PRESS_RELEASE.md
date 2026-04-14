@@ -37,4 +37,4 @@ Lentando is a compassionate, zero-friction habit and substance use tracker built
 
 - Frank Force
 - GitHub: [@KilledByAPixel](https://killedbyapixel.github.io/)
-- Email: frankforce@gmail.com
+- Email: frankforcegames@gmail.com
