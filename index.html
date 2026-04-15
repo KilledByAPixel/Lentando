@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Lentando - Private habit and substance tracker 🐢</title>
 <meta name="description" content="Free, open-source tracker for substance use, urges, and habits. Track cannabis, alcohol, smoking, or custom substances. Harm reduction, no judgment. Private and offline-first with optional sync. No ads.">
 <meta name="author" content="Frank Force">
@@ -176,7 +176,11 @@ body {
   line-height: 1.5;
   max-width: 720px;
   margin: 0 auto;
-  padding: 0 16px 24px;
+  padding:
+    env(safe-area-inset-top)
+    calc(16px + env(safe-area-inset-right))
+    calc(24px + env(safe-area-inset-bottom))
+    calc(16px + env(safe-area-inset-left));
   overscroll-behavior: none;
 }
 
@@ -911,7 +915,7 @@ header .date {
   max-width: 480px;
   background: var(--card);
   border-radius: 16px 16px 0 0;
-  padding: 20px 16px 32px;
+  padding: 20px 16px calc(32px + env(safe-area-inset-bottom));
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -1485,7 +1489,7 @@ header .date {
 
 .toast {
   position: fixed;
-  bottom: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   padding: 12px 20px;
@@ -1559,7 +1563,11 @@ header .date {
 .landing-content {
   width: 100%;
   max-width: 560px;
-  padding: 40px 24px 40px;
+  padding:
+    calc(40px + env(safe-area-inset-top))
+    calc(24px + env(safe-area-inset-right))
+    calc(40px + env(safe-area-inset-bottom))
+    calc(24px + env(safe-area-inset-left));
   display: flex;
   flex-direction: column;
   align-items: center;
