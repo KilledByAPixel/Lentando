@@ -5057,17 +5057,17 @@ function bindEvents() {
     hideHabitChips();
   });
 
-  $('todo-add-btn').addEventListener('click', () => {
+  if ($('todo-add-btn')) $('todo-add-btn').addEventListener('click', () => {
     addTodo($('todo-input').value);
     $('todo-input').value = '';
   });
-  $('todo-input').addEventListener('keydown', e => {
+  if ($('todo-input')) $('todo-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       addTodo($('todo-input').value);
       $('todo-input').value = '';
     }
   });
-  $('todo-list').addEventListener('click', e => {
+  if ($('todo-list')) $('todo-list').addEventListener('click', e => {
     const todoId = e.target.dataset.id;
     if (e.target.classList.contains('todo-check')) toggleTodo(todoId);
     if (e.target.classList.contains('todo-text')) editTodo(todoId);
@@ -5158,6 +5158,7 @@ function saveTodos(todos) {
 }
 
 function renderTodos() {
+  if (!$('todo-list')) return;
   const todos = loadTodos();
   $('todo-list').innerHTML = todos.length === 0
     ? ''
