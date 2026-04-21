@@ -2,12 +2,12 @@
   "name": "Lentando - Private habit and substance tracker",
   "short_name": "Lentando",
   "description": "Free, open-source substance use tracker. Track cannabis, alcohol, smoking with harm reduction approach. Earn progress badges, resist urges, build healthy habits. Private, offline-first, no ads.",
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#5c6bc0",
   "orientation": "any",
-  "scope": "./",
+  "scope": "/",
   "icons": [
     {
       "src": "icon-192.png",
