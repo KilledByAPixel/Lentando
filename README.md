@@ -2,6 +2,8 @@
 
 **Progress At Your Pace** - A habit and substance use tracker that runs entirely in your browser.
 
+## [Lentando is now available on Google Play!](https://play.google.com/store/apps/details?id=com.lentando.app)
+
 ![Lentando Logo](icon-192.png)
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)
